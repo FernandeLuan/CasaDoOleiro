@@ -1,11 +1,20 @@
 function fmtDate(iso, short=false){
   const d = new Date(iso+'T12:00:00');
-  return new Intl.DateTimeFormat('pt-BR', short?{day:'2-digit',month:'2-digit'}:{day:'2-digit',month:'short'}).format(d).replace('.','');
+  const locale=typeof currentLocale==='function'?currentLocale():'pt-BR';
+  return new Intl.DateTimeFormat(locale, short?{day:'2-digit',month:'2-digit'}:{day:'2-digit',month:'short'}).format(d).replace('.','');
 }
 
-function dayName(iso){ return new Intl.DateTimeFormat('pt-BR',{weekday:'short'}).format(new Date(iso+'T12:00:00')).replace('.','').toUpperCase(); }
+function dayName(iso){
+  const locale=typeof currentLocale==='function'?currentLocale():'pt-BR';
+  return new Intl.DateTimeFormat(locale,{weekday:'short'}).format(new Date(iso+'T12:00:00')).replace('.','').toUpperCase();
+}
 
-function longDate(iso){const d=new Date(iso+'T12:00:00');const text=new Intl.DateTimeFormat('pt-BR',{weekday:'long',day:'2-digit',month:'long'}).format(d);return text.charAt(0).toUpperCase()+text.slice(1)}
+function longDate(iso){
+  const d=new Date(iso+'T12:00:00');
+  const locale=typeof currentLocale==='function'?currentLocale():'pt-BR';
+  const text=new Intl.DateTimeFormat(locale,{weekday:'long',day:'2-digit',month:'long'}).format(d);
+  return text.charAt(0).toUpperCase()+text.slice(1)
+}
 
 function statusMeta(s){
   return {
