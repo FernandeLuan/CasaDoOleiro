@@ -18,6 +18,7 @@ function renderVolunteer(){
     content=`<section class="section"><div class="notice danger"><i class="fa-solid fa-triangle-exclamation"></i><div><strong>Não foi possível abrir esta tela.</strong><br>Atualize a página. Se o problema continuar, volte ao início.</div></div><button class="btn btn-primary btn-block" style="margin-top:12px" onclick="state.volunteerPage='home';render()">Voltar ao início</button></section>`;
   }
   app.innerHTML=header(subtitle,true)+`<main class="page">${content}</main>`+volunteerNav();
+  if(typeof applyI18n==='function')applyI18n(app);
 }
 
 function render(){renderVolunteer()}
