@@ -1,1 +1,0 @@
-PWA icon should be replaced with the supplied Casa do Oleiro artwork during backend-ready cleanup.

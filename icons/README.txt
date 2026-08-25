@@ -1,1 +1,0 @@
-Brand icon generated from the Casa do Oleiro artwork supplied for the project.

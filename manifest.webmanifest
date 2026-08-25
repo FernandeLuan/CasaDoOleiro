@@ -11,6 +11,6 @@
   "description": "Portal de gestão e planejamento do programa de voluntariado da Casa do Oleiro.",
   "icons": [
     {"src": "icons/icon-180.png", "sizes": "180x180", "type": "image/png", "purpose": "any"},
-    {"src": "icons/icon-512.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"}
   ]
 }
