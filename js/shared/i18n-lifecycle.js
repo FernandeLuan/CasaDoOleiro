@@ -1,8 +1,0 @@
-if(typeof OLEIRO_TRANSLATIONS!=='undefined'){
-  Object.assign(OLEIRO_TRANSLATIONS.en,{
-    'Prazo para enviar o planejamento':'Deadline to submit the plan','Prorrogar +7 dias':'Extend +7 days','Recusar e inativar':'Reject and deactivate','Recusar e inativar?':'Reject and deactivate?','O acesso ficará inativo até uma reativação manual.':'Access will remain inactive until manually reactivated.','Motivo da inativação:':'Reason for deactivation:','Inativo':'Inactive','Vence hoje':'Due today','Perfil reativado com novo prazo de 7 dias.':'Profile reactivated with a new 7-day deadline.','Prazo prorrogado por mais 7 dias.':'Deadline extended by 7 more days.','Voluntário cadastrado. Prazo de 7 dias iniciado.':'Volunteer created. The 7-day deadline has started.','Cadastre quem já está no processo real de avaliação.':'Register someone already in the actual evaluation process.'
-  });
-  Object.assign(OLEIRO_TRANSLATIONS.es,{
-    'Prazo para enviar o planejamento':'Plazo para enviar la planificación','Prorrogar +7 dias':'Extender +7 días','Recusar e inativar':'Rechazar y desactivar','Recusar e inativar?':'¿Rechazar y desactivar?','O acesso ficará inativo até uma reativação manual.':'El acceso quedará inactivo hasta una reactivación manual.','Motivo da inativação:':'Motivo de la desactivación:','Inativo':'Inactivo','Vence hoje':'Vence hoy','Perfil reativado com novo prazo de 7 dias.':'Perfil reactivado con un nuevo plazo de 7 días.','Prazo prorrogado por mais 7 dias.':'Plazo extendido por 7 días más.','Voluntário cadastrado. Prazo de 7 dias iniciado.':'Voluntario registrado. El plazo de 7 días ha comenzado.','Cadastre quem já está no processo real de avaliação.':'Registra a quien ya está en el proceso real de evaluación.'
-  });
-}
