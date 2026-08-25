@@ -3,6 +3,16 @@
 .portal-actions{display:flex;gap:8px;flex-wrap:wrap}
 .session-count-badge{display:block;flex:0 0 auto;min-width:78px}.session-count-badge .badge{width:100%;justify-content:center;white-space:nowrap}
 
+/* Menu do portal */
+.menu-list{display:flex;flex-direction:column;gap:10px}
+.menu-link{width:100%;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:16px;padding:12px 13px;min-height:64px;display:grid;grid-template-columns:38px minmax(0,1fr) 16px;gap:10px;align-items:center;text-align:left;box-shadow:0 3px 16px rgba(0,0,0,.035);font-family:inherit;overflow:hidden}
+.menu-link>i:first-child{width:38px;height:38px;border-radius:11px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;font-size:.86rem}
+.menu-link>span{display:block;min-width:0;font-size:.75rem;font-weight:600;line-height:1.25;overflow-wrap:anywhere}
+.menu-link small{display:block;margin-top:3px;color:var(--muted);font-size:.61rem;font-weight:400;line-height:1.35;white-space:normal}
+.menu-link>i:last-child{font-size:.68rem;color:var(--muted);justify-self:end}
+.menu-link:active{transform:scale(.995)}
+.volunteer-home-activity{width:100%;font-family:inherit;color:var(--text);text-align:left}
+
 /* Modal de atividade: ocupa só o necessário e rola internamente */
 .modal.activity-modal{max-height:min(82dvh,680px);overflow:auto;padding-bottom:max(20px,env(safe-area-inset-bottom))}
 .activity-modal-form{padding-bottom:2px}.activity-modal-form .textarea{min-height:72px}.activity-date-grid{max-height:210px;overflow:auto;padding:2px;overscroll-behavior:contain}
@@ -14,5 +24,7 @@
   .modal.activity-modal{max-height:78dvh}
   .activity-date-grid{grid-template-columns:1fr 1fr;max-height:190px}
   .session-count-badge{min-width:84px}
+  .menu-link{grid-template-columns:36px minmax(0,1fr) 14px;padding:11px 12px;min-height:62px}
+  .menu-link>i:first-child{width:36px;height:36px}
 }
 @media(min-width:760px){.portal-shell{max-width:840px;margin:0 auto}}
