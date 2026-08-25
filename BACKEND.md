@@ -9,7 +9,8 @@ O frontend permanece estático no GitHub Pages. O backend será responsável por
 - não carregar histórico completo na abertura;
 - listas grandes usam paginação;
 - loading global aparece apenas se uma operação ultrapassar 600 ms;
-- Rodeio e Indaial usam o mesmo sistema e o mesmo banco.
+- Rodeio e Indaial usam o mesmo sistema e o mesmo banco;
+- uma pessoa sempre possui seu próprio usuário e perfil, mesmo quando participa de uma candidatura em casal.
 
 ## Entidades
 
@@ -30,15 +31,21 @@ O frontend permanece estático no GitHub Pages. O backend será responsável por
 Rodeio inicia ativo. Indaial pode existir desde o primeiro deploy com `active=false` e ser configurada antes da ativação.
 
 ### `volunteer_profiles`
-- dados pessoais
+Um documento por pessoa, nunca por casal:
+
+- `uid`
+- nome e dados pessoais
 - nacionalidade
 - gênero
 - contatos
+- `searchTokens`
 
 ### `applications`
-Documento central do processo do voluntário:
+Documento central do processo e da experiência:
 
-- `volunteerUid`
+- `type`: `individual` ou `couple`
+- `participantUids`: um UID para individual ou dois UIDs para casal
+- `participantStatus`: mapa opcional por UID (`active`, `withdrawn`)
 - `unitId`
 - `status`: `pending`, `analysis`, `adjustments`, `approved`, `rejected`
 - `active`
@@ -53,9 +60,18 @@ Documento central do processo do voluntário:
 - `needsVolunteerAttention`
 - `volunteerAttentionReason`
 - `volunteerAttentionUpdatedAt`
+- `source`: `portal`, `spreadsheet_migration` ou outro identificador controlado
+
+Na candidatura em casal existem **dois logins e dois perfis**, mas somente **uma application compartilhada**. Ambos visualizam e podem alimentar o mesmo planejamento. Se uma pessoa desistir, seu `participantStatus` pode virar `withdrawn` sem destruir a candidatura da outra.
 
 ### `activities`
 Definição da atividade: nome, descrição, duração, participação, materiais, observações e autor.
+
+Campos importantes:
+- `applicationId`
+- `createdByUid`
+
+Assim, em uma candidatura em casal sabemos qual participante criou a atividade sem duplicar o planejamento.
 
 ### `activity_sessions`
 Cada ocorrência em uma data específica:
@@ -66,6 +82,7 @@ Cada ocorrência em uma data específica:
 - `time`
 - `status`: `proposed`, `confirmed`, `change_requested`, `rejected`
 - `groupId`
+- `createdByUid`
 
 ### `groups`
 Grupos por unidade, capacidade e integrantes.
@@ -107,6 +124,8 @@ O navegador lê essa data junto com a candidatura e calcula localmente `deadline
 2. Na primeira versão gratuita, ao abrir o Admin, uma consulta específica busca somente candidaturas `pending` cujo `planningDeadlineAt <= agora` e processa a inativação/recusa por ID.
 3. Depois, se quisermos a mudança física de status exatamente sem ninguém abrir o sistema, adicionamos uma rotina diária agendada. Ela consulta somente vencidos, não todos os voluntários.
 4. Ao reativar um perfil: `status=pending`, `active=true` e um novo `planningDeadlineAt = agora + 7 dias`.
+
+Em casal, o prazo pertence à `application`, portanto os dois participantes enxergam a mesma contagem e um único envio conclui a etapa de planejamento da candidatura.
 
 ## Voluntários e paginação
 
@@ -159,6 +178,8 @@ Cada candidatura aprovada mantém `stayMonths`, por exemplo:
 
 O calendário consulta somente candidaturas aprovadas da unidade cujo `stayMonths` contenha o mês exibido. O navegador monta os dias e as bolinhas localmente.
 
+Uma application em casal ocupa **duas pessoas** enquanto ambos os `participantStatus` estiverem ativos, apesar de a estadia existir em um único documento.
+
 ## Planejamento durante a experiência
 
 ### Candidato
@@ -172,6 +193,23 @@ A Agenda torna-se o planejamento operacional. O voluntário pode propor novas at
 - alteração de sessão confirmada → `change_requested`.
 
 Não haverá uma segunda interface redundante de Planejamento para o voluntário aprovado.
+
+Em casal, os dois participantes trabalham sobre a mesma agenda da application. `createdByUid` mantém a autoria das propostas.
+
+## Migração das planilhas existentes
+
+Candidatos que já preencheram a planilha não devem refazer o planejamento no portal.
+
+Fluxo de migração:
+
+1. exportar a planilha Google como `.xlsx` ou `.csv`;
+2. mapear dados pessoais e período para `volunteer_profiles` + `applications`;
+3. criar uma `activity` para cada atividade preenchida;
+4. transformar cada data/horário informado em `activity_sessions`;
+5. marcar `application.source = spreadsheet_migration`;
+6. validar o resultado antes de liberar o primeiro acesso.
+
+Depois da migração, o candidato entra no portal e já encontra o planejamento existente. Novos candidatos passam a usar somente o portal, evitando dois processos paralelos.
 
 ## Rodeio e Indaial
 
@@ -209,6 +247,8 @@ Admin e Portal chamam esses serviços. O Firebase fica encapsulado neles.
 Dados de regressão ficam em `js/shared/mock-data.js` e só são carregados com `?dev=1`.
 
 A massa deve conter mais de 10 aprovados e mais de 5 pendências para validar paginação e limites antes da conexão do backend.
+
+O modo `?dev=1` deve continuar usando somente mocks locais. Ele nunca deve consultar dados reais do Firebase.
 
 ## Ponto de integração do login
 
