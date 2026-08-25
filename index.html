@@ -1,28 +1,9 @@
 <!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
-<meta name="theme-color" content="#315f48">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Casa do Oleiro">
-<link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=20260825-1515">
-<link rel="icon" type="image/png" href="icons/icon-180.png?v=20260825-1515">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-<title>Casa do Oleiro</title>
-<link rel="stylesheet" href="css/theme.css?v=20260825-1515">
-<link rel="stylesheet" href="css/base.css?v=20260825-1515">
-<link rel="stylesheet" href="css/components.css?v=20260825-1515">
-<link rel="stylesheet" href="css/i18n.css?v=20260825-1515">
-<link rel="stylesheet" href="css/login.css?v=20260825-1515">
-<link rel="manifest" href="manifest.webmanifest?v=20260825-1515"></head>
-<body data-root="index.html">
-<main class="login-shell"><section class="login-card">
-<button class="login-language-trigger" type="button" onclick="openLanguageModal()" aria-label="Idioma"><i class="fa-solid fa-language"></i><span class="current-language-code">PT</span></button>
-<div class="login-brand"><img class="login-cover" src="icons/icon-180.png?v=20260825-1515" alt="Casa do Oleiro"><h1>Casa do Oleiro</h1><p>Portal de gestão e planejamento do programa de voluntariado.</p></div>
-<div class="form-grid"><div class="field"><label for="email">E-mail</label><input id="email" class="input" type="email" placeholder="seu@email.com" autocomplete="email"></div><div class="field"><label for="password">Senha</label><input id="password" class="input" type="password" placeholder="••••••••" autocomplete="current-password"></div><button id="loginButton" class="btn btn-primary btn-block" type="button" onclick="prototypeLogin()">Entrar</button><div id="loginMessage" class="notice" hidden></div></div>
-<div class="prototype-box"><strong>Modo protótipo</strong><p>Atalhos temporários para validar cada experiência antes do backend.</p><div class="demo-actions"><button type="button" onclick="choosePrototype('manager')">Gestor</button><button type="button" onclick="choosePrototype('volunteer','candidate')">Candidato</button><button type="button" onclick="choosePrototype('volunteer','approved')">Voluntário</button><button type="button" onclick="choosePrototype('inactive')">Perfil inativo</button></div></div>
-</section></main>
-<div id="loginLoading" class="login-loading" hidden><div class="login-loading-inner"><div class="loading-pulse"><span class="loading-ring ring-a"></span><span class="loading-ring ring-b"></span><img src="icons/icon-180.png?v=20260825-1515" alt="" aria-hidden="true"></div><strong>Entrando...</strong><span>Carregando informações</span></div></div>
-<script src="js/shared/i18n.js?v=20260825-1515"></script><script src="js/login-i18n-fix.js?v=20260825-1515"></script><script src="js/login.js?v=20260825-1515"></script></body></html>
+<meta name="theme-color" content="#315f48"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="Casa do Oleiro">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=20260825-backend"><link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png?v=20260825-backend"><link rel="manifest" href="manifest.webmanifest?v=20260825-backend">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"><title>Casa do Oleiro</title>
+<link rel="stylesheet" href="css/theme.css?v=20260825-backend"><link rel="stylesheet" href="css/base.css?v=20260825-backend"><link rel="stylesheet" href="css/components.css?v=20260825-backend"><link rel="stylesheet" href="css/i18n.css?v=20260825-backend"><link rel="stylesheet" href="css/login.css?v=20260825-backend"></head><body data-root="index.html">
+<main class="login-shell"><section class="login-card"><button class="login-language-trigger" type="button" onclick="openLanguageModal()" aria-label="Idioma"><i class="fa-solid fa-language"></i><span class="current-language-code">PT</span></button><div class="login-brand"><img class="login-cover" src="icons/icon-180.png?v=20260825-backend" alt="Casa do Oleiro"><h1>Casa do Oleiro</h1><p>Portal de gestão e planejamento do programa de voluntariado.</p></div><div class="form-grid"><div class="field"><label for="email">E-mail</label><input id="email" class="input" type="email" placeholder="seu@email.com" autocomplete="email"></div><div class="field"><label for="password">Senha</label><input id="password" class="input" type="password" placeholder="••••••••" autocomplete="current-password"></div><button id="loginButton" class="btn btn-primary btn-block" type="button" onclick="handleLogin()">Entrar</button><div id="loginMessage" class="notice" hidden></div></div><div id="devPanel" class="dev-panel" hidden><strong>Ambiente de teste</strong><p>Atalhos disponíveis apenas com <code>?dev=1</code>.</p><div class="demo-actions"><button type="button" onclick="chooseDevRole('manager')">Gestor</button><button type="button" onclick="chooseDevRole('volunteer','candidate')">Candidato</button><button type="button" onclick="chooseDevRole('volunteer','approved')">Voluntário</button><button type="button" onclick="chooseDevRole('inactive')">Perfil inativo</button></div></div></section></main>
+<div id="loginLoading" class="login-loading" hidden><div class="login-loading-inner"><div class="loading-pulse"><span class="loading-ring ring-a"></span><span class="loading-ring ring-b"></span><img src="icons/icon-180.png?v=20260825-backend" alt="" aria-hidden="true"></div><strong>Entrando...</strong><span>Carregando informações</span></div></div>
+<script src="js/shared/i18n.js?v=20260825-backend"></script><script src="js/login-i18n-fix.js?v=20260825-backend"></script><script src="js/login.js?v=20260825-backend"></script></body></html>
