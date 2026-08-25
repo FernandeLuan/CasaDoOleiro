@@ -1,14 +1,31 @@
+function managerGreeting(){
+  const hour=new Date().getHours();
+  const lang=typeof currentLanguage==='function'?currentLanguage():'pt';
+  if(hour<12)return lang==='en'?'Good morning, Luan':lang==='es'?'Buenos días, Luan':'Bom dia, Luan';
+  if(hour<18)return lang==='en'?'Good afternoon, Luan':lang==='es'?'Buenas tardes, Luan':'Boa tarde, Luan';
+  return lang==='en'?'Good evening, Luan':lang==='es'?'Buenas noches, Luan':'Boa noite, Luan';
+}
+
+function openTodayAgenda(){
+  state.managerPage='agenda';
+  state.agendaAnchor=_oleiroToday;
+  state.selectedDate=_oleiroToday;
+  state.agendaFrom=_oleiroToday;
+  state.agendaTo=_oleiroToday;
+  render();
+}
+
 function managerHome(){
   const today=_oleiroToday;
   const todaySessions=getSessions(today);
-  return `<section class="hero"><div class="eyebrow" style="color:#d9eadf">Gestão • Rodeio</div><h1>Boa noite, Luan</h1><p class="muted">Veja o que precisa da sua atenção e o que acontece hoje na Casa.</p><div class="hero-actions"><button class="btn btn-light" onclick="openNewCandidate()"><i class="fa-solid fa-user-plus"></i>Novo candidato</button><button class="btn btn-outline" style="border-color:rgba(255,255,255,.28);color:white" onclick="state.managerPage='agenda';state.agendaAnchor='${today}';state.selectedDate='${today}';render()"><i class="fa-regular fa-calendar"></i>Ver agenda</button></div></section>
+  return `<section class="hero"><div class="eyebrow" style="color:#d9eadf">Gestão • Rodeio</div><h1>${managerGreeting()}</h1><p class="muted">Veja o que precisa da sua atenção e o que acontece hoje na Casa.</p><div class="hero-actions"><button class="btn btn-light" onclick="openNewCandidate()"><i class="fa-solid fa-user-plus"></i>Novo candidato</button><button class="btn btn-outline" style="border-color:rgba(255,255,255,.28);color:white" onclick="openTodayAgenda()"><i class="fa-regular fa-calendar"></i>Ver agenda</button></div></section>
   <section class="section"><div class="section-head"><div><h2>Pendências</h2><p>Ações que merecem atenção</p></div></div><div class="grid-2 grid-md-4 pending-grid">
     ${metric('3','fa-clipboard-check','Em análise',"state.managerPage='volunteer';state.candidateFilter='analysis';render()")}
     ${metric('1','fa-rotate','Ajustes',"state.managerPage='volunteer';state.candidateFilter='adjustments';render()")}
-    ${metric('2','fa-plane-arrival','Chegadas','showToast(\'Próximas chegadas abertas abaixo.\')')}
+    ${metric('2','fa-plane-arrival','Chegadas',"showToast('Próximas chegadas abertas abaixo.')")}
     ${metric('1','fa-triangle-exclamation','Alteração','openNotifications()')}
   </div></section>
-  <section class="section"><div class="section-head"><div><h2>Hoje na Casa</h2><p>${longDate(today)}</p></div><button class="btn btn-soft" onclick="state.managerPage='agenda';state.agendaAnchor='${today}';state.selectedDate='${today}';render()">Agenda</button></div><div class="list">
+  <section class="section"><div class="section-head"><div><h2>Hoje na Casa</h2><p>${longDate(today)}</p></div><button class="btn btn-soft" onclick="openTodayAgenda()">Agenda</button></div><div class="list">
     ${todaySessions.length?todaySessions.map(s=>agendaItem(s.activity.time,s.activity.name,s.activity.owner,s.group,s.status)).join(''):`<div class="empty">Nenhuma atividade prevista para hoje.</div>`}
   </div></section>
   <section class="section"><div class="section-head"><div><h2>Próximas movimentações</h2><p>Chegadas e saídas</p></div></div><div class="grid-2">
