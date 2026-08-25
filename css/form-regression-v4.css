@@ -10,19 +10,23 @@
 .modal-body .form-grid{gap:15px!important}
 .modal-body .field-row{gap:14px!important}
 
-/* Safari/iOS: impede time/date de virarem labels gigantes */
+/* Safari/iOS: centraliza de verdade o conteúdo de date/time */
 .modal-body input[type="date"],
-.modal-body input[type="time"]{-webkit-appearance:none!important;appearance:none!important;display:block!important;text-align:left!important;font-size:16px!important;font-variant-numeric:tabular-nums!important;line-height:1.2!important;padding:0 13px!important}
+.modal-body input[type="time"]{-webkit-appearance:none!important;appearance:none!important;display:block!important;text-align:left!important;font-size:16px!important;font-variant-numeric:tabular-nums!important;line-height:48px!important;padding:0 13px!important;min-height:48px!important;height:48px!important}
 .modal-body input[type="date"]::-webkit-date-and-time-value,
-.modal-body input[type="time"]::-webkit-date-and-time-value{text-align:left!important;margin:0!important;min-height:0!important;line-height:1.2!important}
+.modal-body input[type="time"]::-webkit-date-and-time-value{display:flex!important;align-items:center!important;height:48px!important;min-height:48px!important;text-align:left!important;margin:0!important;padding:0!important;line-height:1.2!important}
+.modal-body input[type="date"]::-webkit-datetime-edit,
+.modal-body input[type="time"]::-webkit-datetime-edit{display:flex!important;align-items:center!important;height:100%!important;padding:0!important;margin:0!important}
+.modal-body input[type="date"]::-webkit-datetime-edit-fields-wrapper,
+.modal-body input[type="time"]::-webkit-datetime-edit-fields-wrapper{display:flex!important;align-items:center!important;height:100%!important;padding:0!important;margin:0!important}
 .modal-body input[type="date"]::-webkit-calendar-picker-indicator,
-.modal-body input[type="time"]::-webkit-calendar-picker-indicator{margin:0!important;padding:0!important;opacity:.75!important}
+.modal-body input[type="time"]::-webkit-calendar-picker-indicator{margin:0!important;padding:0!important;opacity:.75!important;align-self:center!important}
 
-/* Datas da atividade: compactas, legíveis e sem estouro lateral */
-.activity-date-grid{gap:9px!important;padding:2px!important;overflow-x:hidden!important;max-height:230px!important}
-.activity-date-grid .check-card{min-height:48px!important;height:48px!important;padding:8px 12px!important;border-radius:12px!important;align-items:center!important;gap:9px!important;width:100%!important;max-width:100%!important;min-width:0!important}
+/* Datas da atividade: compactas, legíveis e com respiro entre checkbox e texto */
+.activity-date-grid{gap:10px!important;padding:2px!important;overflow-x:hidden!important;max-height:230px!important}
+.activity-date-grid .check-card{min-height:48px!important;height:48px!important;padding:8px 14px!important;border-radius:12px!important;display:flex!important;align-items:center!important;justify-content:flex-start!important;column-gap:14px!important;width:100%!important;max-width:100%!important;min-width:0!important}
 .activity-date-grid .check-card input{width:18px!important;height:18px!important;flex:0 0 18px!important;margin:0!important}
-.activity-date-grid .check-card span{font-size:13px!important;line-height:1.2!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;min-width:0!important}
+.activity-date-grid .check-card span{display:block!important;font-size:13px!important;line-height:1.2!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;min-width:0!important}
 
 /* Contador de sessões nunca quebra */
 .badge{white-space:nowrap!important}
@@ -41,8 +45,8 @@
   .modal-body .field-row,
   .candidate-date-row,
   .agenda-range-fields{grid-template-columns:1fr!important;gap:15px!important}
-  .activity-date-grid{grid-template-columns:1fr!important;gap:9px!important;max-height:228px!important}
-  .activity-date-grid .check-card{height:46px!important;min-height:46px!important;padding:8px 11px!important}
+  .activity-date-grid{grid-template-columns:1fr!important;gap:10px!important;max-height:228px!important}
+  .activity-date-grid .check-card{height:46px!important;min-height:46px!important;padding:8px 14px!important;column-gap:14px!important}
 }
 
 @media(min-width:760px){
