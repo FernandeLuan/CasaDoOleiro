@@ -29,11 +29,6 @@ function volunteerAgendaContent(editable=false){
 
 function sessionCardVolunteer(s,editable){const [l,t]=statusMeta(s.status);return `<div class="activity-card"><div class="activity-row"><div><h4>${s.activity.time} • ${s.activity.name}</h4><p>${s.activity.duration} min • ${s.activity.period}</p></div>${badge(l,t)}</div>${editable?`<div class="activity-actions"><button class="btn btn-outline" onclick="openActivityModal('${s.date}',${s.activity.id})">Editar</button><button class="btn btn-outline" onclick="moveSession(${s.activity.id},'${s.date}',true)">Mover</button></div>`:''}</div>`}
 
-function activityList(editable=false){
-  const acts=volunteerActivities();
-  return `<div class="list">${acts.map(a=>`<div class="card"><div class="activity-row"><div><h3 style="font-size:.8rem">${a.name}</h3><p style="font-size:.65rem;color:var(--muted)">${a.description}</p></div><span class="session-count-badge">${badge(a.dates.length+' sessões','primary')}</span></div><div class="stat-row"><span class="stat-pill">${a.duration} min</span><span class="stat-pill">${a.participation}</span><span class="stat-pill">${a.period}</span></div><div style="font-size:.63rem;color:var(--muted);margin-top:10px">${a.dates.map(d=>fmtDate(d,true)).join(' • ')}</div>${editable?`<div class="activity-actions"><button class="btn btn-outline" onclick="openActivityModal(null,${a.id})">Editar atividade</button><button class="btn btn-soft" onclick="openReuseActivity(${a.id})">+ Sessão</button></div>`:''}</div>`).join('')}</div>`
-}
-
 function openActivityModal(date=null,id=null){
   if(state.volunteerMode!=='approved'&&!['draft','adjustments'].includes(state.volunteerPlanStatus||'draft'))return showToast('O planejamento já foi enviado. Aguarde a análise da Casa.');
   const a=id?state.activities.find(x=>x.id===id):null;const defaultDate=date||'2026-09-08';const availableDates=volunteerStayDates();
@@ -41,10 +36,6 @@ function openActivityModal(date=null,id=null){
 }
 
 function saveActivity(id){const dates=[...document.querySelectorAll('input[name="actDate"]:checked')].map(x=>x.value);const data={name:document.getElementById('actName').value.trim(),description:document.getElementById('actDesc').value.trim(),duration:+document.getElementById('actDuration').value,participation:document.getElementById('actParticipation').value,materials:document.getElementById('actMaterials').value.trim()||'Nenhum',notes:document.getElementById('actNotes').value.trim(),period:document.getElementById('actPeriod').value,time:document.getElementById('actTime').value||'15:15',dates};if(!data.name)return showToast('Informe o nome da atividade.');if(!dates.length)return showToast('Selecione pelo menos uma data.');if(id){Object.assign(state.activities.find(x=>x.id===id),data)}else{state.activities.push({id:Date.now(),owner:'Thomas Miller',...data})}closeModal();render();showToast(id?'Atividade atualizada.':'Atividade adicionada ao planejamento.')}
-
-function openReuseActivity(id){if(state.volunteerMode!=='approved'&&!['draft','adjustments'].includes(state.volunteerPlanStatus||'draft'))return showToast('O planejamento já foi enviado.');const a=state.activities.find(x=>x.id===id);openModal('Adicionar sessão',a.name,`<div class="field"><label>Selecione uma nova data</label><select id="reuseDate" class="select">${volunteerStayDates().filter(d=>!a.dates.includes(d)).map(d=>`<option value="${d}">${dayName(d)} • ${fmtDate(d)}</option>`).join('')}</select></div><button class="btn btn-primary btn-block" style="margin-top:12px" onclick="addReuseDate(${id})">Adicionar sessão</button>`)}
-
-function addReuseDate(id){const a=state.activities.find(x=>x.id===id);const d=document.getElementById('reuseDate').value;a.dates.push(d);state.sessionStatus[`${id}-${d}`]='proposed';closeModal();render();showToast('Nova sessão adicionada.')}
 
 function submitPlan(){
   const acts=volunteerActivities();
