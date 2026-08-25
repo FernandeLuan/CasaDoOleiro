@@ -6,6 +6,7 @@ const CANDIDATE_STATUS_OPTIONS=[
   ['approved','Aprovado'],
   ['rejected','Rejeitado']
 ];
+const CANDIDATE_PAGE_SIZE=10;
 
 function normalizeCandidateFilter(value){
   return CANDIDATE_STATUS_OPTIONS.some(([id])=>id===value)?value:'approved';
@@ -15,6 +16,7 @@ function managerVolunteers(){
   state.candidateFilter=normalizeCandidateFilter(state.candidateFilter);
   const search=state.candidateSearch||'';
   const filtered=getFilteredCandidates();
+  const visibleCount=Math.max(CANDIDATE_PAGE_SIZE,state.candidateVisibleCount||CANDIDATE_PAGE_SIZE);
   const activeFilters=state.candidateFilter!=='approved'||(state.candidateUnit||'all')!=='all';
   return `<section class="section volunteer-list-page">
     <div class="candidate-tools candidate-tools-compact">
@@ -23,11 +25,11 @@ function managerVolunteers(){
       <button class="candidate-add-button" type="button" onclick="openNewCandidate()" aria-label="Novo voluntário"><i class="fa-solid fa-plus"></i></button>
     </div>
     <div class="candidate-filter-summary">${candidateFilterSummary()}</div>
-    <div id="candidateList" class="list">${candidateListHtml(filtered)}</div>
+    <div id="candidateList" class="list">${candidateListHtml(filtered,visibleCount)}</div>
   </section>`;
 }
 
-function escapeHtml(value){return String(value||'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+function escapeHtml(value){return String(value||'').replace(/[&<>'\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
 
 function getFilteredCandidates(){
   const filter=normalizeCandidateFilter(state.candidateFilter);
@@ -41,12 +43,28 @@ function getFilteredCandidates(){
   });
 }
 
-function candidateListHtml(list){return list.length?list.map(personCompact).join(''):`<div class="empty"><i class="fa-regular fa-folder-open"></i>Nenhum perfil encontrado com esses filtros.</div>`}
+function candidateListHtml(list,visibleCount=state.candidateVisibleCount||CANDIDATE_PAGE_SIZE){
+  if(!list.length)return `<div class="empty"><i class="fa-regular fa-folder-open"></i>Nenhum perfil encontrado com esses filtros.</div>`;
+  const visible=list.slice(0,visibleCount);
+  const remaining=Math.max(0,list.length-visible.length);
+  const more=remaining?`<button class="btn btn-soft btn-block candidate-load-more" type="button" onclick="loadMoreCandidates()"><i class="fa-solid fa-chevron-down"></i>Ver mais ${Math.min(CANDIDATE_PAGE_SIZE,remaining)}</button>`:'';
+  return visible.map(personCompact).join('')+more;
+}
+
+function loadMoreCandidates(){
+  state.candidateVisibleCount=(state.candidateVisibleCount||CANDIDATE_PAGE_SIZE)+CANDIDATE_PAGE_SIZE;
+  refreshCandidateList();
+}
+
+function refreshCandidateList(){
+  const list=document.getElementById('candidateList');
+  if(list){list.innerHTML=candidateListHtml(getFilteredCandidates());if(typeof applyI18n==='function')applyI18n(list)}
+}
 
 function updateCandidateSearch(value){
   state.candidateSearch=value;
-  const list=document.getElementById('candidateList');
-  if(list){list.innerHTML=candidateListHtml(getFilteredCandidates());if(typeof applyI18n==='function')applyI18n(list)}
+  state.candidateVisibleCount=CANDIDATE_PAGE_SIZE;
+  refreshCandidateList();
 }
 
 function candidateFilterSummary(){
@@ -76,12 +94,14 @@ function openCandidateFilters(){
 function applyCandidateFilters(){
   state.candidateFilter=normalizeCandidateFilter(document.getElementById('candidateStatusFilter')?.value);
   state.candidateUnit=document.getElementById('candidateUnitFilter')?.value||'all';
+  state.candidateVisibleCount=CANDIDATE_PAGE_SIZE;
   closeModal();render();
 }
 
 function clearCandidateFilters(){
   state.candidateFilter='approved';
   state.candidateUnit='all';
+  state.candidateVisibleCount=CANDIDATE_PAGE_SIZE;
   closeModal();render();
 }
 
