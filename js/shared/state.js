@@ -28,4 +28,5 @@ const state = {
   notifications: []
 };
 
+window.state=state;
 document.documentElement.classList.toggle('dark', state.theme === 'dark');
