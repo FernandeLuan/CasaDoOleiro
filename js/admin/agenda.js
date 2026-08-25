@@ -2,20 +2,21 @@ function changeAgenda(days){state.agendaAnchor=addDays(state.agendaAnchor,days);
 
 function jumpAgenda(value){if(!value)return;state.agendaAnchor=value;state.selectedDate=value;render()}
 
-function openAgendaDatePicker(){const el=document.getElementById('agendaDatePicker');if(el&&el.showPicker)el.showPicker();else if(el)el.click()}
+function goAgendaToday(){jumpAgenda(_oleiroToday)}
 
 function managerAgenda(){
   const dates=dateRange(state.agendaAnchor,7);
-  return `<section class="section"><div class="section-head"><div><span class="eyebrow">Rodeio</span><h2>Agenda da Casa</h2></div></div>
-  <div class="agenda-nav"><button class="icon-btn" onclick="changeAgenda(-7)" aria-label="Semana anterior"><i class="fa-solid fa-chevron-left"></i></button><div class="agenda-nav-center"><strong>${agendaRangeLabel(state.agendaAnchor)}</strong><button class="icon-btn" onclick="openAgendaDatePicker()" aria-label="Escolher data"><i class="fa-regular fa-calendar"></i></button><input id="agendaDatePicker" class="agenda-date-input" type="date" value="${state.agendaAnchor}" onchange="jumpAgenda(this.value)"></div><button class="icon-btn" onclick="changeAgenda(7)" aria-label="Próxima semana"><i class="fa-solid fa-chevron-right"></i></button></div>
-  <div style="display:flex;justify-content:center;margin-bottom:10px"><button class="btn btn-soft" onclick="jumpAgenda('2026-08-24')">Hoje</button></div>
+  const isToday=state.agendaAnchor===_oleiroToday;
+  return `<section class="section"><div class="section-head"><div><span class="eyebrow">Rodeio</span><h2>Agenda da Casa</h2><p>Atividades organizadas por data</p></div></div>
+  <div class="agenda-toolbar"><button class="icon-btn" onclick="changeAgenda(-7)" aria-label="Ver 7 dias anteriores"><i class="fa-solid fa-chevron-left"></i></button><div class="agenda-toolbar-main"><strong>${agendaRangeLabel(state.agendaAnchor)}</strong><span>${isToday?'A partir de hoje':'7 dias a partir da data escolhida'}</span></div><button class="icon-btn" onclick="changeAgenda(7)" aria-label="Ver próximos 7 dias"><i class="fa-solid fa-chevron-right"></i></button></div>
+  <div class="agenda-shortcuts"><button class="btn ${isToday?'btn-soft':'btn-outline'}" onclick="goAgendaToday()"><i class="fa-solid fa-location-crosshairs"></i>Hoje</button><label class="btn btn-outline agenda-date-button"><i class="fa-regular fa-calendar"></i>Escolher data<input id="agendaDatePicker" class="agenda-date-input" type="date" value="${state.agendaAnchor}" onchange="jumpAgenda(this.value)" aria-label="Escolher uma data"></label></div>
   ${dateStrip(dates)}
   ${renderDays(true,dates)}</section>`;
 }
 
 function dateStrip(dates=null){
   dates=dates||dateRange(state.agendaAnchor,7);
-  return `<div class="calendar-strip">${dates.map(d=>`<button class="date-chip ${state.selectedDate===d?'active':''}" onclick="state.selectedDate='${d}';state.agendaAnchor='${d}';render()"><span>${dayName(d)}</span><strong>${new Date(d+'T12:00:00').getDate()}</strong><span>${new Intl.DateTimeFormat('pt-BR',{month:'short'}).format(new Date(d+'T12:00:00')).replace('.','').toUpperCase()}</span></button>`).join('')}</div>`;
+  return `<div class="calendar-strip">${dates.map(d=>`<button class="date-chip ${state.selectedDate===d?'active':''}" onclick="jumpAgenda('${d}')"><span>${dayName(d)}</span><strong>${new Date(d+'T12:00:00').getDate()}</strong><span>${new Intl.DateTimeFormat('pt-BR',{month:'short'}).format(new Date(d+'T12:00:00')).replace('.','').toUpperCase()}</span></button>`).join('')}</div>`;
 }
 
 function renderDays(manager=false,dates=null){

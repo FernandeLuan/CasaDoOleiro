@@ -5,6 +5,8 @@ function fmtDate(iso, short=false){
 
 function dayName(iso){ return new Intl.DateTimeFormat('pt-BR',{weekday:'short'}).format(new Date(iso+'T12:00:00')).replace('.','').toUpperCase(); }
 
+function longDate(iso){const d=new Date(iso+'T12:00:00');const text=new Intl.DateTimeFormat('pt-BR',{weekday:'long',day:'2-digit',month:'long'}).format(d);return text.charAt(0).toUpperCase()+text.slice(1)}
+
 function statusMeta(s){
   return {
     pending:['Planejamento pendente','warning'], analysis:['Em análise','info'], adjustments:['Ajustes solicitados','warning'], approved:['Aprovado','success'], rejected:['Rejeitado','danger'],

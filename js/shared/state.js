@@ -1,14 +1,18 @@
 /* Estado temporário do protótipo. Futuramente substituído pelo backend. */
+const _oleiroNow = new Date();
+const _oleiroToday = `${_oleiroNow.getFullYear()}-${String(_oleiroNow.getMonth()+1).padStart(2,'0')}-${String(_oleiroNow.getDate()).padStart(2,'0')}`;
 const state = {
   role: localStorage.getItem('oleiro-role') || null,
   managerPage: 'home',
   volunteerPage: 'home',
   volunteerMode: localStorage.getItem('oleiro-volunteer-mode') || 'candidate',
   candidateTab: 'candidates',
-  candidateFilter: 'all',
+  candidateFilter: 'approved',
+  candidateSearch: '',
+  candidateUnit: 'all',
   planView: 'agenda',
-  selectedDate: '2026-09-08',
-  agendaAnchor: '2026-08-24',
+  selectedDate: _oleiroToday,
+  agendaAnchor: _oleiroToday,
   personModalTab: 'overview',
   theme: localStorage.getItem('oleiro-theme') || 'light',
   candidates: [

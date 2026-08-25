@@ -24,3 +24,24 @@
 .person-tabs{position:sticky;top:-18px;z-index:3;background:var(--surface);padding-top:2px}
 .compact-hint{font-size:.62rem;color:var(--muted);line-height:1.45}
 @media(min-width:760px){body{padding-bottom:20px}.page{padding:24px}.bottom-nav{left:50%;right:auto;width:620px;transform:translateX(-50%);border:1px solid var(--border);border-radius:20px;bottom:14px;box-shadow:var(--shadow)}.grid-md-4{grid-template-columns:repeat(4,1fr)}.modal-backdrop{align-items:center}.modal{border-radius:24px;max-height:88vh}.hero{padding:24px}.hero h1{font-size:1.6rem}.field-row.three{grid-template-columns:repeat(3,1fr)}}
+
+/* Filtros do voluntariado */
+.filter-panel{padding:12px;display:grid;gap:9px}
+.filter-search{position:relative}.filter-search>i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.72rem;pointer-events:none}.filter-search .input{padding-left:34px}
+.filter-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr);gap:8px}.filter-caption{font-size:.6rem;color:var(--muted);line-height:1.4}
+
+/* Pendências */
+.pending-grid .metric{align-items:center;text-align:center!important;padding:14px 10px}.pending-grid .metric-icon{margin:0 auto}.pending-grid .metric>div:last-child{width:100%}.pending-grid .metric strong{display:block;text-align:center}.pending-grid .metric span{text-align:center}
+
+/* Agenda */
+.agenda-toolbar{display:grid;grid-template-columns:42px minmax(0,1fr) 42px;gap:8px;align-items:center;margin:8px 0 8px}.agenda-toolbar-main{min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}.agenda-toolbar-main strong{font-size:.74rem;line-height:1.25;text-align:center}.agenda-toolbar-main span{font-size:.58rem;color:var(--muted)}
+.agenda-shortcuts{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}.agenda-shortcuts .btn{min-height:38px;padding:8px 11px}.agenda-date-button{position:relative}.agenda-date-button .agenda-date-input{position:absolute;inset:0;width:100%;height:100%;opacity:0;pointer-events:auto!important;cursor:pointer}
+
+/* Modais de gestão */
+.new-candidate-form{padding-bottom:4px}.new-candidate-form .btn-block{margin-top:2px}.routine-list{padding-bottom:4px}.routine-row{grid-template-columns:minmax(86px,108px) minmax(0,1fr);gap:12px}.routine-row time{white-space:normal;line-height:1.25}.routine-row span{min-width:0;overflow-wrap:anywhere}
+
+@media(max-width:420px){
+  .filter-grid{grid-template-columns:1fr}
+  .routine-row{grid-template-columns:96px minmax(0,1fr);padding:11px 10px;gap:9px}
+  .agenda-toolbar{grid-template-columns:40px minmax(0,1fr) 40px}
+}

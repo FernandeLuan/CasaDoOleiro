@@ -1,4 +1,4 @@
-function managerMenu(){return `<section class="section"><div class="menu-list">
+function managerMenu(){return `<section class="section"><div class="section-head"><div><span class="eyebrow">Gestão</span><h2>Menu</h2><p>Configurações e informações da Casa</p></div></div><div class="menu-list">
   ${menuLink('fa-circle-info','Informações do portal','Conteúdo que candidatos e voluntários consultam',"openInfoEditor()")}
   ${menuLink('fa-building','Unidades','Rodeio ativa • Indaial preparada',"openUnits()")}
   ${menuLink('fa-user-shield','Gestores e acessos','Administradores e coordenadores',"openManagers()")}

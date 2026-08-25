@@ -1,0 +1,32 @@
+/* Ajustes mobile de componentes interativos */
+.menu-list{display:flex;flex-direction:column;gap:9px}
+.menu-link{width:100%;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:16px;padding:12px 13px;min-height:64px;display:grid;grid-template-columns:36px minmax(0,1fr) 16px;gap:10px;align-items:center;text-align:left;box-shadow:0 3px 16px rgba(0,0,0,.035);overflow:hidden}
+.menu-link>i:first-child{width:36px;height:36px;border-radius:11px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;font-size:.88rem}
+.menu-link>span{display:block;min-width:0;font-size:.75rem;font-weight:600;line-height:1.25;overflow-wrap:anywhere}
+.menu-link small{display:block;margin-top:3px;color:var(--muted);font-size:.61rem;font-weight:400;line-height:1.35;white-space:normal}
+.menu-link>i:last-child{font-size:.7rem;justify-self:end}
+.menu-link:active{transform:scale(.995)}
+
+.plan-session-link{width:100%;border:1px solid var(--border);background:var(--surface-2);color:var(--text);border-radius:13px;padding:10px 11px;display:grid;grid-template-columns:30px minmax(0,1fr) 14px;gap:9px;align-items:center;text-align:left}
+.plan-session-link .plan-session-icon{width:30px;height:30px;border-radius:9px;background:var(--surface);color:var(--primary);display:grid;place-items:center}
+.plan-session-link strong{display:block;font-size:.68rem;line-height:1.35;white-space:normal}
+.plan-session-link small{display:block;margin-top:2px;font-size:.59rem;line-height:1.35;color:var(--muted);white-space:normal}
+.plan-session-link>i:last-child{font-size:.66rem;color:var(--muted);justify-self:end}
+
+.modal-backdrop{padding-top:max(10px,env(safe-area-inset-top));overflow:hidden}
+.modal{max-height:min(92vh,calc(100dvh - 10px));overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.modal-head{position:sticky;top:-18px;z-index:6;background:var(--surface);padding:18px 0 12px;margin-top:-18px;margin-bottom:12px;border-bottom:1px solid transparent}
+.modal-head>div{min-width:0;padding-right:4px}.modal-head h2{line-height:1.25}.modal-head p{line-height:1.45;margin-top:3px}
+
+@media(max-width:759px){
+  .page{padding-left:16px;padding-right:16px}
+  .modal{max-height:calc(100dvh - 10px);padding-left:16px;padding-right:16px}
+  .field-row{gap:9px}
+  .field label{font-size:.7rem}
+  .input,.select,.textarea{padding:10px 11px;border-radius:12px}
+  .textarea{min-height:82px}
+}
+.time-box.single{display:grid;place-items:center;min-height:52px}.time-box.single strong{font-size:.78rem}
+body.modal-open{overflow:hidden}
+
+.btn-outline{border:1px solid var(--border)}
