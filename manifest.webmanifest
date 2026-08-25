@@ -1,0 +1,10 @@
+{
+  "name": "Casa do Oleiro",
+  "short_name": "Casa do Oleiro",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f4ef",
+  "theme_color": "#315f48",
+  "description": "Portal de gestão e planejamento do programa de voluntariado da Casa do Oleiro."
+}

@@ -1,0 +1,4 @@
+/* Portal: candidato e voluntário */
+.plan-summary{margin-bottom:12px}
+.portal-actions{display:flex;gap:8px;flex-wrap:wrap}
+@media(min-width:760px){.portal-shell{max-width:840px;margin:0 auto}}
