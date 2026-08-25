@@ -1,3 +1,6 @@
+/* Login */
+setLanguage=function(lang){const next=typeof normalizeOleiroLanguage==='function'?(normalizeOleiroLanguage(lang)||'pt'):lang;localStorage.setItem('oleiro-language',next);if(typeof closeLanguageModal==='function')closeLanguageModal();location.reload();};
+
 let loginTransitionTimer=null;
 function isDevMode(){return new URLSearchParams(location.search).get('dev')==='1'}
 function destinationFor(role){const suffix=isDevMode()?'?dev=1':'';if(role==='manager')return `admin/${suffix}`;if(role==='volunteer')return `portal/${suffix}`;return `inactive.html${suffix}`}
