@@ -1,4 +1,4 @@
-function showToast(msg){toastEl.textContent=msg;toastEl.classList.add('show');setTimeout(()=>toastEl.classList.remove('show'),2200)}
+function showToast(msg){toastEl.textContent=typeof translateText==='function'?translateText(msg):msg;toastEl.classList.add('show');setTimeout(()=>toastEl.classList.remove('show'),2200)}
 
 function toggleTheme(){state.theme=state.theme==='dark'?'light':'dark';localStorage.setItem('oleiro-theme',state.theme);document.documentElement.classList.toggle('dark',state.theme==='dark');render()}
 
@@ -10,7 +10,7 @@ function goHome(){
 }
 
 function header(subtitle, showBell=false){
-  return `<header class="app-header"><div class="brand-row"><div class="brand" role="button" tabindex="0" aria-label="Ir para a tela inicial" onclick="goHome()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goHome()}"><div class="brand-mark"><i class="fa-solid fa-seedling"></i></div><div class="brand-copy"><strong>Casa do Oleiro</strong><span>${subtitle}</span></div></div><div style="display:flex;gap:7px">${showBell?`<button class="icon-btn" onclick="openNotifications()"><i class="fa-regular fa-bell"></i></button>`:''}<button class="icon-btn" onclick="toggleTheme()"><i class="fa-solid ${state.theme==='dark'?'fa-sun':'fa-moon'}"></i></button></div></div></header>`;
+  return `<header class="app-header"><div class="brand-row"><div class="brand" role="button" tabindex="0" aria-label="Ir para a tela inicial" onclick="goHome()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goHome()}"><div class="brand-mark"><i class="fa-solid fa-seedling"></i></div><div class="brand-copy"><strong>Casa do Oleiro</strong><span>${subtitle}</span></div></div><div style="display:flex;gap:7px">${showBell?`<button class="icon-btn" onclick="openNotifications()"><i class="fa-regular fa-bell"></i></button>`:''}<button class="icon-btn language-button" onclick="openLanguageModal()" aria-label="Idioma"><span class="current-language-code">${typeof currentLanguageCode==='function'?currentLanguageCode():'PT'}</span></button><button class="icon-btn" onclick="toggleTheme()"><i class="fa-solid ${state.theme==='dark'?'fa-sun':'fa-moon'}"></i></button></div></div></header>`;
 }
 
 function managerNav(){
@@ -29,6 +29,7 @@ function menuLink(icon,title,desc,action){return `<button class="menu-link" oncl
 function openModal(title,subtitle,body,footer=''){
   document.body.classList.add('modal-open');
   modalRoot.innerHTML=`<div class="modal-backdrop" role="presentation" onclick="if(event.target===this)closeModal()"><div class="modal" role="dialog" aria-modal="true" aria-label="${title}"><div class="modal-head"><div><h2>${title}</h2>${subtitle?`<p>${subtitle}</p>`:''}</div><button class="modal-close" onclick="closeModal()" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button></div>${body}${footer}</div></div>`;
+  if(typeof applyI18n==='function')applyI18n(modalRoot);
   requestAnimationFrame(()=>{const modal=modalRoot.querySelector('.modal');if(modal)modal.scrollTop=0});
 }
 
@@ -37,6 +38,5 @@ function closeModal(){document.body.classList.remove('modal-open');modalRoot.inn
 function infoAccordion(){return `<div class="info-accordion"><details><summary>Como chegar <i class="fa-solid fa-chevron-down"></i></summary><p>A unidade fica em Rodeio/SC. Antes da chegada, confirme com a equipe o melhor transporte e o horário previsto. Dependendo do horário pode haver possibilidade de apoio na chegada.</p></details><details><summary>Acomodação <i class="fa-solid fa-chevron-down"></i></summary><p>Homens utilizam quartos e banheiros compartilhados. Mulheres ficam em quarto e banheiro separados. Wi-Fi, cozinha e lavanderia estão disponíveis.</p></details><details><summary>Refeições <i class="fa-solid fa-chevron-down"></i></summary><p>Todas as refeições são oferecidas na unidade de Rodeio. Avise previamente caso possua alguma restrição alimentar importante.</p></details><details><summary>Rotina da comunidade <i class="fa-solid fa-chevron-down"></i></summary><p>A rotina começa às 06:00 e possui momentos de atividades práticas, reuniões, refeições e atividades noturnas. Ela é flexível devido aos atendimentos terapêuticos e profissionais.</p></details><details><summary>Princípios e religião <i class="fa-solid fa-chevron-down"></i></summary><p>A Casa possui princípios cristãos e momentos de oração. O voluntário não precisa ser cristão nem participar das atividades religiosas.</p></details><details><summary>Convivência e segurança <i class="fa-solid fa-chevron-down"></i></summary><p>Álcool, drogas e cigarros são proibidos. Fotos e vídeos dos acolhidos exigem autorização prévia. Voluntários não exercem funções clínicas, medicamentosas ou terapêuticas.</p></details></div>`}
 
 function logout(){localStorage.removeItem('oleiro-role');location.href=document.body.dataset.root||'../index.html'}
-
 
 function openNotifications(){openModal('Atualizações','Mudanças e pendências recentes',`<div class="list">${state.notifications.map(n=>`<div class="list-item"><div class="metric-icon"><i class="fa-regular fa-bell"></i></div><div class="item-main"><h3>${n.title}</h3><p>${n.text}</p></div></div>`).join('')}</div>`)}
