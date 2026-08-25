@@ -4,14 +4,41 @@
   const dev = new URLSearchParams(location.search).get('dev') === '1';
   if(!dev || typeof state === 'undefined') return;
 
-  state.candidates = [
-    {id:1,name:'Thomas Miller',country:'Alemanha',email:'thomas@email.com',phone:'+49 151 000000',gender:'male',unit:'Rodeio',from:'2026-09-03',to:'2026-09-18',status:'analysis',sessions:9,activities:4,submitted:'Hoje, 14:20'},
-    {id:2,name:'Maria Gómez',country:'Argentina',email:'maria@email.com',phone:'+54 9 11 0000',gender:'female',unit:'Rodeio',from:'2026-09-10',to:'2026-09-25',status:'adjustments',sessions:6,activities:3,submitted:'Ontem'},
-    {id:3,name:'Daniel Costa',country:'Brasil',email:'daniel@email.com',phone:'+55 47 99999-0000',gender:'male',unit:'Rodeio',from:'2026-10-02',to:'2026-10-17',status:'pending',sessions:0,activities:0,submitted:'—'},
-    {id:4,name:'Sophie Martin',country:'França',email:'sophie@email.com',phone:'+33 6 0000',gender:'female',unit:'Rodeio',from:'2026-08-18',to:'2026-09-02',status:'approved',sessions:8,activities:3,submitted:'18/08'},
-    {id:5,name:'Lucas García',country:'Espanha',email:'lucas@email.com',phone:'+34 600 000',gender:'male',unit:'Rodeio',from:'2026-08-20',to:'2026-09-05',status:'approved',sessions:7,activities:4,submitted:'17/08'},
-    {id:6,name:'Alex Brown',country:'Canadá',email:'alex@email.com',phone:'+1 416 000',gender:'male',unit:'Rodeio',from:'2026-09-05',to:'2026-09-20',status:'rejected',sessions:4,activities:2,submitted:'20/08'}
+  state.units = [
+    {id:'rodeio',name:'Rodeio',active:true,acceptingVolunteers:true},
+    {id:'indaial',name:'Indaial',active:false,acceptingVolunteers:false}
   ];
+
+  state.candidates = [
+    {id:1,name:'Thomas Miller',country:'Alemanha',email:'thomas@email.com',phone:'+49 151 000000',gender:'male',unitId:'rodeio',unit:'Rodeio',from:'2026-09-03',to:'2026-09-18',status:'analysis',sessions:9,activities:4,submitted:'Hoje, 14:20'},
+    {id:2,name:'Maria Gómez',country:'Argentina',email:'maria@email.com',phone:'+54 9 11 0000',gender:'female',unitId:'rodeio',unit:'Rodeio',from:'2026-09-10',to:'2026-09-25',status:'adjustments',sessions:6,activities:3,submitted:'Ontem'},
+    {id:3,name:'Daniel Costa',country:'Brasil',email:'daniel@email.com',phone:'+55 47 99999-0000',gender:'male',unitId:'rodeio',unit:'Rodeio',from:'2026-10-02',to:'2026-10-17',status:'pending',sessions:0,activities:0,submitted:'—'},
+    {id:4,name:'Sophie Martin',country:'França',email:'sophie@email.com',phone:'+33 6 0000',gender:'female',unitId:'rodeio',unit:'Rodeio',from:'2026-08-18',to:'2026-09-02',status:'approved',sessions:8,activities:3,submitted:'18/08'},
+    {id:5,name:'Lucas García',country:'Espanha',email:'lucas@email.com',phone:'+34 600 000',gender:'male',unitId:'rodeio',unit:'Rodeio',from:'2026-08-20',to:'2026-09-05',status:'approved',sessions:7,activities:4,submitted:'17/08'},
+    {id:6,name:'Alex Brown',country:'Canadá',email:'alex@email.com',phone:'+1 416 000',gender:'male',unitId:'rodeio',unit:'Rodeio',from:'2026-09-05',to:'2026-09-20',status:'rejected',sessions:4,activities:2,submitted:'20/08'}
+  ];
+
+  const regressionNames=['Ana Souza','Bruno Lima','Camila Torres','Diego Martins','Elena Rossi','Felipe Rocha','Grace Wilson','Hugo Pereira','Isabel Moreno','João Alves','Klara Schmidt','Mateo Ruiz','Nina Costa','Oliver Smith','Paula Silva','Rafael Mendes','Sara López','Victor Santos'];
+  regressionNames.forEach((name,index)=>{
+    const day=6+(index%18);
+    const female=['Ana','Camila','Elena','Grace','Isabel','Klara','Nina','Paula','Sara'].some(first=>name.startsWith(first));
+    state.candidates.push({
+      id:100+index,
+      name,
+      country:index%3===0?'Brasil':index%3===1?'Espanha':'Alemanha',
+      email:`regressao${index+1}@example.com`,
+      phone:'+55 47 90000-0000',
+      gender:female?'female':'male',
+      unitId:'rodeio',
+      unit:'Rodeio',
+      from:`2026-09-${String(day).padStart(2,'0')}`,
+      to:`2026-09-${String(Math.min(28,day+7)).padStart(2,'0')}`,
+      status:index<14?'approved':index<16?'pending':'analysis',
+      sessions:index<14?3+(index%5):0,
+      activities:index<14?2+(index%3):0,
+      submitted:index<14?'Teste regressivo':'—'
+    });
+  });
 
   state.groups = [
     {id:'A',capacity:5,note:'Grupo operacional 1',members:['João','Marcos','André','Paulo','Renato']},
@@ -45,7 +72,12 @@
   };
 
   state.notifications = [
-    {id:1,title:'Cronograma atualizado',text:'Yoga foi movida de 10/09 às 15:15 para 11/09 às 13:45.'},
-    {id:2,title:'Alteração aguardando confirmação',text:'Thomas alterou uma sessão já confirmada.'}
+    {id:1,title:'Cronograma atualizado',text:'Yoga foi movida para um novo horário.'},
+    {id:2,title:'Alteração aguardando confirmação',text:'Thomas alterou uma sessão já confirmada.'},
+    {id:3,title:'Planejamento enviado',text:'Um candidato enviou o planejamento para análise.'},
+    {id:4,title:'Nova proposta',text:'Uma nova sessão foi proposta por um voluntário.'},
+    {id:5,title:'Chegada próxima',text:'Há uma chegada prevista para os próximos dias.'},
+    {id:6,title:'Planejamento reenviado',text:'Um candidato reenviou o planejamento após ajustes.'},
+    {id:7,title:'Mudança de sessão',text:'Uma sessão confirmada recebeu pedido de alteração.'}
   ];
 })();
