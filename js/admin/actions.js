@@ -19,13 +19,20 @@ function personTabContent(p,tab){
   return `<div class="card"><div class="activity-row"><div><span class="eyebrow">Status</span><h3 style="font-size:.88rem;margin-top:5px">${l}</h3></div>${badge(l,t)}</div><div class="stat-row"><span class="stat-pill">${fmtDate(p.from,true)}–${fmtDate(p.to,true)}</span><span class="stat-pill">${p.activities} atividades</span><span class="stat-pill">${p.sessions} sessões</span></div></div><div class="card" style="margin-top:10px"><h3 style="font-size:.78rem">Contato</h3><p style="font-size:.66rem;color:var(--muted);margin-top:6px">${p.email}<br>${p.phone}</p></div>${p.status==='analysis'||p.status==='adjustments'?`<div class="activity-actions" style="margin-top:12px"><button class="btn btn-primary" onclick="approveCandidate(${p.id})">Aprovar</button><button class="btn btn-outline" onclick="requestAdjust(${p.id})">Pedir ajuste</button><button class="btn btn-danger" onclick="rejectCandidate(${p.id})">Recusar</button></div>`:''}${p.status==='rejected'?`<button class="btn btn-soft btn-block" style="margin-top:12px" onclick="reactivateCandidate(${p.id})">Reativar perfil</button>`:''}`;
 }
 
-function approveCandidate(id){const p=state.candidates.find(x=>x.id===id);p.status='approved';closeModal();render();showToast('Candidato aprovado. Estadia confirmada.')}
+function syncPrototypeVolunteer(p,planStatus,mode=null){
+  if(!p||p.name!=='Thomas Miller')return;
+  state.volunteerPlanStatus=planStatus;
+  localStorage.setItem('oleiro-volunteer-plan-status',planStatus);
+  if(mode){state.volunteerMode=mode;localStorage.setItem('oleiro-volunteer-mode',mode)}
+}
 
-function requestAdjust(id){const p=state.candidates.find(x=>x.id===id);p.status='adjustments';closeModal();render();showToast('Planejamento devolvido para ajustes.')}
+function approveCandidate(id){const p=state.candidates.find(x=>x.id===id);p.status='approved';syncPrototypeVolunteer(p,'approved','approved');closeModal();render();showToast('Candidato aprovado. Estadia confirmada.')}
 
-function rejectCandidate(id){const p=state.candidates.find(x=>x.id===id);p.status='rejected';closeModal();state.candidateTab='rejected';render();showToast('Perfil movido para Rejeitados e inativado.')}
+function requestAdjust(id){const p=state.candidates.find(x=>x.id===id);p.status='adjustments';syncPrototypeVolunteer(p,'adjustments','candidate');closeModal();render();showToast('Planejamento devolvido para ajustes. O voluntário poderá reenviar.')}
 
-function reactivateCandidate(id){const p=state.candidates.find(x=>x.id===id);p.status='pending';closeModal();state.candidateTab='candidates';state.candidateFilter='pending';render();showToast('Perfil reativado.')}
+function rejectCandidate(id){const p=state.candidates.find(x=>x.id===id);p.status='rejected';syncPrototypeVolunteer(p,'rejected','candidate');closeModal();state.candidateTab='rejected';render();showToast('Perfil movido para Rejeitados e inativado.')}
+
+function reactivateCandidate(id){const p=state.candidates.find(x=>x.id===id);p.status='pending';syncPrototypeVolunteer(p,'draft','candidate');closeModal();state.candidateTab='candidates';state.candidateFilter='pending';render();showToast('Perfil reativado.')}
 
 function confirmSession(id,date){state.sessionStatus[`${id}-${date}`]='confirmed';render();showToast('Sessão confirmada.')}
 

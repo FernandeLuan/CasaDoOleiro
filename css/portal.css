@@ -1,4 +1,18 @@
-/* Portal: candidato e voluntário */
+/* Portal do voluntário */
 .plan-summary{margin-bottom:12px}
 .portal-actions{display:flex;gap:8px;flex-wrap:wrap}
+.session-count-badge{display:block;flex:0 0 auto;min-width:78px}.session-count-badge .badge{width:100%;justify-content:center;white-space:nowrap}
+
+/* Modal de atividade: ocupa só o necessário e rola internamente */
+.modal.activity-modal{max-height:min(82dvh,680px);overflow:auto;padding-bottom:max(20px,env(safe-area-inset-bottom))}
+.activity-modal-form{padding-bottom:2px}.activity-modal-form .textarea{min-height:72px}.activity-date-grid{max-height:210px;overflow:auto;padding:2px;overscroll-behavior:contain}
+
+/* Perfil */
+.profile-card{display:flex;align-items:center;gap:12px;margin-bottom:12px}.profile-avatar{width:52px;height:52px;border-radius:50%;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;font-weight:700}.profile-card strong{font-size:.86rem}.profile-card p{font-size:.65rem;color:var(--muted);margin-top:2px}.profile-details{display:grid;gap:12px}.profile-details>div{display:grid;gap:3px}.profile-details span{font-size:.6rem;color:var(--muted)}.profile-details strong{font-size:.72rem;overflow-wrap:anywhere}
+
+@media(max-width:420px){
+  .modal.activity-modal{max-height:78dvh}
+  .activity-date-grid{grid-template-columns:1fr 1fr;max-height:190px}
+  .session-count-badge{min-width:84px}
+}
 @media(min-width:760px){.portal-shell{max-width:840px;margin:0 auto}}
