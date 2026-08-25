@@ -7,8 +7,9 @@ function header(_subtitle,showBell=false){return `<header class="app-header simp
 function managerNav(){const items=[['home','fa-house','Início'],['volunteer','fa-users','Voluntariado'],['agenda','fa-calendar-days','Agenda'],['groups','fa-people-group','Grupos'],['menu','fa-bars','Menu']];return `<nav class="bottom-nav">${items.map(([id,ic,tx])=>`<button class="nav-btn ${state.managerPage===id?'active':''}" onclick="navigateManager('${id}')"><i class="fa-solid ${ic}"></i><span>${tx}</span></button>`).join('')}</nav>`;}
 function volunteerNav(){const approved=state.volunteerMode==='approved';const items=approved?[['home','fa-house','Início'],['agenda','fa-calendar-check','Agenda'],['stay','fa-location-dot','Estadia'],['info','fa-circle-info','Informações'],['menu','fa-bars','Menu']]:[['home','fa-house','Início'],['plan','fa-calendar-plus','Planejamento'],['stay','fa-location-dot','Estadia'],['info','fa-circle-info','Informações'],['menu','fa-bars','Menu']];if(approved&&state.volunteerPage==='plan')state.volunteerPage='agenda';return `<nav class="bottom-nav">${items.map(([id,ic,tx])=>`<button class="nav-btn ${state.volunteerPage===id?'active':''}" onclick="navigateVolunteer('${id}')"><i class="fa-solid ${ic}"></i><span>${tx}</span></button>`).join('')}</nav>`;}
 
-/* Comportamento validado de scroll e date picker. */
+/* Comportamento validado de scroll, mobile e date picker. */
 if('scrollRestoration' in history)history.scrollRestoration='manual';
+document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
 scrollPageTop=function(){const reset=()=>{window.scrollTo(0,0);document.documentElement.scrollTop=0;document.body.scrollTop=0;const page=document.querySelector('.page');if(page){page.scrollTop=0;page.scrollLeft=0}};reset();requestAnimationFrame(reset);setTimeout(reset,60);};
 navigateManager=function(page){state.managerPage=page;if(page==='agenda'){state.agendaFrom=_oleiroToday;state.agendaTo=_oleiroToday;state.agendaAnchor=_oleiroToday;state.selectedDate=_oleiroToday;}render();scrollPageTop();};
 navigateVolunteer=function(page){state.volunteerPage=page;render();scrollPageTop();};
