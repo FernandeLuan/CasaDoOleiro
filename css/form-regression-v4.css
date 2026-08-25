@@ -1,0 +1,46 @@
+/* Ajustes finais de enquadramento dos formulários — mobile e desktop */
+.btn:disabled{opacity:.45;cursor:not-allowed;filter:saturate(.7)}
+
+.new-candidate-modal .field label,
+.activity-modal .field label{font-size:13px!important;line-height:1.3!important;margin-bottom:8px!important}
+
+.new-candidate-modal .input,
+.new-candidate-modal .select,
+.activity-modal .input,
+.activity-modal .select{min-height:48px!important;height:48px!important;padding:0 14px!important;line-height:48px!important;border-radius:13px!important}
+
+.new-candidate-modal .textarea,
+.activity-modal .textarea{height:auto!important;min-height:86px!important;padding:12px 14px!important;line-height:1.45!important}
+
+.new-candidate-modal .form-grid,
+.activity-modal .form-grid{gap:17px!important}
+.new-candidate-modal .field-row,
+.activity-modal .field-row{gap:14px!important}
+
+.new-candidate-modal input[type="date"],
+.activity-modal input[type="time"]{appearance:auto;-webkit-appearance:auto;min-height:48px!important;height:48px!important;line-height:normal!important;padding-top:0!important;padding-bottom:0!important}
+
+.activity-date-grid{gap:10px!important;padding:2px!important}
+.activity-date-grid .check-card{min-height:54px!important;height:auto!important;padding:11px 13px!important;border-radius:13px!important;align-items:center!important}
+.activity-date-grid .check-card input{width:19px!important;height:19px!important;flex:0 0 19px!important;margin:0!important}
+.activity-date-grid .check-card span{font-size:12px!important;line-height:1.25!important;white-space:nowrap!important;overflow:visible!important;text-overflow:clip!important}
+
+/* Contador de sessões nunca deve quebrar em duas linhas */
+.badge{white-space:nowrap!important}
+.person-tabs + .list .activity-row>.badge.primary,
+.person-tabs + .list .activity-row>.session-count-badge{flex:0 0 auto!important;min-width:88px!important;justify-content:center!important;white-space:nowrap!important}
+
+@media(max-width:520px){
+  .new-candidate-modal .modal-body,
+  .activity-modal .modal-body{padding-left:20px!important;padding-right:20px!important}
+  .new-candidate-modal .field-row,
+  .activity-modal .field-row{grid-template-columns:1fr!important;gap:16px!important}
+  .activity-date-grid{grid-template-columns:1fr!important;gap:10px!important}
+  .activity-date-grid .check-card{min-height:52px!important;padding:10px 13px!important}
+}
+
+@media(min-width:760px){
+  .new-candidate-modal .field-row,
+  .activity-modal .field-row{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .activity-date-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
