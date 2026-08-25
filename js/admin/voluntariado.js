@@ -40,7 +40,7 @@ function candidateListHtml(list){return list.length?list.map(personCompact).join
 function updateCandidateSearch(value){
   state.candidateSearch=value;
   const list=document.getElementById('candidateList');
-  if(list)list.innerHTML=candidateListHtml(getFilteredCandidates());
+  if(list){list.innerHTML=candidateListHtml(getFilteredCandidates());if(typeof applyI18n==='function')applyI18n(list)}
 }
 
 function countFilter(id){
