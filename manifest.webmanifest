@@ -1,10 +1,16 @@
 {
+  "id": "./",
   "name": "Casa do Oleiro",
   "short_name": "Casa do Oleiro",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
+  "display_override": ["standalone"],
   "background_color": "#f5f4ef",
   "theme_color": "#315f48",
-  "description": "Portal de gestão e planejamento do programa de voluntariado da Casa do Oleiro."
+  "description": "Portal de gestão e planejamento do programa de voluntariado da Casa do Oleiro.",
+  "icons": [
+    {"src": "icons/icon-180.png", "sizes": "180x180", "type": "image/png", "purpose": "any"},
+    {"src": "icons/icon-512.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}
+  ]
 }
