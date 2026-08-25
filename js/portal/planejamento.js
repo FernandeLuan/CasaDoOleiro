@@ -17,9 +17,8 @@ function volunteerPlan(){
       :`<button class="btn btn-primary btn-block" style="margin-top:12px" onclick="submitPlan()"><i class="fa-solid fa-paper-plane"></i>${status==='adjustments'?'Reenviar planejamento':'Enviar planejamento'}</button>`;
 
   return `<section class="section"><div class="section-head"><div><span class="eyebrow">03–18 SET</span><h2>Meu planejamento</h2><p>Datas e horários são sugestões até a confirmação da Casa</p></div></div>
-  <div class="segment"><button class="${state.planView==='agenda'?'active':''}" onclick="state.planView='agenda';render()">Agenda</button><button class="${state.planView==='activities'?'active':''}" onclick="state.planView='activities';render()">Atividades</button></div>
   <div class="notice ${status==='adjustments'?'warning':''}"><i class="fa-solid fa-circle-info"></i><div>${notice}</div></div>
-  <div style="margin-top:14px">${state.planView==='agenda'?volunteerAgendaContent(editable):activityList(editable)}</div>
+  <div style="margin-top:14px">${volunteerAgendaContent(editable)}</div>
   <div class="card plan-summary" style="margin-top:14px"><span class="eyebrow">Resumo</span><div class="stat-row"><span class="stat-pill">${acts.length} atividades</span><span class="stat-pill">${acts.reduce((s,a)=>s+a.dates.length,0)} sessões</span><span class="stat-pill">${(acts.reduce((s,a)=>s+a.duration*a.dates.length,0)/60).toFixed(1).replace('.',',')}h planejadas</span></div>${submitButton}</div></section>`;
 }
 
