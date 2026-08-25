@@ -6,37 +6,40 @@ function candidateLifecycleStore(){
 function candidateDeadlineFrom(base=new Date(),days=7){
   const d=new Date(base);
   d.setDate(d.getDate()+days);
-  d.setHours(23,59,59,999);
   return d.toISOString();
 }
 function saveCandidateLifecycle(p){
+  if(!p)return;
   const store=candidateLifecycleStore();
-  store[p.id]={status:p.status,pendingUntil:p.pendingUntil||null,inactive:!!p.inactive,rejectedReason:p.rejectedReason||'',rejectedAt:p.rejectedAt||null,autoRejected:!!p.autoRejected};
+  store[String(p.id)]={status:p.status,pendingUntil:p.pendingUntil||null,inactive:!!p.inactive,rejectedReason:p.rejectedReason||'',rejectedAt:p.rejectedAt||null,autoRejected:!!p.autoRejected};
   localStorage.setItem(CANDIDATE_LIFECYCLE_KEY,JSON.stringify(store));
 }
 function hydrateCandidateLifecycle(){
   const store=candidateLifecycleStore();
   state.candidates.forEach(p=>{
-    if(store[p.id])Object.assign(p,store[p.id]);
+    const saved=store[String(p.id)];
+    if(saved)Object.assign(p,saved);
     if(p.status==='pending'&&!p.pendingUntil){
       p.pendingUntil=candidateDeadlineFrom(new Date(),7);
       p.inactive=false;
       saveCandidateLifecycle(p);
     }
   });
-  applyCandidateDeadlines();
 }
-function applyCandidateDeadlines(){
+function rejectCandidateRecord(id,reason,autoRejected=false){
+  const p=state.candidates.find(x=>String(x.id)===String(id));
+  if(!p)return null;
+  p.status='rejected';p.inactive=true;p.autoRejected=!!autoRejected;p.pendingUntil=null;p.rejectedReason=reason;p.rejectedAt=new Date().toISOString();
+  saveCandidateLifecycle(p);
+  if(typeof syncPrototypeVolunteer==='function')syncPrototypeVolunteer(p,'rejected','candidate');
+  return p;
+}
+function processExpiredCandidatesOnStartup(){
   const now=Date.now();
   state.candidates.forEach(p=>{
     if(p.status!=='pending'||!p.pendingUntil)return;
     const deadline=new Date(p.pendingUntil).getTime();
-    if(Number.isFinite(deadline)&&deadline<now){
-      p.status='rejected';p.inactive=true;p.autoRejected=true;
-      p.rejectedReason='Prazo de 7 dias para envio do planejamento expirado.';
-      p.rejectedAt=new Date().toISOString();p.pendingUntil=null;
-      saveCandidateLifecycle(p);
-    }
+    if(Number.isFinite(deadline)&&deadline<now)rejectCandidateRecord(p.id,'Prazo de 7 dias para envio do planejamento expirado.',true);
   });
 }
 function candidateDeadlineMeta(p){
@@ -53,23 +56,22 @@ function candidatePendingPanel(p){
   return `<div class="candidate-lifecycle-panel"><div class="candidate-deadline-card"><i class="fa-regular fa-clock"></i><div><strong>Prazo para enviar o planejamento</strong><p>${meta.date} • ${meta.label}. Se o prazo vencer sem envio, o perfil é recusado e inativado automaticamente.</p></div></div><div class="candidate-lifecycle-actions"><button class="btn btn-soft" type="button" onclick="extendCandidateDeadline(${p.id})"><i class="fa-solid fa-clock-rotate-left"></i>Prorrogar +7 dias</button><button class="btn btn-danger" type="button" onclick="requestRejectPendingCandidate(${p.id})"><i class="fa-solid fa-user-slash"></i>Recusar e inativar</button></div></div>`;
 }
 function extendCandidateDeadline(id){
-  const p=state.candidates.find(x=>x.id===id);if(!p)return;
+  const p=state.candidates.find(x=>String(x.id)===String(id));if(!p)return;
   const current=p.pendingUntil?new Date(p.pendingUntil):new Date();
   const base=current.getTime()>Date.now()?current:new Date();
   p.pendingUntil=candidateDeadlineFrom(base,7);p.status='pending';p.inactive=false;p.autoRejected=false;p.rejectedReason='';p.rejectedAt=null;
-  saveCandidateLifecycle(p);openPerson(id,'overview');showToast('Prazo prorrogado por mais 7 dias.');
+  saveCandidateLifecycle(p);openPerson(p.id,'overview');showToast('Prazo prorrogado por mais 7 dias.');
 }
 function requestRejectPendingCandidate(id){
-  const p=state.candidates.find(x=>x.id===id);if(!p)return;
+  const p=state.candidates.find(x=>String(x.id)===String(id));if(!p)return;
   openModal('Recusar e inativar?','O acesso ficará inativo até uma reativação manual.',`<div class="confirm-delete-content"><div class="confirm-person"><i class="fa-solid fa-user-slash"></i><strong>${p.name}</strong></div><div class="confirm-delete-actions"><button class="btn btn-outline" type="button" onclick="openPerson(${id},'overview')">Cancelar</button><button class="btn btn-danger" type="button" onclick="confirmRejectPendingCandidate(${id})">Recusar e inativar</button></div></div>`);
 }
 function confirmRejectPendingCandidate(id){
-  const p=state.candidates.find(x=>x.id===id);if(!p)return;
-  p.status='rejected';p.inactive=true;p.autoRejected=false;p.pendingUntil=null;p.rejectedReason='Recusado pela gestão antes do envio do planejamento.';p.rejectedAt=new Date().toISOString();
-  saveCandidateLifecycle(p);closeModal();state.candidateFilter='rejected';render();scrollPageTop();showToast('Perfil recusado e inativado.');
+  const p=rejectCandidateRecord(id,'Recusado pela gestão antes do envio do planejamento.',false);if(!p)return;
+  closeModal();state.candidateFilter='rejected';render();scrollPageTop();showToast(`${p.name} foi recusado e inativado.`);
 }
 function reactivateCandidate(id){
-  const p=state.candidates.find(x=>x.id===id);if(!p)return;
+  const p=state.candidates.find(x=>String(x.id)===String(id));if(!p)return;
   p.status='pending';p.inactive=false;p.autoRejected=false;p.pendingUntil=candidateDeadlineFrom(new Date(),7);p.rejectedReason='';p.rejectedAt=null;p.submitted='—';
   saveCandidateLifecycle(p);
   if(typeof syncPrototypeVolunteer==='function')syncPrototypeVolunteer(p,'draft','candidate');
@@ -78,7 +80,6 @@ function reactivateCandidate(id){
 
 const _candidateBasePersonTabContent=personTabContent;
 personTabContent=function(p,tab){
-  applyCandidateDeadlines();
   let html=_candidateBasePersonTabContent(p,tab);
   if(p.status==='pending'&&(tab==='overview'||tab==='plan'))html+=candidatePendingPanel(p);
   if(p.status==='rejected'&&p.rejectedReason&&(tab==='overview'||tab==='history'))html+=`<div class="lifecycle-reason"><strong>Motivo da inativação:</strong><br>${p.rejectedReason}</div>`;
@@ -86,7 +87,6 @@ personTabContent=function(p,tab){
 };
 
 personCompact=function(p){
-  applyCandidateDeadlines();
   const [l,t]=statusMeta(p.status);const meta=p.status==='pending'?candidateDeadlineMeta(p):null;
   const extra=meta?`<div class="candidate-deadline-mini"><i class="fa-regular fa-clock"></i>${meta.label}</div>`:'';
   const inactive=p.inactive?badge('Inativo','danger'):'';
@@ -107,3 +107,4 @@ saveCandidate=function(){
 };
 
 hydrateCandidateLifecycle();
+processExpiredCandidatesOnStartup();

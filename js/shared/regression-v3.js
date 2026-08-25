@@ -24,6 +24,6 @@ function openDatePicker(inputOrId){
   try{if(typeof input.showPicker==='function')input.showPicker();else{input.focus();input.click()}}catch{input.focus()}
 }
 document.addEventListener('click',event=>{
-  const input=event.target.closest?.('input[type="date"]');
+  const input=event.target.closest?.('input[type="date"]')||event.target.closest?.('.date-field,.field')?.querySelector?.('input[type="date"]');
   if(input)openDatePicker(input);
 });

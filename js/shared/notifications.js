@@ -2,7 +2,7 @@ const OLEIRO_DISMISSED_NOTIFICATIONS_KEY='oleiro-dismissed-notifications-v2';
 const OLEIRO_MAX_DISMISSED_NOTIFICATIONS=80;
 
 function dismissedNotificationIds(){
-  try{return new Set(JSON.parse(localStorage.getItem(OLEIRO_DISMISSED_NOTIFICATIONS_KEY)||'[]'))}catch{return new Set()}
+  try{return new Set(JSON.parse(localStorage.getItem(OLEIRO_DISMISSED_NOTIFICATIONS_KEY)||'[]').map(String))}catch{return new Set()}
 }
 function persistDismissedNotifications(ids){
   const bounded=[...ids].slice(-OLEIRO_MAX_DISMISSED_NOTIFICATIONS);
@@ -10,29 +10,30 @@ function persistDismissedNotifications(ids){
 }
 function pruneDismissedNotifications(){
   const dismissed=dismissedNotificationIds();
-  state.notifications=state.notifications.filter(n=>!dismissed.has(n.id));
+  state.notifications=state.notifications.filter(n=>!dismissed.has(String(n.id)));
 }
 function notificationUnreadCount(){pruneDismissedNotifications();return state.notifications.length}
 function dismissNotification(id){
   const dismissed=dismissedNotificationIds();
-  dismissed.add(id);
+  dismissed.add(String(id));
   persistDismissedNotifications(dismissed);
-  state.notifications=state.notifications.filter(n=>n.id!==id);
+  state.notifications=state.notifications.filter(n=>String(n.id)!==String(id));
+  if(state.notifications.length)openNotifications();
+  else closeModal();
   render();
-  openNotifications();
 }
 function dismissAllNotifications(){
   const dismissed=dismissedNotificationIds();
-  state.notifications.forEach(n=>dismissed.add(n.id));
+  state.notifications.forEach(n=>dismissed.add(String(n.id)));
   persistDismissedNotifications(dismissed);
   state.notifications=[];
+  closeModal();
   render();
-  openNotifications();
 }
 function openNotifications(){
   pruneDismissedNotifications();
   const count=state.notifications.length;
-  const items=count?state.notifications.map(n=>`<div class="notification-row is-unread"><div class="notification-icon"><i class="fa-regular fa-bell"></i></div><div class="notification-copy"><strong>${n.title}</strong><p>${n.text}</p></div><div class="notification-action"><button class="notification-read-btn" type="button" onclick="dismissNotification(${n.id})">Marcar como lida</button></div></div>`).join(''):'<div class="empty"><i class="fa-regular fa-bell-slash"></i>Nenhuma notificação pendente.</div>';
+  const items=count?state.notifications.map(n=>`<div class="notification-row is-unread"><div class="notification-icon"><i class="fa-regular fa-bell"></i></div><div class="notification-copy"><strong>${n.title}</strong><p>${n.text}</p></div><div class="notification-action"><button class="notification-read-btn" type="button" onclick="dismissNotification(${JSON.stringify(n.id)})">Marcar como lida</button></div></div>`).join(''):'<div class="empty"><i class="fa-regular fa-bell-slash"></i>Nenhuma notificação pendente.</div>';
   openModal('Atualizações',count?`${count} ${count===1?'pendente':'pendentes'}`:'Tudo em dia',`<div class="notification-list">${items}</div>${count>1?'<button class="btn btn-soft btn-block notifications-read-all" type="button" onclick="dismissAllNotifications()"><i class="fa-solid fa-check-double"></i>Marcar todas como lidas</button>':''}`);
   modalRoot.querySelector('.modal')?.classList.add('notifications-modal');
 }
