@@ -16,7 +16,8 @@ function managerAgenda(){
 
 function dateStrip(dates=null){
   dates=dates||dateRange(state.agendaAnchor,7);
-  return `<div class="calendar-strip">${dates.map(d=>`<button class="date-chip ${state.selectedDate===d?'active':''}" onclick="jumpAgenda('${d}')"><span>${dayName(d)}</span><strong>${new Date(d+'T12:00:00').getDate()}</strong><span>${new Intl.DateTimeFormat('pt-BR',{month:'short'}).format(new Date(d+'T12:00:00')).replace('.','').toUpperCase()}</span></button>`).join('')}</div>`;
+  const locale=typeof currentLocale==='function'?currentLocale():'pt-BR';
+  return `<div class="calendar-strip">${dates.map(d=>`<button class="date-chip ${state.selectedDate===d?'active':''}" onclick="jumpAgenda('${d}')"><span>${dayName(d)}</span><strong>${new Date(d+'T12:00:00').getDate()}</strong><span>${new Intl.DateTimeFormat(locale,{month:'short'}).format(new Date(d+'T12:00:00')).replace('.','').toUpperCase()}</span></button>`).join('')}</div>`;
 }
 
 function renderDays(manager=false,dates=null){
