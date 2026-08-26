@@ -1,70 +1,31 @@
 function volunteerPlan(){
-  const acts=volunteerActivities();
-  const status=state.volunteerPlanStatus||'draft';
-  const approved=state.volunteerMode==='approved';
-  const editable=!approved&&(status==='draft'||status==='adjustments');
-  const dates=volunteerStayDates();
-  const periodLabel=dates.length?`${fmtDate(dates[0],true)}–${fmtDate(dates[dates.length-1],true)}`:'Período a confirmar';
-  const notice=approved
-    ?'Seu planejamento aprovado está disponível para consulta. Mudanças na agenda confirmada precisam de nova confirmação da Casa.'
-    :status==='submitted'
-      ?'Planejamento enviado. Enquanto a equipe estiver analisando, atividades e sessões ficam bloqueadas para edição.'
-      :status==='adjustments'
-        ?'A equipe solicitou ajustes. Faça as alterações necessárias e reenvie o planejamento para uma nova análise.'
-        :'Monte o planejamento pelos dias da sua estadia. Você poderá editar tudo até realizar o primeiro envio.';
-  const submitButton=approved
-    ?`<button class="btn btn-soft btn-block" style="margin-top:12px" disabled><i class="fa-solid fa-circle-check"></i>Planejamento aprovado</button>`
-    :status==='submitted'
-      ?`<button class="btn btn-soft btn-block" style="margin-top:12px" disabled><i class="fa-solid fa-paper-plane"></i>Enviado</button>`
-      :`<button class="btn btn-primary btn-block" style="margin-top:12px" onclick="submitPlan()"><i class="fa-solid fa-paper-plane"></i>${status==='adjustments'?'Reenviar planejamento':'Enviar planejamento'}</button>`;
-
-  return `<section class="section"><div class="section-head"><div><span class="eyebrow">${periodLabel}</span><h2>Meu planejamento</h2><p>Datas e horários são sugestões até a confirmação da Casa</p></div></div>
-  <div class="notice ${status==='adjustments'?'warning':''}"><i class="fa-solid fa-circle-info"></i><div>${notice}</div></div>
-  <div style="margin-top:14px">${volunteerAgendaContent(editable)}</div>
-  <div class="card plan-summary" style="margin-top:14px"><span class="eyebrow">Resumo</span><div class="stat-row"><span class="stat-pill">${acts.length} atividades</span><span class="stat-pill">${acts.reduce((s,a)=>s+(a.dates||[]).length,0)} sessões</span><span class="stat-pill">${(acts.reduce((s,a)=>s+(Number(a.duration)||0)*(a.dates||[]).length,0)/60).toFixed(1).replace('.',',')}h planejadas</span></div>${submitButton}</div></section>`;
+  const acts=volunteerActivities();const status=state.volunteerPlanStatus||'draft';const approved=state.volunteerMode==='approved';const editable=!approved&&(status==='draft'||status==='adjustments');const dates=volunteerStayDates();const periodLabel=dates.length?`${fmtDate(dates[0],true)}–${fmtDate(dates[dates.length-1],true)}`:'Período a confirmar';
+  const notice=approved?'Seu planejamento aprovado está disponível para consulta. Mudanças em sessões confirmadas precisam de nova confirmação da Casa.':status==='submitted'?'Planejamento enviado. Enquanto a equipe estiver analisando, atividades e sessões ficam bloqueadas para edição.':status==='adjustments'?'A equipe solicitou ajustes. Faça as alterações necessárias e reenvie o planejamento para uma nova análise.':'Monte o planejamento pelos dias da sua estadia. Você poderá editar tudo até realizar o primeiro envio.';
+  const submitButton=approved?`<button class="btn btn-soft btn-block" style="margin-top:12px" disabled><i class="fa-solid fa-circle-check"></i>Planejamento aprovado</button>`:status==='submitted'?`<button class="btn btn-soft btn-block" style="margin-top:12px" disabled><i class="fa-solid fa-paper-plane"></i>Enviado</button>`:`<button class="btn btn-primary btn-block" style="margin-top:12px" onclick="submitPlan()"><i class="fa-solid fa-paper-plane"></i>${status==='adjustments'?'Reenviar planejamento':'Enviar planejamento'}</button>`;
+  return `<section class="section"><div class="section-head"><div><span class="eyebrow">${periodLabel}</span><h2>Meu planejamento</h2><p>Datas e horários são sugestões até a confirmação da Casa</p></div></div><div class="notice ${status==='adjustments'?'warning':''}"><i class="fa-solid fa-circle-info"></i><div>${notice}</div></div><div style="margin-top:14px">${volunteerAgendaContent(editable)}</div><div class="card plan-summary" style="margin-top:14px"><span class="eyebrow">Resumo</span><div class="stat-row"><span class="stat-pill">${acts.length} atividades</span><span class="stat-pill">${acts.reduce((s,a)=>s+(a.dates||[]).length,0)} sessões</span><span class="stat-pill">${(acts.reduce((s,a)=>s+(Number(a.duration)||0)*(a.dates||[]).length,0)/60).toFixed(1).replace('.',',')}h planejadas</span></div>${submitButton}</div></section>`;
 }
-
 function calendarMonthLabel(date){const locale=typeof currentLocale==='function'?currentLocale():'pt-BR';return new Intl.DateTimeFormat(locale,{month:'short'}).format(new Date(date+'T12:00:00')).replace('.','').toUpperCase()}
 function volunteerAgendaContent(editable=false){
-  const dates=volunteerStayDates();
-  if(!dates.length)return '<div class="empty"><i class="fa-regular fa-calendar-xmark"></i>O período da estadia ainda não foi definido.</div>';
-  return `<div class="calendar-strip">${dates.map(d=>`<button class="date-chip" onclick="document.getElementById('vday-${d}').scrollIntoView({behavior:'smooth',block:'start'})"><span>${dayName(d)}</span><strong>${new Date(d+'T12:00:00').getDate()}</strong><span>${calendarMonthLabel(d)}</span></button>`).join('')}</div><div style="margin-top:14px">${dates.map(d=>{const ss=getSessions(d,true);return `<div class="day-block" id="vday-${d}"><div class="day-title"><h3>${dayName(d)}, ${fmtDate(d)}</h3><span>${ss.length?((ss.reduce((x,s)=>x+(Number(s.activity.duration)||0),0)/60)+'h'):''}</span></div>${ss.map(s=>sessionCardVolunteer(s,editable)).join('')||'<div class="empty">Nenhuma atividade planejada.</div>'}${editable?`<button class="btn btn-soft btn-block" style="margin-top:6px" onclick="openActivityModal('${d}')"><i class="fa-solid fa-plus"></i>Adicionar atividade</button>`:''}</div>`}).join('')}</div>`;
+  const dates=volunteerStayDates();if(!dates.length)return '<div class="empty"><i class="fa-regular fa-calendar-xmark"></i>O período da estadia ainda não foi definido.</div>';
+  return `<div class="calendar-strip">${dates.map(d=>`<button class="date-chip" onclick="document.getElementById('vday-${d}').scrollIntoView({behavior:'smooth',block:'start'})"><span>${dayName(d)}</span><strong>${new Date(d+'T12:00:00').getDate()}</strong><span>${calendarMonthLabel(d)}</span></button>`).join('')}</div><div style="margin-top:14px">${dates.map(d=>{const ss=getSessions(d,true);return `<div class="day-block" id="vday-${d}"><div class="day-title"><h3>${dayName(d)}, ${fmtDate(d)}</h3><span>${ss.length?((ss.reduce((x,s)=>x+(Number(s.activity.duration)||0),0)/60)+'h'):''}</span></div>${ss.map(s=>sessionCardVolunteer(s,editable)).join('')||'<div class="empty">Nenhuma atividade planejada.</div>'}${editable&&state.volunteerMode!=='approved'?`<button class="btn btn-soft btn-block" style="margin-top:6px" onclick="openActivityModal('${d}')"><i class="fa-solid fa-plus"></i>Adicionar atividade</button>`:''}</div>`}).join('')}</div>`;
 }
-
 function sessionCardVolunteer(s,editable){
-  const [l,t]=statusMeta(s.status);
-  return `<div class="activity-card"><div class="activity-row"><div><h4>${s.activity.time||'—'} • ${s.activity.name}</h4><p>${Number(s.activity.duration)||0} min • ${s.activity.period||'Sem preferência'}</p></div>${badge(l,t)}</div>${editable?`<div class="activity-actions"><button class="btn btn-outline" onclick='openActivityModal(${JSON.stringify(s.date)},${JSON.stringify(s.activity.id)})'>Editar</button><button class="btn btn-outline" onclick='moveSession(${JSON.stringify(s.activity.id)},${JSON.stringify(s.date)},true)'>Mover</button></div>`:''}</div>`
+  const [l,t]=statusMeta(s.status);const candidateEdit=editable&&state.volunteerMode!=='approved';const approvedMove=editable&&state.volunteerMode==='approved';
+  const actions=candidateEdit?`<div class="activity-actions"><button class="btn btn-outline" onclick='openActivityModal(${JSON.stringify(s.date)},${JSON.stringify(s.activity.id)})'>Editar</button><button class="btn btn-outline" onclick='moveSession(${JSON.stringify(s.activity.id)},${JSON.stringify(s.date)},true)'>Mover</button></div>`:approvedMove?`<div class="activity-actions"><button class="btn btn-outline" onclick='moveSession(${JSON.stringify(s.activity.id)},${JSON.stringify(s.date)},true)'>Solicitar mudança</button></div>`:'';
+  return `<div class="activity-card"><div class="activity-row"><div><h4>${s.activity.time||'—'} • ${escapeHtml(s.activity.name||'Atividade')}</h4><p>${Number(s.activity.duration)||0} min • ${escapeHtml(s.activity.period||'Sem preferência')}</p></div>${badge(l,t)}</div>${actions}</div>`
 }
-
 async function saveActivity(id){
+  if(state.volunteerMode==='approved')return showToast('Após a aprovação, mudanças devem ser solicitadas pela agenda.');
+  if(!['draft','adjustments'].includes(state.volunteerPlanStatus||'draft'))return showToast('O planejamento está bloqueado para edição.');
   const dates=[...document.querySelectorAll('input[name="actDate"]:checked')].map(x=>x.value);
-  const data={
-    name:document.getElementById('actName')?.value.trim()||'',description:document.getElementById('actDesc')?.value.trim()||'',
-    duration:+document.getElementById('actDuration')?.value||60,participation:document.getElementById('actParticipation')?.value||'Livre',
-    materials:document.getElementById('actMaterials')?.value.trim()||'Nenhum',notes:document.getElementById('actNotes')?.value.trim()||'',
-    period:document.getElementById('actPeriod')?.value||'Sem preferência',time:document.getElementById('actTime')?.value||'15:15'
-  };
-  if(!data.name)return showToast('Informe o nome da atividade.');
-  if(!dates.length)return showToast('Selecione pelo menos uma data.');
-  const application=state.currentApplication;const session=state.currentSession;
-  if(!application?.id||!session?.uid)return showToast('Sessão de voluntariado inválida.');
-  try{
-    await window.OleiroServices.planning.saveActivity({activityId:id,applicationId:application.id,unitId:application.unitId,createdByUid:session.uid,data,dates,existingSessions:state.sessions||[]});
-    closeModal();await hydrateVolunteerPlanning(application);render();showToast(id?'Atividade atualizada.':'Atividade adicionada ao planejamento.');
-  }catch(error){console.error(error);showToast(error?.message||'Não foi possível salvar a atividade.')}
+  const data={name:document.getElementById('actName')?.value.trim()||'',description:document.getElementById('actDesc')?.value.trim()||'',duration:+document.getElementById('actDuration')?.value||60,participation:document.getElementById('actParticipation')?.value||'Livre',materials:document.getElementById('actMaterials')?.value.trim()||'Nenhum',notes:document.getElementById('actNotes')?.value.trim()||'',period:document.getElementById('actPeriod')?.value||'Sem preferência',time:document.getElementById('actTime')?.value||'15:15'};
+  if(!data.name)return showToast('Informe o nome da atividade.');if(!dates.length)return showToast('Selecione pelo menos uma data.');
+  const application=state.currentApplication,session=state.currentSession;if(!application?.id||!session?.uid)return showToast('Sessão de voluntariado inválida.');
+  const ownerName=typeof volunteerProfileName==='function'?volunteerProfileName():(session.profile?.name||session.email||'Voluntário');
+  try{await window.OleiroServices.planning.saveActivity({activityId:id,applicationId:application.id,unitId:application.unitId,createdByUid:session.uid,ownerName,data,dates,existingSessions:state.sessions||[]});closeModal();await hydrateVolunteerPlanning(application);render();showToast(id?'Atividade atualizada.':'Atividade adicionada ao planejamento.')}catch(error){console.error(error);showToast(error?.message||'Não foi possível salvar a atividade.')}
 }
-
 async function submitPlan(){
-  const acts=volunteerActivities();
-  if(!acts.length)return showToast('Adicione pelo menos uma atividade antes de enviar.');
-  const application=state.currentApplication;if(!application?.id)return showToast('Candidatura não encontrada.');
-  const wasAdjustment=state.volunteerPlanStatus==='adjustments';
-  try{
-    await window.OleiroServices.applications.submitPlanning(application.id,{wasAdjustment});
-    const fresh=await window.OleiroServices.applications.getById(application.id);
-    if(fresh){state.currentApplication=fresh;state.volunteerPlanStatus='submitted'}
-    render();showToast(wasAdjustment?'Planejamento reenviado para análise.':'Planejamento enviado para análise.');
-  }catch(error){console.error(error);showToast(error?.message||'Não foi possível enviar o planejamento.')}
+  const acts=volunteerActivities();if(!acts.length)return showToast('Adicione pelo menos uma atividade antes de enviar.');const application=state.currentApplication;if(!application?.id)return showToast('Candidatura não encontrada.');const wasAdjustment=state.volunteerPlanStatus==='adjustments';
+  try{await window.OleiroServices.applications.submitPlanning(application.id,{wasAdjustment});const fresh=await window.OleiroServices.applications.getById(application.id);if(fresh){state.currentApplication=fresh;if(state.currentSession)state.currentSession.application=fresh;state.volunteerPlanStatus='submitted'}render();showToast(wasAdjustment?'Planejamento reenviado para análise.':'Planejamento enviado para análise.')}catch(error){console.error(error);showToast(error?.message||'Não foi possível enviar o planejamento.')}
 }
-
 function openQuickSession(date=null){openActivityModal(date||volunteerStayDates()[0]||null)}
