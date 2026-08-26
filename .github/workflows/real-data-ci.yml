@@ -35,11 +35,27 @@ jobs:
           grep -q '../js/shared/round3-services.js' portal/index.html
           grep -q '../js/admin/round3-ui.js' admin/index.html
           grep -q '../js/portal/round3-ui.js' portal/index.html
-          grep -q 'Compartilhar no WhatsApp' js/admin/round3-ui.js
-          grep -q 'password-visibility' js/login-round3.js
           test ! -e inactive.html
           if grep -RIn 'inactive.html' index.html admin portal js; then
             echo 'Obsolete inactive route found.'
+            exit 1
+          fi
+
+      - name: Check round 4 integration
+        shell: bash
+        run: |
+          grep -q 'css/round4.css' index.html
+          grep -q '../css/round4.css' admin/index.html
+          grep -q '../css/round4.css' portal/index.html
+          grep -q 'js/login-round4.js' index.html
+          grep -q '../js/admin/round4-ui.js' admin/index.html
+          grep -q '../js/portal/round4-ui.js' portal/index.html
+          grep -q 'Solicitar ajuste neste dia' js/admin/round4-ui.js
+          grep -q 'stay-support-link' js/portal/round4-ui.js
+          test ! -e js/shared/notifications.js
+          test ! -e js/services/attention-service.js
+          if grep -RInE 'notifications\.js|attention-service\.js|openNotifications\(' index.html admin portal js; then
+            echo 'Notification UI/service residue found.'
             exit 1
           fi
 
