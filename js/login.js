@@ -2,7 +2,7 @@
 setLanguage=function(lang){const next=typeof normalizeOleiroLanguage==='function'?(normalizeOleiroLanguage(lang)||'pt'):lang;localStorage.setItem('oleiro-language',next);if(typeof closeLanguageModal==='function')closeLanguageModal();location.reload();};
 
 let loginTransitionTimer=null;
-function destinationFor(role){if(role==='manager')return 'admin/';if(role==='volunteer')return 'portal/';return 'inactive.html'}
+function destinationFor(role){if(role==='manager')return 'admin/';if(role==='volunteer')return 'portal/';return 'index.html'}
 function startLoginTransition(role){if(loginTransitionTimer)return;const overlay=document.getElementById('loginLoading');const button=document.getElementById('loginButton');if(button)button.disabled=true;if(overlay)overlay.hidden=false;loginTransitionTimer=setTimeout(()=>{location.href=destinationFor(role)},850)}
 async function handleLogin(){
   const email=document.getElementById('email')?.value.trim()||'';
