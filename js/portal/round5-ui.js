@@ -1,5 +1,10 @@
 /* Round 5 — Portal: reenvio encerra ajuste, estadia mais limpa e próxima atividade sem botão redundante. */
 (function round5Portal(){
+  volunteerDayAdjustment=function(date){
+    if(state.volunteerPlanStatus!=='adjustments')return null;
+    const rows=state.currentApplication?.dayAdjustments;return rows&&typeof rows==='object'?rows[date]||null:null;
+  };
+
   submitPlan=async function(){
     const acts=volunteerActivities();if(!acts.length||(state.sessions||[]).length===0)return showToast('Adicione pelo menos uma atividade antes de enviar.');
     const application=state.currentApplication;if(!application?.id)return showToast('Candidatura não encontrada.');
