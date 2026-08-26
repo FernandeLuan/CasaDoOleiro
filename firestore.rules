@@ -1,0 +1,148 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userPath() {
+      return /databases/$(database)/documents/users/$(request.auth.uid);
+    }
+
+    function hasUser() {
+      return signedIn() && exists(userPath());
+    }
+
+    function currentUser() {
+      return get(userPath()).data;
+    }
+
+    function activeUser() {
+      return hasUser() && currentUser().active == true;
+    }
+
+    function isAdmin() {
+      return activeUser() && currentUser().role == 'admin';
+    }
+
+    function isCoordinator() {
+      return activeUser() && currentUser().role == 'coordinator';
+    }
+
+    function coordinatorHasUnit(unitId) {
+      return isCoordinator()
+        && ('unitIds' in currentUser())
+        && currentUser().unitIds.hasAny([unitId]);
+    }
+
+    function managesUnit(unitId) {
+      return isAdmin() || coordinatorHasUnit(unitId);
+    }
+
+    function isParticipant(data) {
+      return activeUser()
+        && ('participantUids' in data)
+        && data.participantUids.hasAny([request.auth.uid]);
+    }
+
+    function applicationData(applicationId) {
+      return get(/databases/$(database)/documents/applications/$(applicationId)).data;
+    }
+
+    function participantOf(applicationId) {
+      return isParticipant(applicationData(applicationId));
+    }
+
+    function managesApplication(applicationId) {
+      return managesUnit(applicationData(applicationId).unitId);
+    }
+
+    function candidateWindowOpen(applicationId) {
+      let app = applicationData(applicationId);
+      return app.status in ['pending', 'adjustments']
+        && ('planningDeadlineAt' in app)
+        && app.planningDeadlineAt != null
+        && request.time <= app.planningDeadlineAt;
+    }
+
+    function volunteerMayPropose(applicationId) {
+      let app = applicationData(applicationId);
+      return participantOf(applicationId)
+        && app.active == true
+        && (candidateWindowOpen(applicationId) || app.status == 'approved');
+    }
+
+    match /users/{uid} {
+      allow read: if activeUser() && (request.auth.uid == uid || isAdmin());
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /units/{unitId} {
+      allow read: if activeUser();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /volunteer_profiles/{uid} {
+      allow read: if activeUser() && (request.auth.uid == uid || isAdmin());
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /applications/{applicationId} {
+      allow read: if activeUser() && (isParticipant(resource.data) || managesUnit(resource.data.unitId));
+      allow create: if activeUser() && managesUnit(request.resource.data.unitId);
+      allow update, delete: if activeUser() && managesUnit(resource.data.unitId);
+    }
+
+    match /activities/{activityId} {
+      allow read: if activeUser() && (participantOf(resource.data.applicationId) || managesApplication(resource.data.applicationId));
+      allow create: if activeUser()
+        && (managesApplication(request.resource.data.applicationId)
+          || (volunteerMayPropose(request.resource.data.applicationId)
+            && request.resource.data.createdByUid == request.auth.uid));
+      allow update: if activeUser()
+        && (managesApplication(resource.data.applicationId)
+          || (volunteerMayPropose(resource.data.applicationId)
+            && resource.data.createdByUid == request.auth.uid
+            && request.resource.data.applicationId == resource.data.applicationId
+            && request.resource.data.createdByUid == resource.data.createdByUid));
+      allow delete: if activeUser()
+        && (managesApplication(resource.data.applicationId)
+          || (participantOf(resource.data.applicationId)
+            && candidateWindowOpen(resource.data.applicationId)
+            && resource.data.createdByUid == request.auth.uid));
+    }
+
+    match /activity_sessions/{sessionId} {
+      allow read: if activeUser() && (participantOf(resource.data.applicationId) || managesApplication(resource.data.applicationId));
+      allow create: if activeUser()
+        && (managesApplication(request.resource.data.applicationId)
+          || (volunteerMayPropose(request.resource.data.applicationId)
+            && request.resource.data.createdByUid == request.auth.uid
+            && request.resource.data.status == 'proposed'));
+      allow update: if activeUser()
+        && (managesApplication(resource.data.applicationId)
+          || (volunteerMayPropose(resource.data.applicationId)
+            && resource.data.createdByUid == request.auth.uid
+            && resource.data.status == 'proposed'
+            && request.resource.data.status == 'proposed'
+            && request.resource.data.applicationId == resource.data.applicationId
+            && request.resource.data.createdByUid == resource.data.createdByUid));
+      allow delete: if activeUser()
+        && (managesApplication(resource.data.applicationId)
+          || (participantOf(resource.data.applicationId)
+            && candidateWindowOpen(resource.data.applicationId)
+            && resource.data.createdByUid == request.auth.uid
+            && resource.data.status == 'proposed'));
+    }
+
+    match /groups/{groupId} {
+      allow read: if activeUser() && managesUnit(resource.data.unitId);
+      allow create: if activeUser() && managesUnit(request.resource.data.unitId);
+      allow update, delete: if activeUser() && managesUnit(resource.data.unitId);
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
