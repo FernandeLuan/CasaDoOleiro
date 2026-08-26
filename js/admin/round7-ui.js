@@ -32,6 +32,15 @@
     if(button?.isConnected){button.disabled=false;button.textContent='Salvar período'}
   };
 
+  const baseConfirmStayDates=confirmStayDates;
+  confirmStayDates=async function(id,from,to){
+    const button=[...modalRoot.querySelectorAll('.btn-danger')].find(item=>/Alterar e remover/i.test(item.textContent||''));
+    if(button){button.disabled=true;button.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Alterando...'}
+    try{return await baseConfirmStayDates(id,from,to)}finally{
+      if(button?.isConnected){button.disabled=false;button.textContent='Alterar e remover'}
+    }
+  };
+
   /* Agenda: confirmado é o estado normal e não precisa de badge repetitivo. */
   agendaItem=function(time,name,person,group,status){
     const [label,type]=statusMeta(status),showStatus=status!=='confirmed';
