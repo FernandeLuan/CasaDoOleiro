@@ -87,6 +87,13 @@ jobs:
           grep -q 'Reiniciar planejamento' js/admin/round7-ui.js
           grep -q "pending:\['Em preparação'" js/shared/round7-ui.js
           grep -q 'x-apple-data-detectors' css/round7.css
+          grep -q 'MANAGER_APPLICATION_MAX_RECORDS=500' js/admin/app.js
+          grep -q 'hydrateRemainingManagerCandidates' js/admin/app.js
+          grep -q 'planningOwnerName' js/portal/planejamento.js
+          if grep -q 'needsAdminAttention=true' js/portal/planejamento.js; then
+            echo 'Removed notification state is still being set by the portal.'
+            exit 1
+          fi
           if grep -RInE 'stay-date-(editor|field|input|native)-v(2|3)|syncStayDateEditorV3|syncStayDateEditorBounds' js/admin css; then
             echo 'Obsolete stay-date editor implementation found.'
             exit 1
