@@ -17,7 +17,13 @@ async function hydrateCandidatePlanning(applicationId){
 }
 
 async function openPerson(id,tab='overview'){
-  const p=state.candidates.find(x=>String(x.id)===String(id));if(!p)return;
+  let p=state.candidates.find(x=>String(x.id)===String(id));if(!p)return;
+  if(!p.profileHydrated&&window.OleiroServices?.applications?.getById){
+    try{
+      const fresh=await window.OleiroServices.applications.getById(p.id);
+      if(fresh){const index=state.candidates.findIndex(x=>String(x.id)===String(p.id));if(index>=0)state.candidates[index]=fresh;p=fresh}
+    }catch(error){console.error('Não foi possível carregar os dados de contato do perfil:',error)}
+  }
   state.personModalTab=tab;
   if(tab==='plan'){try{await hydrateCandidatePlanning(p.id)}catch(error){console.error(error);return showToast('Não foi possível carregar o planejamento.')}}
   const tabs=[['overview','Visão geral'],['plan','Planejamento'],['stay','Estadia'],['history','Histórico']];const arg=candidateActionArg(p.id);
@@ -25,14 +31,14 @@ async function openPerson(id,tab='overview'){
 }
 
 function personTabContent(p,tab){
-  const [l,t]=statusMeta(p.status);const arg=candidateActionArg(p.id);
+  const [l]=statusMeta(p.status);const arg=candidateActionArg(p.id);
   if(tab==='plan'){
     const acts=state.currentPlanningApplicationId===p.id?state.activities:[];
     return acts.length?`<div class="list">${acts.map(a=>`<div class="card"><div class="activity-row"><div><h3 style="font-size:.8rem">${a.name}</h3><p style="font-size:.64rem;color:var(--muted);margin-top:3px">${a.description||''}</p></div>${badge((a.dates||[]).length+' sessões','primary')}</div><div style="margin-top:10px">${(a.dates||[]).map(d=>{const st=state.sessionStatus[`${a.id}-${d}`]||'proposed';const [sl]=statusMeta(st);return `<button class="plan-session-link" style="margin-bottom:7px" onclick='closeModal();openSessionDetail(${JSON.stringify(a.id)},${JSON.stringify(d)})'><span class="plan-session-icon"><i class="fa-regular fa-calendar"></i></span><span><strong>${dayName(d)} • ${fmtDate(d)} • ${a.time||'—'}</strong><small>${sl} • ${state.sessionGroups[`${a.id}-${d}`]||'Grupo a definir'}</small></span><i class="fa-solid fa-chevron-right"></i></button>`}).join('')}</div></div>`).join('')}</div>`:`<div class="empty"><i class="fa-regular fa-calendar-xmark"></i>Nenhuma atividade cadastrada ainda.</div>`;
   }
   if(tab==='stay')return `<div class="card"><span class="eyebrow">${p.status==='approved'?'Estadia confirmada':'Período proposto'}</span><div class="grid-2" style="margin-top:10px"><div><strong style="font-size:.8rem">Chegada</strong><p class="compact-hint">${fmtDate(p.from)}</p></div><div><strong style="font-size:.8rem">Saída</strong><p class="compact-hint">${fmtDate(p.to)}</p></div></div><div style="margin-top:12px"><strong style="font-size:.72rem">Unidade</strong><p class="compact-hint">${p.unit}</p></div></div>`;
-  if(tab==='history')return `<div class="list"><div class="list-item"><div class="metric-icon"><i class="fa-solid fa-user-plus"></i></div><div class="item-main"><h3>Perfil criado</h3><p>Acesso liberado para o processo de planejamento.</p></div></div>${p.submitted&&p.submitted!=='—'?`<div class="list-item"><div class="metric-icon"><i class="fa-solid fa-paper-plane"></i></div><div class="item-main"><h3>Planejamento enviado</h3><p>${p.submitted}</p></div></div>`:''}<div class="list-item"><div class="metric-icon"><i class="fa-solid fa-circle-info"></i></div><div class="item-main"><h3>Status atual</h3><p>${l}</p></div>${badge(l,t)}</div></div>`;
-  return `<div class="card"><div class="activity-row"><div><span class="eyebrow">Status</span><h3 style="font-size:.88rem;margin-top:5px">${l}</h3></div>${badge(l,t)}</div><div class="stat-row"><span class="stat-pill">${fmtDate(p.from,true)}–${fmtDate(p.to,true)}</span><span class="stat-pill">${p.activities||0} atividades</span><span class="stat-pill">${p.sessions||0} sessões</span></div></div><div class="card" style="margin-top:10px"><h3 style="font-size:.78rem">Contato</h3><p style="font-size:.66rem;color:var(--muted);margin-top:6px">${p.email||'—'}<br>${p.phone||'—'}</p></div>${p.status==='analysis'||p.status==='adjustments'?`<div class="activity-actions" style="margin-top:12px"><button class="btn btn-primary" onclick="approveCandidate(decodeURIComponent('${arg}'))">Aprovar</button><button class="btn btn-outline" onclick="requestAdjust(decodeURIComponent('${arg}'))">Pedir ajuste</button><button class="btn btn-danger" onclick="rejectCandidate(decodeURIComponent('${arg}'))">Recusar</button></div>`:''}${p.status==='rejected'?`<button class="btn btn-soft btn-block" style="margin-top:12px" onclick="reactivateCandidate(decodeURIComponent('${arg}'))">Reativar perfil</button>`:''}`;
+  if(tab==='history')return `<div class="list"><div class="list-item"><div class="metric-icon"><i class="fa-solid fa-user-plus"></i></div><div class="item-main"><h3>Perfil criado</h3><p>Acesso liberado para o processo de planejamento.</p></div></div>${p.submitted&&p.submitted!=='—'?`<div class="list-item"><div class="metric-icon"><i class="fa-solid fa-paper-plane"></i></div><div class="item-main"><h3>Planejamento enviado</h3><p>${p.submitted}</p></div></div>`:''}<div class="list-item"><div class="metric-icon"><i class="fa-solid fa-circle-info"></i></div><div class="item-main"><h3>Status atual</h3><p>${l}</p></div></div></div>`;
+  return `<div class="card"><div><span class="eyebrow">Status</span><h3 style="font-size:.88rem;margin-top:5px">${l}</h3></div><div class="stat-row"><span class="stat-pill">${fmtDate(p.from,true)}–${fmtDate(p.to,true)}</span><span class="stat-pill">${p.activities||0} atividades</span><span class="stat-pill">${p.sessions||0} sessões</span></div></div><div class="card" style="margin-top:10px"><h3 style="font-size:.78rem">Contato</h3><p style="font-size:.66rem;color:var(--muted);margin-top:6px">${p.email||'—'}<br>${p.phone||'—'}</p></div>${p.status==='analysis'||p.status==='adjustments'?`<div class="activity-actions" style="margin-top:12px"><button class="btn btn-primary" onclick="approveCandidate(decodeURIComponent('${arg}'))">Aprovar</button><button class="btn btn-outline" onclick="requestAdjust(decodeURIComponent('${arg}'))">Pedir ajuste</button><button class="btn btn-danger" onclick="rejectCandidate(decodeURIComponent('${arg}'))">Recusar</button></div>`:''}${p.status==='rejected'?`<button class="btn btn-soft btn-block" style="margin-top:12px" onclick="reactivateCandidate(decodeURIComponent('${arg}'))">Reativar perfil</button>`:''}`;
 }
 
 async function approveCandidate(id){
