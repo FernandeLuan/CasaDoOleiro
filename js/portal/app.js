@@ -22,9 +22,10 @@ async function hydrateVolunteerPlanning(application){
     window.OleiroServices.planning.listActivities(application.id),
     window.OleiroServices.planning.listSessions({applicationId:application.id,from,to})
   ]);
+  state.sessions=sessions||[];
   const byActivity=new Map((activities||[]).map(activity=>[String(activity.id),{...activity,dates:[],time:activity.time||''}]));
   state.sessionStatus={};state.sessionGroups={};
-  (sessions||[]).forEach(session=>{
+  state.sessions.forEach(session=>{
     const key=String(session.activityId||'');
     const activity=byActivity.get(key);
     if(activity){if(session.date&&!activity.dates.includes(session.date))activity.dates.push(session.date);if(!activity.time&&session.time)activity.time=session.time}
