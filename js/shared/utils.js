@@ -1,4 +1,5 @@
 function fmtDate(iso, short=false){
+  if(!iso)return '—';
   const d = new Date(iso+'T12:00:00');
   const locale=typeof currentLocale==='function'?currentLocale():'pt-BR';
   return new Intl.DateTimeFormat(locale, short?{day:'2-digit',month:'2-digit'}:{day:'2-digit',month:'short'}).format(d).replace('.','');
@@ -19,7 +20,7 @@ function longDate(iso){
 function statusMeta(s){
   return {
     pending:['Planejamento pendente','warning'], analysis:['Em análise','info'], adjustments:['Ajustes solicitados','warning'], approved:['Aprovado','success'], rejected:['Rejeitado','danger'],
-    proposed:['Proposta','warning'], confirmed:['Confirmada','success'], change:['Alteração pendente','warning'], conflict:['Conflito','danger']
+    proposed:['Proposta','warning'], confirmed:['Confirmada','success'], change:['Alteração pendente','warning'], change_requested:['Alteração pendente','warning'], conflict:['Conflito','danger']
   }[s] || [s,''];
 }
 
@@ -31,11 +32,14 @@ function dateRange(start,count){return Array.from({length:count},(_,i)=>addDays(
 
 function agendaRangeLabel(start){const end=addDays(start,6);return `${fmtDate(start)} – ${fmtDate(end)}`}
 
-function getSessions(date,volunteerOnly=false){
+function getSessions(date,_volunteerOnly=false){
   const out=[];
   state.activities.forEach(a=>{
-    if(volunteerOnly&&a.owner!=='Thomas Miller')return;
-    a.dates.forEach(d=>{if(d===date)out.push({activity:a,date:d,status:state.sessionStatus[`${a.id}-${d}`]||'proposed',group:state.sessionGroups[`${a.id}-${d}`]||'A definir'})})
+    (a.dates||[]).forEach(d=>{
+      if(d!==date)return;
+      const session=(state.sessions||[]).find(s=>String(s.activityId)===String(a.id)&&String(s.date)===String(d));
+      out.push({sessionId:session?.id||null,activity:a,date:d,status:session?.status||state.sessionStatus[`${a.id}-${d}`]||'proposed',group:session?.groupId||state.sessionGroups[`${a.id}-${d}`]||'A definir'});
+    });
   });
-  return out.sort((a,b)=>a.activity.time.localeCompare(b.activity.time)||a.activity.owner.localeCompare(b.activity.owner))
+  return out.sort((a,b)=>String(a.activity.time||'').localeCompare(String(b.activity.time||''))||String(a.activity.name||'').localeCompare(String(b.activity.name||''),'pt-BR'))
 }
