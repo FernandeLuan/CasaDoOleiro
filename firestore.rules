@@ -76,11 +76,6 @@ service cloud.firestore {
         ]);
     }
 
-    function participantOwnsCreatedRecord(data) {
-      return participantOf(data.applicationId)
-        && data.createdByUid == request.auth.uid;
-    }
-
     match /users/{uid} {
       allow read: if activeUser() && (request.auth.uid == uid || isManager());
       allow create, update, delete: if isManager();
@@ -107,14 +102,16 @@ service cloud.firestore {
 
       allow create: if isManager() || (
         activeUser()
-        && candidateWindowOpen(request.resource.data.applicationId)
         && participantOf(request.resource.data.applicationId)
+        && candidateWindowOpen(request.resource.data.applicationId)
         && request.resource.data.createdByUid == request.auth.uid
       );
 
+      // Uma candidatura de casal compartilha o planejamento. Qualquer participante
+      // pode editar a definição, mas applicationId e createdByUid são imutáveis.
       allow update: if isManager() || (
         activeUser()
-        && participantOwnsCreatedRecord(resource.data)
+        && participantOf(resource.data.applicationId)
         && candidateWindowOpen(resource.data.applicationId)
         && request.resource.data.applicationId == resource.data.applicationId
         && request.resource.data.createdByUid == resource.data.createdByUid
@@ -126,7 +123,7 @@ service cloud.firestore {
 
       allow delete: if isManager() || (
         activeUser()
-        && participantOwnsCreatedRecord(resource.data)
+        && participantOf(resource.data.applicationId)
         && candidateWindowOpen(resource.data.applicationId)
       );
     }
@@ -136,17 +133,19 @@ service cloud.firestore {
 
       allow create: if isManager() || (
         activeUser()
-        && candidateWindowOpen(request.resource.data.applicationId)
         && participantOf(request.resource.data.applicationId)
+        && candidateWindowOpen(request.resource.data.applicationId)
         && request.resource.data.createdByUid == request.auth.uid
         && request.resource.data.unitId == applicationData(request.resource.data.applicationId).unitId
         && request.resource.data.status == 'proposed'
         && request.resource.data.groupId == null
       );
 
+      // Os dois participantes de um casal podem alterar o mesmo planejamento.
+      // Campos de identidade, unidade, autoria original e grupo permanecem protegidos.
       allow update: if isManager() || (
         activeUser()
-        && participantOwnsCreatedRecord(resource.data)
+        && participantOf(resource.data.applicationId)
         && request.resource.data.applicationId == resource.data.applicationId
         && request.resource.data.activityId == resource.data.activityId
         && request.resource.data.createdByUid == resource.data.createdByUid
@@ -185,7 +184,7 @@ service cloud.firestore {
 
       allow delete: if isManager() || (
         activeUser()
-        && participantOwnsCreatedRecord(resource.data)
+        && participantOf(resource.data.applicationId)
         && candidateWindowOpen(resource.data.applicationId)
         && resource.data.status == 'proposed'
       );
