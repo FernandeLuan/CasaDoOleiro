@@ -22,7 +22,6 @@ function managerVolunteers(){
     <div class="candidate-tools candidate-tools-compact">
       <div class="filter-search candidate-search"><i class="fa-solid fa-magnifying-glass"></i><input id="candidateSearch" class="input" type="search" value="${escapeHtml(search)}" placeholder="Buscar voluntário por nome" oninput="updateCandidateSearch(this.value)"></div>
       <button class="candidate-filter-button ${activeFilters?'active':''}" type="button" onclick="openCandidateFilters()" aria-label="Filtros"><i class="fa-solid fa-sliders"></i>${activeFilters?'<span class="filter-dot"></span>':''}</button>
-      <button class="candidate-add-button" type="button" onclick="openNewCandidate()" aria-label="Novo voluntário"><i class="fa-solid fa-plus"></i></button>
     </div>
     <div class="candidate-filter-summary">${candidateFilterSummary()}</div>
     <div id="candidateList" class="list">${candidateListHtml(filtered,visibleCount)}</div>
@@ -38,7 +37,7 @@ function getFilteredCandidates(){
   return state.candidates.filter(p=>{
     const byStatus=filter==='all'||p.status===filter;
     const byUnit=unit==='all'||p.unit===unit;
-    const bySearch=!search||p.name.toLocaleLowerCase(typeof currentLocale==='function'?currentLocale():'pt-BR').includes(search);
+    const bySearch=!search||String(p.name||'').toLocaleLowerCase(typeof currentLocale==='function'?currentLocale():'pt-BR').includes(search);
     return byStatus&&byUnit&&bySearch;
   });
 }
