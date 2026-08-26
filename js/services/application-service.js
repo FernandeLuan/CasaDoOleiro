@@ -11,71 +11,48 @@
     const countries=Array.isArray(data.participantCountries)?data.participantCountries.filter(Boolean):[];
     const emails=Array.isArray(data.participantEmails)?data.participantEmails.filter(Boolean):[];
     return {
-      id:doc.id,
-      applicationId:doc.id,
-      ...data,
-      name:names.join(' + ')||data.name||'Voluntário',
-      country:countries.join(' / ')||data.country||'—',
-      email:emails.join(', ')||data.email||'',
-      phone:data.phone||'',
-      unitId:data.unitId||'',
-      unit:data.unitName||unitLabel(data.unitId),
-      from:isoDate(data.stayStart)||'',
-      to:isoDate(data.stayEnd)||'',
-      pendingUntil:isoDateTime(data.planningDeadlineAt),
-      submitted:isoDateTime(data.planningSubmittedAt)||'—',
-      sessions:Number(data.sessionCount||0),
-      activities:Number(data.activityCount||0),
-      inactive:data.active===false
+      id:doc.id,applicationId:doc.id,...data,
+      name:names.join(' + ')||data.name||'Voluntário',country:countries.join(' / ')||data.country||'—',email:emails.join(', ')||data.email||'',phone:data.phone||'',
+      unitId:data.unitId||'',unit:data.unitName||unitLabel(data.unitId),from:isoDate(data.stayStart)||'',to:isoDate(data.stayEnd)||'',
+      pendingUntil:isoDateTime(data.planningDeadlineAt),submitted:isoDateTime(data.planningSubmittedAt)||'—',
+      sessions:Number(data.sessionCount||0),activities:Number(data.activityCount||0),inactive:data.active===false
     };
   }
 
   services.applications={
     async list({status='approved',unit='all',search='',cursor=null,limit=services.config?.candidatePageSize||10}={}){
       return services.run(async()=>{
-        const context=await services.firebase();
-        const {firestore}=context.modules;
-        const constraints=[];
+        const context=await services.firebase();const {firestore}=context.modules;const constraints=[];
         if(status&&status!=='all')constraints.push(firestore.where('status','==',status));
         if(unit&&unit!=='all')constraints.push(firestore.where('unitId','==',normalize(unit)));
         if(cursor)constraints.push(firestore.startAfter(cursor));
-        constraints.push(firestore.limit(Math.max(1,Number(limit)||10)));
-        const q=firestore.query(firestore.collection(context.db,'applications'),...constraints);
-        const snapshot=await firestore.getDocs(q);
-        const term=normalize(search);
-        let items=snapshot.docs.map(mapApplication);
-        if(term)items=items.filter(item=>normalize(item.name).includes(term));
-        const last=snapshot.docs.at(-1)||null;
-        return {items,nextCursor:snapshot.size===Number(limit||10)?last:null,hasMore:snapshot.size===Number(limit||10)};
+        constraints.push(firestore.limit(Math.max(1,Number(limit)||10));
+        const snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'applications'),...constraints));
+        const term=normalize(search);let items=snapshot.docs.map(mapApplication);if(term)items=items.filter(item=>normalize(item.name).includes(term));
+        const last=snapshot.docs.at(-1)||null;return {items,nextCursor:snapshot.size===Number(limit||10)?last:null,hasMore:snapshot.size===Number(limit||10)};
       });
     },
     async getById(id){
-      return services.run(async()=>{
-        const context=await services.firebase();
-        const {firestore}=context.modules;
-        const snapshot=await firestore.getDoc(firestore.doc(context.db,'applications',String(id)));
-        return snapshot.exists()?mapApplication(snapshot):null;
-      });
+      return services.run(async()=>{const context=await services.firebase();const {firestore}=context.modules;const snapshot=await firestore.getDoc(firestore.doc(context.db,'applications',String(id)));return snapshot.exists()?mapApplication(snapshot):null;});
     },
     async update(id,patch){
+      return services.run(async()=>{const context=await services.firebase();const {firestore}=context.modules;await firestore.updateDoc(firestore.doc(context.db,'applications',String(id)),{...patch,updatedAt:firestore.serverTimestamp()});return true;});
+    },
+    async submitPlanning(id,{wasAdjustment=false}={}){
       return services.run(async()=>{
-        const context=await services.firebase();
-        const {firestore}=context.modules;
-        await firestore.updateDoc(firestore.doc(context.db,'applications',String(id)),{...patch,updatedAt:firestore.serverTimestamp()});
+        const context=await services.firebase();const {firestore}=context.modules;const now=firestore.serverTimestamp();
+        await firestore.updateDoc(firestore.doc(context.db,'applications',String(id)),{
+          status:'analysis',planningSubmittedAt:now,needsAdminAttention:true,
+          adminAttentionTitle:wasAdjustment?'Planejamento reenviado':'Planejamento enviado',
+          adminAttentionText:wasAdjustment?'O voluntário reenviou o planejamento após os ajustes solicitados.':'O voluntário enviou o planejamento para análise.',
+          adminAttentionUpdatedAt:now,updatedAt:now
+        });
         return true;
       });
     },
     async setParticipantsActive(uids,active){
-      const ids=[...new Set((uids||[]).filter(Boolean).map(String))];
-      if(!ids.length)return true;
-      return services.run(async()=>{
-        const context=await services.firebase();
-        const {firestore}=context.modules;
-        const batch=firestore.writeBatch(context.db);
-        ids.forEach(uid=>batch.update(firestore.doc(context.db,'users',uid),{active:active===true,updatedAt:firestore.serverTimestamp()}));
-        await batch.commit();
-        return true;
-      });
+      const ids=[...new Set((uids||[]).filter(Boolean).map(String))];if(!ids.length)return true;
+      return services.run(async()=>{const context=await services.firebase();const {firestore}=context.modules;const batch=firestore.writeBatch(context.db);ids.forEach(uid=>batch.update(firestore.doc(context.db,'users',uid),{active:active===true,updatedAt:firestore.serverTimestamp()}));await batch.commit();return true;});
     }
   };
 })();
