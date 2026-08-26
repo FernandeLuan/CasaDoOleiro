@@ -1,5 +1,5 @@
 const CANDIDATE_STATUS_OPTIONS=[
-  ['all','Todos os status'],['pending','Planejamento pendente'],['analysis','Em análise'],['adjustments','Ajustes solicitados'],['approved','Aprovado'],['rejected','Rejeitado']
+  ['all','Todos os status'],['pending','Em preparação'],['analysis','Em análise'],['adjustments','Ajustes'],['approved','Aprovado'],['rejected','Recusado']
 ];
 const CANDIDATE_PAGE_SIZE=10;
 function normalizeCandidateFilter(value){return CANDIDATE_STATUS_OPTIONS.some(([id])=>id===value)?value:'approved';}
