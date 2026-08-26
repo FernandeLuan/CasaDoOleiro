@@ -1,6 +1,4 @@
 (function initAuthService(){
-  if(new URLSearchParams(location.search).get('dev')==='1')return;
-
   async function firebaseContext(){
     if(!window.OleiroFirebase)throw new Error('Backend indisponível.');
     const context=await window.OleiroFirebase.ready;
@@ -39,24 +37,24 @@
     const profile=userSnapshot.data();
     if(profile.active!==true){
       await auth.signOut(context.auth);
-      return {role:'inactive',mode:null,uid:user.uid};
+      return {role:'inactive',mode:null,uid:user.uid,email:user.email||null};
     }
 
     const role=normalizeRole(profile.role);
-    if(role==='manager')return {role,mode:null,uid:user.uid,user:profile};
+    if(role==='manager')return {role,mode:null,uid:user.uid,email:user.email||null,user:profile};
     if(role!=='volunteer'){
       await auth.signOut(context.auth);
-      return {role:'inactive',mode:null,uid:user.uid};
+      return {role:'inactive',mode:null,uid:user.uid,email:user.email||null};
     }
 
     const application=await activeApplication(context,user.uid);
     if(!application){
       await auth.signOut(context.auth);
-      return {role:'inactive',mode:null,uid:user.uid};
+      return {role:'inactive',mode:null,uid:user.uid,email:user.email||null};
     }
 
     const mode=application.status==='approved'?'approved':'candidate';
-    return {role:'volunteer',mode,uid:user.uid,user:profile,application};
+    return {role:'volunteer',mode,uid:user.uid,email:user.email||null,user:profile,application};
   }
 
   window.OleiroAuth={
@@ -83,8 +81,6 @@
     async signOut(){
       const context=await firebaseContext();
       await context.modules.auth.signOut(context.auth);
-      sessionStorage.removeItem('oleiro-role');
-      sessionStorage.removeItem('oleiro-volunteer-mode');
     }
   };
 })();
