@@ -15,6 +15,13 @@
   const baseVolunteerProfile=volunteerProfile;
   volunteerProfile=function(){return baseVolunteerProfile().replace(/E-mail/g,'Email')};
 
+  /* Ajustes antigos só têm efeito enquanto a candidatura realmente está em ajuste. */
+  const baseVolunteerDayAdjustment=volunteerDayAdjustment;
+  volunteerDayAdjustment=function(date){
+    if(state.volunteerPlanStatus!=='adjustments')return null;
+    return baseVolunteerDayAdjustment(date);
+  };
+
   /*
    * Os grupos A/B/C/D/Livre contêm a composição interna da Casa e permanecem sob
    * decisão do gestor. O candidato só precisa saber que a definição ocorre após a análise.
