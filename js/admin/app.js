@@ -5,6 +5,8 @@ function mapManagerScheduleRows(rows){
   const names=new Map((state.candidates||[]).map(p=>[String(p.id),p.name]));
   return (rows||[]).map(row=>({...row,activity:{...(row.activity||{}),owner:row.activity?.owner&&row.activity.owner!=='Voluntário'?row.activity.owner:(names.get(String(row.applicationId))||'Voluntário')}}));
 }
+/* Compatibilidade com chamadas antigas; notificações não existem mais no produto. */
+function deriveAdminNotifications(){return []}
 function invalidateManagerScheduleCache(){_managerScheduleCache.clear();state.scheduleFrom=null;state.scheduleTo=null}
 async function hydrateManagerSchedule(from=_oleiroToday,to=_oleiroToday,{force=false,unitId='all'}={}){
   if(!window.OleiroServices?.planning?.listManagerSchedule)return [];
