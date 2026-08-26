@@ -1,3 +1,5 @@
+function escapeHtml(value){return String(value??'').replace(/[&<>'\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+
 function fmtDate(iso, short=false){
   if(!iso)return '—';
   const d = new Date(iso+'T12:00:00');
