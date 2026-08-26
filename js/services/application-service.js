@@ -64,6 +64,18 @@
         await firestore.updateDoc(firestore.doc(context.db,'applications',String(id)),{...patch,updatedAt:firestore.serverTimestamp()});
         return true;
       });
+    },
+    async setParticipantsActive(uids,active){
+      const ids=[...new Set((uids||[]).filter(Boolean).map(String))];
+      if(!ids.length)return true;
+      return services.run(async()=>{
+        const context=await services.firebase();
+        const {firestore}=context.modules;
+        const batch=firestore.writeBatch(context.db);
+        ids.forEach(uid=>batch.update(firestore.doc(context.db,'users',uid),{active:active===true,updatedAt:firestore.serverTimestamp()}));
+        await batch.commit();
+        return true;
+      });
     }
   };
 })();
