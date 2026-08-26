@@ -1,5 +1,11 @@
-/* Round 5 — invalidar somente o cache de planejamento que pode ter ficado anterior ao reenvio. */
+/* Round 5 — invalidar somente o cache que pode ter ficado anterior ao reenvio e ignorar ajustes já encerrados. */
 (function round5PlanningRefresh(){
+  const baseDayAdjustment=candidateDayAdjustment;
+  candidateDayAdjustment=function(p,date){
+    if(p?.status!=='adjustments')return null;
+    return baseDayAdjustment(p,date);
+  };
+
   const baseOpenPerson=openPerson;
   openPerson=async function(id,tab='overview'){
     const p=candidateById(id);
