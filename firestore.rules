@@ -68,10 +68,6 @@ service cloud.firestore {
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'status',
           'planningSubmittedAt',
-          'needsAdminAttention',
-          'adminAttentionTitle',
-          'adminAttentionText',
-          'adminAttentionUpdatedAt',
           'updatedAt'
         ]);
     }
@@ -159,15 +155,6 @@ service cloud.firestore {
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
               'activityName', 'activityDescription', 'participation', 'materials',
               'notes', 'ownerName', 'date', 'time', 'period', 'duration', 'updatedAt'
-            ])
-          )
-          ||
-          (
-            approvedApplication(resource.data.applicationId)
-            && resource.data.status == 'proposed'
-            && request.resource.data.status == 'proposed'
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-              'date', 'time', 'updatedAt'
             ])
           )
           ||
