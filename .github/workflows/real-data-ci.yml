@@ -59,6 +59,23 @@ jobs:
             exit 1
           fi
 
+      - name: Check round 5 integration
+        shell: bash
+        run: |
+          grep -q 'css/round5.css' index.html
+          grep -q '../css/round5.css' admin/index.html
+          grep -q '../css/round5.css' portal/index.html
+          grep -q '../js/shared/round5-services.js' admin/index.html
+          grep -q '../js/shared/round5-services.js' portal/index.html
+          grep -q '../js/admin/round5-ui.js' admin/index.html
+          grep -q '../js/admin/round5-refresh.js' admin/index.html
+          grep -q '../js/portal/round5-ui.js' portal/index.html
+          grep -q 'planning-note-button' js/admin/round5-ui.js
+          grep -q 'dayAdjustments:{}' js/shared/round5-services.js
+          grep -q 'pending-grid-two' js/admin/round5-ui.js
+          grep -q 'Suporte pelo WhatsApp' js/portal/round5-ui.js
+          grep -q 'state.volunteerPlanStatus' js/portal/round5-ui.js
+
       - name: Reject prototype runtime residues
         shell: bash
         run: |
