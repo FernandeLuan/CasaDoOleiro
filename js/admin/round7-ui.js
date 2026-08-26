@@ -1,4 +1,4 @@
-/* Round 7 — editor de datas simples, reset de teste e status de agenda enxutos. */
+/* Admin — editor de datas simples, reset de teste e status de agenda enxutos. */
 (function round7Admin(){
   window.syncStayDateNative=function(){
     const from=document.getElementById('editStayFrom');
@@ -41,7 +41,6 @@
     }
   };
 
-  /* Agenda: confirmado é o estado normal e não precisa de badge repetitivo. */
   agendaItem=function(time,name,person,group,status){
     const [label,type]=statusMeta(status),showStatus=status!=='confirmed';
     return `<div class="list-item"><div class="time-box single"><strong>${time||'—'}</strong></div><div class="item-main"><h3>${escapeHtml(name||'Atividade')}</h3><p>${escapeHtml(person||'Voluntário')} • ${escapeHtml(group||'A definir')}</p>${showStatus?`<div class="item-meta">${badge(label,type)}</div>`:''}</div></div>`;
@@ -50,9 +49,12 @@
   const baseCandidatePlanContent=candidatePlanContent;
   candidatePlanContent=function(p){
     const content=baseCandidatePlanContent(p);
-    if(!candidatePlanningCache(p.id))return content;
+    if(!candidatePlanningCache(p.id)||!content.includes('planning-admin-footer'))return content;
     const arg=encodeURIComponent(String(p.id));
-    return `${content}<div class="admin-test-tools"><button class="btn btn-outline" type="button" onclick="requestResetPlanning(decodeURIComponent('${arg}'))"><i class="fa-solid fa-arrow-rotate-left"></i>Reiniciar planejamento</button></div>`;
+    const reset=`<button class="btn btn-outline planning-reset-button" type="button" onclick="requestResetPlanning(decodeURIComponent('${arg}'))"><i class="fa-solid fa-arrow-rotate-left"></i>Reiniciar planejamento</button>`;
+    const marker='<div class="planning-admin-footer">',start=content.lastIndexOf(marker),end=start>=0?content.indexOf('</div>',start):-1;
+    if(start<0||end<0)return content;
+    return `${content.slice(0,end)}${reset}${content.slice(end)}`;
   };
 
   function returnToPlanning(id){const p=candidateById(id);if(p)renderPersonModal(p,'plan');else closeModal()}
@@ -72,11 +74,10 @@
     try{
       const result=await window.OleiroServices.applications.resetPlanning(p.id,{deadlineDays:7,participantUids:p.participantUids||[]});
       p.status='pending';p.inactive=false;p.activities=0;p.sessions=0;p.submitted='—';p.dayAdjustments={};p.pendingUntil=result.planningDeadlineAt;
-      if(typeof invalidateCandidatePlanning==='function')invalidateCandidatePlanning(p.id);
+      const emptyCache={activities:[],sessions:[],at:Date.now()};
+      state.candidatePlanningCache[String(p.id)]=emptyCache;applyCandidatePlanningCache(p.id,emptyCache);
       if(typeof invalidateManagerScheduleCache==='function')invalidateManagerScheduleCache();
-      try{await hydrateCandidatePlanning(p.id,{force:true})}catch(error){console.error('Falha ao recarregar planejamento vazio:',error)}
-      renderPersonModal(p,'plan');
-      showToast('Planejamento reiniciado.');
+      renderPersonModal(p,'plan');showToast('Planejamento reiniciado.');
     }catch(error){
       console.error(error);showToast(error?.message||'Não foi possível reiniciar o planejamento.');
       if(button){button.disabled=false;button.textContent='Reiniciar'}
