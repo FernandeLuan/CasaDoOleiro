@@ -3,7 +3,11 @@
   const services=window.OleiroServices=window.OleiroServices||{};
   if(!services.applications)return;
 
-  /* Reenvio após ajuste encerra as marcações antigas no mesmo write que volta para análise. */
+  /*
+   * Reenvio volta a candidatura para análise usando apenas campos já autorizados
+   * pelas regras ativas. As marcações de ajuste deixam de ser exibidas quando o
+   * status sai de "adjustments", sem exigir uma gravação adicional em dayAdjustments.
+   */
   services.applications.submitPlanning=async function(id,{wasAdjustment=false}={}){
     return services.run(async()=>{
       const context=await services.firebase();
@@ -12,7 +16,6 @@
       await firestore.updateDoc(firestore.doc(context.db,'applications',String(id)),{
         status:'analysis',
         planningSubmittedAt:now,
-        ...(wasAdjustment?{dayAdjustments:{}}:{}),
         updatedAt:now
       });
       return true;
