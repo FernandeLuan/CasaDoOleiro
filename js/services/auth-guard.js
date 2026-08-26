@@ -1,15 +1,8 @@
 (function initAuthGuard(){
-  const isDev=new URLSearchParams(location.search).get('dev')==='1';
-
   function rootUrl(){return document.body?.dataset?.root||'../index.html'}
   function redirectTo(path){location.replace(path)}
 
   async function requireRole(expectedRole){
-    if(isDev){
-      const mode=sessionStorage.getItem('oleiro-volunteer-mode')||'candidate';
-      return {role:expectedRole,mode,dev:true};
-    }
-
     if(!window.OleiroAuth?.currentSession){
       redirectTo(rootUrl());
       return null;
@@ -32,10 +25,8 @@
       return null;
     }
 
-    sessionStorage.setItem('oleiro-role',session.role);
-    if(session.mode)sessionStorage.setItem('oleiro-volunteer-mode',session.mode);
     return session;
   }
 
-  window.OleiroAuthGuard={requireRole,isDev};
+  window.OleiroAuthGuard={requireRole};
 })();
