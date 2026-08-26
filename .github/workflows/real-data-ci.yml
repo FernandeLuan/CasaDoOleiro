@@ -99,6 +99,31 @@ jobs:
             exit 1
           fi
 
+      - name: Check current product layer
+        shell: bash
+        run: |
+          grep -q '../css/product-current.css' admin/index.html
+          grep -q '../css/product-current.css' portal/index.html
+          grep -q '../js/shared/product-current.js' admin/index.html
+          grep -q '../js/shared/product-current.js' portal/index.html
+          grep -q '../js/admin/product-current.js' admin/index.html
+          grep -q '../js/portal/product-current.js' portal/index.html
+          grep -q 'js/services/auth-service.js?v=20260826-r10' index.html
+          grep -q 'SCHEDULE_READ_TTL=5\*60\*1000' js/admin/product-current.js
+          grep -q 'APPLICATION_READ_TTL=2\*60\*1000' js/admin/product-current.js
+          grep -q 'Fim de semana — dia sem atividade' js/portal/product-current.js
+          grep -q 'Mudança solicitada' js/portal/product-current.js
+          grep -q 'moveSessionById' js/shared/product-current.js
+          grep -q 'Casal / não informado' js/admin/product-current.js
+          grep -q 'signedIn() && request.auth.uid == uid' firestore.rules
+          python - <<'PY'
+          from pathlib import Path
+          admin = Path('admin/index.html').read_text()
+          portal = Path('portal/index.html').read_text()
+          assert admin.index('../js/admin/product-current.js') > admin.index('../js/admin/app.js')
+          assert portal.index('../js/portal/product-current.js') > portal.index('../js/portal/round7-ui.js')
+          PY
+
       - name: Reject removed features and prototype residues
         shell: bash
         run: |
