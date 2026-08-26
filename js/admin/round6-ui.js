@@ -1,11 +1,10 @@
-/* Round 6 — Admin: Home enxuta, detalhe com retorno e editor de datas nativo. */
+/* Round 6 — Admin: Home enxuta, detalhe com retorno e planejamento por dia. */
 (function round6Admin(){
   function safe(value){return encodeURIComponent(String(value??''))}
   function shortDate(date){try{return new Intl.DateTimeFormat(typeof currentLocale==='function'?currentLocale():'pt-BR',{day:'2-digit',month:'2-digit'}).format(new Date(`${date}T12:00:00`))}catch{return fmtDate(date)}}
   function shortDay(date){try{return new Intl.DateTimeFormat(typeof currentLocale==='function'?currentLocale():'pt-BR',{weekday:'short'}).format(new Date(`${date}T12:00:00`)).replace('.','').toLowerCase()}catch{return String(dayName(date)||'').slice(0,3).toLowerCase()}}
   function totalHours(day){const min=(day.sessions||[]).reduce((sum,row)=>sum+(Number(row.duration||row.activity?.duration)||0),0),h=Math.floor(min/60),m=min%60;return h?(m?`${h}h${String(m).padStart(2,'0')}`:`${h}h`):`${m}min`}
 
-  /* Home: Em análise + Ajustes; em Hoje na Casa não há botão Agenda redundante. */
   managerHome=function(){
     const todaySessions=getSessions(_oleiroToday),arrivals=nextMovements('from'),departures=nextMovements('to');
     return `<section class="hero"><div class="eyebrow" style="color:#d9eadf">Gestão</div><h1>${managerGreeting()}</h1><p class="muted">Veja o que precisa da sua atenção e o que acontece hoje na Casa.</p><div class="hero-actions"><button class="btn btn-light" onclick="navigateManager('volunteer')"><i class="fa-solid fa-users"></i>Voluntariado</button><button class="btn btn-outline" style="border-color:rgba(255,255,255,.28);color:white" onclick="openTodayAgenda()"><i class="fa-regular fa-calendar"></i>Ver agenda</button></div></section>
@@ -19,7 +18,6 @@
     if(p)renderPersonModal(p,'plan');else closeModal();
   }
 
-  /* Detalhe da atividade mantém o contexto e oferece Voltar ao lado do fechar. */
   openAdminActivityInfo=function(name,description,notes){
     const personId=String(modalRoot.dataset.personId||state.currentPlanningApplicationId||'');
     const n=decodeURIComponent(name||''),d=decodeURIComponent(description||''),o=decodeURIComponent(notes||'');
@@ -37,20 +35,6 @@
     const backdrop=modalRoot.querySelector('.modal-backdrop');if(backdrop)backdrop.onclick=e=>{if(e.target===backdrop)restorePlanning(personId)};
   };
 
-  /* Editor de estadia: inputs de data nativos e empilhados no iPhone. */
-  window.syncStayDateEditorBounds=function(){
-    const from=document.getElementById('editStayFrom'),to=document.getElementById('editStayTo');if(!from||!to)return;
-    to.min=from.value||'';
-    if(from.value&&to.value&&to.value<from.value)to.value='';
-  };
-  openStayDateEditor=function(id){
-    const p=candidateById(id);if(!p)return;
-    const body=`<div class="stay-date-editor-v2"><label class="stay-date-field-v2" for="editStayFrom"><span>Chegada</span><input id="editStayFrom" class="stay-date-input-v2" type="date" value="${escapeHtml(p.from||'')}" onchange="syncStayDateEditorBounds()" oninput="syncStayDateEditorBounds()"></label><label class="stay-date-field-v2" for="editStayTo"><span>Saída</span><input id="editStayTo" class="stay-date-input-v2" type="date" value="${escapeHtml(p.to||'')}" onchange="syncStayDateEditorBounds()" oninput="syncStayDateEditorBounds()"></label></div>`;
-    openModal('Editar datas','',body,`<button class="btn btn-primary btn-block" type="button" onclick='saveStayDates(${JSON.stringify(String(id))})'>Salvar período</button>`);
-    modalRoot.querySelector('.modal')?.classList.add('stay-date-modal-v2');requestAnimationFrame(syncStayDateEditorBounds);
-  };
-
-  /* Planejamento: grupo final aparece somente quando definido pela equipe. */
   adminPlanningDayCard=function(p,day){
     const adjustment=candidateDayAdjustment(p,day.date),canAdjust=['analysis','adjustments'].includes(p.status),id=safe(p.id),dateArg=safe(day.date);
     return `<details class="card planning-day-card"><summary class="planning-day-head"><div class="planning-day-date"><strong>${shortDate(day.date)} ${shortDay(day.date)}</strong>${adjustment?'<span class="badge warning">Reajustar</span>':''}</div><div class="planning-day-total"><strong>${totalHours(day)}</strong><i class="fa-solid fa-chevron-down"></i></div></summary><div class="planning-day-content">${adjustment?`<div class="day-adjustment-note"><i class="fa-solid fa-circle-info"></i><span>${escapeHtml(adjustment.note||'Ajuste solicitado pela equipe.')}</span></div>`:''}<div class="planning-day-sessions">${day.sessions.map(session=>{const a=session.activity||{},description=session.activityDescription||a.description||'',notes=session.notes||a.notes||'',hasInfo=!!(description||notes),finalGroup=session.groupId&&session.groupId!=='A definir'?` • Grupo ${escapeHtml(session.groupId)}`:'';return `<div class="planning-session-row"><div><div class="planning-session-title"><strong>${escapeHtml(a.name||session.activityName||'Atividade')}</strong>${hasInfo?`<button class="planning-note-button" type="button" aria-label="Ver informações da atividade" onclick="openAdminActivityInfo('${safe(a.name||session.activityName||'Atividade')}','${safe(description)}','${safe(notes)}')"><i class="fa-solid fa-circle-info"></i></button>`:''}</div><span>${escapeHtml(session.time||a.time||'—')} • ${Number(session.duration||a.duration)||0} min${finalGroup}</span></div></div>`}).join('')}</div>${canAdjust?`<div class="planning-day-adjust-action"><button class="btn btn-soft" type="button" onclick="requestDayAdjust(decodeURIComponent('${id}'),decodeURIComponent('${dateArg}'))"><i class="fa-solid fa-pen"></i>Solicitar ajuste neste dia</button></div>`:''}</div></details>`;
