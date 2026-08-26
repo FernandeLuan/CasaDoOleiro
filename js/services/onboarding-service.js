@@ -48,6 +48,7 @@
     secondaryAuth.languageCode=participant.language||'en';
     try{
       const credential=await authModule.createUserWithEmailAndPassword(secondaryAuth,participant.email,randomPassword());
+      await authModule.updateProfile(credential.user,{displayName:participant.name});
       return {uid:credential.user.uid,user:credential.user,secondaryAuth,secondaryApp,participant};
     }catch(error){
       try{await appModule.deleteApp(secondaryApp)}catch{}
