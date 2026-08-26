@@ -1,33 +1,15 @@
 function managerGroups(){
+  if(!state.groupsLoaded)return `<section class="section compact-page-top"><div class="empty compact-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando grupos...</div></section>`;
   const rows=state.groups||[];
-  return `<section class="section"><div class="section-head"><div><span class="eyebrow">Organização</span><h2>Grupos</h2><p>Composição operacional da unidade</p></div></div>
-  ${rows.length?rows.map(g=>`<details class="group-details"><summary><div class="avatar">${g.code||g.id}</div><div class="group-summary-copy"><strong>Grupo ${g.code||g.id}</strong><span>${(g.members||[]).length} integrantes • capacidade de referência ${g.capacity||5}</span></div><i class="fa-solid fa-chevron-down" style="color:var(--muted)"></i></summary><div class="group-members">${(g.members||[]).map(m=>`<div class="member-row"><span class="member-name"><span class="member-dot"></span>${escapeHtml(m)}</span></div>`).join('')||'<div class="empty">Nenhum nome cadastrado.</div>'}<button class="btn btn-outline btn-block" style="margin-top:10px" onclick="editGroup(${JSON.stringify(g.id)})"><i class="fa-solid fa-pen"></i>Editar grupo</button></div></details>`).join(''):'<div class="empty"><i class="fa-solid fa-people-group"></i>Nenhum grupo cadastrado.</div>'}</section>`;
+  return `<section class="section compact-page-top">${rows.length?rows.map(g=>`<details class="group-details"><summary><div class="avatar">${g.code||g.id}</div><div class="group-summary-copy"><strong>Grupo ${g.code||g.id}</strong><span>${(g.members||[]).length} integrantes • capacidade ${g.capacity||5}</span></div><i class="fa-solid fa-chevron-down" style="color:var(--muted)"></i></summary><div class="group-members">${(g.members||[]).map(m=>`<div class="member-row"><span class="member-name"><span class="member-dot"></span>${escapeHtml(m)}</span></div>`).join('')||'<div class="empty">Nenhum nome cadastrado.</div>'}<button class="btn btn-outline btn-block" type="button" style="margin-top:10px" onclick="event.preventDefault();event.stopPropagation();editGroup(${JSON.stringify(g.id)})"><i class="fa-solid fa-pen"></i>Editar</button></div></details>`).join(''):'<div class="empty"><i class="fa-solid fa-people-group"></i>Nenhum grupo cadastrado.</div>'}</section>`;
 }
-
 function editGroup(id){
-  const g=state.groups.find(x=>String(x.id)===String(id));if(!g)return;
-  const members=[...(g.members||[])];
-  openModal(`Editar Grupo ${g.code||g.id}`,'Nomes visíveis somente na área de gestão.',`<div class="form-grid group-edit-form">
-    <div class="field"><label>Capacidade de referência</label><input id="gCap" class="input" type="number" min="1" value="${Number(g.capacity||5)}"></div>
-    <div class="field"><label>Observação</label><input id="gNote" class="input" value="${escapeHtml(g.note||'')}"></div>
-    <div class="field"><label>Integrantes</label><div id="groupMemberList" class="group-member-list">${members.map((m,i)=>`<div class="member-row group-member-edit-row"><span class="member-name"><span class="member-dot"></span>${escapeHtml(m)}</span><button class="group-delete-button" type="button" onclick="removeGroupMemberDraft(${i})" aria-label="Excluir"><i class="fa-solid fa-trash"></i></button></div>`).join('')||'<div class="empty">Nenhum nome cadastrado.</div>'}</div></div>
-    <div class="field group-new-member"><label>Novo nome</label><div class="group-add-row"><input id="gMember" class="input" placeholder="Nome"><button class="btn btn-soft" type="button" onclick="addGroupMemberDraft()"><i class="fa-solid fa-plus"></i>Adicionar</button></div></div>
-  </div>`,`<button class="btn btn-primary btn-block" type="button" onclick="saveGroupConfig(${JSON.stringify(g.id)})">Salvar grupo</button>`);
-  modalRoot.dataset.groupId=String(g.id);
-  modalRoot.dataset.groupMembers=JSON.stringify(members);
-  modalRoot.querySelector('.modal')?.classList.add('group-edit-modal');
+  const g=(state.groups||[]).find(x=>String(x.id)===String(id));if(!g)return showToast('Grupo não encontrado.');const members=[...(g.members||[])];
+  openModal(`Grupo ${g.code||g.id}`,'Edite capacidade, observação e integrantes.',`<div class="form-grid group-edit-form"><div class="field"><label>Capacidade</label><input id="gCap" class="input" type="number" min="1" value="${Number(g.capacity||5)}"></div><div class="field"><label>Observação</label><input id="gNote" class="input" value="${escapeHtml(g.note||'')}" placeholder="Opcional"></div><div class="field"><label>Integrantes</label><div id="groupMemberList" class="group-member-list">${members.map((m,i)=>`<div class="member-row group-member-edit-row"><span class="member-name"><span class="member-dot"></span>${escapeHtml(m)}</span><button class="group-delete-button" type="button" onclick="removeGroupMemberDraft(${i})" aria-label="Excluir"><i class="fa-solid fa-trash"></i></button></div>`).join('')||'<div class="empty">Nenhum nome cadastrado.</div>'}</div></div><div class="field group-new-member"><label>Novo nome</label><div class="group-add-row"><input id="gMember" class="input" placeholder="Nome"><button class="btn btn-soft" type="button" onclick="addGroupMemberDraft()"><i class="fa-solid fa-plus"></i>Adicionar</button></div></div></div>`,`<button class="btn btn-primary btn-block" type="button" onclick="saveGroupConfig(${JSON.stringify(g.id)})">Salvar</button>`);
+  modalRoot.dataset.groupId=String(g.id);modalRoot.dataset.groupMembers=JSON.stringify(members);modalRoot.querySelector('.modal')?.classList.add('group-edit-modal');
 }
-
 function groupDraftMembers(){try{return JSON.parse(modalRoot.dataset.groupMembers||'[]')}catch{return []}}
 function renderGroupDraftMembers(){const list=document.getElementById('groupMemberList');if(!list)return;const members=groupDraftMembers();list.innerHTML=members.map((m,i)=>`<div class="member-row group-member-edit-row"><span class="member-name"><span class="member-dot"></span>${escapeHtml(m)}</span><button class="group-delete-button" type="button" onclick="removeGroupMemberDraft(${i})" aria-label="Excluir"><i class="fa-solid fa-trash"></i></button></div>`).join('')||'<div class="empty">Nenhum nome cadastrado.</div>'}
 function removeGroupMemberDraft(index){const members=groupDraftMembers();members.splice(index,1);modalRoot.dataset.groupMembers=JSON.stringify(members);renderGroupDraftMembers()}
 function addGroupMemberDraft(){const input=document.getElementById('gMember');const name=input?.value.trim();if(!name)return showToast('Informe um nome.');const members=groupDraftMembers();members.push(name);modalRoot.dataset.groupMembers=JSON.stringify(members);input.value='';renderGroupDraftMembers()}
-
-async function saveGroupConfig(id){
-  const g=state.groups.find(x=>String(x.id)===String(id));if(!g)return;
-  const patch={capacity:Math.max(1,Number(document.getElementById('gCap')?.value)||5),note:document.getElementById('gNote')?.value.trim()||'',members:groupDraftMembers()};
-  try{
-    await window.OleiroServices.groups.update(g.id,patch);
-    Object.assign(g,patch);closeModal();render();showToast('Grupo atualizado.');
-  }catch(error){console.error(error);showToast('Não foi possível salvar o grupo.')}
-}
+async function saveGroupConfig(id){const g=(state.groups||[]).find(x=>String(x.id)===String(id));if(!g)return;const patch={capacity:Math.max(1,Number(document.getElementById('gCap')?.value)||5),note:document.getElementById('gNote')?.value.trim()||'',members:groupDraftMembers()};try{await window.OleiroServices.groups.update(g.id,patch);Object.assign(g,patch);closeModal();render();showToast('Grupo atualizado.')}catch(error){console.error(error);showToast('Não foi possível salvar o grupo.')}}
