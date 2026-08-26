@@ -81,9 +81,12 @@ jobs:
         run: |
           grep -q '../css/round6.css' admin/index.html
           grep -q '../css/round6.css' portal/index.html
+          grep -q '../js/shared/round6-services.js' admin/index.html
+          grep -q '../js/shared/round6-services.js' portal/index.html
           grep -q '../js/admin/round6-ui.js' admin/index.html
           grep -q '../js/portal/round6-ui.js' portal/index.html
           grep -q 'Grupo sugerido' js/portal/round6-ui.js
+          grep -q 'groupPreference' js/shared/round6-services.js
           grep -q 'groupPreference' js/services/planning-service.js
           grep -q 'groupPreference' firestore.rules
           grep -q 'dayAdjustments' firestore.rules
