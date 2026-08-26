@@ -12,22 +12,7 @@
       const id=String(session.activityId||'');if(!id)return;
       let activity=byActivity.get(id);
       if(!activity){
-        activity={
-          id,
-          applicationId:String(p.id),
-          name:session.activityName||'Atividade',
-          description:session.activityDescription||'',
-          duration:Number(session.duration)||60,
-          participation:session.participation||'Livre',
-          materials:session.materials||'',
-          notes:session.notes||'',
-          period:session.period||'Sem preferência',
-          time:session.time||'',
-          ownerName:session.ownerName||p.name||'Voluntário',
-          owner:p.name||session.ownerName||'Voluntário',
-          createdByUid:session.createdByUid||'',
-          dates:[]
-        };
+        activity={id,applicationId:String(p.id),name:session.activityName||'Atividade',description:session.activityDescription||'',duration:Number(session.duration)||60,participation:session.participation||'Livre',materials:session.materials||'',notes:session.notes||'',period:session.period||'Sem preferência',time:session.time||'',ownerName:session.ownerName||p.name||'Voluntário',owner:p.name||session.ownerName||'Voluntário',createdByUid:session.createdByUid||'',dates:[]};
         byActivity.set(id,activity);
       }
       if(session.date&&!activity.dates.includes(session.date))activity.dates.push(session.date);
@@ -37,8 +22,6 @@
     return {activities:[...byActivity.values()],sessions:sessions||[],at:Date.now()};
   }
 
-  /* Uma candidatura já carrega definição da atividade dentro das sessões. Isso evita
-     a antiga consulta duplicada activities + activity_sessions ao abrir Planejamento. */
   hydrateCandidatePlanning=async function(applicationId,{force=false}={}){
     const p=candidateById(applicationId);if(!p||!window.OleiroServices?.planning)return null;
     const key=String(p.id),cached=candidatePlanningCache(key);
@@ -50,13 +33,20 @@
     return cache;
   };
 
-  /* Mantém a tela instantânea quando já existe cache e revalida em segundo plano.
-     Não apagamos mais o cache toda vez que o Admin toca em Planejamento. */
   const baseOpenPerson=openPerson;
   const refreshing=new Set();
   openPerson=async function(id,tab='overview'){
     const p=candidateById(id),cached=p?candidatePlanningCache(p.id):null;
     const result=baseOpenPerson(id,tab);
+
+    /* Se o Admin ficou com a tela aberta enquanto o voluntário reenviou, atualiza o
+       status da candidatura em segundo plano antes de uma nova solicitação de ajuste. */
+    if(p&&tab==='plan'&&p.status==='adjustments'&&typeof refreshCandidateFromBackend==='function'){
+      refreshCandidateFromBackend(p.id).then(fresh=>{
+        if(fresh&&modalRoot.dataset.personId===String(p.id)&&modalRoot.dataset.personTab==='plan')refreshOpenPersonModal(p.id);
+      }).catch(error=>console.error('Não foi possível atualizar o status da candidatura:',error));
+    }
+
     if(p&&tab==='plan'&&cached&&!refreshing.has(String(p.id))){
       refreshing.add(String(p.id));
       hydrateCandidatePlanning(p.id,{force:true}).then(()=>{
@@ -76,8 +66,6 @@
     return html;
   };
 
-  /* Ao começar uma nova rodada de ajustes depois de um reenvio, elimina as marcas
-     da rodada anterior. Se o Admin marcar vários dias na mesma rodada, elas acumulam. */
   saveDayAdjustment=async function(id,date){
     const p=candidateById(id),note=document.getElementById('dayAdjustNote')?.value.trim()||'',button=document.getElementById('r4DayAdjustSave');
     if(!p||!note)return showToast('Informe o ajuste solicitado.');
