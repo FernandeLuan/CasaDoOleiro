@@ -73,7 +73,7 @@
     async approvePlanning(id,{participantUids=[]}={}){
       return services.run(async()=>{
         const context=await services.firebase();const {firestore}=context.modules;const sessions=await applicationSessions(context,id);const batch=firestore.writeBatch(context.db);const now=firestore.serverTimestamp();
-        batch.update(firestore.doc(context.db,'applications',String(id)),{status:'approved',active:true,planningDeadlineAt:null,approvedAt:now,needsAdminAttention:false,dayAdjustments:{},updatedAt:now});
+        batch.update(firestore.doc(context.db,'applications',String(id)),{status:'approved',active:true,planningDeadlineAt:null,approvedAt:now,dayAdjustments:{},updatedAt:now});
         sessions.forEach(session=>batch.update(firestore.doc(context.db,'activity_sessions',String(session.id)),{status:'confirmed',confirmedAt:now,changeNote:'',updatedAt:now}));
         [...new Set((participantUids||[]).filter(Boolean).map(String))].forEach(uid=>batch.update(firestore.doc(context.db,'users',uid),{active:true,updatedAt:now}));
         await batch.commit();return {confirmedSessions:sessions.length};
@@ -105,19 +105,14 @@
       return services.run(async()=>{
         const context=await services.firebase();const {firestore}=context.modules;const now=firestore.serverTimestamp();const deadline=new Date();deadline.setDate(deadline.getDate()+7);
         await firestore.updateDoc(firestore.doc(context.db,'applications',String(id)),{
-          [`dayAdjustments.${date}`]:{note:text,status:'requested',requestedAt:now},status:'adjustments',active:true,planningDeadlineAt:firestore.Timestamp.fromDate(deadline),needsAdminAttention:false,updatedAt:now
+          [`dayAdjustments.${date}`]:{note:text,status:'requested',requestedAt:now},status:'adjustments',active:true,planningDeadlineAt:firestore.Timestamp.fromDate(deadline),updatedAt:now
         });return true;
       },{loading:false});
     },
     async submitPlanning(id,{wasAdjustment=false}={}){
       return services.run(async()=>{
         const context=await services.firebase();const {firestore}=context.modules;const now=firestore.serverTimestamp();
-        await firestore.updateDoc(firestore.doc(context.db,'applications',String(id)),{
-          status:'analysis',planningSubmittedAt:now,needsAdminAttention:true,
-          adminAttentionTitle:wasAdjustment?'Planejamento reenviado':'Planejamento enviado',
-          adminAttentionText:wasAdjustment?'O voluntário reenviou o planejamento após os ajustes solicitados.':'O voluntário enviou o planejamento para análise.',
-          adminAttentionUpdatedAt:now,updatedAt:now
-        });
+        await firestore.updateDoc(firestore.doc(context.db,'applications',String(id)),{status:'analysis',planningSubmittedAt:now,updatedAt:now});
         return true;
       },{loading:false});
     },
