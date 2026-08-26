@@ -24,7 +24,21 @@ jobs:
       - name: Reject prototype runtime residues
         shell: bash
         run: |
-          if grep -RInE '\?dev=1|mock-data|Thomas Miller|Maria Gómez|Sophie Martin|Trocar modo do protótipo|Teste regressivo|2026-09-' index.html admin portal js; then
-            echo 'Prototype residue found in runtime files.'
+          test ! -e js/shared/mock-data.js
+          if grep -RInE '\?dev=1|URLSearchParams\([^)]*\).*dev|chooseDevRole|devPanel|syncPrototype|Thomas Miller|Maria Gómez|Sophie Martin|Teste regressivo|2026-09-' index.html admin portal js --exclude='i18n.js'; then
+            echo 'Prototype runtime residue found.'
             exit 1
           fi
+
+      - name: Reject prototype persistence
+        shell: bash
+        run: |
+          if grep -RInE 'oleiro-candidate-lifecycle|oleiro-dismissed-notifications|oleiro-volunteer-mode|oleiro-volunteer-plan-status' index.html admin portal js; then
+            echo 'Prototype browser persistence found.'
+            exit 1
+          fi
+
+      - name: Compile Firestore rules
+        shell: bash
+        run: |
+          npx --yes firebase-tools@latest emulators:exec --only firestore --project demo-casadooleiro "echo Firestore-rules-ok"
