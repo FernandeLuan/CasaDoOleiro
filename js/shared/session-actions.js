@@ -1,3 +1,27 @@
-function moveSession(id,date,byVolunteer=false){const a=state.activities.find(x=>x.id===id);openModal('Mover sessão',`${a.name} • ${fmtDate(date)}`,`<div class="field"><label>Nova data</label><select id="moveDate" class="select">${volunteerStayDates().filter(d=>d!==date).map(d=>`<option value="${d}">${dayName(d)} • ${fmtDate(d)}</option>`).join('')}</select></div><div class="field" style="margin-top:10px"><label>Novo horário sugerido</label><input id="moveTime" class="input" type="time" value="${a.time}"></div><button class="btn btn-primary btn-block" style="margin-top:12px" onclick="saveMove(${id},'${date}',${byVolunteer})">Mover</button>`)}
-
-function saveMove(id,oldDate,byVolunteer){const a=state.activities.find(x=>x.id===id);const newDate=document.getElementById('moveDate').value;a.dates=a.dates.map(d=>d===oldDate?newDate:d);a.time=document.getElementById('moveTime').value||a.time;delete state.sessionStatus[`${id}-${oldDate}`];state.sessionStatus[`${id}-${newDate}`]=byVolunteer?'change':'confirmed';closeModal();render();showToast(byVolunteer?'Alteração enviada para confirmação.':'Cronograma atualizado.')}
+function realSessionFor(activityId,date){return (state.sessions||[]).find(s=>String(s.activityId)===String(activityId)&&String(s.date)===String(date))||null}
+function sessionMoveDates(){
+  if(state.role==='volunteer'&&typeof volunteerStayDates==='function')return volunteerStayDates();
+  const p=state.candidates?.find(x=>String(x.id)===String(state.currentPlanningApplicationId));
+  if(p?.from&&p?.to){const dates=[];for(let d=p.from,i=0;i<370&&d<=p.to;i++,d=addDays(d,1))dates.push(d);return dates}
+  return [];
+}
+function moveSession(id,date,byVolunteer=false){
+  const a=state.activities.find(x=>String(x.id)===String(id));const session=realSessionFor(id,date);
+  if(!a||!session)return showToast('Sessão não encontrada.');
+  const options=sessionMoveDates().filter(d=>d!==date);
+  if(!options.length)return showToast('Não há outra data disponível no período da estadia.');
+  openModal('Mover sessão',`${a.name} • ${fmtDate(date)}`,`<div class="field"><label>Nova data</label><select id="moveDate" class="select">${options.map(d=>`<option value="${d}">${dayName(d)} • ${fmtDate(d)}</option>`).join('')}</select></div><div class="field" style="margin-top:10px"><label>Novo horário sugerido</label><input id="moveTime" class="input" type="time" value="${session.time||a.time||''}"></div><button class="btn btn-primary btn-block" style="margin-top:12px" onclick='saveMove(${JSON.stringify(id)},${JSON.stringify(date)},${byVolunteer})'>Mover</button>`)
+}
+async function saveMove(id,oldDate,byVolunteer){
+  const a=state.activities.find(x=>String(x.id)===String(id));const session=realSessionFor(id,oldDate);if(!a||!session)return showToast('Sessão não encontrada.');
+  const newDate=document.getElementById('moveDate')?.value;const newTime=document.getElementById('moveTime')?.value||session.time||a.time||'';if(!newDate)return showToast('Escolha a nova data.');
+  const patch={date:newDate,time:newTime};
+  if(byVolunteer&&session.status==='confirmed'){patch.status='change_requested';patch.changeRequestedAt=new Date();patch.changeNote='Alteração solicitada pelo voluntário.'}
+  try{
+    await window.OleiroServices.planning.updateSession(session.id,patch);
+    closeModal();
+    if(state.role==='volunteer'&&typeof hydrateVolunteerPlanning==='function')await hydrateVolunteerPlanning(state.currentApplication);
+    if(state.role==='manager'&&typeof hydrateCandidatePlanning==='function')await hydrateCandidatePlanning(state.currentPlanningApplicationId);
+    render();showToast(byVolunteer&&session.status==='confirmed'?'Alteração enviada para confirmação.':'Cronograma atualizado.');
+  }catch(error){console.error(error);showToast(error?.message||'Não foi possível mover a sessão.')}
+}
