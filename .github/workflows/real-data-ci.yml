@@ -102,6 +102,25 @@ jobs:
             exit 1
           fi
 
+      - name: Check round 7 integration
+        shell: bash
+        run: |
+          grep -q '../css/round7.css' admin/index.html
+          grep -q '../css/round7.css' portal/index.html
+          grep -q 'format-detection' admin/index.html
+          grep -q 'format-detection' portal/index.html
+          grep -q '../js/shared/round7-ui.js' admin/index.html
+          grep -q '../js/shared/round7-ui.js' portal/index.html
+          grep -q '../js/shared/round7-services.js' admin/index.html
+          grep -q '../js/admin/round7-ui.js' admin/index.html
+          grep -q '../js/portal/round7-ui.js' portal/index.html
+          grep -q 'Carregando atividades' js/portal/round7-ui.js
+          grep -q 'stay-date-editor-v3' js/admin/round7-ui.js
+          grep -q 'resetPlanning' js/shared/round7-services.js
+          grep -q 'Reiniciar planejamento' js/admin/round7-ui.js
+          grep -q "pending:\['Em preparação'" js/shared/round7-ui.js
+          grep -q 'x-apple-data-detectors' css/round7.css
+
       - name: Reject prototype runtime residues
         shell: bash
         run: |
@@ -120,7 +139,7 @@ jobs:
           fi
 
       - name: Set up Java 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
