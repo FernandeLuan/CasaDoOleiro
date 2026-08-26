@@ -6,11 +6,20 @@ function renderManager(){
 }
 
 function render(){renderManager()}
+async function hydrateManagerData(){
+  const tasks=[];
+  if(window.OleiroServices?.units?.list)tasks.push(window.OleiroServices.units.list({includeInactive:true}).then(items=>{state.units=items}));
+  if(window.OleiroServices?.applications?.list)tasks.push(window.OleiroServices.applications.list({status:'all',unit:'all',limit:30}).then(result=>{state.candidates=result.items||[]}));
+  if(window.OleiroServices?.attention?.listForAdmin)tasks.push(window.OleiroServices.attention.listForAdmin({unit:'all',limit:5}).then(items=>{state.notifications=items||[]}));
+  if(tasks.length)await Promise.all(tasks);
+}
 async function bootManager(){
-  const session=window.OleiroAuthGuard?await window.OleiroAuthGuard.requireRole('manager'):{role:'manager',dev:true};
+  const session=await window.OleiroAuthGuard?.requireRole('manager');
   if(!session)return;
   state.role='manager';
+  state.currentSession=session;
   state.managerPage='home';
+  try{await hydrateManagerData()}catch(error){console.error('Falha ao carregar dados da gestão:',error)}
   render();
 }
 bootManager();
