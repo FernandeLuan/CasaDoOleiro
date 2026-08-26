@@ -3,7 +3,9 @@ name: Real data regression
 on:
   push:
     branches:
+      - main
       - refactor/real-data-only
+      - 'fix/**'
   workflow_dispatch:
 
 permissions:
