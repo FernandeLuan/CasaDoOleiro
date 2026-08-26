@@ -10,7 +10,8 @@ O frontend permanece estático no GitHub Pages. O backend será responsável por
 - listas grandes usam paginação;
 - loading global aparece apenas se uma operação ultrapassar 600 ms;
 - Rodeio e Indaial usam o mesmo sistema e o mesmo banco;
-- uma pessoa sempre possui seu próprio usuário e perfil, mesmo quando participa de uma candidatura em casal.
+- uma pessoa sempre possui seu próprio usuário e perfil, mesmo quando participa de uma candidatura em casal;
+- dados mínimos de listagem podem ser denormalizados para evitar consultas N+1.
 
 ## Entidades
 
@@ -38,7 +39,8 @@ Um documento por pessoa, nunca por casal:
 - nacionalidade
 - gênero
 - contatos
-- `searchTokens`
+
+O perfil completo é carregado somente quando necessário. A listagem do Admin usa um resumo mantido na `application` para evitar uma leitura adicional por pessoa.
 
 ### `applications`
 Documento central do processo e da experiência:
@@ -46,6 +48,10 @@ Documento central do processo e da experiência:
 - `type`: `individual` ou `couple`
 - `participantUids`: um UID para individual ou dois UIDs para casal
 - `participantStatus`: mapa opcional por UID (`active`, `withdrawn`)
+- `participantNames`: nomes necessários para a listagem
+- `participantCountries`: países necessários para a listagem
+- `participantCount`: quantidade de participantes ativos/relevantes no card
+- `searchTokens`: prefixos normalizados dos nomes dos participantes
 - `unitId`
 - `status`: `pending`, `analysis`, `adjustments`, `approved`, `rejected`
 - `active`
@@ -61,8 +67,12 @@ Documento central do processo e da experiência:
 - `volunteerAttentionReason`
 - `volunteerAttentionUpdatedAt`
 - `source`: `portal`, `spreadsheet_migration` ou outro identificador controlado
+- `createdAt`
+- `updatedAt`
 
 Na candidatura em casal existem **dois logins e dois perfis**, mas somente **uma application compartilhada**. Ambos visualizam e podem alimentar o mesmo planejamento. Se uma pessoa desistir, seu `participantStatus` pode virar `withdrawn` sem destruir a candidatura da outra.
+
+Os campos `participantNames`, `participantCountries`, `participantCount` e `searchTokens` são um resumo controlado. Eles evitam buscar os perfis completos para montar cada card da listagem.
 
 ### `activities`
 Definição da atividade: nome, descrição, duração, participação, materiais, observações e autor.
@@ -120,7 +130,7 @@ O navegador lê essa data junto com a candidatura e calcula localmente `deadline
 
 ### Quando o prazo vence
 
-1. A regra de segurança do backend deve impedir o envio do planejamento quando `request.time > planningDeadlineAt` e o status ainda é `pending`. Portanto, mesmo que nenhum gestor abra o sistema, um envio fora do prazo não será aceito.
+1. A regra de segurança do backend deve impedir operações de planejamento fora da janela permitida, mesmo que o status ainda não tenha sido atualizado visualmente.
 2. Na primeira versão gratuita, ao abrir o Admin, uma consulta específica busca somente candidaturas `pending` cujo `planningDeadlineAt <= agora` e processa a inativação/recusa por ID.
 3. Depois, se quisermos a mudança física de status exatamente sem ninguém abrir o sistema, adicionamos uma rotina diária agendada. Ela consulta somente vencidos, não todos os voluntários.
 4. Ao reativar um perfil: `status=pending`, `active=true` e um novo `planningDeadlineAt = agora + 7 dias`.
@@ -145,9 +155,9 @@ Mudou filtro ou busca: cursor é descartado e a consulta volta aos primeiros 10.
 
 ### Busca por nome
 
-Para evitar mecanismo externo de busca, cada perfil pode manter `searchTokens`, gerados ao salvar o nome. Exemplo para `Thomas Miller`: prefixos de `Thomas` e `Miller` em minúsculas. A busca usa `array-contains` com o prefixo digitado e retorna no máximo 10 documentos.
+Para evitar mecanismo externo de busca e leituras adicionais, a própria `application` mantém `searchTokens`, gerados a partir dos nomes dos participantes. Exemplo para `Thomas Miller`: prefixos de `Thomas` e `Miller` em minúsculas.
 
-Isso permite buscar pelo início do nome ou sobrenome sem ler a coleção inteira.
+A consulta usa `array-contains` com o prefixo digitado, combinada com unidade/status e `limit(10)`. Assim o Admin recebe apenas as applications da página atual e não precisa abrir cada `volunteer_profile` para descobrir o nome.
 
 ## Loading
 
@@ -230,8 +240,12 @@ Estrutura alvo:
 
 ```text
 js/
+  firebase/
+    firebase-config.js
+    firebase-client.js
   services/
     auth-service.js
+    auth-guard.js
     application-service.js
     planning-service.js
     agenda-service.js
@@ -248,17 +262,19 @@ Dados de regressão ficam em `js/shared/mock-data.js` e só são carregados com 
 
 A massa deve conter mais de 10 aprovados e mais de 5 pendências para validar paginação e limites antes da conexão do backend.
 
-O modo `?dev=1` deve continuar usando somente mocks locais. Ele nunca deve consultar dados reais do Firebase.
+O modo `?dev=1` usa somente mocks locais. `firebase-client.js` não inicializa Firebase nesse modo.
 
 ## Ponto de integração do login
 
-`js/login.js` procura por:
+`js/login.js` chama:
 
 ```js
 window.OleiroAuth.signIn({ email, password })
 ```
 
-O backend deve retornar, no mínimo:
+O serviço valida Firebase Authentication, carrega `users/{uid}` e, para voluntários, localiza a `application` ativa.
+
+Retorno mínimo:
 
 ```js
 {
@@ -266,3 +282,5 @@ O backend deve retornar, no mínimo:
   mode: "candidate" | "approved"
 }
 ```
+
+`admin/` e `portal/` também usam `auth-guard.js`, portanto digitar a URL interna diretamente não substitui a validação da sessão.
