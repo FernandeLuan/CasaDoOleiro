@@ -12,6 +12,13 @@
     return 'inactive';
   }
 
+  function appRootUrl(){
+    const marker='/CasaDoOleiro/';
+    const index=location.pathname.indexOf(marker);
+    const path=index>=0?location.pathname.slice(0,index+marker.length):'/';
+    return `${location.origin}${path}`;
+  }
+
   async function activeApplication(context,uid){
     const {firestore}=context.modules;
     // A consulta por participante usa apenas o índice automático. O filtro de ativo é
@@ -76,6 +83,23 @@
         if(error?.code==='auth/too-many-requests')throw new Error('Muitas tentativas. Aguarde alguns minutos e tente novamente.');
         if(error?.message)throw error;
         throw new Error('Não foi possível entrar.');
+      }
+    },
+    async sendPasswordReset(email,{language=null}={}){
+      const normalized=String(email||'').trim().toLowerCase();
+      if(!normalized||!normalized.includes('@'))throw new Error('Informe um e-mail válido.');
+      const context=await firebaseContext();
+      const {auth}=context.modules;
+      try{
+        context.auth.languageCode=language||((typeof currentLanguage==='function'&&currentLanguage())||'pt');
+        await auth.sendPasswordResetEmail(context.auth,normalized,{url:appRootUrl(),handleCodeInApp:false});
+        return true;
+      }catch(error){
+        // Não revelamos no login se um endereço está ou não cadastrado.
+        if(error?.code==='auth/user-not-found')return true;
+        if(error?.code==='auth/invalid-email')throw new Error('Informe um e-mail válido.');
+        if(error?.code==='auth/too-many-requests')throw new Error('Muitas solicitações. Aguarde alguns minutos e tente novamente.');
+        throw new Error('Não foi possível enviar o e-mail de recuperação.');
       }
     },
     async currentSession(){
