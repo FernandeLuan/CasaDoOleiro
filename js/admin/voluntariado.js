@@ -1,114 +1,21 @@
 const CANDIDATE_STATUS_OPTIONS=[
-  ['all','Todos os status'],
-  ['pending','Planejamento pendente'],
-  ['analysis','Em análise'],
-  ['adjustments','Ajustes solicitados'],
-  ['approved','Aprovado'],
-  ['rejected','Rejeitado']
+  ['all','Todos os status'],['pending','Planejamento pendente'],['analysis','Em análise'],['adjustments','Ajustes solicitados'],['approved','Aprovado'],['rejected','Rejeitado']
 ];
 const CANDIDATE_PAGE_SIZE=10;
-
-function normalizeCandidateFilter(value){
-  return CANDIDATE_STATUS_OPTIONS.some(([id])=>id===value)?value:'approved';
-}
-
+function normalizeCandidateFilter(value){return CANDIDATE_STATUS_OPTIONS.some(([id])=>id===value)?value:'approved';}
 function managerVolunteers(){
-  state.candidateFilter=normalizeCandidateFilter(state.candidateFilter);
-  const search=state.candidateSearch||'';
-  const filtered=getFilteredCandidates();
-  const visibleCount=Math.max(CANDIDATE_PAGE_SIZE,state.candidateVisibleCount||CANDIDATE_PAGE_SIZE);
-  const activeFilters=state.candidateFilter!=='approved'||(state.candidateUnit||'all')!=='all';
-  return `<section class="section volunteer-list-page">
-    <div class="section-head"><div><span class="eyebrow">Voluntariado</span><h2>Candidatos e experiências</h2><p>Cadastros e acessos reais do programa</p></div></div>
-    <div class="candidate-tools candidate-tools-compact">
-      <div class="filter-search candidate-search"><i class="fa-solid fa-magnifying-glass"></i><input id="candidateSearch" class="input" type="search" value="${escapeHtml(search)}" placeholder="Buscar voluntário por nome" oninput="updateCandidateSearch(this.value)"></div>
-      <button class="candidate-filter-button ${activeFilters?'active':''}" type="button" onclick="openCandidateFilters()" aria-label="Filtros"><i class="fa-solid fa-sliders"></i>${activeFilters?'<span class="filter-dot"></span>':''}</button>
-      <button class="candidate-add-button" type="button" onclick="openNewCandidate()" aria-label="Novo candidato" title="Novo candidato"><i class="fa-solid fa-user-plus"></i></button>
-    </div>
-    <div class="candidate-filter-summary">${candidateFilterSummary()}</div>
-    <div id="candidateList" class="list">${candidateListHtml(filtered,visibleCount)}</div>
-  </section>`;
+  state.candidateFilter=normalizeCandidateFilter(state.candidateFilter);const search=state.candidateSearch||'';const filtered=getFilteredCandidates();const visibleCount=Math.max(CANDIDATE_PAGE_SIZE,state.candidateVisibleCount||CANDIDATE_PAGE_SIZE);const activeFilters=state.candidateFilter!=='approved'||(state.candidateUnit||'all')!=='all';
+  return `<section class="section volunteer-list-page compact-page-top"><div class="candidate-tools candidate-tools-compact"><div class="filter-search candidate-search"><i class="fa-solid fa-magnifying-glass"></i><input id="candidateSearch" class="input" type="search" value="${escapeHtml(search)}" placeholder="Buscar voluntário por nome" oninput="updateCandidateSearch(this.value)"></div><button class="candidate-filter-button ${activeFilters?'active':''}" type="button" onclick="openCandidateFilters()" aria-label="Filtros"><i class="fa-solid fa-sliders"></i>${activeFilters?'<span class="filter-dot"></span>':''}</button><button class="candidate-add-button" type="button" onclick="openNewCandidate()" aria-label="Novo candidato" title="Novo candidato"><i class="fa-solid fa-user-plus"></i></button></div><div class="candidate-filter-summary">${candidateFilterSummary()}</div><div id="candidateList" class="list">${candidateListHtml(filtered,visibleCount)}</div></section>`;
 }
-
 function escapeHtml(value){return String(value||'').replace(/[&<>'\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
-
-function getFilteredCandidates(){
-  const filter=normalizeCandidateFilter(state.candidateFilter);
-  const search=(state.candidateSearch||'').trim().toLocaleLowerCase(typeof currentLocale==='function'?currentLocale():'pt-BR');
-  const unit=state.candidateUnit||'all';
-  return state.candidates.filter(p=>{
-    const byStatus=filter==='all'||p.status===filter;
-    const byUnit=unit==='all'||p.unit===unit;
-    const bySearch=!search||String(p.name||'').toLocaleLowerCase(typeof currentLocale==='function'?currentLocale():'pt-BR').includes(search);
-    return byStatus&&byUnit&&bySearch;
-  });
-}
-
-function candidateListHtml(list,visibleCount=state.candidateVisibleCount||CANDIDATE_PAGE_SIZE){
-  if(!list.length)return `<div class="empty"><i class="fa-regular fa-folder-open"></i>Nenhum perfil encontrado com esses filtros.</div>`;
-  const visible=list.slice(0,visibleCount);
-  const remaining=Math.max(0,list.length-visible.length);
-  const more=remaining?`<button class="btn btn-soft btn-block candidate-load-more" type="button" onclick="loadMoreCandidates()"><i class="fa-solid fa-chevron-down"></i>Ver mais ${Math.min(CANDIDATE_PAGE_SIZE,remaining)}</button>`:'';
-  return visible.map(personCompact).join('')+more;
-}
-
-function loadMoreCandidates(){
-  state.candidateVisibleCount=(state.candidateVisibleCount||CANDIDATE_PAGE_SIZE)+CANDIDATE_PAGE_SIZE;
-  refreshCandidateList();
-}
-
-function refreshCandidateList(){
-  const list=document.getElementById('candidateList');
-  if(list){list.innerHTML=candidateListHtml(getFilteredCandidates());if(typeof applyI18n==='function')applyI18n(list)}
-}
-
-function updateCandidateSearch(value){
-  state.candidateSearch=value;
-  state.candidateVisibleCount=CANDIDATE_PAGE_SIZE;
-  refreshCandidateList();
-}
-
-function candidateFilterSummary(){
-  const filter=normalizeCandidateFilter(state.candidateFilter);
-  const unit=state.candidateUnit||'all';
-  const label=(CANDIDATE_STATUS_OPTIONS.find(([id])=>id===filter)||['','Aprovado'])[1];
-  const parts=[label];
-  if(unit!=='all')parts.push(unit);
-  return `<span><i class="fa-solid fa-filter"></i>${parts.join(' • ')}</span>`;
-}
-
-function openCandidateFilters(){
-  const filter=normalizeCandidateFilter(state.candidateFilter);
-  const unit=state.candidateUnit||'all';
-  openModal('Filtros','Refine os perfis exibidos.',`<div class="filter-modal-content">
-    <div class="field"><label>Status</label><select id="candidateStatusFilter" class="select">
-      ${CANDIDATE_STATUS_OPTIONS.map(([id,l])=>`<option value="${id}" ${filter===id?'selected':''}>${l}</option>`).join('')}
-    </select></div>
-    <div class="field"><label>Unidade</label><select id="candidateUnitFilter" class="select">
-      ${[['all','Todas as unidades'],['Rodeio','Rodeio'],['Indaial','Indaial']].map(([id,l])=>`<option value="${id}" ${unit===id?'selected':''}>${l}</option>`).join('')}
-    </select></div>
-    <div class="filter-modal-actions"><button class="btn btn-outline" type="button" onclick="clearCandidateFilters()">Limpar filtros</button><button class="btn btn-primary" type="button" onclick="applyCandidateFilters()">Aplicar</button></div>
-  </div>`);
-  modalRoot.querySelector('.modal')?.classList.add('filter-modal');
-}
-
-function applyCandidateFilters(){
-  state.candidateFilter=normalizeCandidateFilter(document.getElementById('candidateStatusFilter')?.value);
-  state.candidateUnit=document.getElementById('candidateUnitFilter')?.value||'all';
-  state.candidateVisibleCount=CANDIDATE_PAGE_SIZE;
-  closeModal();render();
-}
-
-function clearCandidateFilters(){
-  state.candidateFilter='approved';
-  state.candidateUnit='all';
-  state.candidateVisibleCount=CANDIDATE_PAGE_SIZE;
-  closeModal();render();
-}
-
-function countFilter(id){
-  if(id==='all')return state.candidates.length;
-  return state.candidates.filter(p=>p.status===id).length;
-}
-
+function getFilteredCandidates(){const filter=normalizeCandidateFilter(state.candidateFilter);const search=(state.candidateSearch||'').trim().toLocaleLowerCase(typeof currentLocale==='function'?currentLocale():'pt-BR');const unit=state.candidateUnit||'all';return state.candidates.filter(p=>{const byStatus=filter==='all'||p.status===filter;const byUnit=unit==='all'||p.unit===unit;const bySearch=!search||String(p.name||'').toLocaleLowerCase(typeof currentLocale==='function'?currentLocale():'pt-BR').includes(search);return byStatus&&byUnit&&bySearch;});}
+function candidateListHtml(list,visibleCount=state.candidateVisibleCount||CANDIDATE_PAGE_SIZE){if(!list.length)return `<div class="empty"><i class="fa-regular fa-folder-open"></i>Nenhum perfil encontrado com esses filtros.</div>`;const visible=list.slice(0,visibleCount);const remaining=Math.max(0,list.length-visible.length);const more=remaining?`<button class="btn btn-soft btn-block candidate-load-more" type="button" onclick="loadMoreCandidates()"><i class="fa-solid fa-chevron-down"></i>Ver mais ${Math.min(CANDIDATE_PAGE_SIZE,remaining)}</button>`:'';return visible.map(personCompact).join('')+more;}
+function loadMoreCandidates(){state.candidateVisibleCount=(state.candidateVisibleCount||CANDIDATE_PAGE_SIZE)+CANDIDATE_PAGE_SIZE;refreshCandidateList();}
+function refreshCandidateList(){const list=document.getElementById('candidateList');if(list){list.innerHTML=candidateListHtml(getFilteredCandidates());if(typeof applyI18n==='function')applyI18n(list)}}
+function updateCandidateSearch(value){state.candidateSearch=value;state.candidateVisibleCount=CANDIDATE_PAGE_SIZE;refreshCandidateList();}
+function candidateFilterSummary(){const filter=normalizeCandidateFilter(state.candidateFilter);const unit=state.candidateUnit||'all';const label=(CANDIDATE_STATUS_OPTIONS.find(([id])=>id===filter)||['','Aprovado'])[1];const parts=[label];if(unit!=='all')parts.push(unit);return `<span><i class="fa-solid fa-filter"></i>${parts.join(' • ')}</span>`;}
+function openCandidateFilters(){const filter=normalizeCandidateFilter(state.candidateFilter);const unit=state.candidateUnit||'all';openModal('Filtros','Refine os perfis exibidos.',`<div class="filter-modal-content"><div class="field"><label>Status</label><select id="candidateStatusFilter" class="select">${CANDIDATE_STATUS_OPTIONS.map(([id,l])=>`<option value="${id}" ${filter===id?'selected':''}>${l}</option>`).join('')}</select></div><div class="field"><label>Unidade</label><select id="candidateUnitFilter" class="select">${[['all','Todas as unidades'],['Rodeio','Rodeio'],['Indaial','Indaial']].map(([id,l])=>`<option value="${id}" ${unit===id?'selected':''}>${l}</option>`).join('')}</select></div><div class="filter-modal-actions"><button class="btn btn-outline" type="button" onclick="clearCandidateFilters()">Limpar filtros</button><button class="btn btn-primary" type="button" onclick="applyCandidateFilters()">Aplicar</button></div></div>`);modalRoot.querySelector('.modal')?.classList.add('filter-modal');}
+function applyCandidateFilters(){state.candidateFilter=normalizeCandidateFilter(document.getElementById('candidateStatusFilter')?.value);state.candidateUnit=document.getElementById('candidateUnitFilter')?.value||'all';state.candidateVisibleCount=CANDIDATE_PAGE_SIZE;closeModal();render();}
+function clearCandidateFilters(){state.candidateFilter='approved';state.candidateUnit='all';state.candidateVisibleCount=CANDIDATE_PAGE_SIZE;closeModal();render();}
+function countFilter(id){if(id==='all')return state.candidates.length;return state.candidates.filter(p=>p.status===id).length;}
 function countTab(id){if(id==='candidates')return state.candidates.filter(p=>['pending','analysis','adjustments'].includes(p.status)).length;return state.candidates.filter(p=>p.status===id).length}
