@@ -74,13 +74,17 @@
         const {firestore}=context.modules;
         const activityRef=activityId?firestore.doc(context.db,'activities',String(activityId)):firestore.doc(firestore.collection(context.db,'activities'));
         const batch=firestore.writeBatch(context.db);
-        const definition={
-          applicationId:String(applicationId),createdByUid:String(createdByUid),ownerName:String(ownerName||''),
+        const editableDefinition={
+          applicationId:String(applicationId),ownerName:String(ownerName||''),
           name:data.name,description:data.description||'',duration:Number(data.duration)||60,
           participation:data.participation||'Livre',materials:data.materials||'',notes:data.notes||'',
           period:data.period||'Sem preferência',time:data.time||'',updatedAt:firestore.serverTimestamp()
         };
-        if(activityId)batch.update(activityRef,definition);else batch.set(activityRef,{...definition,createdAt:firestore.serverTimestamp()});
+        if(activityId){
+          batch.update(activityRef,editableDefinition);
+        }else{
+          batch.set(activityRef,{...editableDefinition,createdByUid:String(createdByUid),createdAt:firestore.serverTimestamp()});
+        }
 
         const wanted=new Set((dates||[]).map(String));
         const byDate=new Map((existingSessions||[]).filter(s=>String(s.activityId)===activityRef.id).map(s=>[String(s.date),s]));
