@@ -6,6 +6,7 @@ on:
       - main
       - refactor/real-data-only
       - 'fix/**'
+      - 'fix-*'
   workflow_dispatch:
 
 permissions:
