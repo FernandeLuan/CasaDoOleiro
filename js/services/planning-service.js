@@ -17,12 +17,16 @@
       return services.run(async()=>{
         const context=await services.firebase();
         const {firestore}=context.modules;
-        const constraints=[firestore.where('applicationId','==',String(applicationId))];
-        if(from)constraints.push(firestore.where('date','>=',from));
-        if(to)constraints.push(firestore.where('date','<=',to));
-        constraints.push(firestore.orderBy('date','asc'));
-        const snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'activity_sessions'),...constraints));
-        return snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
+        const snapshot=await firestore.getDocs(
+          firestore.query(
+            firestore.collection(context.db,'activity_sessions'),
+            firestore.where('applicationId','==',String(applicationId))
+          )
+        );
+        return snapshot.docs
+          .map(doc=>({id:doc.id,...doc.data()}))
+          .filter(row=>(!from||row.date>=from)&&(!to||row.date<=to))
+          .sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))||String(a.time||'').localeCompare(String(b.time||'')));
       });
     },
     async listManagerSchedule({from,to,unitId='all'}={}){
@@ -30,11 +34,16 @@
       return services.run(async()=>{
         const context=await services.firebase();
         const {firestore}=context.modules;
-        const constraints=[];
-        if(unitId&&unitId!=='all')constraints.push(firestore.where('unitId','==',String(unitId).toLowerCase()));
-        constraints.push(firestore.where('date','>=',from),firestore.where('date','<=',to),firestore.orderBy('date','asc'));
-        const snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'activity_sessions'),...constraints));
-        const sessions=snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
+        const snapshot=await firestore.getDocs(
+          firestore.query(
+            firestore.collection(context.db,'activity_sessions'),
+            firestore.where('date','>=',from),
+            firestore.where('date','<=',to),
+            firestore.orderBy('date','asc')
+          )
+        );
+        let sessions=snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
+        if(unitId&&unitId!=='all')sessions=sessions.filter(row=>String(row.unitId||'').toLowerCase()===String(unitId).toLowerCase());
         const missing=sessions.filter(s=>!s.activityName).map(s=>s.activityId);
         const activityMap=missing.length?await fetchActivitiesByIds(context,missing):new Map();
         return sessions.map(session=>{
