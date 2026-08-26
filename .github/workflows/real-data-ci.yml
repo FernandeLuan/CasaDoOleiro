@@ -71,28 +71,36 @@ jobs:
           grep -q '../js/admin/round5-refresh.js' admin/index.html
           grep -q '../js/portal/round5-ui.js' portal/index.html
           grep -q 'planning-note-button' js/admin/round5-ui.js
-          grep -q 'dayAdjustments:{}' js/shared/round5-services.js
           grep -q 'pending-grid-two' js/admin/round5-ui.js
           grep -q 'Suporte pelo WhatsApp' js/portal/round5-ui.js
           grep -q 'state.volunteerPlanStatus' js/portal/round5-ui.js
+          if grep -q 'dayAdjustments:{}' js/shared/round5-services.js; then
+            echo 'Adjustment resend still depends on undeployed Firestore rule.'
+            exit 1
+          fi
 
       - name: Check round 6 integration
         shell: bash
         run: |
           grep -q '../css/round6.css' admin/index.html
           grep -q '../css/round6.css' portal/index.html
-          grep -q '../js/shared/round6-services.js' admin/index.html
-          grep -q '../js/shared/round6-services.js' portal/index.html
           grep -q '../js/admin/round6-ui.js' admin/index.html
           grep -q '../js/portal/round6-ui.js' portal/index.html
-          grep -q 'Grupo sugerido' js/portal/round6-ui.js
-          grep -q 'groupPreference' js/shared/round6-services.js
-          grep -q 'groupPreference' js/services/planning-service.js
-          grep -q 'groupPreference' firestore.rules
-          grep -q 'dayAdjustments' firestore.rules
+          grep -q 'Grupo definido pela Casa' js/portal/round6-ui.js
+          grep -q "state.volunteerPlanStatus!=='adjustments'" js/portal/round6-ui.js
           grep -q 'stay-date-editor-v2' js/admin/round6-ui.js
           grep -q 'modal-back-button' js/admin/round6-ui.js
           grep -q 'overscroll-behavior-y:none' css/round6.css
+          grep -q 'x-apple-data-detectors' css/round6.css
+          test ! -e js/shared/round6-services.js
+          if grep -RIn 'round6-services\.js' admin portal js; then
+            echo 'Unused round 6 planning service dependency found.'
+            exit 1
+          fi
+          if grep -RIn 'groupPreference' admin portal js firestore.rules; then
+            echo 'Undeployable candidate group preference residue found.'
+            exit 1
+          fi
 
       - name: Reject prototype runtime residues
         shell: bash
