@@ -1,0 +1,74 @@
+/* Camada final do produto — somente regras visuais atuais. */
+
+/* Admin: decisões em linhas previsíveis. */
+.candidate-lifecycle-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important}
+.candidate-lifecycle-actions .btn{width:100%;min-width:0;padding-left:8px!important;padding-right:8px!important}
+.candidate-decision-actions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important}
+.candidate-decision-actions .btn{width:100%;min-width:0}
+.planning-review-footer{display:grid!important;grid-template-columns:1fr 1fr!important;gap:9px!important;align-items:stretch!important}
+.planning-review-footer>.btn-primary{grid-column:1;grid-row:1;width:100%!important}
+.planning-review-footer>.btn-danger-soft,.planning-review-footer>.btn-danger{grid-column:2;grid-row:1;width:100%!important}
+.planning-review-footer>.planning-whatsapp{grid-column:1/-1;grid-row:2;width:100%!important;max-width:none!important;justify-content:center!important;text-align:center!important}
+.planning-review-footer>.planning-whatsapp:only-child{grid-row:1}
+.admin-test-tools .btn{width:100%!important;justify-content:center!important}
+
+/* Editor de datas: nenhum input pode determinar uma largura maior que o modal. */
+.stay-date-modal-native,.stay-date-modal-native .modal-body,.stay-date-editor-native,.stay-date-field-native{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;overflow-x:hidden!important}
+.stay-date-editor-native{grid-template-columns:1fr!important}
+.stay-date-input-native{display:block!important;width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;-webkit-appearance:none!important;appearance:none!important}
+.stay-date-input-native::-webkit-date-and-time-value{text-align:left;min-width:0}
+.stay-date-input-native::-webkit-calendar-picker-indicator{margin:0;padding:4px}
+
+/* Detalhes de atividade compactos. */
+.activity-info-modal-compact{max-width:390px!important}
+.activity-info-compact{display:grid;gap:0;margin:-3px 0}
+.activity-info-compact .activity-info-block{padding:10px 0!important}
+.activity-info-compact .activity-info-block p{margin:3px 0 0!important;line-height:1.45!important}
+.modal-back-button{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:34px;border:0;background:var(--primary-soft);color:var(--primary);border-radius:10px;padding:7px 10px;font:inherit;font-size:.62rem;font-weight:600;margin-right:8px}
+
+/* Portal: dias onde não há atividade por padrão. */
+.no-activity-day{min-height:64px;border:1px dashed var(--border);border-radius:14px;display:flex;align-items:center;justify-content:center;gap:8px;text-align:center;color:var(--muted);font-size:.64rem;padding:12px;margin-top:7px;background:var(--surface-2)}
+.no-activity-day i{color:var(--primary);font-size:.78rem}
+.activity-date-grid .check-card.is-disabled{opacity:.5;border-style:dashed;pointer-events:none}
+
+/* Portal: informação alinhada ao título e grupo visível. */
+.volunteer-session-main{min-width:0;flex:1}
+.volunteer-session-title{display:flex;align-items:center;gap:6px;min-width:0}
+.volunteer-session-title h4{min-width:0;margin:0;overflow-wrap:anywhere}
+.volunteer-info-button{align-self:center!important;transform:none!important;margin:0!important}
+.volunteer-group-label{display:inline-flex;align-items:center;gap:5px;margin-top:5px;color:var(--primary);font-size:.59rem;font-weight:600}
+.volunteer-group-label i{font-size:.58rem}
+
+/* Unidade/suporte incorporados à Home do voluntário. */
+.home-unit-support{margin-top:-2px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px!important}
+.home-unit-copy{display:flex;align-items:center;gap:10px;min-width:0}
+.home-unit-icon{width:36px;height:36px;flex:0 0 36px;border-radius:11px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center}
+.home-unit-copy div{min-width:0}.home-unit-copy small,.home-unit-copy span{display:block;color:var(--muted);font-size:.58rem}.home-unit-copy strong{display:block;font-size:.73rem;margin:1px 0;overflow-wrap:anywhere}
+.home-unit-support>a{width:38px;height:38px;flex:0 0 38px;border-radius:12px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;text-decoration:none;font-size:1rem}
+
+/* Perfil mais limpo. */
+.volunteer-profile-page .profile-card{align-items:center!important;padding:14px!important}
+.volunteer-profile-page .profile-card>div:last-child{min-width:0}
+.volunteer-profile-page .profile-card p{margin-top:3px!important;line-height:1.35!important}
+.admin-account-card{display:grid;gap:9px}.admin-account-row{display:grid;grid-template-columns:38px minmax(0,1fr);gap:10px;align-items:center;padding:11px;border:1px solid var(--border);border-radius:14px;background:var(--surface-2)}.admin-account-icon{width:38px;height:38px;border-radius:11px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center}.admin-account-row div{min-width:0}.admin-account-row small{display:block;color:var(--muted);font-size:.57rem}.admin-account-row strong{display:block;margin-top:2px;font-size:.69rem;overflow-wrap:anywhere}
+
+/* Ocupação: azul homem, rosa mulher e cinza casal/não informado. */
+.occupancy-dot.couple,.occupancy-dot.other,.legend-dot.couple{background:#8b9490!important}
+.occupancy-legend{flex-wrap:wrap!important}
+
+/* Multi-grupos */
+.multi-group-grid .check-card{display:flex!important;align-items:center;gap:8px!important}
+.multi-group-grid input{accent-color:var(--primary)}
+
+/* Logout na barra fica visualmente neutro até ser acionado. */
+.volunteer-nav-current .nav-logout{color:var(--muted)}
+.volunteer-nav-current .nav-logout:active{color:var(--danger)}
+
+@media(max-width:520px){
+  .candidate-decision-actions{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  .candidate-decision-actions .btn{padding:9px 5px!important;font-size:.62rem!important}
+  .candidate-lifecycle-actions{grid-template-columns:1fr 1fr!important}
+  .planning-review-footer{grid-template-columns:1fr 1fr!important}
+  .stay-date-modal-native{width:calc(100vw - 20px)!important;max-width:440px!important}
+}
+@media(max-width:350px){.candidate-decision-actions{grid-template-columns:1fr!important}.candidate-lifecycle-actions{grid-template-columns:1fr!important}}
