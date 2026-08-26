@@ -24,6 +24,25 @@ jobs:
         run: |
           find js -type f -name '*.js' -print0 | xargs -0 -n1 node --check
 
+      - name: Check round 3 integration
+        shell: bash
+        run: |
+          grep -q 'css/round3.css' index.html
+          grep -q '../css/round3.css' admin/index.html
+          grep -q '../css/round3.css' portal/index.html
+          grep -q 'js/login-round3.js' index.html
+          grep -q '../js/shared/round3-services.js' admin/index.html
+          grep -q '../js/shared/round3-services.js' portal/index.html
+          grep -q '../js/admin/round3-ui.js' admin/index.html
+          grep -q '../js/portal/round3-ui.js' portal/index.html
+          grep -q 'Compartilhar no WhatsApp' js/admin/round3-ui.js
+          grep -q 'password-visibility' js/login-round3.js
+          test ! -e inactive.html
+          if grep -RIn 'inactive.html' index.html admin portal js; then
+            echo 'Obsolete inactive route found.'
+            exit 1
+          fi
+
       - name: Reject prototype runtime residues
         shell: bash
         run: |
