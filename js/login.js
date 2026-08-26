@@ -14,4 +14,14 @@ async function handleLogin(){
     return startLoginTransition(session.role);
   }catch(error){return showLoginMessage(error?.message||'Não foi possível entrar.')}
 }
+async function handleForgotPassword(){
+  const email=document.getElementById('email')?.value.trim()||'';const button=document.getElementById('forgotPasswordButton');
+  if(!email)return showLoginMessage('Informe seu e-mail para recuperar a senha.');
+  if(!window.OleiroAuth||typeof window.OleiroAuth.sendPasswordReset!=='function')return showLoginMessage('Recuperação de senha indisponível. Atualize a página e tente novamente.');
+  try{
+    if(button)button.disabled=true;
+    await window.OleiroAuth.sendPasswordReset(email);
+    showLoginMessage('Se este e-mail estiver cadastrado, você receberá uma mensagem para definir uma nova senha.');
+  }catch(error){showLoginMessage(error?.message||'Não foi possível enviar o e-mail de recuperação.')}finally{if(button)button.disabled=false}
+}
 function showLoginMessage(text){const el=document.getElementById('loginMessage');if(!el)return;el.textContent=typeof translateText==='function'?translateText(text):text;el.hidden=false}
