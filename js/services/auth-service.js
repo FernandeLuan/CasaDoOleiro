@@ -14,16 +14,16 @@
 
   async function activeApplication(context,uid){
     const {firestore}=context.modules;
+    // A consulta por participante usa apenas o índice automático. O filtro de ativo é
+    // aplicado em memória porque cada usuário possui pouquíssimas candidaturas.
     const q=firestore.query(
       firestore.collection(context.db,'applications'),
       firestore.where('participantUids','array-contains',uid),
-      firestore.where('active','==',true),
-      firestore.limit(1)
+      firestore.limit(10)
     );
     const snapshot=await firestore.getDocs(q);
-    if(snapshot.empty)return null;
-    const doc=snapshot.docs[0];
-    return {id:doc.id,...doc.data()};
+    const doc=snapshot.docs.find(item=>item.data().active===true);
+    return doc?{id:doc.id,...doc.data()}:null;
   }
 
   async function volunteerProfile(context,uid){
