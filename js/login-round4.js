@@ -21,8 +21,9 @@
     button.innerHTML=busy?'<i class="fa-solid fa-circle-notch"></i>Entrando...':originalButtonHtml;
   }
 
-  document.getElementById('email')?.addEventListener('input',clearInvalidAndMessage);
-  document.getElementById('password')?.addEventListener('input',clearInvalidAndMessage);
+  ['email','password'].forEach(id=>{
+    const input=document.getElementById(id);input?.addEventListener('input',clearInvalidAndMessage);input?.addEventListener('focus',()=>{if(fieldFor(id)?.classList.contains('is-invalid'))clearInvalidAndMessage()});
+  });
 
   showLoginMessage=function(text,options={}){
     const el=document.getElementById('loginMessage');if(!el)return;
