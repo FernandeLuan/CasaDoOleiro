@@ -11,10 +11,13 @@
     return execute();
   }
 
-  function backendUnavailable(){
-    throw new Error('Backend ainda não configurado. Use ?dev=1 para a massa de regressão.');
+  async function firebase(){
+    if(!window.OleiroFirebase)throw new Error('Backend indisponível.');
+    const context=await window.OleiroFirebase.ready;
+    if(!context?.configured)throw new Error('Firebase não configurado.');
+    return context;
   }
 
   window.OleiroServices=window.OleiroServices||{};
-  Object.assign(window.OleiroServices,{config,run,backendUnavailable});
+  Object.assign(window.OleiroServices,{config,run,firebase});
 })();
