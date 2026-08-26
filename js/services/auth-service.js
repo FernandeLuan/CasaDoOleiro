@@ -26,6 +26,12 @@
     return {id:doc.id,...doc.data()};
   }
 
+  async function volunteerProfile(context,uid){
+    const {firestore}=context.modules;
+    const snapshot=await firestore.getDoc(firestore.doc(context.db,'volunteer_profiles',uid));
+    return snapshot.exists()?{id:snapshot.id,...snapshot.data()}:null;
+  }
+
   async function sessionFromUser(context,user){
     const {firestore,auth}=context.modules;
     const userSnapshot=await firestore.getDoc(firestore.doc(context.db,'users',user.uid));
@@ -34,27 +40,27 @@
       throw new Error('Este acesso ainda não foi liberado pela Casa do Oleiro.');
     }
 
-    const profile=userSnapshot.data();
-    if(profile.active!==true){
+    const access=userSnapshot.data();
+    if(access.active!==true){
       await auth.signOut(context.auth);
       return {role:'inactive',mode:null,uid:user.uid,email:user.email||null};
     }
 
-    const role=normalizeRole(profile.role);
-    if(role==='manager')return {role,mode:null,uid:user.uid,email:user.email||null,user:profile};
+    const role=normalizeRole(access.role);
+    if(role==='manager')return {role,mode:null,uid:user.uid,email:user.email||null,user:access};
     if(role!=='volunteer'){
       await auth.signOut(context.auth);
       return {role:'inactive',mode:null,uid:user.uid,email:user.email||null};
     }
 
-    const application=await activeApplication(context,user.uid);
+    const [application,profile]=await Promise.all([activeApplication(context,user.uid),volunteerProfile(context,user.uid)]);
     if(!application){
       await auth.signOut(context.auth);
       return {role:'inactive',mode:null,uid:user.uid,email:user.email||null};
     }
 
     const mode=application.status==='approved'?'approved':'candidate';
-    return {role:'volunteer',mode,uid:user.uid,email:user.email||null,user:profile,application};
+    return {role:'volunteer',mode,uid:user.uid,email:user.email||null,user:access,profile,application};
   }
 
   window.OleiroAuth={
