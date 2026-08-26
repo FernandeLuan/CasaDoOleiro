@@ -99,7 +99,7 @@
             participantCount:accounts.length,participantStatus,unitId:data.unitId,unitName:data.unitName,
             status:'pending',active:true,stayStart:data.stayStart,stayEnd:data.stayEnd,stayMonths:stayMonths(data.stayStart,data.stayEnd),
             planningDeadlineAt:firestore.Timestamp.fromDate(deadlineDate),planningSubmittedAt:null,
-            needsAdminAttention:false,activityCount:0,sessionCount:0,source:'portal',internalNote:data.note||'',
+            activityCount:0,sessionCount:0,source:'portal',internalNote:data.note||'',
             searchTokens:searchTokens(data.participants),createdAt:now,updatedAt:now
           });
 
