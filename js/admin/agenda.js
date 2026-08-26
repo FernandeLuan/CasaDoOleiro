@@ -3,113 +3,38 @@ function ensureAgendaRange(){
   if(!state.agendaTo)state.agendaTo=state.agendaFrom;
   if(state.agendaFrom>state.agendaTo){const tmp=state.agendaFrom;state.agendaFrom=state.agendaTo;state.agendaTo=tmp}
 }
+function agendaRangeCount(){ensureAgendaRange();return Math.floor((new Date(state.agendaTo+'T12:00:00')-new Date(state.agendaFrom+'T12:00:00'))/86400000)+1}
+function agendaRangeDates(){ensureAgendaRange();return dateRange(state.agendaFrom,Math.max(1,Math.min(31,agendaRangeCount())))}
 
-function agendaRangeCount(){
+async function reloadManagerAgenda(){
   ensureAgendaRange();
-  const start=new Date(state.agendaFrom+'T12:00:00');
-  const end=new Date(state.agendaTo+'T12:00:00');
-  return Math.floor((end-start)/86400000)+1;
+  try{await hydrateManagerSchedule(state.agendaFrom,state.agendaTo)}catch(error){console.error(error);showToast('Não foi possível carregar a agenda.')}
+  render();scrollPageTop();
 }
-
-function agendaRangeDates(){
-  ensureAgendaRange();
-  return dateRange(state.agendaFrom,Math.max(1,Math.min(31,agendaRangeCount())));
+async function shiftAgendaRange(direction){
+  ensureAgendaRange();const span=agendaRangeCount();state.agendaFrom=addDays(state.agendaFrom,direction*span);state.agendaTo=addDays(state.agendaTo,direction*span);state.agendaAnchor=state.agendaFrom;state.selectedDate=state.agendaFrom;await reloadManagerAgenda();
 }
-
-function shiftAgendaRange(direction){
-  ensureAgendaRange();
-  const span=agendaRangeCount();
-  state.agendaFrom=addDays(state.agendaFrom,direction*span);
-  state.agendaTo=addDays(state.agendaTo,direction*span);
-  state.agendaAnchor=state.agendaFrom;
-  state.selectedDate=state.agendaFrom;
-  render();
-}
-
-function goAgendaToday(){
-  state.agendaFrom=_oleiroToday;
-  state.agendaTo=_oleiroToday;
-  state.agendaAnchor=_oleiroToday;
-  state.selectedDate=_oleiroToday;
-  render();
-}
-
+async function goAgendaToday(){state.agendaFrom=_oleiroToday;state.agendaTo=_oleiroToday;state.agendaAnchor=_oleiroToday;state.selectedDate=_oleiroToday;await reloadManagerAgenda()}
 function agendaHeaderLabel(){
-  ensureAgendaRange();
-  const lang=typeof currentLanguage==='function'?currentLanguage():'pt';
-  const locale=typeof currentLocale==='function'?currentLocale():'pt-BR';
-  if(state.agendaFrom===state.agendaTo){
-    const d=new Date(state.agendaFrom+'T12:00:00');
-    const dateText=new Intl.DateTimeFormat(locale,{day:'numeric',month:'long'}).format(d);
-    if(state.agendaFrom===_oleiroToday){
-      const today=lang==='en'?'Today':lang==='es'?'Hoy':'Hoje';
-      return `${today} • ${dateText}`;
-    }
-    return dateText.charAt(0).toUpperCase()+dateText.slice(1);
-  }
+  ensureAgendaRange();const lang=typeof currentLanguage==='function'?currentLanguage():'pt';const locale=typeof currentLocale==='function'?currentLocale():'pt-BR';
+  if(state.agendaFrom===state.agendaTo){const d=new Date(state.agendaFrom+'T12:00:00');const text=new Intl.DateTimeFormat(locale,{day:'numeric',month:'long'}).format(d);if(state.agendaFrom===_oleiroToday)return `${lang==='en'?'Today':lang==='es'?'Hoy':'Hoje'} • ${text}`;return text.charAt(0).toUpperCase()+text.slice(1)}
   return `${fmtDate(state.agendaFrom)} – ${fmtDate(state.agendaTo)}`;
 }
-
 function managerAgenda(){
-  ensureAgendaRange();
-  const dates=agendaRangeDates();
-  return `<section class="section agenda-page">
-    <div class="agenda-topbar">
-      <button class="icon-btn agenda-arrow" type="button" onclick="shiftAgendaRange(-1)" aria-label="Período anterior"><i class="fa-solid fa-chevron-left"></i></button>
-      <div class="agenda-date-center">
-        <button class="agenda-date-label" type="button" onclick="openAgendaRangeModal()" aria-label="Escolher período"><strong>${agendaHeaderLabel()}</strong></button>
-        <button class="icon-btn agenda-calendar-trigger" type="button" onclick="openAgendaRangeModal()" aria-label="Escolher período"><i class="fa-regular fa-calendar-days"></i></button>
-      </div>
-      <button class="icon-btn agenda-arrow" type="button" onclick="shiftAgendaRange(1)" aria-label="Próximo período"><i class="fa-solid fa-chevron-right"></i></button>
-    </div>
-    <div class="agenda-days">${renderDays(true,dates)}</div>
-  </section>`;
+  ensureAgendaRange();const dates=agendaRangeDates();
+  return `<section class="section agenda-page"><div class="agenda-topbar"><button class="icon-btn agenda-arrow" type="button" onclick="shiftAgendaRange(-1)" aria-label="Período anterior"><i class="fa-solid fa-chevron-left"></i></button><div class="agenda-date-center"><button class="agenda-date-label" type="button" onclick="openAgendaRangeModal()"><strong>${agendaHeaderLabel()}</strong></button><button class="icon-btn agenda-calendar-trigger" type="button" onclick="openAgendaRangeModal()" aria-label="Escolher período"><i class="fa-regular fa-calendar-days"></i></button></div><button class="icon-btn agenda-arrow" type="button" onclick="shiftAgendaRange(1)" aria-label="Próximo período"><i class="fa-solid fa-chevron-right"></i></button></div><div class="agenda-days">${renderDays(true,dates)}</div></section>`;
 }
-
-function openAgendaRangeModal(){
-  ensureAgendaRange();
-  openModal('Período da agenda','Escolha as datas que deseja visualizar.',`<div class="agenda-range-form">
-    <div class="field-row agenda-range-fields"><div class="field"><label>De</label><input id="agendaFromInput" class="input" type="date" value="${state.agendaFrom}"></div><div class="field"><label>Até</label><input id="agendaToInput" class="input" type="date" value="${state.agendaTo}"></div></div>
-    <button class="btn btn-primary btn-block" type="button" onclick="applyAgendaRange()">Aplicar período</button>
-  </div>`);
-  modalRoot.querySelector('.modal')?.classList.add('agenda-range-modal');
+function openAgendaRangeModal(){ensureAgendaRange();openModal('Período da agenda','Escolha as datas que deseja visualizar.',`<div class="agenda-range-form"><div class="field-row agenda-range-fields"><div class="field"><label>De</label><input id="agendaFromInput" class="input" type="date" value="${state.agendaFrom}"></div><div class="field"><label>Até</label><input id="agendaToInput" class="input" type="date" value="${state.agendaTo}"></div></div></div>`,`<button class="btn btn-primary btn-block" type="button" onclick="applyAgendaRange()">Aplicar período</button>`);modalRoot.querySelector('.modal')?.classList.add('agenda-range-modal')}
+async function applyAgendaRange(){
+  const from=document.getElementById('agendaFromInput')?.value,to=document.getElementById('agendaToInput')?.value;if(!from||!to)return showToast('Informe as duas datas.');const days=Math.floor((new Date(to+'T12:00:00')-new Date(from+'T12:00:00'))/86400000)+1;if(days<1)return showToast('A data final deve ser igual ou posterior à inicial.');if(days>31)return showToast('Selecione um período de até 31 dias.');state.agendaFrom=from;state.agendaTo=to;state.agendaAnchor=from;state.selectedDate=from;closeModal();await reloadManagerAgenda();
 }
-
-function applyAgendaRange(){
-  const from=document.getElementById('agendaFromInput')?.value;
-  const to=document.getElementById('agendaToInput')?.value;
-  if(!from||!to)return showToast('Informe as duas datas.');
-  const start=new Date(from+'T12:00:00');
-  const end=new Date(to+'T12:00:00');
-  const days=Math.floor((end-start)/86400000)+1;
-  if(days<1)return showToast('A data final deve ser igual ou posterior à inicial.');
-  if(days>31)return showToast('Selecione um período de até 31 dias.');
-  state.agendaFrom=from;
-  state.agendaTo=to;
-  state.agendaAnchor=from;
-  state.selectedDate=from;
-  closeModal();render();
+function renderDays(_manager=false,dates=null){dates=dates||agendaRangeDates();return dates.map(d=>{const sessions=getSessions(d);const mins=sessions.reduce((s,x)=>s+(Number(x.activity.duration)||0),0);return `<div class="day-block"><div class="day-title"><h3>${dayName(d)}, ${fmtDate(d)}</h3><span>${mins?`${(mins/60).toFixed(mins%60?1:0).replace('.',',')}h planejadas`:''}</span></div>${sessions.length?sessions.map(sessionCard).join(''):'<div class="empty">Nenhuma atividade neste dia.</div>'}</div>`}).join('')}
+function sessionCard(s){const [l,t]=statusMeta(s.status);return `<div class="activity-card clickable" onclick='openManagerSession(${JSON.stringify(s.sessionId)})'><div class="activity-row"><div><h4>${s.activity.time||'—'} • ${escapeHtml(s.activity.name||'Atividade')}</h4><p>${Number(s.activity.duration)||0} min • ${escapeHtml(s.activity.period||'Sem preferência')} • ${escapeHtml(s.activity.participation||'Livre')}</p><div class="session-person"><i class="fa-regular fa-user"></i>${escapeHtml(s.activity.owner||'Voluntário')}</div></div><div style="display:flex;align-items:flex-start;gap:7px">${badge(l,t)}<i class="fa-solid fa-chevron-right chevron"></i></div></div><div class="item-meta">${badge(s.group||'A definir','primary')}</div></div>`}
+function managerSessionById(id){return (state.sessions||[]).find(s=>String(s.id)===String(id))||null}
+function openManagerSession(id){
+  const s=managerSessionById(id);if(!s)return showToast('Sessão não encontrada.');const a=s.activity||{};const [l,t]=statusMeta(s.status||'proposed');const group=s.groupId||'A definir';
+  openModal(a.name||'Atividade',`${a.owner||'Voluntário'} • ${dayName(s.date)}, ${fmtDate(s.date)}`,`<div class="card"><div class="activity-row"><div><h3 style="font-size:.85rem">${s.time||a.time||'—'} • ${Number(s.duration||a.duration)||0} min</h3><p style="font-size:.65rem;color:var(--muted);margin-top:4px">${escapeHtml(a.description||'')}</p></div>${badge(l,t)}</div><div class="item-meta">${badge(group,'primary')}${badge(a.participation||'Livre')}</div>${a.materials?`<p class="compact-hint" style="margin-top:10px"><strong>Materiais:</strong> ${escapeHtml(a.materials)}</p>`:''}</div>`,`<div class="activity-actions modal-action-row"><button class="btn btn-soft" onclick='confirmManagerSession(${JSON.stringify(s.id)})'>Confirmar</button><button class="btn btn-outline" onclick='closeModal();moveSession(${JSON.stringify(s.activityId)},${JSON.stringify(s.date)},false)'>Mover</button><button class="btn btn-outline" onclick='openManagerGroupPicker(${JSON.stringify(s.id)})'>Grupo</button></div>`);modalRoot.querySelector('.modal')?.classList.add('session-detail-modal')
 }
-
-function dateStrip(dates=null){
-  dates=dates||agendaRangeDates();
-  const locale=typeof currentLocale==='function'?currentLocale():'pt-BR';
-  return `<div class="calendar-strip">${dates.map(d=>`<button class="date-chip ${state.selectedDate===d?'active':''}" onclick="state.selectedDate='${d}';render()"><span>${dayName(d)}</span><strong>${new Date(d+'T12:00:00').getDate()}</strong><span>${new Intl.DateTimeFormat(locale,{month:'short'}).format(new Date(d+'T12:00:00')).replace('.','').toUpperCase()}</span></button>`).join('')}</div>`;
-}
-
-function renderDays(manager=false,dates=null){
-  dates=dates||agendaRangeDates();
-  return dates.map(d=>{const sessions=getSessions(d);const mins=sessions.reduce((s,x)=>s+x.activity.duration,0);return `<div class="day-block"><div class="day-title"><h3>${dayName(d)}, ${fmtDate(d)}</h3><span>${mins?`${(mins/60).toFixed(mins%60?1:0).replace('.',',')}h planejadas`:''}</span></div>${sessions.length?sessions.map(s=>sessionCard(s,manager)).join(''):`<div class="empty">Nenhuma atividade neste dia.</div>`}</div>`}).join('')
-}
-
-function sessionCard(s,manager=false){
-  const [l,t]=statusMeta(s.status);
-  return `<div class="activity-card ${manager?'clickable':''}" ${manager?`onclick="openSessionDetail(${s.activity.id},'${s.date}')"`:''}><div class="activity-row"><div><h4>${s.activity.time} • ${s.activity.name}</h4><p>${s.activity.duration} min • ${s.activity.period} • ${s.activity.participation}</p><div class="session-person"><i class="fa-regular fa-user"></i>${s.activity.owner}</div></div><div style="display:flex;align-items:flex-start;gap:7px">${badge(l,t)}${manager?'<i class="fa-solid fa-chevron-right chevron"></i>':''}</div></div><div class="item-meta">${badge(s.group,'primary')}</div></div>`
-}
-
-function openSessionDetail(id,date){
-  const a=state.activities.find(x=>x.id===id);if(!a)return;
-  const status=state.sessionStatus[`${id}-${date}`]||'proposed';const [l,t]=statusMeta(status);const group=state.sessionGroups[`${id}-${date}`]||'A definir';
-  openModal(a.name,`${a.owner} • ${dayName(date)}, ${fmtDate(date)}`,`<div class="card"><div class="activity-row"><div><h3 style="font-size:.85rem">${a.time} • ${a.duration} min</h3><p style="font-size:.65rem;color:var(--muted);margin-top:4px">${a.description}</p></div>${badge(l,t)}</div><div class="item-meta">${badge(group,'primary')}${badge(a.participation)}</div>${a.materials?`<p class="compact-hint" style="margin-top:10px"><strong>Materiais:</strong> ${a.materials}</p>`:''}</div><div class="activity-actions modal-action-row" style="margin-top:12px"><button class="btn btn-soft" onclick="confirmSession(${id},'${date}');closeModal()">Confirmar</button><button class="btn btn-outline" onclick="closeModal();moveSession(${id},'${date}')">Mover</button><button class="btn btn-outline" onclick="closeModal();assignGroup(${id},'${date}')">Grupo</button></div>`);
-  modalRoot.querySelector('.modal')?.classList.add('session-detail-modal');
-}
+async function confirmManagerSession(id){const s=managerSessionById(id);if(!s)return;try{await window.OleiroServices.planning.updateSession(id,{status:'confirmed',confirmedAt:new Date()});closeModal();await reloadManagerAgenda();showToast('Sessão confirmada.')}catch(error){console.error(error);showToast('Não foi possível confirmar a sessão.')}}
+function openManagerGroupPicker(id){const s=managerSessionById(id);if(!s)return;const groups=(state.groups||[]).map(g=>g.code||g.id);const options=[...groups,'Livre'];openModal('Definir grupo','Somente a equipe da Casa define quem participa.',`<div class="check-grid">${options.map(g=>`<button class="check-card" onclick='saveManagerGroup(${JSON.stringify(id)},${JSON.stringify(g)})'>${g==='Livre'?'Participação livre':'Grupo '+g}</button>`).join('')}</div>`)}
+async function saveManagerGroup(id,g){try{await window.OleiroServices.planning.updateSession(id,{groupId:g});closeModal();await reloadManagerAgenda();showToast('Grupo atualizado.')}catch(error){console.error(error);showToast('Não foi possível atualizar o grupo.')}}
