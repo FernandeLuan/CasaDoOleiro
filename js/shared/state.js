@@ -1,10 +1,11 @@
-/* Estado de interface. Dados reais serão hidratados pelo backend.
-   Dados de demonstração vivem em mock-data.js e só são aplicados com ?dev=1. */
+/* Estado efêmero da interface. Dados persistentes vêm exclusivamente do Firebase. */
 const _oleiroNow = new Date();
 const _oleiroToday = `${_oleiroNow.getFullYear()}-${String(_oleiroNow.getMonth()+1).padStart(2,'0')}-${String(_oleiroNow.getDate()).padStart(2,'0')}`;
 
 const state = {
   role: null,
+  currentSession: null,
+  currentApplication: null,
   managerPage: 'home',
   volunteerPage: 'home',
   volunteerMode: 'candidate',
