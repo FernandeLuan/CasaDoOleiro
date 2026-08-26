@@ -22,13 +22,13 @@ a[href^="mailto:"],a[x-apple-data-detectors],[x-apple-data-detectors],.candidate
 
 /* Editor de datas dedicado: não reutiliza o overlay de datas do cadastro. */
 .stay-date-editor-v2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;width:100%;max-width:100%;min-width:0;overflow:hidden}
-.stay-date-field-v2{display:block;min-width:0;max-width:100%;width:100%}
+.stay-date-field-v2{display:block;min-width:0;max-width:100%;width:100%;overflow:hidden}
 .stay-date-field-v2>span{display:block;font-size:.65rem;font-weight:600;margin-bottom:6px;color:var(--text)}
-.stay-date-input-v2{display:block;width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:13px;padding:11px 10px;font-size:16px!important;line-height:1.2;overflow:hidden}
+.stay-date-input-v2{display:block;inline-size:100%!important;max-inline-size:100%!important;width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:13px;padding:11px 10px;font-size:16px!important;line-height:1.2;overflow:hidden}
+.stay-date-modal-v2{max-width:620px!important;overflow-x:hidden!important}
 
-/* Grupo sugerido pelo voluntário é informação de planejamento, não composição do grupo. */
-.group-preference-hint{display:block;margin-top:5px;font-size:.59rem;color:var(--muted);line-height:1.45}
-.planning-group-suggestion{font-size:.61rem;color:var(--primary);font-weight:600;margin-top:3px}
+.group-definition-note{margin:0;font-size:.65rem}
+.group-definition-note strong{font-size:.66rem}
 
 @media(max-width:520px){
   .stay-date-editor-v2{grid-template-columns:minmax(0,1fr)}
