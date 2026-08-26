@@ -6,6 +6,11 @@ function renderManager(){
 }
 
 function render(){renderManager()}
-state.role='manager';
-state.managerPage='home';
-render();
+async function bootManager(){
+  const session=window.OleiroAuthGuard?await window.OleiroAuthGuard.requireRole('manager'):{role:'manager',dev:true};
+  if(!session)return;
+  state.role='manager';
+  state.managerPage='home';
+  render();
+}
+bootManager();
