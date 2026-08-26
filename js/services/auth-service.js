@@ -5,8 +5,9 @@
   function inactiveAccessError(){const error=new Error('Seu cadastro está inativo. Entre em contato com a equipe da Casa do Oleiro para verificar o acesso.');error.code='oleiro/inactive';return error}
   async function activeApplication(context,uid){const {firestore}=context.modules;const q=firestore.query(firestore.collection(context.db,'applications'),firestore.where('participantUids','array-contains',uid),firestore.limit(10));const snapshot=await firestore.getDocs(q);const doc=snapshot.docs.find(item=>item.data().active===true);return doc?{id:doc.id,...doc.data()}:null}
   async function volunteerProfile(context,uid){const {firestore}=context.modules;const snapshot=await firestore.getDoc(firestore.doc(context.db,'volunteer_profiles',uid));return snapshot.exists()?{id:snapshot.id,...snapshot.data()}:null}
+  async function ownAccessDocument(context,user){const {firestore,auth}=context.modules;try{return await firestore.getDoc(firestore.doc(context.db,'users',user.uid))}catch(error){if(error?.code==='permission-denied'||/missing or insufficient permissions/i.test(String(error?.message||''))){await auth.signOut(context.auth);throw inactiveAccessError()}throw error}}
   async function sessionFromUser(context,user){
-    const {firestore,auth}=context.modules;const userSnapshot=await firestore.getDoc(firestore.doc(context.db,'users',user.uid));
+    const {auth}=context.modules;const userSnapshot=await ownAccessDocument(context,user);
     if(!userSnapshot.exists()){await auth.signOut(context.auth);const error=new Error('Este acesso ainda não foi liberado pela Casa do Oleiro.');error.code='oleiro/not-released';throw error}
     const access=userSnapshot.data();if(access.active!==true){await auth.signOut(context.auth);throw inactiveAccessError()}
     const role=normalizeRole(access.role);if(role==='manager')return {role,mode:null,uid:user.uid,email:user.email||null,user:access};if(role!=='volunteer'){await auth.signOut(context.auth);throw inactiveAccessError()}
