@@ -21,7 +21,6 @@ service cloud.firestore {
       return hasUser() && currentUser().active == true;
     }
 
-    // Administrador e coordenador possuem o mesmo acesso funcional: Gestor.
     function isManager() {
       return activeUser() && currentUser().role in ['admin', 'coordinator'];
     }
@@ -73,7 +72,10 @@ service cloud.firestore {
     }
 
     match /users/{uid} {
-      allow read: if activeUser() && (request.auth.uid == uid || isManager());
+      // O próprio usuário pode ler somente seu documento de acesso. Isso permite que
+      // o cliente identifique active=false e mostre a mensagem correta, sem liberar
+      // outros dados protegidos. Gestores continuam podendo consultar usuários.
+      allow read: if (signedIn() && request.auth.uid == uid) || isManager();
       allow create, update, delete: if isManager();
     }
 
@@ -103,8 +105,6 @@ service cloud.firestore {
         && request.resource.data.createdByUid == request.auth.uid
       );
 
-      // Uma candidatura de casal compartilha o planejamento. Qualquer participante
-      // pode editar a definição, mas applicationId e createdByUid são imutáveis.
       allow update: if isManager() || (
         activeUser()
         && participantOf(resource.data.applicationId)
@@ -137,8 +137,6 @@ service cloud.firestore {
         && request.resource.data.groupId == null
       );
 
-      // Os dois participantes de um casal podem alterar o mesmo planejamento.
-      // Campos de identidade, unidade, autoria original e grupo permanecem protegidos.
       allow update: if isManager() || (
         activeUser()
         && participantOf(resource.data.applicationId)
