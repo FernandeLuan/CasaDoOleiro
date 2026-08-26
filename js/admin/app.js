@@ -12,6 +12,7 @@ async function hydrateManagerData(){
   if(window.OleiroServices?.applications?.list)tasks.push(window.OleiroServices.applications.list({status:'all',unit:'all',limit:30}).then(result=>{state.candidates=result.items||[]}));
   if(window.OleiroServices?.attention?.listForAdmin)tasks.push(window.OleiroServices.attention.listForAdmin({unit:'all',limit:5}).then(items=>{state.notifications=items||[]}));
   if(tasks.length)await Promise.all(tasks);
+  if(typeof processExpiredCandidatesOnStartup==='function')await processExpiredCandidatesOnStartup();
 }
 async function bootManager(){
   const session=await window.OleiroAuthGuard?.requireRole('manager');
