@@ -3,19 +3,25 @@
 
   services.planning={
     async listSessions({applicationId,from,to}={}){
-      return services.run(()=>{
-        const dev=new URLSearchParams(location.search).get('dev')==='1';
-        if(dev){
-          const activities=window.state?.activities||[];
-          const rows=[];
-          activities.forEach(activity=>activity.dates.forEach(date=>{
-            if(from&&date<from)return;
-            if(to&&date>to)return;
-            rows.push({activityId:activity.id,date,time:activity.time,status:window.state?.sessionStatus?.[`${activity.id}-${date}`]||'proposed',groupId:window.state?.sessionGroups?.[`${activity.id}-${date}`]||null,activity});
-          }));
-          return rows.sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time));
-        }
-        return services.backendUnavailable();
+      if(!applicationId)return [];
+      return services.run(async()=>{
+        const context=await services.firebase();
+        const {firestore}=context.modules;
+        const constraints=[firestore.where('applicationId','==',String(applicationId))];
+        if(from)constraints.push(firestore.where('date','>=',from));
+        if(to)constraints.push(firestore.where('date','<=',to));
+        constraints.push(firestore.orderBy('date','asc'));
+        const snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'activity_sessions'),...constraints));
+        return snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
+      });
+    },
+    async listActivities(applicationId){
+      if(!applicationId)return [];
+      return services.run(async()=>{
+        const context=await services.firebase();
+        const {firestore}=context.modules;
+        const snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'activities'),firestore.where('applicationId','==',String(applicationId))));
+        return snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
       });
     }
   };
