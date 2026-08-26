@@ -24,115 +24,93 @@ jobs:
         run: |
           find js -type f -name '*.js' -print0 | xargs -0 -n1 node --check
 
-      - name: Check round 3 integration
+      - name: Check legacy UI integrations
         shell: bash
         run: |
           grep -q 'css/round3.css' index.html
           grep -q '../css/round3.css' admin/index.html
           grep -q '../css/round3.css' portal/index.html
           grep -q 'js/login-round3.js' index.html
-          grep -q '../js/shared/round3-services.js' admin/index.html
-          grep -q '../js/shared/round3-services.js' portal/index.html
           grep -q '../js/admin/round3-ui.js' admin/index.html
           grep -q '../js/portal/round3-ui.js' portal/index.html
-          test ! -e inactive.html
-          if grep -RIn 'inactive.html' index.html admin portal js; then
-            echo 'Obsolete inactive route found.'
-            exit 1
-          fi
-
-      - name: Check round 4 integration
-        shell: bash
-        run: |
-          grep -q 'css/round4.css' index.html
-          grep -q '../css/round4.css' admin/index.html
-          grep -q '../css/round4.css' portal/index.html
-          grep -q 'js/login-round4.js' index.html
           grep -q '../js/admin/round4-ui.js' admin/index.html
           grep -q '../js/portal/round4-ui.js' portal/index.html
-          grep -q 'Solicitar ajuste neste dia' js/admin/round4-ui.js
-          grep -q 'stay-support-link' js/portal/round4-ui.js
-          test ! -e js/shared/notifications.js
-          test ! -e js/services/attention-service.js
-          if grep -RInE 'notifications\.js|attention-service\.js|openNotifications\(' index.html admin portal js; then
-            echo 'Notification UI/service residue found.'
-            exit 1
-          fi
-
-      - name: Check round 5 integration
-        shell: bash
-        run: |
-          grep -q 'css/round5.css' index.html
-          grep -q '../css/round5.css' admin/index.html
-          grep -q '../css/round5.css' portal/index.html
-          grep -q '../js/shared/round5-services.js' admin/index.html
-          grep -q '../js/shared/round5-services.js' portal/index.html
           grep -q '../js/admin/round5-ui.js' admin/index.html
           grep -q '../js/admin/round5-refresh.js' admin/index.html
           grep -q '../js/portal/round5-ui.js' portal/index.html
+          grep -q '../js/admin/round6-ui.js' admin/index.html
+          grep -q '../js/portal/round6-ui.js' portal/index.html
+          grep -q '../js/admin/round7-ui.js' admin/index.html
+          grep -q '../js/portal/round7-ui.js' portal/index.html
+          grep -q '../js/shared/round7-ui.js' admin/index.html
+          grep -q '../js/shared/round7-ui.js' portal/index.html
+
+      - name: Check consolidated services
+        shell: bash
+        run: |
+          test ! -e js/shared/round3-services.js
+          test ! -e js/shared/round5-services.js
+          test ! -e js/shared/round6-services.js
+          test ! -e js/shared/round7-services.js
+          if grep -RInE 'round(3|5|6|7)-services\.js' admin portal index.html; then
+            echo 'Legacy service patch layer is still loaded.'
+            exit 1
+          fi
+          grep -q 'const activityCache=new Map' js/services/planning-service.js
+          grep -q 'O candidato não atualiza o documento applications' js/services/planning-service.js
+          if grep -q "firestore.doc(context.db,'applications'" js/services/planning-service.js; then
+            echo 'Planning service must not write application documents from candidate operations.'
+            exit 1
+          fi
+          grep -q 'const memory=new Map' js/services/group-service.js
+          grep -q 'resetPlanning' js/services/application-service.js
+          grep -q 'sessionCount:sessions.length,activityCount' js/services/application-service.js
+
+      - name: Check current UX fixes
+        shell: bash
+        run: |
+          grep -q 'Solicitar ajuste neste dia' js/admin/round6-ui.js
+          grep -q 'stay-support-link' js/portal/round4-ui.js
           grep -q 'planning-note-button' js/admin/round5-ui.js
           grep -q 'pending-grid-two' js/admin/round5-ui.js
           grep -q 'Suporte pelo WhatsApp' js/portal/round5-ui.js
-          grep -q 'state.volunteerPlanStatus' js/portal/round5-ui.js
-          if grep -q 'dayAdjustments:{}' js/shared/round5-services.js; then
-            echo 'Adjustment resend still depends on undeployed Firestore rule.'
+          grep -q 'Grupo definido pela Casa' js/portal/round6-ui.js
+          grep -q "state.volunteerPlanStatus!=='adjustments'" js/portal/round6-ui.js
+          grep -q 'modal-back-button' js/admin/round6-ui.js
+          grep -q 'overscroll-behavior-y:none' css/round6.css
+          grep -q 'format-detection' admin/index.html
+          grep -q 'format-detection' portal/index.html
+          grep -q 'Carregando atividades' js/portal/round7-ui.js
+          grep -q 'stay-date-editor-native' js/admin/round7-ui.js
+          grep -q 'stay-date-input-native' css/round7.css
+          grep -q 'saveStayDatesWithFeedback' js/admin/round7-ui.js
+          grep -q 'Reiniciar planejamento' js/admin/round7-ui.js
+          grep -q "pending:\['Em preparação'" js/shared/round7-ui.js
+          grep -q 'x-apple-data-detectors' css/round7.css
+          if grep -RInE 'stay-date-(editor|field|input|native)-v(2|3)|syncStayDateEditorV3|syncStayDateEditorBounds' js/admin css; then
+            echo 'Obsolete stay-date editor implementation found.'
             exit 1
           fi
 
-      - name: Check round 6 integration
+      - name: Reject removed features and prototype residues
         shell: bash
         run: |
-          grep -q '../css/round6.css' admin/index.html
-          grep -q '../css/round6.css' portal/index.html
-          grep -q '../js/admin/round6-ui.js' admin/index.html
-          grep -q '../js/portal/round6-ui.js' portal/index.html
-          grep -q 'Grupo definido pela Casa' js/portal/round6-ui.js
-          grep -q "state.volunteerPlanStatus!=='adjustments'" js/portal/round6-ui.js
-          grep -q 'stay-date-editor-v2' js/admin/round6-ui.js
-          grep -q 'modal-back-button' js/admin/round6-ui.js
-          grep -q 'overscroll-behavior-y:none' css/round6.css
-          grep -q 'x-apple-data-detectors' css/round6.css
-          test ! -e js/shared/round6-services.js
-          if grep -RIn 'round6-services\.js' admin portal js; then
-            echo 'Unused round 6 planning service dependency found.'
+          test ! -e inactive.html
+          test ! -e js/shared/notifications.js
+          test ! -e js/services/attention-service.js
+          test ! -e js/shared/mock-data.js
+          if grep -RInE 'inactive\.html|notifications\.js|attention-service\.js|openNotifications\(' index.html admin portal js; then
+            echo 'Removed route/notification residue found.'
             exit 1
           fi
           if grep -RIn 'groupPreference' admin portal js firestore.rules; then
             echo 'Undeployable candidate group preference residue found.'
             exit 1
           fi
-
-      - name: Check round 7 integration
-        shell: bash
-        run: |
-          grep -q '../css/round7.css' admin/index.html
-          grep -q '../css/round7.css' portal/index.html
-          grep -q 'format-detection' admin/index.html
-          grep -q 'format-detection' portal/index.html
-          grep -q '../js/shared/round7-ui.js' admin/index.html
-          grep -q '../js/shared/round7-ui.js' portal/index.html
-          grep -q '../js/shared/round7-services.js' admin/index.html
-          grep -q '../js/admin/round7-ui.js' admin/index.html
-          grep -q '../js/portal/round7-ui.js' portal/index.html
-          grep -q 'Carregando atividades' js/portal/round7-ui.js
-          grep -q 'stay-date-editor-v3' js/admin/round7-ui.js
-          grep -q 'resetPlanning' js/shared/round7-services.js
-          grep -q 'Reiniciar planejamento' js/admin/round7-ui.js
-          grep -q "pending:\['Em preparação'" js/shared/round7-ui.js
-          grep -q 'x-apple-data-detectors' css/round7.css
-
-      - name: Reject prototype runtime residues
-        shell: bash
-        run: |
-          test ! -e js/shared/mock-data.js
           if grep -RInE '\?dev=1|URLSearchParams\([^)]*\).*dev|chooseDevRole|devPanel|syncPrototype|Thomas Miller|Maria Gómez|Sophie Martin|Teste regressivo|2026-09-' index.html admin portal js --exclude='i18n.js'; then
             echo 'Prototype runtime residue found.'
             exit 1
           fi
-
-      - name: Reject prototype persistence
-        shell: bash
-        run: |
           if grep -RInE 'oleiro-candidate-lifecycle|oleiro-dismissed-notifications|oleiro-volunteer-mode|oleiro-volunteer-plan-status' index.html admin portal js; then
             echo 'Prototype browser persistence found.'
             exit 1
