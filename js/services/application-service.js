@@ -10,13 +10,25 @@
     const names=Array.isArray(data.participantNames)?data.participantNames.filter(Boolean):[];
     const countries=Array.isArray(data.participantCountries)?data.participantCountries.filter(Boolean):[];
     const emails=Array.isArray(data.participantEmails)?data.participantEmails.filter(Boolean):[];
+    const phones=Array.isArray(data.participantPhones)?data.participantPhones.filter(Boolean):[];
+    const participantUids=Array.isArray(data.participantUids)?data.participantUids.filter(Boolean):[];
     return {
       id:doc.id,applicationId:doc.id,...data,
-      name:names.join(' + ')||data.name||'Voluntário',country:countries.join(' / ')||data.country||'—',email:emails.join(', ')||data.email||'',phone:data.phone||'',
+      name:names.join(' + ')||data.name||'Voluntário',country:countries.join(' / ')||data.country||'—',email:emails.join(', ')||data.email||'',phone:phones.join(' / ')||data.phone||'',
       unitId:data.unitId||'',unit:data.unitName||unitLabel(data.unitId),from:isoDate(data.stayStart)||'',to:isoDate(data.stayEnd)||'',
       pendingUntil:isoDateTime(data.planningDeadlineAt),submitted:isoDateTime(data.planningSubmittedAt)||'—',
-      sessions:Number(data.sessionCount||0),activities:Number(data.activityCount||0),inactive:data.active===false
+      sessions:Number(data.sessionCount||0),activities:Number(data.activityCount||0),inactive:data.active===false,
+      participantUids,participantPhones:phones,profileHydrated:phones.length>0||participantUids.length===0
     };
+  }
+  async function enrichApplicationProfiles(context,item){
+    if(!item||item.profileHydrated)return item;
+    const {firestore}=context.modules;const uids=(item.participantUids||[]).map(String).filter(Boolean);
+    if(!uids.length)return {...item,profileHydrated:true};
+    const snapshots=await Promise.all(uids.map(uid=>firestore.getDoc(firestore.doc(context.db,'volunteer_profiles',uid))));
+    const profiles=snapshots.filter(snapshot=>snapshot.exists()).map(snapshot=>snapshot.data());
+    const phones=profiles.map(profile=>profile.phone||profile.whatsapp||'').filter(Boolean);
+    return {...item,phone:item.phone||phones.join(' / '),participantPhones:item.participantPhones?.length?item.participantPhones:phones,profileHydrated:true};
   }
 
   services.applications={
@@ -33,7 +45,12 @@
       });
     },
     async getById(id){
-      return services.run(async()=>{const context=await services.firebase();const {firestore}=context.modules;const snapshot=await firestore.getDoc(firestore.doc(context.db,'applications',String(id)));return snapshot.exists()?mapApplication(snapshot):null;});
+      return services.run(async()=>{
+        const context=await services.firebase();const {firestore}=context.modules;
+        const snapshot=await firestore.getDoc(firestore.doc(context.db,'applications',String(id)));
+        if(!snapshot.exists())return null;
+        return enrichApplicationProfiles(context,mapApplication(snapshot));
+      });
     },
     async update(id,patch){
       return services.run(async()=>{const context=await services.firebase();const {firestore}=context.modules;await firestore.updateDoc(firestore.doc(context.db,'applications',String(id)),{...patch,updatedAt:firestore.serverTimestamp()});return true;});
