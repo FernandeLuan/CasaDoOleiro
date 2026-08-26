@@ -1,29 +1,35 @@
-/* Round 7 — editor de datas robusto, reset de teste e status de agenda enxutos. */
+/* Round 7 — editor de datas simples, reset de teste e status de agenda enxutos. */
 (function round7Admin(){
-  function stayDateText(value){
-    if(!value)return 'Selecionar data';
-    const parts=String(value).split('-');
-    return parts.length===3?`${parts[2]}/${parts[1]}/${parts[0]}`:String(value);
-  }
-  function stayDateField(id,label,value=''){
-    return `<label class="stay-date-field-v3" for="${id}"><span class="stay-date-label-v3">${label}</span><span class="stay-date-shell-v3"><span id="${id}Text" class="stay-date-value-v3 ${value?'':'is-placeholder'}">${stayDateText(value)}</span><i class="fa-regular fa-calendar"></i><input id="${id}" class="stay-date-native-v3" type="date" value="${escapeHtml(value||'')}" onchange="syncStayDateEditorV3('${id}')" oninput="syncStayDateEditorV3('${id}')"></span></label>`;
-  }
-
-  window.syncStayDateEditorV3=function(id){
-    const input=document.getElementById(id),text=document.getElementById(`${id}Text`);
-    if(input&&text){text.textContent=stayDateText(input.value);text.classList.toggle('is-placeholder',!input.value)}
-    const from=document.getElementById('editStayFrom'),to=document.getElementById('editStayTo');
+  window.syncStayDateNative=function(){
+    const from=document.getElementById('editStayFrom');
+    const to=document.getElementById('editStayTo');
     if(!from||!to)return;
     to.min=from.value||'';
-    if(from.value&&to.value&&to.value<from.value){to.value='';const toText=document.getElementById('editStayToText');if(toText){toText.textContent='Selecionar data';toText.classList.add('is-placeholder')}}
+    if(from.value&&to.value&&to.value<from.value)to.value='';
   };
 
   openStayDateEditor=function(id){
     const p=candidateById(id);if(!p)return;
-    const body=`<div class="stay-date-editor-v3">${stayDateField('editStayFrom','Chegada',p.from||'')}${stayDateField('editStayTo','Saída',p.to||'')}</div>`;
-    openModal('Editar datas','',body,`<button class="btn btn-primary btn-block" type="button" onclick='saveStayDates(${JSON.stringify(String(id))})'>Salvar período</button>`);
-    modalRoot.querySelector('.modal')?.classList.add('stay-date-modal-v3');
-    requestAnimationFrame(()=>{syncStayDateEditorV3('editStayFrom');syncStayDateEditorV3('editStayTo')});
+    const body=`<div class="stay-date-editor-native">
+      <div class="stay-date-field-native">
+        <label for="editStayFrom">Chegada</label>
+        <input id="editStayFrom" class="stay-date-input-native" type="date" value="${escapeHtml(p.from||'')}" onchange="syncStayDateNative()" oninput="syncStayDateNative()">
+      </div>
+      <div class="stay-date-field-native">
+        <label for="editStayTo">Saída</label>
+        <input id="editStayTo" class="stay-date-input-native" type="date" value="${escapeHtml(p.to||'')}" onchange="syncStayDateNative()" oninput="syncStayDateNative()">
+      </div>
+    </div>`;
+    openModal('Editar datas','',body,`<button id="stayDateSaveButton" class="btn btn-primary btn-block" type="button" onclick='saveStayDatesWithFeedback(${JSON.stringify(String(id))})'>Salvar período</button>`);
+    modalRoot.querySelector('.modal')?.classList.add('stay-date-modal-native');
+    requestAnimationFrame(syncStayDateNative);
+  };
+
+  window.saveStayDatesWithFeedback=async function(id){
+    const button=document.getElementById('stayDateSaveButton');
+    if(button){button.disabled=true;button.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Verificando...'}
+    await saveStayDates(id);
+    if(button?.isConnected){button.disabled=false;button.textContent='Salvar período'}
   };
 
   /* Agenda: confirmado é o estado normal e não precisa de badge repetitivo. */
@@ -55,11 +61,10 @@
     const p=candidateById(id),button=document.getElementById('resetPlanningConfirm');if(!p)return;
     if(button){button.disabled=true;button.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i>Reiniciando...'}
     try{
-      const result=await window.OleiroServices.applications.resetPlanning(p.id,{deadlineDays:7});
+      const result=await window.OleiroServices.applications.resetPlanning(p.id,{deadlineDays:7,participantUids:p.participantUids||[]});
       p.status='pending';p.inactive=false;p.activities=0;p.sessions=0;p.submitted='—';p.dayAdjustments={};p.pendingUntil=result.planningDeadlineAt;
       if(typeof invalidateCandidatePlanning==='function')invalidateCandidatePlanning(p.id);
       if(typeof invalidateManagerScheduleCache==='function')invalidateManagerScheduleCache();
-      if(typeof deriveAdminNotifications==='function')deriveAdminNotifications();
       try{await hydrateCandidatePlanning(p.id,{force:true})}catch(error){console.error('Falha ao recarregar planejamento vazio:',error)}
       renderPersonModal(p,'plan');
       showToast('Planejamento reiniciado.');
