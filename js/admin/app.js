@@ -8,13 +8,13 @@ function mapManagerScheduleRows(rows){
 function deriveAdminNotifications(){
   state.notifications=(state.candidates||[]).filter(p=>p.needsAdminAttention===true).sort((a,b)=>String(b.adminAttentionUpdatedAt||b.submitted||'').localeCompare(String(a.adminAttentionUpdatedAt||a.submitted||''))).slice(0,5).map(p=>({id:p.id,applicationId:p.id,title:p.adminAttentionTitle||'Atualização de voluntariado',text:p.adminAttentionText||`${p.name||'Voluntário'} possui uma pendência para análise.`}));
 }
-function invalidateManagerScheduleCache(){_managerScheduleCache.clear()}
+function invalidateManagerScheduleCache(){_managerScheduleCache.clear();state.scheduleFrom=null;state.scheduleTo=null}
 async function hydrateManagerSchedule(from=_oleiroToday,to=_oleiroToday,{force=false,unitId='all'}={}){
   if(!window.OleiroServices?.planning?.listManagerSchedule)return [];
   const key=managerScheduleKey(from,to,unitId),cached=_managerScheduleCache.get(key);
-  if(!force&&cached&&Date.now()-cached.at<MANAGER_SCHEDULE_CACHE_MS){state.sessions=cached.rows;state.activities=[];return cached.rows;}
+  if(!force&&cached&&Date.now()-cached.at<MANAGER_SCHEDULE_CACHE_MS){state.sessions=cached.rows;state.activities=[];state.scheduleFrom=from;state.scheduleTo=to;return cached.rows;}
   const rows=mapManagerScheduleRows(await window.OleiroServices.planning.listManagerSchedule({from,to,unitId}));
-  _managerScheduleCache.set(key,{at:Date.now(),rows});state.sessions=rows;state.activities=[];return rows;
+  _managerScheduleCache.set(key,{at:Date.now(),rows});state.sessions=rows;state.activities=[];state.scheduleFrom=from;state.scheduleTo=to;return rows;
 }
 async function hydrateManagerBaseData(){
   const [unitsResult,applicationsResult]=await Promise.all([
@@ -35,7 +35,7 @@ function renderManager(){
 function render(){renderManager()}
 async function bootManager(){
   const session=await window.OleiroAuthGuard?.requireRole('manager');if(!session)return;
-  state.role='manager';state.currentSession=session;state.managerPage='home';state.groupsLoaded=false;state.groupsLoading=false;state.sessions=[];render();
+  state.role='manager';state.currentSession=session;state.managerPage='home';state.groupsLoaded=false;state.groupsLoading=false;state.sessions=[];state.scheduleFrom=null;state.scheduleTo=null;render();
   try{
     await hydrateManagerBaseData();if(state.managerPage==='home')render();
     processExpiredCandidatesOnStartup?.().then(()=>{deriveAdminNotifications();if(state.managerPage==='home'||state.managerPage==='volunteer')render()}).catch(error=>console.error('Falha ao processar prazos:',error));
