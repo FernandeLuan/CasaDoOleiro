@@ -26,7 +26,7 @@
         if(status&&status!=='all')constraints.push(firestore.where('status','==',status));
         if(unit&&unit!=='all')constraints.push(firestore.where('unitId','==',normalize(unit)));
         if(cursor)constraints.push(firestore.startAfter(cursor));
-        constraints.push(firestore.limit(Math.max(1,Number(limit)||10));
+        constraints.push(firestore.limit(Math.max(1,Number(limit)||10)));
         const snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'applications'),...constraints));
         const term=normalize(search);let items=snapshot.docs.map(mapApplication);if(term)items=items.filter(item=>normalize(item.name).includes(term));
         const last=snapshot.docs.at(-1)||null;return {items,nextCursor:snapshot.size===Number(limit||10)?last:null,hasMore:snapshot.size===Number(limit||10)};
