@@ -95,7 +95,7 @@
 
           batch.set(applicationRef,{
             type:accounts.length===2?'couple':'individual',participantUids,
-            participantNames:accounts.map(a=>a.participant.name),participantEmails:accounts.map(a=>a.participant.email),participantCountries:accounts.map(a=>a.participant.country||''),
+            participantNames:accounts.map(a=>a.participant.name),participantEmails:accounts.map(a=>a.participant.email),participantCountries:accounts.map(a=>a.participant.country||''),participantPhones:accounts.map(a=>a.participant.phone||''),
             participantCount:accounts.length,participantStatus,unitId:data.unitId,unitName:data.unitName,
             status:'pending',active:true,stayStart:data.stayStart,stayEnd:data.stayEnd,stayMonths:stayMonths(data.stayStart,data.stayEnd),
             planningDeadlineAt:firestore.Timestamp.fromDate(deadlineDate),planningSubmittedAt:null,
