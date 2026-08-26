@@ -24,6 +24,7 @@ const state = {
   candidates: [],
   groups: [],
   activities: [],
+  sessions: [],
   sessionStatus: {},
   sessionGroups: {},
   notifications: []
