@@ -1,0 +1,77 @@
+name: Deploy Casa do Oleiro
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare static site
+        run: |
+          mkdir -p _site
+          rsync -a \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='_site' \
+            ./ _site/
+
+      - name: Inject Firebase web config
+        env:
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          api_key = os.environ.get('FIREBASE_API_KEY', '').strip()
+          if not api_key:
+              raise SystemExit('FIREBASE_API_KEY repository secret is missing.')
+
+          config = {
+              'apiKey': api_key,
+              'authDomain': 'casadooleiro-35c4e.firebaseapp.com',
+              'projectId': 'casadooleiro-35c4e',
+              'storageBucket': 'casadooleiro-35c4e.firebasestorage.app',
+              'messagingSenderId': '391973666005',
+              'appId': '1:391973666005:web:5ab4e4a406b591cccc765c',
+          }
+
+          target = Path('_site/js/firebase/firebase-config.js')
+          target.parent.mkdir(parents=True, exist_ok=True)
+          target.write_text(
+              'window.OLEIRO_FIREBASE_CONFIG = ' + json.dumps(config, separators=(',', ':')) + ';\n',
+              encoding='utf-8',
+          )
+          PY
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
