@@ -1,0 +1,44 @@
+/* Round 5 — refinamentos finais de fluxo e largura no mobile. */
+
+/* Dashboard Admin: somente duas pendências. */
+.pending-grid-two{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.pending-grid-two .metric{min-height:94px}
+
+/* Planejamento Admin: cards fechados por padrão e informações sob demanda. */
+.planning-day-card>summary{cursor:pointer;list-style:none}
+.planning-day-card>summary::-webkit-details-marker{display:none}
+.planning-day-card:not([open]) .planning-day-head{border-bottom:0}
+.planning-day-card .planning-day-total{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.planning-day-card .planning-day-total>strong{font-size:.72rem;color:var(--primary)}
+.planning-day-card .planning-day-total>i{font-size:.62rem;color:var(--muted);transition:transform .18s ease}
+.planning-day-card[open] .planning-day-total>i{transform:rotate(180deg)}
+.planning-session-title{display:flex;align-items:center;gap:6px;min-width:0}
+.planning-session-title>strong{min-width:0;overflow-wrap:anywhere}
+.planning-note-button{width:28px;height:28px;flex:0 0 28px;border:0;border-radius:9px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;padding:0}
+.planning-note-button i{font-size:.68rem}
+.activity-info-block{padding:12px 0;border-bottom:1px solid var(--border)}
+.activity-info-block:last-child{border-bottom:0}
+.activity-info-block strong{display:block;font-size:.7rem;color:var(--text);margin-bottom:5px}
+.activity-info-block p{font-size:.66rem;line-height:1.55;color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere}
+.planning-review-footer{grid-template-columns:1fr 1fr 1fr!important}
+.planning-review-footer .btn{min-width:0}
+
+/* Editor de datas: impedir qualquer overflow do input date no Safari/iOS. */
+.stay-date-editor,.stay-date-grid,.stay-date-grid .field{min-width:0;max-width:100%;width:100%;box-sizing:border-box}
+.stay-date-grid{overflow:hidden}
+.stay-date-grid .field label{font-size:.64rem;line-height:1.2;max-width:100%;overflow-wrap:anywhere}
+.stay-date-grid input[type="date"],.stay-date-editor input[type="date"]{display:block;min-width:0!important;max-width:100%!important;width:100%!important;box-sizing:border-box!important;font-size:.7rem!important;padding:10px 9px!important}
+#modalRoot .modal{overflow-x:hidden!important;box-sizing:border-box}
+#modalRoot .modal-body,#modalRoot .modal-content{min-width:0;max-width:100%;overflow-x:hidden}
+
+/* Estadia */
+.stay-unit-card .activity-actions{display:none!important}
+
+@media(max-width:520px){
+  .planning-review-footer{grid-template-columns:1fr!important}
+  .pending-grid-two{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .stay-date-grid{grid-template-columns:minmax(0,1fr)!important}
+}
+@media(max-width:360px){
+  .pending-grid-two{grid-template-columns:1fr!important}
+}
