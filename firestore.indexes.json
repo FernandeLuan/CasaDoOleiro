@@ -32,15 +32,6 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "unitId", "order": "ASCENDING" },
-        { "fieldPath": "needsAdminAttention", "order": "ASCENDING" },
-        { "fieldPath": "adminAttentionUpdatedAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "applications",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "unitId", "order": "ASCENDING" },
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "stayMonths", "arrayConfig": "CONTAINS" }
       ]
