@@ -76,6 +76,21 @@ jobs:
           grep -q 'Suporte pelo WhatsApp' js/portal/round5-ui.js
           grep -q 'state.volunteerPlanStatus' js/portal/round5-ui.js
 
+      - name: Check round 6 integration
+        shell: bash
+        run: |
+          grep -q '../css/round6.css' admin/index.html
+          grep -q '../css/round6.css' portal/index.html
+          grep -q '../js/admin/round6-ui.js' admin/index.html
+          grep -q '../js/portal/round6-ui.js' portal/index.html
+          grep -q 'Grupo sugerido' js/portal/round6-ui.js
+          grep -q 'groupPreference' js/services/planning-service.js
+          grep -q 'groupPreference' firestore.rules
+          grep -q 'dayAdjustments' firestore.rules
+          grep -q 'stay-date-editor-v2' js/admin/round6-ui.js
+          grep -q 'modal-back-button' js/admin/round6-ui.js
+          grep -q 'overscroll-behavior-y:none' css/round6.css
+
       - name: Reject prototype runtime residues
         shell: bash
         run: |
