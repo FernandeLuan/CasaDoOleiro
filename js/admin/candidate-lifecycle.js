@@ -1,3 +1,4 @@
+function candidateActionArg(value){return encodeURIComponent(String(value??''))}
 function candidateDeadlineFrom(base=new Date(),days=7){
   const d=new Date(base);d.setDate(d.getDate()+days);return d.toISOString();
 }
@@ -27,8 +28,8 @@ function candidateDeadlineMeta(p){
   return {days,date,label:days===0?'Vence hoje':days===1?'1 dia restante':`${days} dias restantes`};
 }
 function candidatePendingPanel(p){
-  const meta=candidateDeadlineMeta(p);if(!meta)return '';
-  return `<div class="candidate-lifecycle-panel"><div class="candidate-deadline-card"><i class="fa-regular fa-clock"></i><div><strong>Prazo para enviar o planejamento</strong><p>${meta.date} • ${meta.label}. Se o prazo vencer sem envio, o perfil é recusado e inativado.</p></div></div><div class="candidate-lifecycle-actions"><button class="btn btn-soft" type="button" onclick="extendCandidateDeadline(${JSON.stringify(p.id)})"><i class="fa-solid fa-clock-rotate-left"></i>Prorrogar +7 dias</button><button class="btn btn-danger" type="button" onclick="requestRejectPendingCandidate(${JSON.stringify(p.id)})"><i class="fa-solid fa-user-slash"></i>Recusar e inativar</button></div></div>`;
+  const meta=candidateDeadlineMeta(p);if(!meta)return '';const id=candidateActionArg(p.id);
+  return `<div class="candidate-lifecycle-panel"><div class="candidate-deadline-card"><i class="fa-regular fa-clock"></i><div><strong>Prazo para enviar o planejamento</strong><p>${meta.date} • ${meta.label}. Se o prazo vencer sem envio, o perfil é recusado e inativado.</p></div></div><div class="candidate-lifecycle-actions"><button class="btn btn-soft" type="button" onclick="extendCandidateDeadline(decodeURIComponent('${id}'))"><i class="fa-solid fa-clock-rotate-left"></i>Prorrogar +7 dias</button><button class="btn btn-danger" type="button" onclick="requestRejectPendingCandidate(decodeURIComponent('${id}'))"><i class="fa-solid fa-user-slash"></i>Recusar e inativar</button></div></div>`;
 }
 async function extendCandidateDeadline(id){
   const p=candidateById(id);if(!p)return;
@@ -40,16 +41,16 @@ async function extendCandidateDeadline(id){
   }catch(error){console.error(error);showToast('Não foi possível prorrogar o prazo.')}
 }
 function requestRejectPendingCandidate(id){
-  const p=candidateById(id);if(!p||p.status!=='pending')return showToast('Este perfil não está mais com planejamento pendente.');
-  openModal('Recusar e inativar?',`A ação será aplicada somente a ${p.name}.`,`<div class="confirm-delete-content"><div class="confirm-person"><i class="fa-solid fa-user-slash"></i><strong>${p.name}</strong></div><p class="compact-hint">O acesso ficará inativo até uma reativação manual.</p></div>`,`<div class="confirm-delete-actions"><button class="btn btn-outline" type="button" onclick="closeModal()">Cancelar</button><button class="btn btn-danger" type="button" onclick="confirmRejectPendingCandidate(${JSON.stringify(p.id)})">Recusar e inativar</button></div>`);modalRoot.querySelector('.modal')?.classList.add('confirm-delete-modal');
+  const p=candidateById(id);if(!p||p.status!=='pending')return showToast('Este perfil não está mais com planejamento pendente.');const arg=candidateActionArg(p.id);
+  openModal('Recusar e inativar?',`A ação será aplicada somente a ${p.name}.`,`<div class="confirm-delete-content"><div class="confirm-person"><i class="fa-solid fa-user-slash"></i><strong>${p.name}</strong></div><p class="compact-hint">O acesso ficará inativo até uma reativação manual.</p></div>`,`<div class="confirm-delete-actions"><button class="btn btn-outline" type="button" onclick="closeModal()">Cancelar</button><button class="btn btn-danger" type="button" onclick="confirmRejectPendingCandidate(decodeURIComponent('${arg}'))">Recusar e inativar</button></div>`);modalRoot.querySelector('.modal')?.classList.add('confirm-delete-modal');
 }
 async function confirmRejectPendingCandidate(id){
   const p=candidateById(id);if(!p||p.status!=='pending')return closeModal();
   try{await rejectCandidateRecord(p.id,'Recusado pela gestão antes do envio do planejamento.',false);closeModal();state.candidateFilter='rejected';render();scrollPageTop();showToast(`${p.name} foi recusado e inativado.`)}catch(error){console.error(error);showToast('Não foi possível inativar o perfil.')}
 }
 function rejectCandidate(id){
-  const p=candidateById(id);if(!p||!['analysis','adjustments'].includes(p.status))return showToast('Este perfil não pode ser recusado neste status.');
-  openModal('Recusar perfil?',`A ação será aplicada somente a ${p.name}.`,`<div class="confirm-delete-content"><div class="confirm-person"><i class="fa-solid fa-user-slash"></i><strong>${p.name}</strong></div><p class="compact-hint">O planejamento será recusado e o acesso ficará inativo.</p></div>`,`<div class="confirm-delete-actions"><button class="btn btn-outline" type="button" onclick="openPerson(${JSON.stringify(p.id)},'overview')">Cancelar</button><button class="btn btn-danger" type="button" onclick="confirmRejectCandidate(${JSON.stringify(p.id)})">Recusar</button></div>`);modalRoot.querySelector('.modal')?.classList.add('confirm-delete-modal');
+  const p=candidateById(id);if(!p||!['analysis','adjustments'].includes(p.status))return showToast('Este perfil não pode ser recusado neste status.');const arg=candidateActionArg(p.id);
+  openModal('Recusar perfil?',`A ação será aplicada somente a ${p.name}.`,`<div class="confirm-delete-content"><div class="confirm-person"><i class="fa-solid fa-user-slash"></i><strong>${p.name}</strong></div><p class="compact-hint">O planejamento será recusado e o acesso ficará inativo.</p></div>`,`<div class="confirm-delete-actions"><button class="btn btn-outline" type="button" onclick="openPerson(decodeURIComponent('${arg}'),'overview')">Cancelar</button><button class="btn btn-danger" type="button" onclick="confirmRejectCandidate(decodeURIComponent('${arg}'))">Recusar</button></div>`);modalRoot.querySelector('.modal')?.classList.add('confirm-delete-modal');
 }
 async function confirmRejectCandidate(id){
   const p=candidateById(id);if(!p||!['analysis','adjustments'].includes(p.status))return closeModal();
@@ -75,6 +76,6 @@ personTabContent=function(p,tab){
 personCompact=function(p){
   const [l,t]=statusMeta(p.status);const meta=p.status==='pending'?candidateDeadlineMeta(p):null;
   const extra=meta?`<div class="candidate-deadline-mini"><i class="fa-regular fa-clock"></i>${meta.label}</div>`:'';const inactive=p.inactive?badge('Inativo','danger'):'';
-  const period=p.from&&p.to?`${fmtDate(p.from,true)}–${fmtDate(p.to,true)}`:'Período não informado';
-  return `<div class="list-item clickable" onclick="openPerson(${JSON.stringify(p.id)})"><div class="avatar">${String(p.name||'V').split(' ').map(x=>x[0]).slice(0,2).join('')}</div><div class="item-main"><h3>${p.name}</h3><p>${p.country||'—'} • ${p.unit||'—'} • ${period}</p><div class="item-meta">${badge(l,t)}${inactive}</div>${extra}</div><i class="fa-solid fa-chevron-right" style="color:var(--muted);margin-top:11px"></i></div>`;
+  const period=p.from&&p.to?`${fmtDate(p.from,true)}–${fmtDate(p.to,true)}`:'Período não informado';const id=candidateActionArg(p.id);
+  return `<div class="list-item clickable" onclick="openPerson(decodeURIComponent('${id}'))"><div class="avatar">${String(p.name||'V').split(' ').map(x=>x[0]).slice(0,2).join('')}</div><div class="item-main"><h3>${p.name}</h3><p>${p.country||'—'} • ${p.unit||'—'} • ${period}</p><div class="item-meta">${badge(l,t)}${inactive}</div>${extra}</div><i class="fa-solid fa-chevron-right" style="color:var(--muted);margin-top:11px"></i></div>`;
 };
