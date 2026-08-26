@@ -1,5 +1,7 @@
 const _managerScheduleCache=new Map();
 const MANAGER_SCHEDULE_CACHE_MS=60000;
+const MANAGER_APPLICATION_PAGE_SIZE=50;
+const MANAGER_APPLICATION_MAX_RECORDS=500;
 function managerScheduleKey(from,to,unit='all'){return `${from}|${to}|${unit}`}
 function mapManagerScheduleRows(rows){
   const names=new Map((state.candidates||[]).map(p=>[String(p.id),p.name]));
@@ -15,14 +17,36 @@ async function hydrateManagerSchedule(from=_oleiroToday,to=_oleiroToday,{force=f
   const rows=mapManagerScheduleRows(await window.OleiroServices.planning.listManagerSchedule({from,to,unitId}));
   _managerScheduleCache.set(key,{at:Date.now(),rows});state.sessions=rows;state.activities=[];state.scheduleFrom=from;state.scheduleTo=to;return rows;
 }
+
+function mergeManagerCandidates(rows){
+  const byId=new Map((state.candidates||[]).map(row=>[String(row.id),row]));
+  (rows||[]).forEach(row=>byId.set(String(row.id),row));
+  state.candidates=[...byId.values()];
+}
+
+async function hydrateRemainingManagerCandidates(firstResult){
+  if(!window.OleiroServices?.applications?.list||!firstResult?.hasMore||!firstResult.nextCursor)return;
+  let cursor=firstResult.nextCursor,total=(state.candidates||[]).length;
+  while(cursor&&total<MANAGER_APPLICATION_MAX_RECORDS){
+    const result=await window.OleiroServices.applications.list({status:'all',unit:'all',cursor,limit:MANAGER_APPLICATION_PAGE_SIZE});
+    const rows=result?.items||[];
+    if(!rows.length)break;
+    mergeManagerCandidates(rows);total=(state.candidates||[]).length;
+    if(state.managerPage==='home'||state.managerPage==='volunteer')render();
+    if(!result.hasMore||!result.nextCursor)break;
+    cursor=result.nextCursor;
+  }
+}
+
 async function hydrateManagerBaseData(){
   const [unitsResult,applicationsResult]=await Promise.all([
     window.OleiroServices?.units?.list?window.OleiroServices.units.list({includeInactive:true}):[],
-    window.OleiroServices?.applications?.list?window.OleiroServices.applications.list({status:'all',unit:'all',limit:30}):{items:[]}
+    window.OleiroServices?.applications?.list?window.OleiroServices.applications.list({status:'all',unit:'all',limit:MANAGER_APPLICATION_PAGE_SIZE}):{items:[]}
   ]);
   state.units=unitsResult||[];state.candidates=applicationsResult?.items||[];
+  return applicationsResult;
 }
-async function hydrateManagerData(){await hydrateManagerBaseData();return state.candidates}
+async function hydrateManagerData(){const result=await hydrateManagerBaseData();await hydrateRemainingManagerCandidates(result);return state.candidates}
 async function ensureManagerGroups(){
   if(state.groupsLoaded)return state.groups||[];state.groupsLoading=true;
   try{state.groups=window.OleiroServices?.groups?.ensureDefaults?await window.OleiroServices.groups.ensureDefaults('rodeio'):[];state.groupsLoaded=true;return state.groups;}finally{state.groupsLoading=false}
@@ -36,7 +60,8 @@ async function bootManager(){
   const session=await window.OleiroAuthGuard?.requireRole('manager');if(!session)return;
   state.role='manager';state.currentSession=session;state.managerPage='home';state.groupsLoaded=false;state.groupsLoading=false;state.sessions=[];state.scheduleFrom=null;state.scheduleTo=null;render();
   try{
-    await hydrateManagerBaseData();if(state.managerPage==='home')render();
+    const firstApplicationsPage=await hydrateManagerBaseData();if(state.managerPage==='home')render();
+    hydrateRemainingManagerCandidates(firstApplicationsPage).catch(error=>console.error('Falha ao carregar registros adicionais:',error));
     processExpiredCandidatesOnStartup?.().then(()=>{if(state.managerPage==='home'||state.managerPage==='volunteer')render()}).catch(error=>console.error('Falha ao processar prazos:',error));
     hydrateManagerSchedule(_oleiroToday,_oleiroToday).then(()=>{if(state.managerPage==='home')render()}).catch(error=>console.error('Falha ao carregar agenda de hoje:',error));
   }catch(error){console.error('Falha ao carregar dados da gestão:',error);showToast('Não foi possível atualizar os dados da gestão.')}
