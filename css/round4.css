@@ -1,0 +1,97 @@
+/* Round 4 — refinamento visual e mobile. Carregado por último. */
+
+/* Login */
+#loginMessage{justify-content:center!important;text-align:center!important;width:100%;box-sizing:border-box}
+#loginMessage.login-error{color:#912018!important;background:#fff4f2!important;border:1px solid rgba(217,45,32,.25)!important}
+.login-card .field.is-invalid .input{border-color:#d92d20!important;background:#fff7f6!important}
+.login-card .field.is-invalid label{color:#b42318!important}
+#loginButton.is-loading{cursor:wait;opacity:.92}
+#loginButton.is-loading i{animation:r4spin .75s linear infinite}
+@keyframes r4spin{to{transform:rotate(360deg)}}
+
+/* Cadastro */
+.new-candidate-form>.card:not(.candidate-participant-card){background:linear-gradient(180deg,var(--surface),var(--primary-soft))!important;border-color:rgba(49,95,72,.16)!important}
+.new-candidate-form>.card:not(.candidate-participant-card)>.form-grid>.field>label,
+.new-candidate-form>.card:not(.candidate-participant-card) .date-field>label{color:var(--primary)!important}
+
+/* Contatos de candidatura individual/dupla */
+.candidate-contact-card{margin-top:10px!important;padding:0!important;overflow:hidden}
+.candidate-contact-title{padding:12px 14px 9px;font-size:.68rem;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border)}
+.candidate-contact-person{padding:12px 14px;border-bottom:1px solid var(--border);min-width:0}
+.candidate-contact-person:last-child{border-bottom:0}
+.candidate-contact-person strong{display:block;font-size:.74rem;color:var(--text);margin-bottom:5px;overflow-wrap:anywhere}
+.candidate-contact-person span{display:block;font-size:.62rem;color:var(--muted);line-height:1.5;overflow-wrap:anywhere;word-break:break-word}
+.candidate-internal-note{margin-top:10px;padding:11px 13px;background:var(--surface-2);border:1px solid var(--border);border-radius:13px}
+.candidate-internal-note strong{display:block;font-size:.62rem;color:var(--primary);margin-bottom:4px}
+.candidate-internal-note p{font-size:.63rem;line-height:1.5;color:var(--text);overflow-wrap:anywhere}
+
+/* Grupos */
+.group-edit-form input[type="number"]{font-size:16px!important}
+.group-edit-modal .modal-footer .btn{min-height:46px}
+
+/* Planejamento Admin — um resumo recolhível por dia */
+.planning-by-day{gap:9px!important}
+details.planning-day-card{padding:0!important;overflow:hidden!important}
+details.planning-day-card>summary{list-style:none;cursor:pointer;-webkit-user-select:none;user-select:none}
+details.planning-day-card>summary::-webkit-details-marker{display:none}
+.planning-day-head{min-height:52px;padding:11px 13px!important;border-bottom:0!important}
+details.planning-day-card[open]>.planning-day-head{border-bottom:1px solid var(--border)!important}
+.planning-day-date{display:flex;align-items:center;gap:7px;min-width:0}
+.planning-day-date strong{font-size:.75rem!important;white-space:nowrap}
+.planning-day-total{display:flex;align-items:center;gap:8px;flex:0 0 auto;color:var(--primary)}
+.planning-day-total strong{font-size:.69rem!important;color:var(--primary)!important}
+.planning-day-total i{font-size:.58rem;transition:transform .18s ease}
+details.planning-day-card[open] .planning-day-total i{transform:rotate(180deg)}
+.planning-day-content{padding-bottom:11px}
+.planning-day-content .planning-day-sessions{padding-top:3px}
+.planning-day-adjust-action{padding:0 12px 2px}
+.planning-day-adjust-action .btn{width:100%;min-height:38px}
+.day-adjustment-note{margin-top:9px!important}
+
+/* Vermelho suave consistente */
+.btn-danger-soft,.candidate-session-actions .btn-danger-soft{background:#f9e5e5!important;color:var(--danger)!important;border:1px solid rgba(170,55,55,.12)!important}
+.btn-danger-soft:active{background:#f4dada!important}
+
+/* Editor de datas */
+.stay-date-editor .field{min-width:0}
+.stay-date-editor .field label{font-size:.63rem!important;line-height:1.25!important;margin-bottom:5px!important}
+.stay-date-editor input[type="date"]{min-width:0;width:100%;box-sizing:border-box;font-size:16px!important}
+.stay-date-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important}
+.confirm-delete-actions{display:grid!important;grid-template-columns:1fr 1fr;gap:8px}
+.confirm-delete-actions .btn{width:100%;white-space:normal}
+
+/* Minha conta */
+.admin-account-icon{display:grid!important;place-items:center!important;width:38px!important;height:38px!important;min-width:38px!important;min-height:38px!important;padding:0!important;overflow:hidden!important;background:var(--primary-soft)!important;color:var(--primary)!important}
+.admin-account-icon i{display:block!important;position:static!important;margin:0!important;padding:0!important;font-size:.85rem!important;line-height:1!important;color:var(--primary)!important;transform:none!important}
+.admin-account-row>div{min-width:0}
+
+/* Informações — volta ao espaçamento compacto */
+.info-accordion{gap:5px!important}
+.info-accordion details{margin:0!important;border-radius:14px!important}
+.info-accordion summary{min-height:46px;padding:11px 13px!important;box-sizing:border-box}
+.info-accordion summary i{transition:transform .18s ease}
+.info-accordion details[open] summary i{transform:rotate(180deg)}
+.info-accordion details>p{margin:0 0 8px!important;padding:0 13px!important;line-height:1.5!important}
+.info-action-link{margin:3px 13px 12px!important;width:calc(100% - 26px)!important}
+
+/* Estadia no portal */
+.stay-unit-card{padding:14px!important}
+.stay-unit-card h3{font-size:.9rem!important;line-height:1.25!important;margin:0!important}
+.stay-unit-card>p{font-size:.66rem!important;line-height:1.5!important;color:var(--muted)!important;margin:6px 0 12px!important}
+.stay-support-link{display:grid;grid-template-columns:38px minmax(0,1fr) 18px;gap:10px;align-items:center;width:100%;box-sizing:border-box;padding:10px 11px;border:1px solid rgba(49,95,72,.14);border-radius:13px;background:var(--primary-soft);color:var(--text)!important;text-decoration:none!important}
+.stay-support-icon{width:38px;height:38px;border-radius:11px;background:var(--surface);display:grid;place-items:center;color:var(--primary);font-size:1rem}
+.stay-support-copy{min-width:0}
+.stay-support-copy small{display:block;font-size:.56rem;color:var(--muted);margin-bottom:1px}
+.stay-support-copy strong{display:block;font-size:.7rem;line-height:1.3;color:var(--text);overflow-wrap:anywhere}
+.stay-support-link>i:last-child{font-size:.62rem;color:var(--primary);justify-self:end}
+.stay-unit-actions{margin-top:10px}
+.stay-unit-actions .btn{width:auto;min-height:38px;padding:8px 11px}
+
+@media(max-width:520px){
+  .stay-date-grid{grid-template-columns:1fr!important}
+  .stay-date-editor .field label{font-size:.61rem!important}
+  .candidate-contact-person{padding:11px 12px}
+  .planning-day-head{padding:10px 11px!important}
+  .planning-day-total strong{font-size:.66rem!important}
+  .confirm-delete-actions{grid-template-columns:1fr 1.15fr}
+}
