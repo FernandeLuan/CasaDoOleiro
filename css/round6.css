@@ -1,12 +1,10 @@
-/* Round 6 — navegação mobile, data editor e neutralização de auto-links do iOS. */
+/* Round 6 — navegação mobile, retorno de detalhe e neutralização de auto-links do iOS. */
 
-/* Evita a área vazia real abaixo do conteúdo causada por body + 100vh. */
 html,body{overscroll-behavior-y:none}
 body{padding-bottom:0!important;min-height:100dvh}
 #app{min-height:100dvh}
 .page{padding-bottom:calc(92px + env(safe-area-inset-bottom))!important}
 
-/* Safari/iOS transforma e-mails detectados em links. Mantemos o texto visualmente neutro. */
 a[href^="mailto:"],a[x-apple-data-detectors],[x-apple-data-detectors],.candidate-contact-person span,.profile-details strong,.no-email-link{
   color:inherit!important;
   text-decoration:none!important;
@@ -15,23 +13,14 @@ a[href^="mailto:"],a[x-apple-data-detectors],[x-apple-data-detectors],.candidate
   box-shadow:none!important;
 }
 
-/* Detalhe da atividade: voltar sem perder o planejamento aberto. */
 .modal-head-actions{display:flex;align-items:center;gap:7px;flex:0 0 auto}
 .modal-back-button{border:0;background:var(--primary-soft);color:var(--primary);height:34px;border-radius:11px;padding:0 10px;display:inline-flex;align-items:center;gap:6px;font-size:.65rem;font-weight:600}
 .modal-back-button i{font-size:.62rem}
-
-/* Editor de datas dedicado: não reutiliza o overlay de datas do cadastro. */
-.stay-date-editor-v2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;width:100%;max-width:100%;min-width:0;overflow:hidden}
-.stay-date-field-v2{display:block;min-width:0;max-width:100%;width:100%;overflow:hidden}
-.stay-date-field-v2>span{display:block;font-size:.65rem;font-weight:600;margin-bottom:6px;color:var(--text)}
-.stay-date-input-v2{display:block;inline-size:100%!important;max-inline-size:100%!important;width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:13px;padding:11px 10px;font-size:16px!important;line-height:1.2;overflow:hidden}
-.stay-date-modal-v2{max-width:620px!important;overflow-x:hidden!important}
 
 .group-definition-note{margin:0;font-size:.65rem}
 .group-definition-note strong{font-size:.66rem}
 
 @media(max-width:520px){
-  .stay-date-editor-v2{grid-template-columns:minmax(0,1fr)}
   .modal-back-button span{display:none}
   .modal-back-button{width:34px;padding:0;justify-content:center}
 }
