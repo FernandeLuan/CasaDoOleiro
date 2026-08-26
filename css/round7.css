@@ -1,6 +1,5 @@
-/* Round 7 — refinamentos visuais e feedback de carregamento. */
+/* Refinamentos visuais e feedback de carregamento. */
 
-/* Neutraliza detecção automática de contatos no Safari/iOS. */
 a[href^="mailto:"],a[href^="tel:"],a[href^="sms:"],a[x-apple-data-detectors],[x-apple-data-detectors],
 .candidate-contact-person a,.candidate-contact-person span,.candidate-contact-person strong,
 .profile-details a,.profile-details strong,.no-email-link{
@@ -14,7 +13,6 @@ a[href^="mailto:"],a[href^="tel:"],a[href^="sms:"],a[x-apple-data-detectors],[x-
   background-image:none!important;
 }
 
-/* Pendências: ícone lateral e conteúdo alinhado. */
 .pending-grid-two .metric{
   min-height:82px!important;
   display:grid!important;
@@ -30,7 +28,6 @@ a[href^="mailto:"],a[href^="tel:"],a[href^="sms:"],a[x-apple-data-detectors],[x-
 .pending-grid-two .metric>div:last-child strong{font-size:1.18rem;line-height:1.05}
 .pending-grid-two .metric>div:last-child span{font-size:.66rem!important;line-height:1.25;margin-top:4px}
 
-/* Loading discreto da agenda/planejamento do voluntário. */
 .volunteer-inline-loading{
   min-height:86px;
   display:flex;
@@ -45,18 +42,21 @@ a[href^="mailto:"],a[href^="tel:"],a[href^="sms:"],a[x-apple-data-detectors],[x-
 }
 .volunteer-inline-loading i{color:var(--primary);font-size:.82rem}
 
-/* Editor de datas: inputs nativos, visíveis e sem overlay transparente. */
-.stay-date-editor-native{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
-  gap:12px;
-  width:100%;
-  min-width:0;
+/* Editor de datas: uma coluna, sem largura intrínseca escapando do modal no Safari/iOS. */
+.stay-date-modal-native{
+  width:min(390px,calc(100vw - 24px))!important;
+  max-width:min(390px,calc(100vw - 24px))!important;
+  overflow:hidden!important;
 }
-.stay-date-field-native{display:block;min-width:0;width:100%;overflow:hidden}
-.stay-date-field-native label{display:block;margin:0 0 6px;font-size:.65rem;font-weight:600;color:var(--text)}
+.stay-date-modal-native .modal-body,.stay-date-modal-native .modal-footer{width:100%;min-width:0;max-width:100%;box-sizing:border-box;overflow-x:hidden!important}
+.stay-date-editor-native{display:flex;flex-direction:column;gap:12px;width:100%;min-width:0;max-width:100%;box-sizing:border-box;overflow:hidden}
+.stay-date-field-native{display:block;min-width:0;max-width:100%;width:100%;box-sizing:border-box;overflow:hidden}
+.stay-date-field-native label{display:block;max-width:100%;margin:0 0 6px;font-size:.65rem;font-weight:600;line-height:1.25;color:var(--text);overflow:hidden;text-overflow:ellipsis}
 .stay-date-input-native{
   display:block!important;
+  inline-size:100%!important;
+  max-inline-size:100%!important;
+  min-inline-size:0!important;
   width:100%!important;
   max-width:100%!important;
   min-width:0!important;
@@ -70,13 +70,32 @@ a[href^="mailto:"],a[href^="tel:"],a[href^="sms:"],a[x-apple-data-detectors],[x-
   font:inherit!important;
   font-size:16px!important;
   line-height:1.2!important;
+  overflow:hidden!important;
 }
-.stay-date-modal-native{max-width:620px!important;overflow-x:hidden!important}
+.stay-date-input-native::-webkit-date-and-time-value{min-width:0;text-align:left}
 
-.admin-test-tools{margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
-.admin-test-tools .btn{width:100%}
+/* Ações compactas sem empilhar desnecessariamente no iPhone. */
+.candidate-lifecycle-actions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}
+.candidate-lifecycle-actions .btn{width:100%;min-width:0}
+.candidate-decision-actions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important}
+.candidate-decision-actions .btn{width:100%;min-width:0;padding-left:7px!important;padding-right:7px!important}
+.planning-admin-footer{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;align-items:stretch}
+.planning-admin-footer .btn{width:100%;min-width:0}
+.planning-admin-footer .btn-primary{grid-column:1/-1;order:1}
+.planning-admin-footer .planning-whatsapp{order:2}
+.planning-admin-footer .planning-reset-button{order:3}
+
+.volunteer-activity-main{min-width:0;flex:1}
+.volunteer-activity-title{display:flex;align-items:flex-start;gap:6px;min-width:0}
+.volunteer-activity-title h4{min-width:0;overflow-wrap:anywhere}
+.planning-session-row.has-change-request{border-color:rgba(180,126,33,.28);background:rgba(180,126,33,.05)}
+.approve-change-button{margin-top:8px!important;width:auto!important;min-height:34px!important;padding:7px 10px!important;font-size:.62rem!important}
 
 @media(max-width:520px){
-  .stay-date-editor-native{grid-template-columns:minmax(0,1fr)}
   .pending-grid-two .metric{grid-template-columns:38px minmax(0,1fr)!important;gap:9px!important}
+}
+@media(max-width:360px){
+  .candidate-decision-actions{grid-template-columns:1fr!important}
+  .planning-admin-footer{grid-template-columns:1fr!important}
+  .planning-admin-footer .btn-primary{grid-column:auto}
 }
