@@ -21,7 +21,7 @@ service cloud.firestore {
       return hasUser() && currentUser().active == true;
     }
 
-    // Admin e coordenador são o mesmo perfil funcional: Gestor.
+    // Administrador e coordenador possuem o mesmo acesso funcional: Gestor.
     function isManager() {
       return activeUser() && currentUser().role in ['admin', 'coordinator'];
     }
@@ -54,11 +54,6 @@ service cloud.firestore {
       return app.active == true && app.status == 'approved';
     }
 
-    function volunteerMayEditPlanning(applicationId) {
-      return participantOf(applicationId)
-        && (candidateWindowOpen(applicationId) || approvedApplication(applicationId));
-    }
-
     function participantMaySubmitApplication() {
       return isParticipant(resource.data)
         && resource.data.active == true
@@ -79,6 +74,11 @@ service cloud.firestore {
           'adminAttentionUpdatedAt',
           'updatedAt'
         ]);
+    }
+
+    function participantOwnsCreatedRecord(data) {
+      return participantOf(data.applicationId)
+        && data.createdByUid == request.auth.uid;
     }
 
     match /users/{uid} {
@@ -104,56 +104,91 @@ service cloud.firestore {
 
     match /activities/{activityId} {
       allow read: if activeUser() && (isManager() || participantOf(resource.data.applicationId));
-      allow create: if activeUser()
-        && (isManager()
-          || (volunteerMayEditPlanning(request.resource.data.applicationId)
-            && request.resource.data.createdByUid == request.auth.uid));
-      allow update: if activeUser()
-        && (isManager()
-          || (volunteerMayEditPlanning(resource.data.applicationId)
-            && resource.data.createdByUid == request.auth.uid
-            && request.resource.data.applicationId == resource.data.applicationId
-            && request.resource.data.createdByUid == resource.data.createdByUid));
-      allow delete: if activeUser()
-        && (isManager()
-          || (volunteerMayEditPlanning(resource.data.applicationId)
-            && resource.data.createdByUid == request.auth.uid));
+
+      allow create: if isManager() || (
+        activeUser()
+        && candidateWindowOpen(request.resource.data.applicationId)
+        && participantOf(request.resource.data.applicationId)
+        && request.resource.data.createdByUid == request.auth.uid
+      );
+
+      allow update: if isManager() || (
+        activeUser()
+        && participantOwnsCreatedRecord(resource.data)
+        && candidateWindowOpen(resource.data.applicationId)
+        && request.resource.data.applicationId == resource.data.applicationId
+        && request.resource.data.createdByUid == resource.data.createdByUid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'name', 'description', 'duration', 'participation', 'materials',
+          'notes', 'period', 'time', 'ownerName', 'updatedAt'
+        ])
+      );
+
+      allow delete: if isManager() || (
+        activeUser()
+        && participantOwnsCreatedRecord(resource.data)
+        && candidateWindowOpen(resource.data.applicationId)
+      );
     }
 
     match /activity_sessions/{sessionId} {
       allow read: if activeUser() && (isManager() || participantOf(resource.data.applicationId));
-      allow create: if activeUser()
-        && (isManager()
-          || (volunteerMayEditPlanning(request.resource.data.applicationId)
-            && request.resource.data.createdByUid == request.auth.uid
-            && request.resource.data.status == 'proposed'));
-      allow update: if activeUser()
-        && (isManager()
-          || (
-            participantOf(resource.data.applicationId)
-            && resource.data.createdByUid == request.auth.uid
-            && request.resource.data.applicationId == resource.data.applicationId
-            && request.resource.data.activityId == resource.data.activityId
-            && request.resource.data.createdByUid == resource.data.createdByUid
-            && (
-              (volunteerMayEditPlanning(resource.data.applicationId)
-                && resource.data.status == 'proposed'
-                && request.resource.data.status == 'proposed')
-              ||
-              (approvedApplication(resource.data.applicationId)
-                && resource.data.status == 'confirmed'
-                && request.resource.data.status == 'change_requested'
-                && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-                  'date', 'time', 'period', 'duration', 'status',
-                  'changeNote', 'changeRequestedAt', 'updatedAt'
-                ]))
-            )
-          ));
-      allow delete: if activeUser()
-        && (isManager()
-          || (volunteerMayEditPlanning(resource.data.applicationId)
-            && resource.data.createdByUid == request.auth.uid
-            && resource.data.status == 'proposed'));
+
+      allow create: if isManager() || (
+        activeUser()
+        && candidateWindowOpen(request.resource.data.applicationId)
+        && participantOf(request.resource.data.applicationId)
+        && request.resource.data.createdByUid == request.auth.uid
+        && request.resource.data.unitId == applicationData(request.resource.data.applicationId).unitId
+        && request.resource.data.status == 'proposed'
+        && request.resource.data.groupId == null
+      );
+
+      allow update: if isManager() || (
+        activeUser()
+        && participantOwnsCreatedRecord(resource.data)
+        && request.resource.data.applicationId == resource.data.applicationId
+        && request.resource.data.activityId == resource.data.activityId
+        && request.resource.data.createdByUid == resource.data.createdByUid
+        && request.resource.data.unitId == resource.data.unitId
+        && request.resource.data.groupId == resource.data.groupId
+        && (
+          (
+            candidateWindowOpen(resource.data.applicationId)
+            && resource.data.status == 'proposed'
+            && request.resource.data.status == 'proposed'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'activityName', 'activityDescription', 'participation', 'materials',
+              'notes', 'ownerName', 'date', 'time', 'period', 'duration', 'updatedAt'
+            ])
+          )
+          ||
+          (
+            approvedApplication(resource.data.applicationId)
+            && resource.data.status == 'proposed'
+            && request.resource.data.status == 'proposed'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'date', 'time', 'updatedAt'
+            ])
+          )
+          ||
+          (
+            approvedApplication(resource.data.applicationId)
+            && resource.data.status == 'confirmed'
+            && request.resource.data.status == 'change_requested'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'date', 'time', 'status', 'changeNote', 'changeRequestedAt', 'updatedAt'
+            ])
+          )
+        )
+      );
+
+      allow delete: if isManager() || (
+        activeUser()
+        && participantOwnsCreatedRecord(resource.data)
+        && candidateWindowOpen(resource.data.applicationId)
+        && resource.data.status == 'proposed'
+      );
     }
 
     match /groups/{groupId} {
