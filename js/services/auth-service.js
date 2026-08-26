@@ -76,6 +76,7 @@
     },
     async currentSession(){
       const context=await firebaseContext();
+      if(typeof context.auth.authStateReady==='function')await context.auth.authStateReady();
       const user=context.auth.currentUser;
       return user?sessionFromUser(context,user):null;
     },
