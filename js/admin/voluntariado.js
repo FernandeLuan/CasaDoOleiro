@@ -19,10 +19,11 @@ function managerVolunteers(){
   const visibleCount=Math.max(CANDIDATE_PAGE_SIZE,state.candidateVisibleCount||CANDIDATE_PAGE_SIZE);
   const activeFilters=state.candidateFilter!=='approved'||(state.candidateUnit||'all')!=='all';
   return `<section class="section volunteer-list-page">
-    <div class="section-head"><div><span class="eyebrow">Voluntariado</span><h2>Candidatos e experiências</h2><p>Cadastros e acessos reais do programa</p></div><button class="btn btn-primary" type="button" onclick="openNewCandidate()"><i class="fa-solid fa-user-plus"></i>Novo</button></div>
+    <div class="section-head"><div><span class="eyebrow">Voluntariado</span><h2>Candidatos e experiências</h2><p>Cadastros e acessos reais do programa</p></div></div>
     <div class="candidate-tools candidate-tools-compact">
       <div class="filter-search candidate-search"><i class="fa-solid fa-magnifying-glass"></i><input id="candidateSearch" class="input" type="search" value="${escapeHtml(search)}" placeholder="Buscar voluntário por nome" oninput="updateCandidateSearch(this.value)"></div>
       <button class="candidate-filter-button ${activeFilters?'active':''}" type="button" onclick="openCandidateFilters()" aria-label="Filtros"><i class="fa-solid fa-sliders"></i>${activeFilters?'<span class="filter-dot"></span>':''}</button>
+      <button class="candidate-add-button" type="button" onclick="openNewCandidate()" aria-label="Novo candidato" title="Novo candidato"><i class="fa-solid fa-user-plus"></i></button>
     </div>
     <div class="candidate-filter-summary">${candidateFilterSummary()}</div>
     <div id="candidateList" class="list">${candidateListHtml(filtered,visibleCount)}</div>
