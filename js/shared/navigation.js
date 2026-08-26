@@ -24,5 +24,5 @@ function volunteerNav(){const approved=state.volunteerMode==='approved';const it
 
 if('scrollRestoration' in history)history.scrollRestoration='manual';
 document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
-function openDatePicker(inputOrId){const input=typeof inputOrId==='string'?document.getElementById(inputOrId):inputOrId;if(!input||input.disabled)return;try{if(typeof input.showPicker==='function')input.showPicker();else{input.focus();input.click()}}catch{input.focus()}}
-document.addEventListener('click',event=>{const input=event.target.closest?.('input[type="date"]')||event.target.closest?.('.date-field,.field')?.querySelector?.('input[type="date"]');if(input)openDatePicker(input);});
+function openDatePicker(inputOrId){const input=typeof inputOrId==='string'?document.getElementById(inputOrId):inputOrId;if(!input||input.disabled)return;try{if(typeof input.showPicker==='function')input.showPicker();else input.focus()}catch{input.focus()}}
+document.addEventListener('click',event=>{if(event.target.closest?.('input[type="date"]'))return;const input=event.target.closest?.('.date-field')?.querySelector?.('input[type="date"]');if(input)openDatePicker(input);});
