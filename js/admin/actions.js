@@ -1,60 +1,70 @@
-async function hydrateCandidatePlanning(applicationId){
-  const p=state.candidates.find(x=>String(x.id)===String(applicationId));if(!p||!window.OleiroServices?.planning)return;
-  const [activities,sessions]=await Promise.all([
-    window.OleiroServices.planning.listActivities(p.id),
-    window.OleiroServices.planning.listSessions({applicationId:p.id,from:p.from||null,to:p.to||null})
-  ]);
-  state.currentPlanningApplicationId=p.id;
-  state.sessions=sessions||[];
-  const byActivity=new Map((activities||[]).map(activity=>[String(activity.id),{...activity,owner:p.name,dates:[],time:activity.time||''}]));
-  state.sessionStatus={};state.sessionGroups={};
-  state.sessions.forEach(session=>{
-    const activity=byActivity.get(String(session.activityId||''));
-    if(activity&&session.date&&!activity.dates.includes(session.date))activity.dates.push(session.date);
-    if(session.activityId&&session.date){state.sessionStatus[`${session.activityId}-${session.date}`]=session.status||'proposed';state.sessionGroups[`${session.activityId}-${session.date}`]=session.groupId||'A definir'}
-  });
-  state.activities=[...byActivity.values()];
-}
+const CANDIDATE_PLAN_PAGE_SIZE=5;
+state.candidatePlanningCache=state.candidatePlanningCache||{};
+state.candidatePlanVisible=state.candidatePlanVisible||{};
 
-async function openPerson(id,tab='overview'){
-  let p=state.candidates.find(x=>String(x.id)===String(id));if(!p)return;
-  if(!p.profileHydrated&&window.OleiroServices?.applications?.getById){
-    try{
-      const fresh=await window.OleiroServices.applications.getById(p.id);
-      if(fresh){const index=state.candidates.findIndex(x=>String(x.id)===String(p.id));if(index>=0)state.candidates[index]=fresh;p=fresh}
-    }catch(error){console.error('Não foi possível carregar os dados de contato do perfil:',error)}
-  }
-  state.personModalTab=tab;
-  if(tab==='plan'){try{await hydrateCandidatePlanning(p.id)}catch(error){console.error(error);return showToast('Não foi possível carregar o planejamento.')}}
-  const tabs=[['overview','Visão geral'],['plan','Planejamento'],['stay','Estadia'],['history','Histórico']];const arg=candidateActionArg(p.id);
-  openModal(p.name,`${p.country} • ${p.unit}`,`<div class="tabs person-tabs">${tabs.map(([k,l])=>`<button class="tab ${tab===k?'active':''}" onclick="openPerson(decodeURIComponent('${arg}'),'${k}')">${l}</button>`).join('')}</div>${personTabContent(p,tab)}`)
+function candidatePlanningCache(id){return state.candidatePlanningCache[String(id)]||null}
+function applyCandidatePlanningCache(id,cache){
+  state.currentPlanningApplicationId=id;state.sessions=cache?.sessions||[];state.activities=cache?.activities||[];state.sessionStatus={};state.sessionGroups={};
+  state.sessions.forEach(session=>{if(session.activityId&&session.date){state.sessionStatus[`${session.activityId}-${session.date}`]=session.status||'proposed';state.sessionGroups[`${session.activityId}-${session.date}`]=session.groupId||'A definir'}});
 }
+async function hydrateCandidatePlanning(applicationId,{force=false}={}){
+  const p=state.candidates.find(x=>String(x.id)===String(applicationId));if(!p||!window.OleiroServices?.planning)return null;const key=String(p.id),cached=candidatePlanningCache(key);
+  if(cached&&!force){applyCandidatePlanningCache(p.id,cached);return cached}
+  const [activities,sessions]=await Promise.all([window.OleiroServices.planning.listActivities(p.id),window.OleiroServices.planning.listSessions({applicationId:p.id})]);
+  const byActivity=new Map((activities||[]).map(activity=>[String(activity.id),{...activity,owner:p.name,dates:[],time:activity.time||''}]));
+  (sessions||[]).forEach(session=>{const activity=byActivity.get(String(session.activityId||''));if(activity&&session.date&&!activity.dates.includes(session.date))activity.dates.push(session.date);if(activity&&!activity.time&&session.time)activity.time=session.time});
+  const cache={activities:[...byActivity.values()],sessions:sessions||[],at:Date.now()};state.candidatePlanningCache[key]=cache;applyCandidatePlanningCache(p.id,cache);return cache;
+}
+function invalidateCandidatePlanning(id){delete state.candidatePlanningCache[String(id)];if(String(state.currentPlanningApplicationId)===String(id)){state.currentPlanningApplicationId=null;state.activities=[];state.sessions=[]}}
+function prefetchCandidatePlanning(id){if(candidatePlanningCache(id))return;hydrateCandidatePlanning(id).catch(error=>console.error('Falha ao pré-carregar planejamento:',error))}
+function renderPersonModal(p,tab='overview'){
+  state.personModalTab=tab;const tabs=[['overview','Visão geral'],['plan','Planejamento'],['stay','Estadia'],['history','Histórico']];const arg=candidateActionArg(p.id);
+  openModal(p.name,`${p.country} • ${p.unit}`,`<div class="tabs person-tabs">${tabs.map(([k,l])=>`<button class="tab ${tab===k?'active':''}" onclick="openPerson(decodeURIComponent('${arg}'),'${k}')">${l}</button>`).join('')}</div>${personTabContent(p,tab)}`);modalRoot.dataset.personId=String(p.id);modalRoot.dataset.personTab=tab;
+}
+function refreshOpenPersonModal(id){const p=candidateById(id);if(!p||modalRoot.dataset.personId!==String(id))return;renderPersonModal(p,modalRoot.dataset.personTab||state.personModalTab||'overview')}
+async function openPerson(id,tab='overview'){
+  let p=candidateById(id);if(!p)return;renderPersonModal(p,tab);
+  if(!p.profileHydrated&&window.OleiroServices?.applications?.getById){window.OleiroServices.applications.getById(p.id).then(fresh=>{if(!fresh)return;const index=state.candidates.findIndex(x=>String(x.id)===String(p.id));if(index>=0)state.candidates[index]=fresh;p=fresh;refreshOpenPersonModal(p.id)}).catch(error=>console.error('Não foi possível carregar contato:',error));}
+  if(tab==='plan'){
+    const cached=candidatePlanningCache(p.id);if(cached){applyCandidatePlanningCache(p.id,cached);refreshOpenPersonModal(p.id)}else hydrateCandidatePlanning(p.id).then(()=>refreshOpenPersonModal(p.id)).catch(error=>{console.error(error);showToast('Não foi possível carregar o planejamento.')});
+  }else if(['analysis','adjustments','approved'].includes(p.status))prefetchCandidatePlanning(p.id);
+}
+function planningActivityForSession(session){return (state.activities||[]).find(a=>String(a.id)===String(session.activityId))||{id:session.activityId,name:session.activityName||'Atividade',notes:session.notes||'',duration:session.duration||60,time:session.time||''}}
+function candidatePlanningDays(p){
+  const cache=candidatePlanningCache(p.id);if(!cache)return [];
+  applyCandidatePlanningCache(p.id,cache);const byDate=new Map();(state.sessions||[]).forEach(session=>{if(!session.date)return;const list=byDate.get(session.date)||[];list.push({...session,activity:planningActivityForSession(session)});byDate.set(session.date,list)});
+  return [...byDate.entries()].sort(([a],[b])=>a.localeCompare(b)).map(([date,sessions])=>({date,sessions:sessions.sort((a,b)=>String(a.time||a.activity?.time||'').localeCompare(String(b.time||b.activity?.time||'')))}));
+}
+function candidateDayAdjustment(p,date){return p.dayAdjustments&&p.dayAdjustments[date]?p.dayAdjustments[date]:null}
+function adminPlanningDayCard(p,day){
+  const adjustment=candidateDayAdjustment(p,day.date);const canAdjust=['analysis','adjustments'].includes(p.status);const id=candidateActionArg(p.id);const dateArg=encodeURIComponent(day.date);
+  return `<div class="card planning-day-card"><div class="planning-day-head"><div><strong>${fmtDate(day.date,true)} <small>${dayName(day.date)}</small></strong>${adjustment?`<span class="badge warning">Reajustar</span>`:''}</div>${canAdjust?`<button class="btn btn-soft btn-xs" type="button" onclick="requestDayAdjust(decodeURIComponent('${id}'),decodeURIComponent('${dateArg}'))"><i class="fa-solid fa-pen"></i>Ajuste</button>`:''}</div>${adjustment?`<div class="day-adjustment-note"><i class="fa-solid fa-circle-info"></i><span>${escapeHtml(adjustment.note||'Ajuste solicitado pela equipe.')}</span></div>`:''}<div class="planning-day-sessions">${day.sessions.map(session=>{const a=session.activity||{};const note=session.notes||a.notes||'';const group=session.groupId&&session.groupId!=='A definir'?` • Grupo ${escapeHtml(session.groupId)}`:'';return `<div class="planning-session-row"><div><strong>${escapeHtml(a.name||session.activityName||'Atividade')}</strong><span>${escapeHtml(session.time||a.time||'—')} • ${Number(session.duration||a.duration)||0} min • 1 sessão${group}</span>${note?`<p>${escapeHtml(note)}</p>`:''}</div></div>`}).join('')}</div></div>`;
+}
+function candidatePlanContent(p){
+  const cache=candidatePlanningCache(p.id);if(!cache)return `<div class="empty compact-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando planejamento...</div>`;
+  const days=candidatePlanningDays(p);if(!days.length)return `<div class="empty"><i class="fa-regular fa-calendar-xmark"></i>Nenhuma atividade cadastrada ainda.</div>`;
+  const visible=Math.max(CANDIDATE_PLAN_PAGE_SIZE,state.candidatePlanVisible[String(p.id)]||CANDIDATE_PLAN_PAGE_SIZE);const shown=days.slice(0,visible);const remaining=days.length-shown.length;const arg=candidateActionArg(p.id);
+  return `<div class="planning-by-day">${shown.map(day=>adminPlanningDayCard(p,day)).join('')}</div>${remaining>0?`<button class="btn btn-soft btn-block" type="button" onclick="loadMoreCandidatePlan(decodeURIComponent('${arg}'))"><i class="fa-solid fa-chevron-down"></i>Ver mais ${Math.min(CANDIDATE_PLAN_PAGE_SIZE,remaining)}</button>`:''}<div class="planning-admin-footer"><button class="btn btn-outline" type="button" onclick="exportCandidatePlanning(decodeURIComponent('${arg}'))"><i class="fa-solid fa-file-export"></i>Exportar planejamento</button>${['analysis','adjustments'].includes(p.status)?`<button class="btn btn-primary" type="button" onclick="approveCandidate(decodeURIComponent('${arg}'))">Aprovar planejamento</button>`:''}</div>`;
+}
+function loadMoreCandidatePlan(id){state.candidatePlanVisible[String(id)]=(state.candidatePlanVisible[String(id)]||CANDIDATE_PLAN_PAGE_SIZE)+CANDIDATE_PLAN_PAGE_SIZE;refreshOpenPersonModal(id)}
+function exportCandidatePlanning(id){
+  const p=candidateById(id);if(!p)return;const days=candidatePlanningDays(p);const lines=[`Planejamento - ${p.name}`,`${p.unit} | ${fmtDate(p.from,true)} a ${fmtDate(p.to,true)}`,''];days.forEach(day=>{lines.push(`${dayName(day.date)} ${fmtDate(day.date,true)}`);day.sessions.forEach(session=>{const a=session.activity||{};lines.push(`- ${session.time||a.time||'—'} | ${a.name||session.activityName||'Atividade'} | ${Number(session.duration||a.duration)||0} min${session.notes||a.notes?` | Obs.: ${session.notes||a.notes}`:''}`)});lines.push('')});const blob=new Blob([lines.join('\n')],{type:'text/plain;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`planejamento-${String(p.name||'voluntario').toLowerCase().replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'')}.txt`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function requestDayAdjust(id,date){const p=candidateById(id);if(!p)return;const existing=candidateDayAdjustment(p,date)?.note||'';openModal(`Ajuste em ${fmtDate(date,true)}`,'Explique somente o que precisa ser revisto neste dia.',`<div class="field"><label for="dayAdjustNote">Orientação ao voluntário</label><textarea id="dayAdjustNote" class="textarea" placeholder="Ex.: ajustar o horário e reduzir a duração.">${escapeHtml(existing)}</textarea></div>`,`<button class="btn btn-primary btn-block" type="button" onclick="saveDayAdjustment(${JSON.stringify(String(id))},${JSON.stringify(date)})">Solicitar ajuste</button>`)}
+async function saveDayAdjustment(id,date){const p=candidateById(id);const note=document.getElementById('dayAdjustNote')?.value.trim()||'';if(!p||!note)return showToast('Informe o ajuste solicitado.');try{await window.OleiroServices.applications.requestDayAdjustment(p.id,date,note);p.status='adjustments';p.dayAdjustments=p.dayAdjustments||{};p.dayAdjustments[date]={note,status:'requested'};p.pendingUntil=candidateDeadlineFrom(new Date(),7);p.needsAdminAttention=false;deriveAdminNotifications?.();renderPersonModal(p,'plan');showToast('Ajuste solicitado para este dia.')}catch(error){console.error(error);showToast(error?.message||'Não foi possível solicitar o ajuste.')}}
 
 function personTabContent(p,tab){
   const [l]=statusMeta(p.status);const arg=candidateActionArg(p.id);
-  if(tab==='plan'){
-    const acts=state.currentPlanningApplicationId===p.id?state.activities:[];
-    return acts.length?`<div class="list">${acts.map(a=>`<div class="card"><div class="activity-row"><div><h3 style="font-size:.8rem">${a.name}</h3><p style="font-size:.64rem;color:var(--muted);margin-top:3px">${a.description||''}</p></div>${badge((a.dates||[]).length+' sessões','primary')}</div><div style="margin-top:10px">${(a.dates||[]).map(d=>{const st=state.sessionStatus[`${a.id}-${d}`]||'proposed';const [sl]=statusMeta(st);return `<button class="plan-session-link" style="margin-bottom:7px" onclick='closeModal();openSessionDetail(${JSON.stringify(a.id)},${JSON.stringify(d)})'><span class="plan-session-icon"><i class="fa-regular fa-calendar"></i></span><span><strong>${dayName(d)} • ${fmtDate(d)} • ${a.time||'—'}</strong><small>${sl} • ${state.sessionGroups[`${a.id}-${d}`]||'Grupo a definir'}</small></span><i class="fa-solid fa-chevron-right"></i></button>`}).join('')}</div></div>`).join('')}</div>`:`<div class="empty"><i class="fa-regular fa-calendar-xmark"></i>Nenhuma atividade cadastrada ainda.</div>`;
-  }
-  if(tab==='stay')return `<div class="card"><span class="eyebrow">${p.status==='approved'?'Estadia confirmada':'Período proposto'}</span><div class="grid-2" style="margin-top:10px"><div><strong style="font-size:.8rem">Chegada</strong><p class="compact-hint">${fmtDate(p.from)}</p></div><div><strong style="font-size:.8rem">Saída</strong><p class="compact-hint">${fmtDate(p.to)}</p></div></div><div style="margin-top:12px"><strong style="font-size:.72rem">Unidade</strong><p class="compact-hint">${p.unit}</p></div></div>`;
+  if(tab==='plan')return candidatePlanContent(p);
+  if(tab==='stay')return `<div class="card"><span class="eyebrow">${p.status==='approved'?'Estadia confirmada':'Período proposto'}</span><div class="grid-2" style="margin-top:10px"><div><strong style="font-size:.8rem">Chegada</strong><p class="compact-hint">${fmtDate(p.from)}</p></div><div><strong style="font-size:.8rem">Saída</strong><p class="compact-hint">${fmtDate(p.to)}</p></div></div><div style="margin-top:12px"><strong style="font-size:.72rem">Unidade</strong><p class="compact-hint">${p.unit}</p></div><button class="btn btn-outline btn-block" style="margin-top:12px" type="button" onclick="openStayDateEditor(decodeURIComponent('${arg}'))"><i class="fa-regular fa-calendar"></i>Editar datas</button></div>`;
   if(tab==='history')return `<div class="list"><div class="list-item"><div class="metric-icon"><i class="fa-solid fa-user-plus"></i></div><div class="item-main"><h3>Perfil criado</h3><p>Acesso liberado para o processo de planejamento.</p></div></div>${p.submitted&&p.submitted!=='—'?`<div class="list-item"><div class="metric-icon"><i class="fa-solid fa-paper-plane"></i></div><div class="item-main"><h3>Planejamento enviado</h3><p>${p.submitted}</p></div></div>`:''}<div class="list-item"><div class="metric-icon"><i class="fa-solid fa-circle-info"></i></div><div class="item-main"><h3>Status atual</h3><p>${l}</p></div></div></div>`;
-  return `<div class="card"><div><span class="eyebrow">Status</span><h3 style="font-size:.88rem;margin-top:5px">${l}</h3></div><div class="stat-row"><span class="stat-pill">${fmtDate(p.from,true)}–${fmtDate(p.to,true)}</span><span class="stat-pill">${p.activities||0} atividades</span><span class="stat-pill">${p.sessions||0} sessões</span></div></div><div class="card" style="margin-top:10px"><h3 style="font-size:.78rem">Contato</h3><p style="font-size:.66rem;color:var(--muted);margin-top:6px">${p.email||'—'}<br>${p.phone||'—'}</p></div>${p.status==='analysis'||p.status==='adjustments'?`<div class="activity-actions" style="margin-top:12px"><button class="btn btn-primary" onclick="approveCandidate(decodeURIComponent('${arg}'))">Aprovar</button><button class="btn btn-outline" onclick="requestAdjust(decodeURIComponent('${arg}'))">Pedir ajuste</button><button class="btn btn-danger" onclick="rejectCandidate(decodeURIComponent('${arg}'))">Recusar</button></div>`:''}${p.status==='rejected'?`<button class="btn btn-soft btn-block" style="margin-top:12px" onclick="reactivateCandidate(decodeURIComponent('${arg}'))">Reativar perfil</button>`:''}`;
+  return `<div class="card"><div><span class="eyebrow">Status</span><h3 style="font-size:.88rem;margin-top:5px">${l}</h3></div><div class="stat-row"><span class="stat-pill">${fmtDate(p.from,true)}–${fmtDate(p.to,true)}</span><span class="stat-pill">${p.activities||0} atividades</span><span class="stat-pill">${p.sessions||0} sessões</span></div></div><div class="card" style="margin-top:10px"><h3 style="font-size:.78rem">Contato</h3><p style="font-size:.66rem;color:var(--muted);margin-top:6px">${escapeHtml(p.email||'—')}<br>${escapeHtml(p.phone||'—')}</p></div>${['analysis','adjustments'].includes(p.status)?`<div class="activity-actions" style="margin-top:12px"><button class="btn btn-primary" onclick="approveCandidate(decodeURIComponent('${arg}'))">Aprovar</button><button class="btn btn-outline" onclick="openPerson(decodeURIComponent('${arg}'),'plan')">Revisar planejamento</button><button class="btn btn-danger" onclick="rejectCandidate(decodeURIComponent('${arg}'))">Recusar</button></div>`:''}${p.status==='rejected'?`<button class="btn btn-soft btn-block" style="margin-top:12px" onclick="reactivateCandidate(decodeURIComponent('${arg}'))">Reativar perfil</button>`:''}`;
 }
-
-async function approveCandidate(id){
-  const p=state.candidates.find(x=>String(x.id)===String(id));if(!p)return;
-  try{await window.OleiroServices.applications.update(p.id,{status:'approved',active:true,planningDeadlineAt:null,approvedAt:new Date(),needsAdminAttention:false});await refreshCandidateFromBackend(p.id);closeModal();render();showToast('Voluntário aprovado. Estadia confirmada.')}catch(error){console.error(error);showToast('Não foi possível aprovar o voluntário.')}
-}
-async function requestAdjust(id){
-  const p=state.candidates.find(x=>String(x.id)===String(id));if(!p)return;
-  try{await window.OleiroServices.applications.update(p.id,{status:'adjustments',active:true,planningDeadlineAt:new Date(candidateDeadlineFrom(new Date(),7)),adjustmentRequestedAt:new Date(),needsAdminAttention:false});await refreshCandidateFromBackend(p.id);closeModal();render();showToast('Planejamento devolvido para ajustes.')}catch(error){console.error(error);showToast('Não foi possível solicitar ajustes.')}
-}
-async function confirmSession(id,date){
-  const session=realSessionFor(id,date);if(!session)return showToast('Sessão não encontrada.');
-  try{await window.OleiroServices.planning.updateSession(session.id,{status:'confirmed',confirmedAt:new Date()});await hydrateCandidatePlanning(state.currentPlanningApplicationId);render();showToast('Sessão confirmada.')}catch(error){console.error(error);showToast('Não foi possível confirmar a sessão.')}
-}
+function openStayDateEditor(id){const p=candidateById(id);if(!p)return;openModal('Editar datas','Se o novo período excluir dias planejados, mostraremos uma confirmação antes de remover essas sessões.',`<div class="field-row">${datePickerField('editStayFrom','Chegada',p.from,true,'syncVisualDateField')}${datePickerField('editStayTo','Saída',p.to,true,'syncVisualDateField')}</div>`,`<button class="btn btn-primary btn-block" type="button" onclick="saveStayDates(${JSON.stringify(String(id))})">Salvar período</button>`)}
+async function saveStayDates(id){const p=candidateById(id);const from=document.getElementById('editStayFrom')?.value||'',to=document.getElementById('editStayTo')?.value||'';if(!p||!from||!to||to<from)return showToast('Confira as datas informadas.');try{const preview=await window.OleiroServices.applications.previewStayDateChange(p.id,{stayStart:from,stayEnd:to});if(preview.outsideCount){openModal('Confirmar alteração',`${preview.outsideCount} ${preview.outsideCount===1?'sessão ficará':'sessões ficarão'} fora do novo período.`,`<div class="notice warning"><i class="fa-solid fa-triangle-exclamation"></i><div>As sessões em ${preview.outsideDates.map(d=>fmtDate(d,true)).join(', ')} serão removidas para manter o planejamento consistente.</div></div>`,`<div class="confirm-delete-actions"><button class="btn btn-outline" onclick="openStayDateEditor(${JSON.stringify(String(id))})">Voltar</button><button class="btn btn-danger" onclick="confirmStayDates(${JSON.stringify(String(id))},${JSON.stringify(from)},${JSON.stringify(to)})">Alterar e remover</button></div>`);return}await confirmStayDates(id,from,to);}catch(error){console.error(error);showToast(error?.message||'Não foi possível verificar o novo período.')}}
+async function confirmStayDates(id,from,to){const p=candidateById(id);if(!p)return;try{const result=await window.OleiroServices.applications.changeStayDates(p.id,{stayStart:from,stayEnd:to,removeOutside:true});p.from=from;p.to=to;p.stayStart=from;p.stayEnd=to;p.sessions=result.sessionCount;p.activities=result.activityCount;invalidateCandidatePlanning(p.id);invalidateManagerScheduleCache?.();renderPersonModal(p,'stay');showToast(result.removedSessions?`Datas alteradas. ${result.removedSessions} sessões fora do período foram removidas.`:'Datas da estadia alteradas.')}catch(error){console.error(error);showToast(error?.message||'Não foi possível alterar as datas.')}}
+async function approveCandidate(id){const p=candidateById(id);if(!p)return;try{const result=await window.OleiroServices.applications.approvePlanning(p.id,{participantUids:p.participantUids});p.status='approved';p.active=true;p.inactive=false;p.pendingUntil=null;p.planningDeadlineAt=null;p.needsAdminAttention=false;p.dayAdjustments={};const cache=candidatePlanningCache(p.id);if(cache)cache.sessions.forEach(s=>{s.status='confirmed'});deriveAdminNotifications?.();invalidateManagerScheduleCache?.();closeModal();render();showToast(`Planejamento aprovado. ${result.confirmedSessions||0} sessões confirmadas.`)}catch(error){console.error(error);showToast('Não foi possível aprovar o voluntário.')}}
+async function requestAdjust(id){openPerson(id,'plan')}
+async function confirmSession(id,date){const session=realSessionFor(id,date);if(!session)return showToast('Sessão não encontrada.');try{await window.OleiroServices.planning.updateSession(session.id,{status:'confirmed',confirmedAt:new Date()});session.status='confirmed';invalidateManagerScheduleCache?.();refreshOpenPersonModal(state.currentPlanningApplicationId);showToast('Sessão confirmada.')}catch(error){console.error(error);showToast('Não foi possível confirmar a sessão.')}}
 function assignGroup(id,date){openModal('Definir grupo','Somente a equipe da Casa define quem participa.',`<div class="check-grid">${['A','B','C','D','A+B','C+D','Livre'].map(g=>`<button class="check-card" onclick='saveGroup(${JSON.stringify(id)},${JSON.stringify(date)},${JSON.stringify(g)})'>${g==='Livre'?'Participação livre':'Grupo '+g}</button>`).join('')}</div>`)}
-async function saveGroup(id,date,g){
-  const session=realSessionFor(id,date);if(!session)return showToast('Sessão não encontrada.');
-  try{await window.OleiroServices.planning.updateSession(session.id,{groupId:g});await hydrateCandidatePlanning(state.currentPlanningApplicationId);closeModal();render();showToast('Grupo atualizado.')}catch(error){console.error(error);showToast('Não foi possível atualizar o grupo.')}
-}
+async function saveGroup(id,date,g){const session=realSessionFor(id,date);if(!session)return showToast('Sessão não encontrada.');try{await window.OleiroServices.planning.updateSession(session.id,{groupId:g});session.groupId=g;invalidateManagerScheduleCache?.();closeModal();refreshOpenPersonModal(state.currentPlanningApplicationId);showToast('Grupo atualizado.')}catch(error){console.error(error);showToast('Não foi possível atualizar o grupo.')}}
