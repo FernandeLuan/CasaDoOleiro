@@ -1,4 +1,4 @@
-/* Round 15 — operações consistentes que ainda complementam os serviços-base. */
+/* Round 15/22 — operações consistentes; consultas indexadas nunca degradam para leitura ampla. */
 (function consistencyR15Services(){
   const services=window.OleiroServices=window.OleiroServices||{};
   const baseSaveActivity=services.planning?.saveActivity?.bind(services.planning);
@@ -10,6 +10,7 @@
     while(y<ey||(y===ey&&m<=em)){out.push(`${y}-${String(m+1).padStart(2,'0')}`);m++;if(m===12){m=0;y++}}
     return out;
   }
+  function indexUnavailable(error){return /index|failed-precondition/i.test(`${error?.code||''} ${error?.message||''}`)}
   async function focusedSessions(applicationId,from,to){
     const context=await services.firebase(),{firestore}=context.modules,collection=firestore.collection(context.db,'activity_sessions');
     const map=snapshot=>snapshot.docs.map(doc=>({id:doc.id,...doc.data()})).filter(row=>(!from||row.date>=from)&&(!to||row.date<=to)).sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))||String(a.time||'').localeCompare(String(b.time||'')));
@@ -19,19 +20,18 @@
     if(from||to)constraints.push(firestore.orderBy('date','asc'));
     try{return map(await firestore.getDocs(firestore.query(collection,...constraints)))}
     catch(error){
-      const message=String(error?.message||'');if(!(from||to)||(!/index|failed-precondition/i.test(`${error?.code||''} ${message}`)))throw error;
-      console.warn('Índice de agenda ainda indisponível; usando leitura compatível até o índice ficar pronto.');
-      const fallback=await firestore.getDocs(firestore.query(collection,firestore.where('applicationId','==',String(applicationId))));return map(fallback);
+      if((from||to)&&indexUnavailable(error)){
+        const safeError=new Error('O índice activity_sessions(applicationId, date) ainda não está pronto. A leitura ampla foi bloqueada para proteger a cota do Firestore.');
+        safeError.code='oleiro/index-not-ready';throw safeError;
+      }
+      throw error;
     }
   }
 
   if(services.planning){
     if(baseSaveActivity){
       services.planning.saveActivity=async function(args={}){
-        if(args.postApprovalProposal===true&&args.activityId&&args.applicationId){
-          const allSessions=await focusedSessions(args.applicationId,'','');
-          return baseSaveActivity({...args,existingSessions:allSessions});
-        }
+        if(args.postApprovalProposal===true&&args.activityId&&args.applicationId){const allSessions=await focusedSessions(args.applicationId,'','');return baseSaveActivity({...args,existingSessions:allSessions})}
         return baseSaveActivity(args);
       };
     }
@@ -58,32 +58,21 @@
       if(!id||!unitId)throw new Error('Selecione uma unidade.');
       return services.run(async()=>{
         const context=await services.firebase(),{firestore}=context.modules,applicationId=String(id),normalized=String(unitId).toLowerCase(),sessions=await focusedSessions(applicationId,'',''),batch=firestore.writeBatch(context.db),now=firestore.serverTimestamp();
-        batch.update(firestore.doc(context.db,'applications',applicationId),{unitId:normalized,unitName:String(unitName||unitId),updatedAt:now});
-        sessions.forEach(session=>batch.update(firestore.doc(context.db,'activity_sessions',String(session.id)),{unitId:normalized,updatedAt:now}));
-        await batch.commit();return {unitId:normalized,unitName:String(unitName||unitId),updatedSessions:sessions.length};
+        batch.update(firestore.doc(context.db,'applications',applicationId),{unitId:normalized,unitName:String(unitName||unitId),updatedAt:now});sessions.forEach(session=>batch.update(firestore.doc(context.db,'activity_sessions',String(session.id)),{unitId:normalized,updatedAt:now}));await batch.commit();return {unitId:normalized,unitName:String(unitName||unitId),updatedSessions:sessions.length};
       },{loading:false});
     };
 
     services.applications.prepareStayDateChange=async function(id,{stayStart,stayEnd}={}){
       if(!id||!stayStart||!stayEnd||stayEnd<stayStart)throw new Error('Período inválido.');
-      return services.run(async()=>{
-        const sessions=await focusedSessions(String(id),'',''),outside=sessions.filter(s=>!s.date||s.date<stayStart||s.date>stayEnd),outsideIds=new Set(outside.map(s=>String(s.id))),remaining=sessions.filter(s=>!outsideIds.has(String(s.id)));
-        return {stayStart,stayEnd,sessions,outside,remaining,outsideCount:outside.length,outsideDates:[...new Set(outside.map(s=>s.date).filter(Boolean))].sort()};
-      },{loading:false});
+      return services.run(async()=>{const sessions=await focusedSessions(String(id),'',''),outside=sessions.filter(s=>!s.date||s.date<stayStart||s.date>stayEnd),outsideIds=new Set(outside.map(s=>String(s.id))),remaining=sessions.filter(s=>!outsideIds.has(String(s.id)));return {stayStart,stayEnd,sessions,outside,remaining,outsideCount:outside.length,outsideDates:[...new Set(outside.map(s=>s.date).filter(Boolean))].sort()}},{loading:false});
     };
 
     services.applications.applyPreparedStayDateChange=async function(id,prepared){
       if(!id||!prepared?.stayStart||!prepared?.stayEnd)throw new Error('Alteração de período inválida.');
       return services.run(async()=>{
-        const context=await services.firebase(),{firestore}=context.modules,applicationId=String(id),outside=prepared.outside||[],remaining=prepared.remaining||[],remainingActivityIds=new Set(remaining.map(s=>String(s.activityId||'')).filter(Boolean)),batch=firestore.writeBatch(context.db),now=firestore.serverTimestamp();
-        outside.forEach(s=>batch.delete(firestore.doc(context.db,'activity_sessions',String(s.id))));
-        let removedActivities=0;
-        if(outside.length){
-          const activitiesSnapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'activities'),firestore.where('applicationId','==',applicationId)));
-          activitiesSnapshot.docs.forEach(doc=>{if(!remainingActivityIds.has(String(doc.id))){batch.delete(doc.ref);removedActivities++}});
-        }
-        batch.update(firestore.doc(context.db,'applications',applicationId),{stayStart:prepared.stayStart,stayEnd:prepared.stayEnd,stayMonths:stayMonths(prepared.stayStart,prepared.stayEnd),sessionCount:remaining.length,activityCount:remainingActivityIds.size,updatedAt:now});
-        await batch.commit();return {removedSessions:outside.length,removedActivities,sessionCount:remaining.length,activityCount:remainingActivityIds.size};
+        const context=await services.firebase(),{firestore}=context.modules,applicationId=String(id),outside=prepared.outside||[],remaining=prepared.remaining||[],remainingActivityIds=new Set(remaining.map(s=>String(s.activityId||'')).filter(Boolean)),batch=firestore.writeBatch(context.db),now=firestore.serverTimestamp();outside.forEach(s=>batch.delete(firestore.doc(context.db,'activity_sessions',String(s.id))));let removedActivities=0;
+        if(outside.length){const activitiesSnapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'activities'),firestore.where('applicationId','==',applicationId)));activitiesSnapshot.docs.forEach(doc=>{if(!remainingActivityIds.has(String(doc.id))){batch.delete(doc.ref);removedActivities++}})}
+        batch.update(firestore.doc(context.db,'applications',applicationId),{stayStart:prepared.stayStart,stayEnd:prepared.stayEnd,stayMonths:stayMonths(prepared.stayStart,prepared.stayEnd),sessionCount:remaining.length,activityCount:remainingActivityIds.size,updatedAt:now});await batch.commit();return {removedSessions:outside.length,removedActivities,sessionCount:remaining.length,activityCount:remainingActivityIds.size};
       },{loading:false});
     };
   }
