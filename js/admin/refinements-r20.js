@@ -1,4 +1,4 @@
-/* Round 20 — acabamento da lista, Conta e ações da Agenda sem leituras adicionais. */
+/* Round 20 — acabamento da lista, Conta, Agenda e revisão de planejamento sem leituras adicionais. */
 (function refinementsR20Admin(){
   function safe(value){return encodeURIComponent(String(value??''))}
 
@@ -30,14 +30,36 @@
     return result;
   };
 
+  /* Usa somente as sessões já carregadas da página atual para definir o estado visual do dia. */
+  const baseAdminPlanningDayCard=adminPlanningDayCard;
+  function reviewState(day){
+    const sessions=day?.sessions||[];
+    return {
+      hasChange:sessions.some(session=>session.status==='change_requested'),
+      hasProposal:sessions.some(session=>session.postApprovalProposal===true&&session.reviewStatus==='analysis')
+    };
+  }
+  function reviewBadges(hasProposal,hasChange){
+    const parts=[];
+    if(hasProposal)parts.push('<span class="badge info day-review-badge">Nova atividade</span>');
+    if(hasChange)parts.push('<span class="badge warning day-review-badge">Mudança solicitada</span>');
+    return parts.length===2?`${parts[0]}<span class="day-review-plus" aria-hidden="true">+</span>${parts[1]}`:parts.join('');
+  }
+  adminPlanningDayCard=function(p,day){
+    let html=baseAdminPlanningDayCard(p,day);
+    const {hasChange,hasProposal}=reviewState(day);
+    if(!hasChange&&!hasProposal)return html;
+    const tone=hasChange?'review-day-warning':'review-day-info';
+    if(!html.includes(tone))html=html.replace('class="card planning-day-card','class="card planning-day-card '+tone);
+    const tags=reviewBadges(hasProposal,hasChange),marker='<div class="planning-day-date">',start=html.indexOf(marker);
+    if(start>=0&&!html.includes('day-review-summary')){
+      const strongEnd=html.indexOf('</strong>',start);
+      if(strongEnd>=0){const at=strongEnd+'</strong>'.length;html=`${html.slice(0,at)}<span class="day-review-summary">${tags}</span>${html.slice(at)}`}
+    }
+    return html;
+  };
+
   window.personCompact=personCompact;
   window.renderPersonModal=renderPersonModal;
-
-  /* Carrega o acabamento da revisão sem adicionar nenhuma consulta de dados. */
-  if(!document.querySelector('script[data-oleiro-r21-admin]')){
-    const script=document.createElement('script');
-    script.src='../js/admin/refinements-r21.js?v=20260827-r21';
-    script.dataset.oleiroR21Admin='1';
-    document.head.appendChild(script);
-  }
+  window.adminPlanningDayCard=adminPlanningDayCard;
 })();
