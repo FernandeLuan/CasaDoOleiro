@@ -1,4 +1,4 @@
-/* Round 20 — alinhamento fino de status, Conta, Agenda, Home e revisão. */
+/* Round 20/22 — alinhamento fino de status, Conta, Agenda, Home e gestão do planejamento. */
 .candidate-status-row{display:flex!important;align-items:center!important;gap:6px!important;flex-wrap:wrap!important}
 .candidate-deadline-inline{display:inline-flex;align-items:center;gap:4px;font-size:.58rem;color:var(--warning);font-weight:600;line-height:1.2}
 .candidate-deadline-inline i{font-size:.55rem}
@@ -10,7 +10,6 @@
 .session-detail-modal .modal-action-row .btn{width:100%!important;min-width:0!important;padding-left:6px!important;padding-right:6px!important;white-space:nowrap!important;justify-content:center!important}
 
 .home-unit-copy .home-unit-label,.home-unit-link-copy .home-unit-label{display:block;font-size:.67rem!important;line-height:1.25;margin:0 0 2px!important;overflow-wrap:anywhere}
-/* A seção anterior já possui 22px de margem inferior; compensar para manter ~12px de respiro real. */
 .home-unit-support{margin-top:-10px!important;margin-bottom:12px!important}
 .home-unit-support-link{display:grid!important;grid-template-columns:36px minmax(0,1fr) 18px;align-items:center;gap:10px;text-decoration:none;color:var(--text);width:100%;cursor:pointer}
 .home-unit-support-link .home-unit-icon{margin:0!important;background:var(--primary-soft)!important;color:var(--primary)!important}
@@ -19,7 +18,9 @@
 .home-unit-chevron{justify-self:end;color:var(--muted);font-size:.75rem}
 .home-unit-support-link:active{transform:scale(.995)}
 
-/* Admin pode pré-cadastrar atividades sem nova leitura após o salvamento. */
+/* Gestão direta das atividades pelo Admin. */
+.admin-session-manage-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(78px,1fr));gap:7px;margin-top:10px;width:100%}
+.admin-session-manage-actions .btn{width:100%;min-width:0;min-height:34px;padding:7px 8px;font-size:.61rem;white-space:nowrap}
 .admin-create-activity-action{margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
 .admin-create-activity-action .btn{min-height:38px!important;font-size:.66rem!important}
 .manager-activity-date{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;background:var(--surface-2);color:var(--primary);font-size:.66rem;font-weight:600}
@@ -44,7 +45,10 @@
 @media(max-width:390px){
   .day-review-summary{margin-left:6px;gap:4px}
   .day-review-badge{font-size:.49rem!important;padding:4px 6px!important}
+  .admin-session-manage-actions{gap:6px}
+  .admin-session-manage-actions .btn{font-size:.58rem;padding-left:5px;padding-right:5px}
 }
 @media(max-width:350px){
   .session-detail-modal .modal-action-row .btn{font-size:.58rem!important;padding-left:4px!important;padding-right:4px!important}
+  .admin-session-manage-actions{grid-template-columns:1fr}
 }
