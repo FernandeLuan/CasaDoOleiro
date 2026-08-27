@@ -9,9 +9,15 @@
 .session-detail-modal .modal-action-row{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important;width:100%!important}
 .session-detail-modal .modal-action-row .btn{width:100%!important;min-width:0!important;padding-left:6px!important;padding-right:6px!important;white-space:nowrap!important;justify-content:center!important}
 
-.home-unit-copy .home-unit-label{display:block;font-size:.67rem!important;line-height:1.25;margin:0 0 2px!important;overflow-wrap:anywhere}
+.home-unit-copy .home-unit-label,.home-unit-link-copy .home-unit-label{display:block;font-size:.67rem!important;line-height:1.25;margin:0 0 2px!important;overflow-wrap:anywhere}
 /* A seção anterior já possui 22px de margem inferior; compensar para manter ~12px de respiro real. */
 .home-unit-support{margin-top:-10px!important;margin-bottom:12px!important}
+.home-unit-support-link{display:grid!important;grid-template-columns:36px minmax(0,1fr) 18px;align-items:center;gap:10px;text-decoration:none;color:var(--text);width:100%;cursor:pointer}
+.home-unit-support-link .home-unit-icon{margin:0!important;background:var(--primary-soft)!important;color:var(--primary)!important}
+.home-unit-link-copy{min-width:0;display:block}
+.home-unit-link-copy>span{display:block;color:var(--muted);font-size:.58rem;line-height:1.35;overflow-wrap:anywhere}
+.home-unit-chevron{justify-self:end;color:var(--muted);font-size:.75rem}
+.home-unit-support-link:active{transform:scale(.995)}
 
 /* Pendências pós-aprovação: o card inteiro assume a cor do estado. */
 .planning-day-card.review-day-info,
