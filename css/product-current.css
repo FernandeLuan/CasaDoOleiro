@@ -22,8 +22,8 @@
 /* Detalhes de atividade compactos. */
 .activity-info-modal-compact{max-width:390px!important}
 .activity-info-compact{display:grid;gap:0;margin:-3px 0}
-.activity-info-compact .activity-info-block{padding:10px 0!important}
-.activity-info-compact .activity-info-block p{margin:3px 0 0!important;line-height:1.45!important}
+.activity-info-compact .activity-info-block{padding:8px 0!important}
+.activity-info-compact .activity-info-block p{margin:3px 0 0!important;line-height:1.42!important}
 .modal-back-button{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:34px;border:0;background:var(--primary-soft);color:var(--primary);border-radius:10px;padding:7px 10px;font:inherit;font-size:.62rem;font-weight:600;margin-right:8px}
 
 /* Portal: dias onde não há atividade por padrão. */
@@ -31,33 +31,48 @@
 .no-activity-day i{color:var(--primary);font-size:.78rem}
 .activity-date-grid .check-card.is-disabled{opacity:.5;border-style:dashed;pointer-events:none}
 
-/* Portal: informação alinhada ao título e grupo visível. */
+/* Portal: informação alinhada ao título, descrição visível e grupo explícito. */
 .volunteer-session-main{min-width:0;flex:1}
 .volunteer-session-title{display:flex;align-items:center;gap:6px;min-width:0}
 .volunteer-session-title h4{min-width:0;margin:0;overflow-wrap:anywhere}
-.volunteer-info-button{align-self:center!important;transform:none!important;margin:0!important}
+.volunteer-info-button{display:inline-grid!important;place-items:center!important;align-self:center!important;transform:none!important;margin:0!important;line-height:1!important}
+.volunteer-info-button i{display:block;line-height:1!important}
 .volunteer-group-label{display:inline-flex;align-items:center;gap:5px;margin-top:5px;color:var(--primary);font-size:.59rem;font-weight:600}
 .volunteer-group-label i{font-size:.58rem}
+.volunteer-session-description{margin:7px 0 0!important;font-size:.61rem!important;line-height:1.45!important;color:var(--muted)!important;overflow-wrap:anywhere}
+.volunteer-session-description strong{color:var(--text);font-weight:600}
+.move-date-select{font-size:.66rem!important;line-height:1.3!important}
 
-/* Unidade/suporte incorporados à Home do voluntário. */
-.home-unit-support{margin-top:-2px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px!important}
+/* Unidade/suporte incorporados à Home. */
+.home-unit-support{margin-top:12px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px!important}
 .home-unit-copy{display:flex;align-items:center;gap:10px;min-width:0}
-.home-unit-icon{width:36px;height:36px;flex:0 0 36px;border-radius:11px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center}
+.home-unit-icon{width:36px;height:36px;flex:0 0 36px;border-radius:11px;background:var(--primary-soft);color:var(--primary);display:grid!important;place-items:center!important;line-height:1}
+.home-unit-icon i{display:block;line-height:1}
 .home-unit-copy div{min-width:0}.home-unit-copy small,.home-unit-copy span{display:block;color:var(--muted);font-size:.58rem}.home-unit-copy strong{display:block;font-size:.73rem;margin:1px 0;overflow-wrap:anywhere}
 .home-unit-support>a{width:38px;height:38px;flex:0 0 38px;border-radius:12px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;text-decoration:none;font-size:1rem}
 
-/* Perfil do voluntário em um único card. */
+/* Perfil do voluntário em um único card, mais compacto. */
 .volunteer-profile-unified{padding:14px!important;overflow:hidden}
-.volunteer-profile-identity{display:grid;grid-template-columns:48px minmax(0,1fr);gap:11px;align-items:center;padding-bottom:13px;border-bottom:1px solid var(--border)}
+.volunteer-profile-identity{display:grid;grid-template-columns:48px minmax(0,1fr);gap:11px;align-items:center;padding-bottom:11px;border-bottom:1px solid var(--border)}
 .volunteer-profile-identity .profile-avatar{width:48px;height:48px;font-size:.78rem}
 .volunteer-profile-identity>div:last-child{min-width:0}
 .volunteer-profile-identity strong{display:block;font-size:.8rem;line-height:1.3;overflow-wrap:anywhere}
 .volunteer-profile-identity span{display:block;margin-top:3px;color:var(--muted);font-size:.61rem;line-height:1.35}
-.volunteer-profile-details{margin-top:2px!important}
-.volunteer-profile-details>div{padding:10px 0!important}
+.volunteer-profile-details{margin-top:0!important}
+.volunteer-profile-details>div{padding:7px 0!important}
 .volunteer-profile-details>div:last-child{border-bottom:0!important}
 .volunteer-profile-details strong{overflow-wrap:anywhere}
+.profile-status{display:inline-flex!important;width:max-content;max-width:100%;align-items:center;border-radius:999px;padding:4px 8px;font-size:.62rem!important;line-height:1.2;white-space:nowrap}
+.profile-status.success{background:var(--primary-soft);color:var(--primary)}
+.profile-status.warning{background:#fff4dc;color:#8a6116}
+.profile-status.info{background:#edf3f7;color:#496471}
+.profile-status.danger{background:#fce7e7;color:var(--danger)}
 .admin-account-card{display:grid;gap:9px}.admin-account-row{display:grid;grid-template-columns:38px minmax(0,1fr);gap:10px;align-items:center;padding:11px;border:1px solid var(--border);border-radius:14px;background:var(--surface-2)}.admin-account-icon{width:38px;height:38px;border-radius:11px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center}.admin-account-row div{min-width:0}.admin-account-row small{display:block;color:var(--muted);font-size:.57rem}.admin-account-row strong{display:block;margin-top:2px;font-size:.69rem;overflow-wrap:anywhere}
+
+/* Informações: rotina respeita o mesmo respiro dos demais detalhes. */
+.info-accordion details .info-routine{margin-top:10px;padding-top:2px}
+.info-routine p{margin:0 0 8px!important;line-height:1.45}
+.info-routine p:last-child{margin-bottom:0!important}
 
 /* Ocupação: classes reais dos pontos do calendário. */
 .occupancy-person-dot.couple,.occupancy-person-dot.other,.legend-dot.couple{background:#8b9490!important}
@@ -67,9 +82,12 @@
 .multi-group-grid .check-card{display:flex!important;align-items:center;gap:8px!important}
 .multi-group-grid input{accent-color:var(--primary)}
 
-/* Logout na barra fica visualmente neutro até ser acionado. */
-.volunteer-nav-current .nav-logout{color:var(--muted)}
-.volunteer-nav-current .nav-logout:active{color:var(--danger)}
+/* Busca de país no cadastro. */
+.country-search-wrap{display:grid;gap:6px}.country-search-wrap .country-search-results{max-height:160px;overflow:auto;border:1px solid var(--border);border-radius:12px;background:var(--surface);padding:4px}.country-search-option{width:100%;border:0;background:transparent;color:var(--text);text-align:left;padding:8px 9px;border-radius:9px;font:inherit;font-size:.64rem}.country-search-option:active{background:var(--primary-soft)}
+
+/* Logout da barra é uma ação destrutiva explícita. */
+.volunteer-nav-current .nav-logout{color:var(--danger)!important}
+.volunteer-nav-current .nav-logout i,.volunteer-nav-current .nav-logout span{color:var(--danger)!important}
 
 @media(max-width:520px){
   .candidate-decision-actions{grid-template-columns:repeat(3,minmax(0,1fr))!important}
@@ -78,4 +96,4 @@
   .planning-review-footer{grid-template-columns:1fr 1fr!important}
   .stay-date-modal-native{width:calc(100vw - 20px)!important;max-width:440px!important}
 }
-@media(max-width:350px){.candidate-decision-actions{grid-template-columns:1fr!important}.candidate-lifecycle-actions{grid-template-columns:1fr!important}}
+@media(max-width:350px){.candidate-decision-actions{grid-template-columns:1fr!important}.candidate-lifecycle-actions{grid-template-columns:1fr!important}.profile-status{white-space:normal}}
