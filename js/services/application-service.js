@@ -54,15 +54,53 @@
   services.applications={
     async list({status='approved',unit='all',search='',cursor=null,limit=services.config?.candidatePageSize||10}={}){
       return services.run(async()=>{
-        const context=await services.firebase();const {firestore}=context.modules;const constraints=[];
+        const context=await services.firebase();const {firestore}=context.modules;const constraints=[];const term=normalize(search);
         if(status&&status!=='all')constraints.push(firestore.where('status','==',status));
         if(unit&&unit!=='all')constraints.push(firestore.where('unitId','==',normalize(unit)));
+        if(term)constraints.push(firestore.where('searchTokens','array-contains',term.slice(0,24)));
         if(cursor)constraints.push(firestore.startAfter(cursor));
-        constraints.push(firestore.limit(Math.max(1,Number(limit)||10)));
+        const pageSize=Math.max(1,Math.min(Number(limit)||10,50));constraints.push(firestore.limit(pageSize));
         const snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'applications'),...constraints));
-        const term=normalize(search);let items=snapshot.docs.map(mapApplication);if(term)items=items.filter(item=>normalize(item.name).includes(term));
-        const last=snapshot.docs.at(-1)||null;
-        return {items,nextCursor:snapshot.size===Number(limit||10)?last:null,hasMore:snapshot.size===Number(limit||10)};
+        const items=snapshot.docs.map(mapApplication),last=snapshot.docs.at(-1)||null;
+        return {items,nextCursor:snapshot.size===pageSize?last:null,hasMore:snapshot.size===pageSize};
+      },{loading:false});
+    },
+
+    async countStatus(status){
+      if(!status||status==='all')return 0;
+      return services.run(async()=>{
+        const context=await services.firebase();const {firestore}=context.modules;
+        const q=firestore.query(firestore.collection(context.db,'applications'),firestore.where('status','==',String(status)));
+        if(typeof firestore.getCountFromServer==='function'){const snapshot=await firestore.getCountFromServer(q);return Number(snapshot.data().count)||0}
+        const snapshot=await firestore.getDocs(q);return snapshot.size;
+      },{loading:false});
+    },
+
+    async listUpcoming({field='stayStart',from,limit=3}={}){
+      if(!from||!['stayStart','stayEnd'].includes(field))return [];
+      return services.run(async()=>{
+        const context=await services.firebase();const {firestore}=context.modules;
+        const snapshot=await firestore.getDocs(firestore.query(
+          firestore.collection(context.db,'applications'),
+          firestore.where('status','==','approved'),
+          firestore.where(field,'>=',String(from)),
+          firestore.orderBy(field,'asc'),
+          firestore.limit(Math.max(1,Math.min(Number(limit)||3,10)))
+        ));
+        return snapshot.docs.map(mapApplication).filter(row=>!row.inactive);
+      },{loading:false});
+    },
+
+    async listOccupancyMonth(month){
+      if(!month)return [];
+      return services.run(async()=>{
+        const context=await services.firebase();const {firestore}=context.modules;
+        const snapshot=await firestore.getDocs(firestore.query(
+          firestore.collection(context.db,'applications'),
+          firestore.where('status','==','approved'),
+          firestore.where('stayMonths','array-contains',String(month))
+        ));
+        return snapshot.docs.map(mapApplication).filter(row=>!row.inactive);
       },{loading:false});
     },
 
