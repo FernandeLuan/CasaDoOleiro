@@ -41,6 +41,8 @@
     try{
       await window.OleiroServices.planning.updateSession(sessionId,{status:'confirmed',confirmedAt:new Date(),changeNote:''});
       session.status='confirmed';session.changeNote='';
+      state.pendingChangeRequests=(state.pendingChangeRequests||[]).filter(row=>String(row.id)!==String(sessionId));
+      if(typeof invalidateManagerPendingChanges==='function')invalidateManagerPendingChanges();
       if(typeof invalidateManagerScheduleCache==='function')invalidateManagerScheduleCache();
       renderPersonModal(p,'plan');showToast('Mudança aprovada.');
     }catch(error){console.error(error);showToast(error?.message||'Não foi possível aprovar a mudança.')}
