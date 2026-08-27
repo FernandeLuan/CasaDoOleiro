@@ -125,8 +125,15 @@ jobs:
           grep -q 'Aprovar mudança' js/admin/round12-ui.js
           grep -q 'Reiniciar planejamento' js/admin/round7-ui.js
           grep -q 'Limpar planejamento' js/admin/refinements-r23.js
+          grep -q 'candidateSubmitted=\[' js/admin/refinements-r23.js
+          grep -q "\['analysis','adjustments'\]" js/admin/refinements-r23.js
+          grep -q 'admin-review-actions-r24' js/admin/refinements-r23.js
+          grep -q 'btn-plan-clear-warning' js/admin/refinements-r23.js
           grep -q 'day-initial-analysis' js/admin/refinements-r23.js
           grep -q 'Em análise' js/admin/refinements-r23.js
+          grep -q 'aria-busy' js/portal/refinements-r23.js
+          grep -q 'Reenviando' js/portal/refinements-r23.js
+          grep -q 'Enviando' js/portal/refinements-r23.js
           grep -q 'Digite para buscar o país' js/admin/candidate-form.js
           grep -q 'overscroll-behavior-y:none' css/round6.css
           grep -q 'participantGenders' js/services/onboarding-service.js
