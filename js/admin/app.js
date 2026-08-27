@@ -1,17 +1,16 @@
 const _managerScheduleCache=new Map();
 const MANAGER_SCHEDULE_CACHE_MS=60000;
-const MANAGER_APPLICATION_PAGE_SIZE=50;
-const MANAGER_APPLICATION_MAX_RECORDS=500;
 const MANAGER_APPLICATION_REFRESH_MS=10000;
 const MANAGER_CHANGE_REFRESH_MS=120000;
 let _managerApplicationsRefreshAt=0;
 let _managerApplicationsRefreshPromise=null;
 let _managerPendingChangesAt=0;
 let _managerPendingChangesPromise=null;
+let _managerCandidateRequestKey='';
 function managerScheduleKey(from,to,unit='all'){return `${from}|${to}|${unit}`}
 function mapManagerScheduleRows(rows){
   const names=new Map((state.candidates||[]).map(p=>[String(p.id),p.name]));
-  return (rows||[]).map(row=>({...row,activity:{...(row.activity||{}),owner:row.activity?.owner&&row.activity.owner!=='Voluntário'?row.activity.owner:(names.get(String(row.applicationId))||'Voluntário')}}));
+  return (rows||[]).map(row=>({...row,activity:{...(row.activity||{}),owner:row.activity?.owner&&row.activity.owner!=='Voluntário'?row.activity.owner:(names.get(String(row.applicationId))||row.ownerName||'Voluntário')}}));
 }
 function deriveAdminNotifications(){return []}
 function invalidateManagerScheduleCache(){_managerScheduleCache.clear();state.scheduleFrom=null;state.scheduleTo=null}
@@ -32,51 +31,52 @@ async function hydrateManagerPendingChanges({force=false}={}){
 }
 function invalidateManagerPendingChanges(){_managerPendingChangesAt=0}
 
-function mergeManagerCandidates(rows){
-  const byId=new Map((state.candidates||[]).map(row=>[String(row.id),row]));
-  (rows||[]).forEach(row=>byId.set(String(row.id),row));
-  state.candidates=[...byId.values()];
-}
-
-async function hydrateRemainingManagerCandidates(firstResult){
-  if(!window.OleiroServices?.applications?.list||!firstResult?.hasMore||!firstResult.nextCursor)return;
-  let cursor=firstResult.nextCursor,total=(state.candidates||[]).length;
-  while(cursor&&total<MANAGER_APPLICATION_MAX_RECORDS){
-    const result=await window.OleiroServices.applications.list({status:'all',unit:'all',cursor,limit:MANAGER_APPLICATION_PAGE_SIZE});
+function managerCandidateQueryKey(){return JSON.stringify({status:state.candidateFilter||'approved',unit:state.candidateUnit||'all',search:String(state.candidateSearch||'').trim().toLocaleLowerCase('pt-BR')})}
+async function loadManagerCandidates({append=false,force=false}={}){
+  if(!window.OleiroServices?.applications?.list)return state.candidates||[];
+  const key=managerCandidateQueryKey();
+  if(!append&&!force&&key===state.candidateQueryKey&&Date.now()-_managerApplicationsRefreshAt<MANAGER_APPLICATION_REFRESH_MS)return state.candidates||[];
+  if(state.candidateLoading)return state.candidates||[];
+  const requestKey=`${key}|${Date.now()}`;_managerCandidateRequestKey=requestKey;state.candidateLoading=true;
+  if(!append){state.candidateCursor=null;state.candidateHasMore=false;state.candidateQueryKey=key;if(state.managerPage==='volunteer')render()}
+  try{
+    const result=await window.OleiroServices.applications.list({
+      status:state.candidateFilter||'approved',unit:state.candidateUnit||'all',search:state.candidateSearch||'',
+      cursor:append?state.candidateCursor:null,limit:10
+    });
+    if(_managerCandidateRequestKey!==requestKey)return state.candidates||[];
     const rows=result?.items||[];
-    if(!rows.length)break;
-    mergeManagerCandidates(rows);total=(state.candidates||[]).length;
-    if(state.managerPage==='home'||state.managerPage==='volunteer')render();
-    if(!result.hasMore||!result.nextCursor)break;
-    cursor=result.nextCursor;
-  }
+    if(append){const byId=new Map((state.candidates||[]).map(row=>[String(row.id),row]));rows.forEach(row=>byId.set(String(row.id),row));state.candidates=[...byId.values()]}
+    else state.candidates=rows;
+    state.candidateCursor=result?.nextCursor||null;state.candidateHasMore=!!result?.hasMore;state.candidateQueryKey=key;_managerApplicationsRefreshAt=Date.now();
+    if(state.managerPage==='volunteer')render();
+    return state.candidates;
+  }finally{if(_managerCandidateRequestKey===requestKey){state.candidateLoading=false;if(state.managerPage==='volunteer')render()}}
+}
+async function loadMoreManagerCandidates(){if(state.candidateLoading||!state.candidateHasMore||!state.candidateCursor)return;return loadManagerCandidates({append:true,force:true})}
+async function refreshManagerApplications({force=false}={}){return loadManagerCandidates({append:false,force})}
+
+async function hydrateManagerDashboardData(){
+  if(!window.OleiroServices?.applications)return;
+  const service=window.OleiroServices.applications;
+  const [analysis,adjustments,arrivals,departures]=await Promise.all([
+    service.countStatus?.('analysis')??0,service.countStatus?.('adjustments')??0,
+    service.listUpcoming?.({field:'stayStart',from:_oleiroToday,limit:3})??[],
+    service.listUpcoming?.({field:'stayEnd',from:_oleiroToday,limit:3})??[]
+  ]);
+  state.dashboardCounts={analysis:Number(analysis)||0,adjustments:Number(adjustments)||0};
+  state.dashboardArrivals=arrivals||[];state.dashboardDepartures=departures||[];
+  if(state.managerPage==='home')render();
 }
 
 async function hydrateManagerBaseData(){
-  const [unitsResult,applicationsResult]=await Promise.all([
-    window.OleiroServices?.units?.list?window.OleiroServices.units.list({includeInactive:true}):[],
-    window.OleiroServices?.applications?.list?window.OleiroServices.applications.list({status:'all',unit:'all',limit:MANAGER_APPLICATION_PAGE_SIZE}):{items:[]}
-  ]);
-  state.units=unitsResult||[];state.candidates=applicationsResult?.items||[];
-  _managerApplicationsRefreshAt=Date.now();
-  return applicationsResult;
+  const unitsResult=await (window.OleiroServices?.units?.list?window.OleiroServices.units.list({includeInactive:true}):[]);
+  state.units=unitsResult||[];
+  state.candidateFilter=state.candidateFilter||'approved';state.candidateUnit=state.candidateUnit||'all';state.candidateSearch=state.candidateSearch||'';
+  await Promise.all([loadManagerCandidates({force:true}),hydrateManagerDashboardData()]);
 }
 
-async function refreshManagerApplications({force=false}={}){
-  if(!window.OleiroServices?.applications?.list)return state.candidates||[];
-  if(_managerApplicationsRefreshPromise)return _managerApplicationsRefreshPromise;
-  if(!force&&Date.now()-_managerApplicationsRefreshAt<MANAGER_APPLICATION_REFRESH_MS)return state.candidates||[];
-  _managerApplicationsRefreshPromise=(async()=>{
-    const first=await window.OleiroServices.applications.list({status:'all',unit:'all',limit:MANAGER_APPLICATION_PAGE_SIZE});
-    state.candidates=first?.items||[];_managerApplicationsRefreshAt=Date.now();
-    if(state.managerPage==='home'||state.managerPage==='volunteer')render();
-    await hydrateRemainingManagerCandidates(first);
-    return state.candidates;
-  })().finally(()=>{_managerApplicationsRefreshPromise=null});
-  return _managerApplicationsRefreshPromise;
-}
-
-async function hydrateManagerData(){const result=await hydrateManagerBaseData();await hydrateRemainingManagerCandidates(result);return state.candidates}
+async function hydrateManagerData(){await hydrateManagerBaseData();return state.candidates}
 async function ensureManagerGroups(){
   if(state.groupsLoaded)return state.groups||[];state.groupsLoading=true;
   try{state.groups=window.OleiroServices?.groups?.ensureDefaults?await window.OleiroServices.groups.ensureDefaults('rodeio'):[];state.groupsLoaded=true;return state.groups;}finally{state.groupsLoading=false}
@@ -88,11 +88,10 @@ function renderManager(){
 function render(){renderManager()}
 async function bootManager(){
   const session=await window.OleiroAuthGuard?.requireRole('manager');if(!session)return;
-  state.role='manager';state.currentSession=session;state.managerPage='home';state.groupsLoaded=false;state.groupsLoading=false;state.sessions=[];state.pendingChangeRequests=[];state.scheduleFrom=null;state.scheduleTo=null;render();
+  state.role='manager';state.currentSession=session;state.managerPage='home';state.groupsLoaded=false;state.groupsLoading=false;state.sessions=[];state.pendingChangeRequests=[];state.scheduleFrom=null;state.scheduleTo=null;state.dashboardCounts={analysis:0,adjustments:0};state.dashboardArrivals=[];state.dashboardDepartures=[];state.candidateHasMore=false;state.candidateCursor=null;state.candidateLoading=false;render();
   try{
-    const firstApplicationsPage=await hydrateManagerBaseData();if(state.managerPage==='home')render();
-    hydrateRemainingManagerCandidates(firstApplicationsPage).catch(error=>console.error('Falha ao carregar registros adicionais:',error));
-    processExpiredCandidatesOnStartup?.().then(()=>{if(state.managerPage==='home'||state.managerPage==='volunteer')render()}).catch(error=>console.error('Falha ao processar prazos:',error));
+    await hydrateManagerBaseData();if(state.managerPage==='home')render();
+    processExpiredCandidatesOnStartup?.().then(()=>hydrateManagerDashboardData()).catch(error=>console.error('Falha ao processar prazos:',error));
     hydrateManagerSchedule(_oleiroToday,_oleiroToday).then(()=>{if(state.managerPage==='home')render()}).catch(error=>console.error('Falha ao carregar agenda de hoje:',error));
     hydrateManagerPendingChanges().catch(console.error);
   }catch(error){console.error('Falha ao carregar dados da gestão:',error);showToast('Não foi possível atualizar os dados da gestão.')}
@@ -100,9 +99,9 @@ async function bootManager(){
 
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState!=='visible'||state.role!=='manager')return;
-  refreshManagerApplications().catch(console.error);
+  if(state.managerPage==='volunteer')refreshManagerApplications().catch(console.error);
+  if(state.managerPage==='home'){hydrateManagerDashboardData().catch(console.error);hydrateManagerSchedule(_oleiroToday,_oleiroToday,{force:true}).then(()=>render()).catch(console.error)}
   hydrateManagerPendingChanges().catch(console.error);
-  if(state.managerPage==='home')hydrateManagerSchedule(_oleiroToday,_oleiroToday,{force:true}).then(()=>render()).catch(console.error);
   if(state.managerPage==='agenda')hydrateManagerSchedule(state.agendaFrom||_oleiroToday,state.agendaTo||_oleiroToday,{force:true}).then(()=>render()).catch(console.error);
 });
 
