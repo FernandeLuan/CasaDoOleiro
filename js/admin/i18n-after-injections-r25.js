@@ -28,6 +28,23 @@
     node.append(strong,document.createTextNode(' '),text);
   }
   function applyAdminI18n(){if(typeof applyI18n==='function'&&typeof modalRoot!=='undefined'&&modalRoot)applyI18n(modalRoot)}
+  function visibleText(pt){return typeof translateText==='function'?translateText(pt):pt}
+  function setActionLabel(button,ptLabel,iconClass){
+    if(!button||button.disabled||button.getAttribute('aria-busy')==='true')return;
+    const label=visibleText(ptLabel);
+    if(String(button.textContent||'').trim()===label)return;
+    button.innerHTML=`<i class="fa-solid ${iconClass}"></i>${escapeHtml(label)}`;
+  }
+  function normalizeFinalDecisionButtons(){
+    if(typeof modalRoot==='undefined'||!modalRoot)return;
+    modalRoot.querySelectorAll('.selection-final-actions button').forEach(button=>{
+      const action=String(button.getAttribute('onclick')||'');
+      if(action.includes("'reject'"))setActionLabel(button,'Recusar','fa-xmark');
+      if(action.includes("'approve'"))setActionLabel(button,'Aprovar','fa-check');
+    });
+    setActionLabel(document.getElementById('finalSelectionReject'),'Recusar','fa-xmark');
+    setActionLabel(document.getElementById('finalSelectionApprove'),'Aprovar','fa-check');
+  }
 
   /* Lista de voluntários: status da etapa de reunião deriva também de meetingStatus. */
   const basePersonCompact=typeof window.personCompact==='function'?window.personCompact:null;
@@ -59,10 +76,21 @@
       if(notesNode&&meetingNotes)setProtectedLabeledText(notesNode,'Observação:',meetingNotes);
       const reason=String(p?.rejectedReason||'').trim(),reasonNode=modalRoot.querySelector('.account-reason > div');
       if(reasonNode&&reason)setProtectedLabeledText(reasonNode,'Motivo:',reason);
-      applyAdminI18n();
+      applyAdminI18n();normalizeFinalDecisionButtons();
       return result;
     };
     window.renderPersonModal=renderPersonModal;
+  }
+
+  /* O modal de reunião recebe uma classe estrutural própria para o Safari/iPhone. */
+  const baseOpenSelectionMeetingEditor=typeof window.openSelectionMeetingEditor==='function'?window.openSelectionMeetingEditor:null;
+  if(baseOpenSelectionMeetingEditor){
+    window.openSelectionMeetingEditor=function(...args){
+      const result=baseOpenSelectionMeetingEditor(...args),dateInput=document.getElementById('selectionMeetingDate'),row=dateInput?.closest('.field-row');
+      if(row)row.classList.add('selection-meeting-datetime');
+      applyAdminI18n();
+      return result;
+    };
   }
 
   /* Alterar unidade: loading local imediato, bloqueio de duplo clique e restauração automática se o modal permanecer aberto. */
@@ -88,7 +116,7 @@
 
   /* Qualquer conteúdo inserido no modal depois de applyI18n recebe tradução, inclusive estados de loading. */
   if(typeof MutationObserver!=='undefined'&&typeof modalRoot!=='undefined'&&modalRoot&&typeof applyI18n==='function'){
-    const observer=new MutationObserver(()=>applyI18n(modalRoot));
+    const observer=new MutationObserver(()=>{applyAdminI18n();normalizeFinalDecisionButtons()});
     observer.observe(modalRoot,{childList:true,subtree:true});
   }
 })();
