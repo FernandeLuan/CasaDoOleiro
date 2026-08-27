@@ -32,4 +32,12 @@
 
   window.personCompact=personCompact;
   window.renderPersonModal=renderPersonModal;
+
+  /* Carrega o acabamento da revisão sem adicionar nenhuma consulta de dados. */
+  if(!document.querySelector('script[data-oleiro-r21-admin]')){
+    const script=document.createElement('script');
+    script.src='../js/admin/refinements-r21.js?v=20260827-r21';
+    script.dataset.oleiroR21Admin='1';
+    document.head.appendChild(script);
+  }
 })();
