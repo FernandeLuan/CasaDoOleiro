@@ -23,6 +23,16 @@
       throw error;
     }
   }
+  async function activitySessions(context,applicationId,activityId){
+    const {firestore}=context.modules,appId=String(applicationId),actId=String(activityId),started=Date.now();
+    const snapshot=await firestore.getDocs(firestore.query(
+      firestore.collection(context.db,'activity_sessions'),
+      firestore.where('applicationId','==',appId),
+      firestore.where('activityId','==',actId)
+    ));
+    services.recordQuery?.('activity_sessions/activity-review',started,snapshot.size,{applicationId:appId,activityId:actId});
+    return snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
+  }
 
   services.planning={
     async listSessions({applicationId,from,to}={}){
@@ -185,24 +195,27 @@
       const reviewNote=String(note||'').trim();if(decision==='adjustments'&&!reviewNote)throw new Error('Informe o reajuste solicitado.');
       return services.run(async()=>{
         const context=await services.firebase();const {firestore}=context.modules;
-        const allSessions=await applicationSessions(context,applicationId),sessions=allSessions.filter(row=>String(row.activityId)===String(activityId));
+        const sessions=await activitySessions(context,applicationId,activityId);
         if(!sessions.length)throw new Error('Proposta não encontrada.');
+        if(!sessions.some(row=>row.postApprovalProposal===true))throw new Error('Esta atividade não é uma proposta pós-aprovação.');
+        if(decision==='approve'&&sessions.every(row=>row.status==='confirmed'))throw new Error('Esta atividade já foi aprovada.');
         const activityRef=firestore.doc(context.db,'activities',String(activityId)),batch=firestore.writeBatch(context.db),now=firestore.serverTimestamp();
         const reviewStatus=decision==='approve'?'approved':decision==='reject'?'rejected':'adjustments';
         const sessionStatus=decision==='approve'?'confirmed':decision==='reject'?'rejected':'proposed';
-        const reviewPatch={postApprovalProposal:true,reviewStatus,reviewNote:decision==='adjustments'?reviewNote:'',reviewedAt:now,updatedAt:now};
+        const reviewPatch={postApprovalProposal:true,reviewStatus,reviewNote:decision==='adjustments'?reviewNote:'',status:sessionStatus,reviewedAt:now,updatedAt:now};
         batch.update(activityRef,reviewPatch);
         sessions.forEach(session=>batch.update(firestore.doc(context.db,'activity_sessions',String(session.id)),{...reviewPatch,status:sessionStatus,...(decision==='approve'?{confirmedAt:now}:{} )}));
-        let counts=null;
+        let countDelta=null;
         if(decision==='approve'){
-          const simulated=allSessions.map(row=>String(row.activityId)===String(activityId)?{...row,status:'confirmed'}:row).filter(row=>row.status==='confirmed');
-          const activityCount=new Set(simulated.map(row=>String(row.activityId||'')).filter(Boolean)).size;
-          counts={sessionCount:simulated.length,activityCount};
-          batch.update(firestore.doc(context.db,'applications',String(applicationId)),{sessionCount:counts.sessionCount,activityCount:counts.activityCount,updatedAt:now});
+          const newSessions=sessions.filter(row=>row.status!=='confirmed').length,newActivity=sessions.some(row=>row.status==='confirmed')?0:1;
+          countDelta={sessionCount:newSessions,activityCount:newActivity};
+          batch.update(firestore.doc(context.db,'applications',String(applicationId)),{
+            sessionCount:firestore.increment(newSessions),activityCount:firestore.increment(newActivity),planningCountVersion:1,updatedAt:now
+          });
         }
         await batch.commit();
-        const cached=activityCache.get(String(activityId));if(cached)Object.assign(cached,{postApprovalProposal:true,reviewStatus,reviewNote:decision==='adjustments'?reviewNote:''});
-        return {reviewStatus,status:sessionStatus,sessionIds:sessions.map(row=>String(row.id)),counts};
+        const cached=activityCache.get(String(activityId));if(cached)Object.assign(cached,{postApprovalProposal:true,reviewStatus,reviewNote:decision==='adjustments'?reviewNote:'',status:sessionStatus});
+        return {reviewStatus,status:sessionStatus,sessionIds:sessions.map(row=>String(row.id)),countDelta};
       },{loading:false});
     },
 
