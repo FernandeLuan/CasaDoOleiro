@@ -19,6 +19,13 @@
 .home-unit-chevron{justify-self:end;color:var(--muted);font-size:.75rem}
 .home-unit-support-link:active{transform:scale(.995)}
 
+/* Admin pode pré-cadastrar atividades sem nova leitura após o salvamento. */
+.admin-create-activity-action{margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.admin-create-activity-action .btn{min-height:38px!important;font-size:.66rem!important}
+.manager-activity-date{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;background:var(--surface-2);color:var(--primary);font-size:.66rem;font-weight:600}
+.manager-activity-date i{font-size:.72rem}
+.manager-activity-modal .modal-body{overflow-x:hidden}
+
 /* Pendências pós-aprovação: o card inteiro assume a cor do estado. */
 .planning-day-card.review-day-info,
 .planning-day-card.review-day-info>.planning-day-head,
