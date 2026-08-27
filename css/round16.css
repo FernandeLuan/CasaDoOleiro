@@ -1,0 +1,19 @@
+/* Round 16 — telas compactas e estados/ações ocupando a mesma faixa do card. */
+.portal-compact-page{margin-top:0}
+.portal-agenda-compact>.calendar-strip{margin-top:0}
+.portal-agenda-compact>.agenda-page-nav{margin-top:2px}
+
+.approved-card-actions{width:100%;display:flex}
+.approved-card-actions>.btn:only-child{width:100%;min-height:42px;justify-content:center}
+.review-action-neutral{background:var(--surface-2)!important;border:1px solid var(--border)!important;color:var(--text)!important}
+.review-action-warning{background:#fff4dc!important;border:1px solid #f0dcae!important;color:#8a6116!important}
+
+.change-request-card{display:grid;gap:12px;padding:12px;border:1px solid var(--border);border-radius:15px;background:var(--surface-2)}
+.change-reason-card{margin-top:9px;padding:10px 11px;border:1px solid var(--border);border-radius:11px;background:var(--surface-2)}
+.change-reason-card small{display:block;font-size:.52rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:4px}
+.change-reason-card p{font-size:.64rem;line-height:1.5;color:var(--text)}
+
+/* Evita que páginas sem cabeçalho mantenham respiro artificial no topo. */
+.portal-compact-page>.profile-card:first-child,
+.portal-compact-page>.info-accordion:first-child,
+.portal-compact-page>.calendar-strip:first-child{margin-top:0}
