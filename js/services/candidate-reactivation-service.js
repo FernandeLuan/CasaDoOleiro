@@ -3,14 +3,6 @@
   const services=window.OleiroServices=window.OleiroServices||{};
   if(!services.applications)return;
 
-  function metric(name,started,count,meta={}){
-    const row={name,ms:Date.now()-started,count:Number(count)||0,...meta,at:new Date().toISOString()};
-    window.OleiroQueryMetrics=window.OleiroQueryMetrics||[];
-    window.OleiroQueryMetrics.push(row);
-    if(window.OleiroQueryMetrics.length>40)window.OleiroQueryMetrics.splice(0,window.OleiroQueryMetrics.length-40);
-    if(row.ms>1200)console.warn(`[Firestore lento] ${name}: ${row.ms}ms • ${row.count} docs`,meta);
-  }
-
   services.applications.reactivateCandidatePlanning=async function(id,{participantUids=[],planningDeadlineAt=null}={}){
     if(!id)throw new Error('Candidatura não encontrada.');
     if(!planningDeadlineAt)throw new Error('Novo prazo do planejamento não informado.');
@@ -27,7 +19,7 @@
           firestore.where('applicationId','==',applicationId)
         ))
       ]);
-      metric('candidate/reactivation-planning',started,sessionsSnapshot.size+activitiesSnapshot.size,{applicationId,queries:2});
+      services.recordQuery?.('candidate/reactivation-planning',started,sessionsSnapshot.size+activitiesSnapshot.size,{applicationId,queries:2});
 
       const uids=[...new Set((participantUids||[]).filter(Boolean).map(String))];
       const total=sessionsSnapshot.size+activitiesSnapshot.size+uids.length+1;
