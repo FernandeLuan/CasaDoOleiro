@@ -83,6 +83,25 @@ service cloud.firestore {
         ]);
     }
 
+    function participantMayResetEmptyAdjustment() {
+      return isParticipant(resource.data)
+        && resource.data.active == true
+        && resource.data.status == 'adjustments'
+        && request.resource.data.status == 'pending'
+        && request.resource.data.active == resource.data.active
+        && request.resource.data.participantUids == resource.data.participantUids
+        && request.resource.data.unitId == resource.data.unitId
+        && request.resource.data.planningDeadlineAt == resource.data.planningDeadlineAt
+        && request.resource.data.planningSubmittedAt == null
+        && request.resource.data.dayAdjustments == {}
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status',
+          'planningSubmittedAt',
+          'dayAdjustments',
+          'updatedAt'
+        ]);
+    }
+
     function createsApprovedProposal(data) {
       return activeUser()
         && participantOf(data.applicationId)
@@ -126,7 +145,7 @@ service cloud.firestore {
     match /applications/{applicationId} {
       allow read: if activeUser() && (isManager() || isParticipant(resource.data));
       allow create, delete: if isManager();
-      allow update: if isManager() || participantMaySubmitApplication();
+      allow update: if isManager() || participantMaySubmitApplication() || participantMayResetEmptyAdjustment();
     }
 
     match /activities/{activityId} {
