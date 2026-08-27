@@ -1,20 +1,28 @@
-/* Round 23 — revisão inicial padronizada, destaque por estado e limpeza do planejamento. */
+/* Round 23/24 — revisão inicial padronizada, destaque estritamente por dia e limpeza do planejamento. */
 (function refinementsR23Admin(){
   function safe(value){return encodeURIComponent(String(value??''))}
 
+  function reviewActions(p){
+    const id=safe(p.id);
+    return `<button class="btn btn-plan-clear-warning" type="button" onclick="requestClearCandidatePlanning('${id}')"><i class="fa-solid fa-broom"></i>Limpar</button><button class="btn btn-danger" type="button" onclick="rejectCandidate(decodeURIComponent('${id}'))"><i class="fa-solid fa-xmark"></i>Recusar</button><button class="btn btn-primary" type="button" onclick="approveCandidate(decodeURIComponent('${id}'))"><i class="fa-solid fa-check"></i>Aprovar</button>`;
+  }
+
   function standardizeReviewFooter(p){
+    modalRoot.querySelectorAll('.admin-plan-clear-r23').forEach(node=>node.remove());
     const footer=modalRoot.querySelector('.admin-plan-review-footer');
-    if(footer){
-      const approve=footer.querySelector('button[onclick*="approveCandidate"]');
-      const adjust=footer.querySelector('button[onclick*="openGeneralPlanningAdjustment"]');
-      const reject=footer.querySelector('button[onclick*="rejectCandidate"]');
-      if(approve)approve.innerHTML='<i class="fa-solid fa-check"></i>Aprovar';
-      if(adjust)adjust.innerHTML='<i class="fa-solid fa-rotate"></i>Reajustar';
-      if(reject)reject.innerHTML='<i class="fa-solid fa-xmark"></i>Recusar';
+    if(!p||['approved','rejected'].includes(p.status))return;
+
+    if(footer&&['analysis','adjustments'].includes(p.status)){
+      footer.classList.add('admin-review-actions-r24');
+      footer.innerHTML=reviewActions(p);
+      return;
     }
-    if(!p||['approved','rejected'].includes(p.status)||modalRoot.querySelector('.admin-plan-clear-r23'))return;
-    const anchor=footer||modalRoot.querySelector('.admin-refactor-planning');if(!anchor)return;
-    anchor.insertAdjacentHTML('afterend',`<div class="admin-plan-clear-r23"><button class="btn btn-outline btn-block" type="button" onclick="requestClearCandidatePlanning('${safe(p.id)}')"><i class="fa-solid fa-broom"></i>Limpar planejamento</button></div>`);
+
+    /* Em preparação, mantém a limpeza disponível somente quando há algo carregado para limpar. */
+    const hasLoadedSessions=modalRoot.querySelector('.planning-session-row');
+    if(!hasLoadedSessions)return;
+    const anchor=modalRoot.querySelector('.admin-refactor-planning');if(!anchor)return;
+    anchor.insertAdjacentHTML('afterend',`<div class="admin-plan-clear-r23"><button class="btn btn-plan-clear-warning btn-block" type="button" onclick="requestClearCandidatePlanning('${safe(p.id)}')"><i class="fa-solid fa-broom"></i>Limpar planejamento</button></div>`);
   }
 
   window.requestClearCandidatePlanning=function(encodedId){
@@ -33,11 +41,13 @@
   adminPlanningDayCard=function(p,day){
     let html=baseAdminPlanningDayCard(p,day),sessions=day?.sessions||[];
     const adjustment=typeof candidateDayAdjustment==='function'?candidateDayAdjustment(p,day.date):null;
-    const initialAnalysis=p?.status==='analysis'&&sessions.some(session=>session.status==='proposed'&&session.postApprovalProposal!==true);
+    const candidateSubmitted=['analysis','adjustments'].includes(p?.status)&&sessions.some(session=>session.status==='proposed'&&session.postApprovalProposal!==true);
+
+    /* Ajuste é sempre por data. O status global "adjustments" nunca pinta os outros dias de amarelo. */
     if(adjustment){
       html=html.replace(/review-day-info/g,'review-day-warning');
       if(!html.includes('review-day-warning'))html=html.replace('class="card planning-day-card','class="card planning-day-card review-day-warning');
-    }else if(initialAnalysis&&!html.includes('review-day-info')&&!html.includes('review-day-warning')){
+    }else if(candidateSubmitted&&!html.includes('review-day-info')&&!html.includes('review-day-warning')){
       html=html.replace('class="card planning-day-card','class="card planning-day-card review-day-info');
       const marker='<div class="planning-day-date">',start=html.indexOf(marker);
       if(start>=0&&!html.includes('day-initial-analysis')){
