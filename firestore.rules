@@ -39,10 +39,14 @@ service cloud.firestore {
       return isParticipant(applicationData(applicationId));
     }
 
+    function candidateEditable(applicationId) {
+      let app = applicationData(applicationId);
+      return app.active == true && app.status in ['pending', 'adjustments'];
+    }
+
     function candidateWindowOpen(applicationId) {
       let app = applicationData(applicationId);
-      return app.active == true
-        && app.status in ['pending', 'adjustments']
+      return candidateEditable(applicationId)
         && ('planningDeadlineAt' in app)
         && app.planningDeadlineAt != null
         && request.time <= app.planningDeadlineAt;
@@ -187,8 +191,9 @@ service cloud.firestore {
       allow delete: if isManager() || (
         activeUser()
         && participantOf(resource.data.applicationId)
+        && (!('managerCreated' in resource.data) || resource.data.managerCreated != true)
         && (
-          candidateWindowOpen(resource.data.applicationId)
+          candidateEditable(resource.data.applicationId)
           || (
             approvedApplication(resource.data.applicationId)
             && resource.data.postApprovalProposal == true
@@ -259,9 +264,10 @@ service cloud.firestore {
       allow delete: if isManager() || (
         activeUser()
         && participantOf(resource.data.applicationId)
+        && (!('managerCreated' in resource.data) || resource.data.managerCreated != true)
         && (
           (
-            candidateWindowOpen(resource.data.applicationId)
+            candidateEditable(resource.data.applicationId)
             && resource.data.status == 'proposed'
           )
           ||
