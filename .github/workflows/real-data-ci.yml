@@ -46,7 +46,12 @@ jobs:
           grep -q 'listUpcoming' js/services/application-service.js
           grep -q 'listOccupancyMonth' js/services/application-service.js
           grep -q 'processExpiredPending' js/services/application-maintenance-service.js
-          test -e js/admin/occupancy-data.js
+          grep -q 'managerOccupancy' js/admin/refactor-r18.js
+          grep -q 'occupancyScreenCache' js/admin/refactor-r18.js
+          grep -q 'openOccupancyDay' js/admin/refinements-r19.js
+          test ! -e js/admin/occupancy-data.js
+          grep -q "where('applicationId','==',appId)" js/services/planning-service.js
+          grep -q "where('date','>=',String(from))" js/services/planning-service.js
           if grep -RInE 'MANAGER_APPLICATION_MAX_RECORDS|hydrateRemainingManagerCandidates' js/admin; then
             echo 'Legacy full volunteer preload is still present.'
             exit 1
@@ -95,6 +100,10 @@ jobs:
           grep -q 'Reiniciar planejamento' js/admin/round7-ui.js
           grep -q 'Digite para buscar o país' js/admin/candidate-form.js
           grep -q 'overscroll-behavior-y:none' css/round6.css
+          grep -q 'participantGenders' js/services/onboarding-service.js
+          grep -q 'registrationLink' js/services/onboarding-service.js
+          grep -q 'review-day-warning' js/admin/refinements-r19.js
+          grep -q 'Voltar ao calendário' js/admin/refinements-r19.js
           grep -q 'format-detection' admin/index.html
           grep -q 'format-detection' portal/index.html
 
