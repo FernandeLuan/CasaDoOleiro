@@ -43,14 +43,14 @@
         (result?.sessions||[]).forEach(session=>{
           const patch={};
           if(groupRequested)patch.groupId=groupId;
-          if(managerCreated)patch.managerCreated=true;
+          if(managerCreated){patch.managerCreated=true;patch.status='manager_confirmed'}
           if(!Object.keys(patch).length)return;
           batch.update(firestore.doc(context.db,'activity_sessions',String(session.id)),{...patch,updatedAt:now});
           Object.assign(session,patch);changed=true;
         });
         if(managerCreated&&result?.activityId){
-          batch.update(firestore.doc(context.db,'activities',String(result.activityId)),{managerCreated:true,updatedAt:now});
-          if(result.activity)result.activity.managerCreated=true;changed=true;
+          batch.update(firestore.doc(context.db,'activities',String(result.activityId)),{managerCreated:true,status:'manager_confirmed',updatedAt:now});
+          if(result.activity){result.activity.managerCreated=true;result.activity.status='manager_confirmed'}changed=true;
         }
         if(markCounts&&args.applicationId){
           batch.update(firestore.doc(context.db,'applications',String(args.applicationId)),{planningCountVersion:1,updatedAt:now});changed=true;
