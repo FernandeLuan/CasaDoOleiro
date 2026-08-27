@@ -16,14 +16,12 @@
     return new Map(unique.map(id=>[id,activityCache.get(id)]).filter(([,row])=>row));
   }
 
-  async function applicationSessions(context,applicationId){
-    const {firestore}=context.modules;
-    const snapshot=await firestore.getDocs(
-      firestore.query(
-        firestore.collection(context.db,'activity_sessions'),
-        firestore.where('applicationId','==',String(applicationId))
-      )
-    );
+  async function applicationSessions(context,applicationId,{from=null,to=null}={}){
+    const {firestore}=context.modules;const constraints=[firestore.where('applicationId','==',String(applicationId))];
+    if(from)constraints.push(firestore.where('date','>=',String(from)));
+    if(to)constraints.push(firestore.where('date','<=',String(to)));
+    if(from||to)constraints.push(firestore.orderBy('date','asc'));
+    const snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'activity_sessions'),...constraints));
     return snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
   }
 
@@ -32,10 +30,8 @@
       if(!applicationId)return [];
       return services.run(async()=>{
         const context=await services.firebase();
-        const rows=await applicationSessions(context,applicationId);
-        return rows
-          .filter(row=>(!from||row.date>=from)&&(!to||row.date<=to))
-          .sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))||String(a.time||'').localeCompare(String(b.time||'')));
+        const rows=await applicationSessions(context,applicationId,{from,to});
+        return rows.sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))||String(a.time||'').localeCompare(String(b.time||'')));
       },{loading:false});
     },
 
@@ -59,17 +55,11 @@
       if(!from||!to)return [];
       return services.run(async()=>{
         const context=await services.firebase();
-        const {firestore}=context.modules;
-        const snapshot=await firestore.getDocs(
-          firestore.query(
-            firestore.collection(context.db,'activity_sessions'),
-            firestore.where('date','>=',from),
-            firestore.where('date','<=',to),
-            firestore.orderBy('date','asc')
-          )
-        );
-        let sessions=snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
-        if(unitId&&unitId!=='all')sessions=sessions.filter(row=>String(row.unitId||'').toLowerCase()===String(unitId).toLowerCase());
+        const {firestore}=context.modules;const constraints=[];
+        if(unitId&&unitId!=='all')constraints.push(firestore.where('unitId','==',String(unitId).toLowerCase()));
+        constraints.push(firestore.where('date','>=',from),firestore.where('date','<=',to),firestore.orderBy('date','asc'));
+        const snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'activity_sessions'),...constraints));
+        const sessions=snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
         const missing=sessions.filter(s=>!s.activityName).map(s=>s.activityId);
         const activityMap=missing.length?await fetchActivitiesByIds(context,missing):new Map();
         return sessions.map(session=>{
