@@ -7,11 +7,13 @@
   async function activeApplication(context,uid){const {firestore}=context.modules;const q=firestore.query(firestore.collection(context.db,'applications'),firestore.where('participantUids','array-contains',uid),firestore.limit(10));const snapshot=await firestore.getDocs(q);const doc=snapshot.docs.find(item=>item.data().active===true);return doc?{id:doc.id,...doc.data()}:null}
   async function volunteerProfile(context,uid){const {firestore}=context.modules;const snapshot=await firestore.getDoc(firestore.doc(context.db,'volunteer_profiles',uid));return snapshot.exists()?{id:snapshot.id,...snapshot.data()}:null}
   async function ownAccessDocument(context,user){const {firestore,auth}=context.modules;try{return await firestore.getDoc(firestore.doc(context.db,'users',user.uid))}catch(error){const message=String(error?.message||'');if(error?.code==='unavailable'||/offline|failed to get/i.test(message))throw offlineAccessError();if(error?.code==='permission-denied'||/missing or insufficient permissions/i.test(message)){await auth.signOut(context.auth);throw inactiveAccessError()}throw error}}
+  async function markFirstPortalAccess(context,user,access){if(access?.firstPortalAccessAt)return access;const {firestore}=context.modules;try{await firestore.updateDoc(firestore.doc(context.db,'users',user.uid),{firstPortalAccessAt:firestore.serverTimestamp(),updatedAt:firestore.serverTimestamp()});return {...access,firstPortalAccessAt:new Date().toISOString()}}catch(error){console.warn('Não foi possível registrar o primeiro acesso:',error);return access}}
   async function sessionFromUser(context,user){
     const {auth}=context.modules;const userSnapshot=await ownAccessDocument(context,user);
     if(!userSnapshot.exists()){await auth.signOut(context.auth);const error=new Error('Este acesso ainda não foi liberado pela Casa do Oleiro.');error.code='oleiro/not-released';throw error}
-    const access=userSnapshot.data();if(access.active!==true){await auth.signOut(context.auth);throw inactiveAccessError()}
+    let access=userSnapshot.data();if(access.active!==true){await auth.signOut(context.auth);throw inactiveAccessError()}
     const role=normalizeRole(access.role);if(role==='manager')return {role,mode:null,uid:user.uid,email:user.email||null,user:access};if(role!=='volunteer'){await auth.signOut(context.auth);throw inactiveAccessError()}
+    access=await markFirstPortalAccess(context,user,access);
     const [application,profile]=await Promise.all([activeApplication(context,user.uid),volunteerProfile(context,user.uid)]);if(!application){await auth.signOut(context.auth);throw inactiveAccessError()}
     const mode=application.status==='approved'?'approved':'candidate';return {role:'volunteer',mode,uid:user.uid,email:user.email||null,user:access,profile,application};
   }
