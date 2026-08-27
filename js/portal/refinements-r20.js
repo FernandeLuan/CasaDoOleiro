@@ -18,6 +18,23 @@
     let html=baseVolunteerHome();
     const t=copy();
     html=html.replace(/<small>Unidade<\/small><strong>(.*?)<\/strong><span>Suporte:/,`<strong class="home-unit-label">${t.unit}: $1</strong><span>${t.support}:`);
+
+    const template=document.createElement('template');
+    template.innerHTML=html;
+    const card=template.content.querySelector('.home-unit-support');
+    if(card){
+      const label=card.querySelector('.home-unit-label')?.textContent?.trim()||`${t.unit}: Rodeio`;
+      const support=card.querySelector('.home-unit-copy span:last-child')?.textContent?.trim()||`${t.support}: +55 47 99950-4753`;
+      const link=document.createElement('a');
+      link.className='card home-unit-support home-unit-support-link';
+      link.href='https://wa.me/5547999504753';
+      link.target='_blank';
+      link.rel='noopener noreferrer';
+      link.setAttribute('aria-label',`${t.support} WhatsApp`);
+      link.innerHTML=`<span class="home-unit-icon"><i class="fa-brands fa-whatsapp"></i></span><span class="home-unit-link-copy"><strong class="home-unit-label">${escapeHtml(label)}</strong><span>${escapeHtml(support)}</span></span><i class="fa-solid fa-chevron-right home-unit-chevron" aria-hidden="true"></i>`;
+      card.replaceWith(link);
+      html=template.innerHTML;
+    }
     return html;
   };
 
