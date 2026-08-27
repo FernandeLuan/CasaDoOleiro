@@ -1,14 +1,8 @@
-/* Round 25 — separa aprovação do planejamento, reunião e decisão final sem leituras de navegação adicionais. */
+/* Round 25/26 — separa aprovação do planejamento, reunião e decisão final sem leituras de navegação adicionais. */
 (function selectionFlowR25Service(){
   const services=window.OleiroServices=window.OleiroServices||{};
   if(!services.applications||!services.planning)return;
 
-  function metric(name,started,count,meta={}){
-    const row={name,ms:Date.now()-started,count:Number(count)||0,...meta,at:new Date().toISOString()};
-    window.OleiroQueryMetrics=window.OleiroQueryMetrics||[];window.OleiroQueryMetrics.push(row);
-    if(window.OleiroQueryMetrics.length>40)window.OleiroQueryMetrics.splice(0,window.OleiroQueryMetrics.length-40);
-    if(row.ms>1200)console.warn(`[Firestore lento] ${name}: ${row.ms}ms • ${row.count} docs`,meta);
-  }
   function cleanUrl(value){
     const raw=String(value||'').trim();if(!raw)return '';
     try{const url=new URL(raw);return ['http:','https:'].includes(url.protocol)?url.toString():''}catch{return ''}
@@ -19,7 +13,7 @@
       firestore.getDocs(firestore.query(firestore.collection(context.db,'activity_sessions'),firestore.where('applicationId','==',id))),
       firestore.getDocs(firestore.query(firestore.collection(context.db,'activities'),firestore.where('applicationId','==',id)))
     ]);
-    metric('selection/planning-docs',started,sessionsSnapshot.size+activitiesSnapshot.size,{applicationId:id,queries:2});
+    services.recordQuery?.('selection/planning-docs',started,sessionsSnapshot.size+activitiesSnapshot.size,{applicationId:id,queries:2});
     return {sessions:sessionsSnapshot.docs,activities:activitiesSnapshot.docs};
   }
   function ensureBatchSize(sessionDocs,activityDocs,participantUids=[]){
@@ -92,7 +86,7 @@
       const context=await services.firebase(),{firestore}=context.modules,collection=firestore.collection(context.db,'activity_sessions'),normalizedUnit=unitId&&unitId!=='all'?String(unitId).toLowerCase():'',started=Date.now();
       const constraints=[firestore.where('status','==','confirmed')];if(normalizedUnit)constraints.push(firestore.where('unitId','==',normalizedUnit));constraints.push(firestore.where('date','>=',String(from)),firestore.where('date','<=',String(to)),firestore.orderBy('date','asc'));
       try{
-        const snapshot=await firestore.getDocs(firestore.query(collection,...constraints));metric('activity_sessions/operational-schedule',started,snapshot.size,{from,to,unitId:normalizedUnit||'all',status:'confirmed'});
+        const snapshot=await firestore.getDocs(firestore.query(collection,...constraints));services.recordQuery?.('activity_sessions/operational-schedule',started,snapshot.size,{from,to,unitId:normalizedUnit||'all',status:'confirmed'});
         return snapshot.docs.map(doc=>{const row={id:doc.id,...doc.data()};return {...row,activity:{id:row.activityId,name:row.activityName||'Atividade',description:row.activityDescription||'',duration:Number(row.duration)||60,participation:row.participation||'Livre',materials:row.materials||'',notes:row.notes||'',period:row.period||'Sem preferência',time:row.time||'',owner:row.ownerName||'Voluntário',applicationId:row.applicationId}}});
       }catch(error){
         if(/index|failed-precondition/i.test(`${error?.code||''} ${error?.message||''}`)){const safe=new Error('O índice da Agenda confirmada ainda não está pronto. A consulta ampla foi bloqueada para proteger a cota do Firestore.');safe.code='oleiro/index-not-ready';throw safe}throw error;
