@@ -1,8 +1,5 @@
-/* Round 20/22 — acabamento do Portal, planejamento vazio imediato e consistência de ajustes. */
+/* Round 20/22 — acabamento do Portal e consistência das ações do candidato. */
 (function refinementsR20Portal(){
-  const emptyVerification=new Map();
-  const emptyReconcile=new Map();
-
   function lang(){return typeof currentLanguage==='function'?currentLanguage():'pt'}
   function copy(){
     const l=lang();
@@ -11,14 +8,6 @@
     return {title:'Sair do portal',question:'Deseja realmente encerrar sua sessão?',body:'Você precisará entrar novamente com seu email e senha.',cancel:'Cancelar',exit:'Sair',unit:'Unidade',support:'Suporte'};
   }
   function activeSessions(){return (state.sessions||[]).filter(row=>row.status!=='rejected'&&row.reviewStatus!=='rejected')}
-  function applyEmptyPlanning(application){
-    state.sessions=[];state.activities=[];state.sessionStatus={};state.sessionGroups={};state.volunteerPlanningLoadedFor=String(application?.id||'');state.volunteerPlanningFailedFor=null;state.volunteerAgendaLoading=false;
-  }
-  async function reconcileEmptyAdjustment(application){
-    if(!application?.id||application.status!=='adjustments'||emptyReconcile.has(String(application.id)))return;
-    const id=String(application.id),promise=window.OleiroServices?.applications?.update?.(id,{status:'pending',planningSubmittedAt:null,dayAdjustments:{}}).then(()=>{application.status='pending';application.planningSubmittedAt=null;application.dayAdjustments={};state.volunteerPlanStatus='draft'}).catch(error=>console.warn('Não foi possível normalizar o planejamento vazio:',error)).finally(()=>emptyReconcile.delete(id));
-    if(promise)emptyReconcile.set(id,promise);return promise;
-  }
 
   window.confirmVolunteerLogout=function(){const t=copy();openModal(t.title,t.question,`<div class="notice"><i class="fa-solid fa-right-from-bracket"></i><div>${t.body}</div></div>`,`<div class="confirm-delete-actions"><button class="btn btn-outline" type="button" onclick="closeModal()">${t.cancel}</button><button class="btn btn-danger" type="button" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i>${t.exit}</button></div>`)};
 
@@ -34,21 +23,6 @@
   const baseSessionCardVolunteer=sessionCardVolunteer;
   sessionCardVolunteer=function(s,editable){const managerCreated=s?.raw?.managerCreated===true||s?.activity?.managerCreated===true;if(state.volunteerMode!=='approved'&&managerCreated)return baseSessionCardVolunteer(s,false);return baseSessionCardVolunteer(s,editable)};
 
-  /* Planejamento declarado vazio aparece imediatamente. Cadastros antigos são verificados com limit(1) em segundo plano. */
-  const baseHydrateVolunteerPlanning=hydrateVolunteerPlanning;
-  hydrateVolunteerPlanning=async function(application,{force=false}={}){
-    const app=application||state.currentApplication,id=String(app?.id||''),candidate=state.volunteerMode!=='approved',declaredEmpty=candidate&&Number(app?.sessionCount||0)===0&&Number(app?.activityCount||0)===0;
-    if(!id)return baseHydrateVolunteerPlanning(application,{force});
-    if(!force&&declaredEmpty){
-      applyEmptyPlanning(app);
-      if(!emptyVerification.has(id)&&window.OleiroServices?.planning?.hasSessions){
-        const verify=window.OleiroServices.planning.hasSessions({applicationId:id}).then(async hasAny=>{if(hasAny)await baseHydrateVolunteerPlanning(app,{force:true});else await reconcileEmptyAdjustment(app);if(typeof render==='function')render()}).catch(error=>{console.error('Falha ao verificar planejamento:',error);state.volunteerPlanningFailedFor=id;if(typeof render==='function')render()}).finally(()=>emptyVerification.delete(id));emptyVerification.set(id,verify);
-      }
-      return [];
-    }
-    const result=await baseHydrateVolunteerPlanning(app,{force});if(candidate&&activeSessions().length===0)await reconcileEmptyAdjustment(app);return result;
-  };
-
   /* Nunca exibe uma ação de envio quando não existe sessão válida. */
   const baseVolunteerPlan=volunteerPlan;
   volunteerPlan=function(){let html=baseVolunteerPlan();if(state.volunteerMode!=='approved'&&state.volunteerPlanningLoadedFor===String(state.currentApplication?.id||'')&&activeSessions().length===0){html=html.replace(/<button class="btn btn-primary btn-block candidate-plan-submit"[^>]*>[\s\S]*?<\/button>/,`<button class="btn btn-soft btn-block candidate-plan-submit" type="button" disabled><i class="fa-solid fa-circle-info"></i>Adicione uma atividade para enviar</button>`)}return html};
@@ -57,7 +31,7 @@
   window.deletePlanningSession=async function(activityId,date){
     const session=typeof realSessionFor==='function'?realSessionFor(activityId,date):null,application=state.currentApplication;if(!session||!application?.id)return showToast('Sessão não encontrada.');
     const approved=state.volunteerMode==='approved',activity=(state.activities||[]).find(row=>String(row.id)===String(activityId)),postAdjustment=approved&&activity?.postApprovalProposal===true&&activity?.reviewStatus==='adjustments';if(approved&&!postAdjustment)return showToast('Esta sessão não pode ser excluída neste status.');
-    const before=activeSessions(),remaining=before.filter(row=>String(row.id)!==String(session.id)),resetEmpty=!approved&&state.volunteerPlanStatus==='adjustments'&&remaining.length===0,planningStatePatch=resetEmpty?{status:'pending',planningSubmittedAt:null,dayAdjustments:{}}:null;
+    const remaining=activeSessions().filter(row=>String(row.id)!==String(session.id)),resetEmpty=!approved&&state.volunteerPlanStatus==='adjustments'&&remaining.length===0,planningStatePatch=resetEmpty?{status:'pending',planningSubmittedAt:null,dayAdjustments:{}}:null;
     try{
       const result=await window.OleiroServices.planning.deleteSession(session.id,{applicationId:application.id,activityId,updateApplicationCounts:false,planningStatePatch});state.sessions=(state.sessions||[]).filter(row=>String(row.id)!==String(session.id));
       if(result.deletedActivity)state.activities=(state.activities||[]).filter(row=>String(row.id)!==String(activityId));else{const current=(state.activities||[]).find(row=>String(row.id)===String(activityId));if(current)current.dates=(current.dates||[]).filter(value=>value!==date)}
@@ -66,6 +40,6 @@
     }catch(error){console.error(error);showToast(error?.message||'Não foi possível excluir a sessão.')}
   };
 
-  window.volunteerHome=volunteerHome;window.sessionCardVolunteer=sessionCardVolunteer;window.hydrateVolunteerPlanning=hydrateVolunteerPlanning;window.volunteerPlan=volunteerPlan;
+  window.volunteerHome=volunteerHome;window.sessionCardVolunteer=sessionCardVolunteer;window.volunteerPlan=volunteerPlan;
   if(state.role==='volunteer'&&typeof render==='function')render();
 })();
