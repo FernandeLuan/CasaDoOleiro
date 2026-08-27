@@ -3,8 +3,11 @@ const MANAGER_SCHEDULE_CACHE_MS=60000;
 const MANAGER_APPLICATION_PAGE_SIZE=50;
 const MANAGER_APPLICATION_MAX_RECORDS=500;
 const MANAGER_APPLICATION_REFRESH_MS=10000;
+const MANAGER_CHANGE_REFRESH_MS=120000;
 let _managerApplicationsRefreshAt=0;
 let _managerApplicationsRefreshPromise=null;
+let _managerPendingChangesAt=0;
+let _managerPendingChangesPromise=null;
 function managerScheduleKey(from,to,unit='all'){return `${from}|${to}|${unit}`}
 function mapManagerScheduleRows(rows){
   const names=new Map((state.candidates||[]).map(p=>[String(p.id),p.name]));
@@ -19,6 +22,15 @@ async function hydrateManagerSchedule(from=_oleiroToday,to=_oleiroToday,{force=f
   const rows=mapManagerScheduleRows(await window.OleiroServices.planning.listManagerSchedule({from,to,unitId}));
   _managerScheduleCache.set(key,{at:Date.now(),rows});state.sessions=rows;state.activities=[];state.scheduleFrom=from;state.scheduleTo=to;return rows;
 }
+
+async function hydrateManagerPendingChanges({force=false}={}){
+  if(!window.OleiroServices?.planning?.listPendingChanges)return state.pendingChangeRequests||[];
+  if(_managerPendingChangesPromise)return _managerPendingChangesPromise;
+  if(!force&&Date.now()-_managerPendingChangesAt<MANAGER_CHANGE_REFRESH_MS)return state.pendingChangeRequests||[];
+  _managerPendingChangesPromise=window.OleiroServices.planning.listPendingChanges({limit:100}).then(rows=>{state.pendingChangeRequests=rows||[];_managerPendingChangesAt=Date.now();if(state.managerPage==='home'||(state.managerPage==='volunteer'&&state.candidateFilter==='adjustments'))render();return state.pendingChangeRequests}).catch(error=>{console.error('Falha ao carregar mudanças solicitadas:',error);return state.pendingChangeRequests||[]}).finally(()=>{_managerPendingChangesPromise=null});
+  return _managerPendingChangesPromise;
+}
+function invalidateManagerPendingChanges(){_managerPendingChangesAt=0}
 
 function mergeManagerCandidates(rows){
   const byId=new Map((state.candidates||[]).map(row=>[String(row.id),row]));
@@ -76,18 +88,20 @@ function renderManager(){
 function render(){renderManager()}
 async function bootManager(){
   const session=await window.OleiroAuthGuard?.requireRole('manager');if(!session)return;
-  state.role='manager';state.currentSession=session;state.managerPage='home';state.groupsLoaded=false;state.groupsLoading=false;state.sessions=[];state.scheduleFrom=null;state.scheduleTo=null;render();
+  state.role='manager';state.currentSession=session;state.managerPage='home';state.groupsLoaded=false;state.groupsLoading=false;state.sessions=[];state.pendingChangeRequests=[];state.scheduleFrom=null;state.scheduleTo=null;render();
   try{
     const firstApplicationsPage=await hydrateManagerBaseData();if(state.managerPage==='home')render();
     hydrateRemainingManagerCandidates(firstApplicationsPage).catch(error=>console.error('Falha ao carregar registros adicionais:',error));
     processExpiredCandidatesOnStartup?.().then(()=>{if(state.managerPage==='home'||state.managerPage==='volunteer')render()}).catch(error=>console.error('Falha ao processar prazos:',error));
     hydrateManagerSchedule(_oleiroToday,_oleiroToday).then(()=>{if(state.managerPage==='home')render()}).catch(error=>console.error('Falha ao carregar agenda de hoje:',error));
+    hydrateManagerPendingChanges().catch(console.error);
   }catch(error){console.error('Falha ao carregar dados da gestão:',error);showToast('Não foi possível atualizar os dados da gestão.')}
 }
 
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState!=='visible'||state.role!=='manager')return;
   refreshManagerApplications().catch(console.error);
+  hydrateManagerPendingChanges().catch(console.error);
   if(state.managerPage==='home')hydrateManagerSchedule(_oleiroToday,_oleiroToday,{force:true}).then(()=>render()).catch(console.error);
   if(state.managerPage==='agenda')hydrateManagerSchedule(state.agendaFrom||_oleiroToday,state.agendaTo||_oleiroToday,{force:true}).then(()=>render()).catch(console.error);
 });
