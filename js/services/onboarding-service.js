@@ -86,7 +86,7 @@
           accounts.forEach(account=>{
             const p=account.participant;const uid=account.uid;
             batch.set(firestore.doc(context.db,'users',uid),{
-              role:'volunteer',active:true,language:p.language||'en',unitIds:[data.unitId],email:p.email,createdAt:now,updatedAt:now
+              role:'volunteer',active:true,language:p.language||'en',unitIds:[data.unitId],email:p.email,firstPortalAccessAt:null,createdAt:now,updatedAt:now
             });
             batch.set(firestore.doc(context.db,'volunteer_profiles',uid),{
               name:p.name,fullName:p.name,email:p.email,phone:p.phone||'',whatsapp:p.phone||'',country:p.country||'',nationality:p.country||'',language:p.language||'en',createdAt:now,updatedAt:now
