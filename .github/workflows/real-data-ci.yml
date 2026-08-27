@@ -63,31 +63,45 @@ jobs:
           grep -q 'PLAN_CACHE_MS=5\*60\*1000' js/admin/refactor-r18.js
           grep -q "listSessions({applicationId:p.id,from:dates\[0\],to:dates\[dates.length-1\]})" js/admin/refactor-r18.js
           grep -q 'A consulta ampla foi bloqueada para proteger a cota do Firestore' js/services/planning-service.js
-          grep -q 'OleiroQueryMetrics' js/services/planning-service.js
+          grep -q 'recordQuery' js/services/service-core.js
+          grep -q 'activity_sessions/application' js/services/planning-service.js
           grep -q 'hasSessions' js/services/planning-r22-service.js
           grep -q "firestore.limit(1)" js/services/planning-r22-service.js
           grep -q 'activity-delete-check' js/services/planning-r22-service.js
           grep -q 'getCountFromServer' js/services/planning-r22-service.js
-          grep -q 'getSessionById' js/services/planning-r23-service.js
-          grep -q 'activity_sessions/by-id' js/services/planning-r23-service.js
           grep -q 'declaredEmpty' js/portal/app.js
           grep -q 'openAdminPlanningActivity' js/admin/refinements-r20.js
           grep -q 'managerUpdateSession' js/admin/refinements-r20.js
-          grep -q 'manager_confirmed' js/services/planning-r22-service.js
+          grep -q 'manager_confirmed' js/services/planning-service.js
           grep -q 'requestAdminDeletePlanningSession' js/admin/refinements-r20.js
           grep -q "where('status','==','confirmed')" js/services/selection-flow-r25-service.js
           grep -q 'activity_sessions/operational-schedule' js/services/selection-flow-r25-service.js
           grep -q 'selection/planning-docs' js/services/selection-flow-r25-service.js
           grep -q 'A consulta ampla foi bloqueada para proteger a cota do Firestore' js/services/selection-flow-r25-service.js
           grep -q 'hydrateCandidatePlanning(p.id,{force:true})' js/admin/selection-flow-r25.js
-          grep -q '../js/services/planning-r23-service.js' admin/index.html
-          grep -q '../js/services/planning-r23-service.js' portal/index.html
+          grep -q "where('active','==',true)" js/services/auth-service.js
+          grep -q "firestore.limit(1)" js/services/auth-service.js
+          grep -q 'sessionsForActivity' js/services/consistency-r15-services.js
+          grep -q "where('activityId','==',actId)" js/services/consistency-r15-services.js
+          grep -q 'ensureFunctions' js/firebase/firebase-client.js
           grep -q '../js/services/selection-flow-r25-service.js' admin/index.html
           grep -q '../js/services/selection-flow-r25-service.js' portal/index.html
+          test ! -e js/services/planning-r23-service.js
+          test ! -e js/services/planning-manager-status-r25-service.js
+          if grep -RInE 'planning-r23-service|planning-manager-status-r25-service|getSessionById' admin portal js; then
+            echo 'Dead planning reread/status layer was reintroduced.'
+            exit 1
+          fi
           if grep -RInE 'usando leitura compatível|leitura compatível temporária' js/services; then
             echo 'Unsafe Firestore wide-query fallback found in services.'
             exit 1
           fi
+          if grep -nA12 'async countStatus' js/services/application-service.js | grep -q 'getDocs'; then
+            echo 'Broad countStatus document fallback was reintroduced.'
+            exit 1
+          fi
+          grep -q '"fieldPath": "applicationId"' firestore.indexes.json
+          grep -q '"fieldPath": "activityId"' firestore.indexes.json
 
       - name: Check secure account administration
         shell: bash
@@ -96,6 +110,7 @@ jobs:
           test -e js/services/admin-access-service.js
           test -e js/admin/access-management.js
           grep -q 'southamerica-east1' js/firebase/firebase-client.js
+          grep -q 'ensureFunctions' js/services/admin-access-service.js
           grep -q 'adminUpdateVolunteerEmail' functions/index.js
           grep -q 'adminDeleteVolunteerApplication' functions/index.js
           grep -q 'firstPortalAccessAt' js/services/onboarding-service.js
