@@ -85,9 +85,10 @@
 
       let nextSessionCount=null,nextActivityCount=null;
       if(updateApplicationCounts){
-        const knownSession=Number(knownCounts?.sessionCount),knownActivity=Number(knownCounts?.activityCount);
-        if(Number.isFinite(knownSession)&&Number.isFinite(knownActivity)){nextSessionCount=Math.max(0,knownSession-1);nextActivityCount=Math.max(0,knownActivity-(deletedActivity?1:0))}
-        else{
+        const knownSession=Number(knownCounts?.sessionCount),knownActivity=Number(knownCounts?.activityCount),authoritative=knownCounts?.authoritative===true;
+        if(authoritative&&Number.isFinite(knownSession)&&Number.isFinite(knownActivity)){
+          nextSessionCount=Math.max(0,knownSession-1);nextActivityCount=Math.max(0,knownActivity-(deletedActivity?1:0));
+        }else{
           if(typeof firestore.getCountFromServer!=='function')throw new Error('Contagem segura do Firestore indisponível. Exclusão cancelada para evitar leitura ampla.');
           const started=Date.now();
           const [sessionCountSnapshot,activityCountSnapshot]=await Promise.all([
