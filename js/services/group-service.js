@@ -7,56 +7,52 @@
   function cacheKey(unitId){return `oleiro-groups-${normalizeUnit(unitId)}`}
   function clone(rows){return (rows||[]).map(row=>({...row,members:[...(row.members||[])]}))}
   function mapGroup(doc){const data=doc.data();return {id:doc.id,code:data.code||doc.id.split('_').pop(),unitId:data.unitId||'rodeio',capacity:Number(data.capacity||5),note:data.note||'',members:Array.isArray(data.members)?data.members:[],...data}}
+  function sortRows(rows){return clone(rows).sort((a,b)=>String(a.code).localeCompare(String(b.code)))}
 
   function readCache(unitId){
-    const key=normalizeUnit(unitId);
-    const inMemory=memory.get(key);
+    const key=normalizeUnit(unitId),inMemory=memory.get(key);
     if(inMemory&&Date.now()-inMemory.at<=ttlMs)return clone(inMemory.rows);
     try{
-      const raw=sessionStorage.getItem(cacheKey(key));
-      if(!raw)return null;
-      const parsed=JSON.parse(raw);
-      if(!parsed?.rows||Date.now()-Number(parsed.at||0)>ttlMs)return null;
-      memory.set(key,{at:Number(parsed.at||Date.now()),rows:parsed.rows});
-      return clone(parsed.rows);
+      const raw=sessionStorage.getItem(cacheKey(key));if(!raw)return null;
+      const parsed=JSON.parse(raw);if(!parsed?.rows||Date.now()-Number(parsed.at||0)>ttlMs)return null;
+      memory.set(key,{at:Number(parsed.at||Date.now()),rows:parsed.rows});return clone(parsed.rows);
     }catch{return null}
   }
 
   function writeCache(unitId,rows){
-    const key=normalizeUnit(unitId),entry={at:Date.now(),rows:clone(rows)};
-    memory.set(key,entry);
+    const key=normalizeUnit(unitId),entry={at:Date.now(),rows:sortRows(rows)};memory.set(key,entry);
     try{sessionStorage.setItem(cacheKey(key),JSON.stringify(entry))}catch{}
     return clone(entry.rows);
   }
 
   services.groups={
     async list({unitId='rodeio',force=false}={}){
-      const normalized=normalizeUnit(unitId);
-      if(!force){const cached=readCache(normalized);if(cached)return cached}
+      const normalized=normalizeUnit(unitId);if(!force){const cached=readCache(normalized);if(cached)return cached}
       const rows=await services.run(async()=>{
-        const context=await services.firebase();const {firestore}=context.modules,started=Date.now();
+        const context=await services.firebase(),{firestore}=context.modules,started=Date.now();
         const snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'groups'),firestore.where('unitId','==',normalized)));
         services.recordQuery?.('groups/unit',started,snapshot.size,{unitId:normalized});
-        return snapshot.docs.map(mapGroup).sort((a,b)=>String(a.code).localeCompare(String(b.code)));
+        return snapshot.docs.map(mapGroup);
       },{loading:false});
       return writeCache(normalized,rows);
     },
 
     async ensureDefaults(unitId='rodeio'){
-      const normalized=normalizeUnit(unitId),current=await this.list({unitId:normalized});
-      if(current.length)return current;
-      const rows=await services.run(async()=>{
-        const context=await services.firebase();const {firestore}=context.modules;const batch=firestore.writeBatch(context.db);
-        const defaults=['A','B','C','D'].map(code=>({id:`${normalized}_${code}`,code,unitId:normalized,capacity:5,note:'',members:[]}));
-        defaults.forEach(row=>batch.set(firestore.doc(context.db,'groups',row.id),{code:row.code,unitId:row.unitId,capacity:5,note:'',members:[],createdAt:firestore.serverTimestamp(),updatedAt:firestore.serverTimestamp()}));
-        await batch.commit();return defaults;
+      const normalized=normalizeUnit(unitId),current=await this.list({unitId:normalized}),required=['A','B','C','D'];
+      const existingCodes=new Set(current.map(row=>String(row.code||'').toUpperCase())),missing=required.filter(code=>!existingCodes.has(code));
+      if(!missing.length)return sortRows(current);
+      const created=await services.run(async()=>{
+        const context=await services.firebase(),{firestore}=context.modules,batch=firestore.writeBatch(context.db),now=firestore.serverTimestamp();
+        const rows=missing.map(code=>({id:`${normalized}_${code}`,code,unitId:normalized,capacity:5,note:'',members:[]}));
+        rows.forEach(row=>batch.set(firestore.doc(context.db,'groups',row.id),{code:row.code,unitId:row.unitId,capacity:5,note:'',members:[],createdAt:now,updatedAt:now},{merge:true}));
+        await batch.commit();return rows;
       },{loading:false});
-      return writeCache(normalized,rows);
+      return writeCache(normalized,[...current,...created]);
     },
 
     async update(id,patch){
       await services.run(async()=>{
-        const context=await services.firebase();const {firestore}=context.modules;
+        const context=await services.firebase(),{firestore}=context.modules;
         await firestore.updateDoc(firestore.doc(context.db,'groups',String(id)),{...patch,updatedAt:firestore.serverTimestamp()});
       },{loading:false});
       for(const [unitId,entry] of memory.entries()){
