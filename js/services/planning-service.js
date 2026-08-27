@@ -17,18 +17,30 @@
   }
 
   function indexUnavailable(error){return /index|failed-precondition/i.test(`${error?.code||''} ${error?.message||''}`)}
+  function recordQuery(name,started,count,meta={}){
+    const ms=Date.now()-started,row={name,ms,count:Number(count)||0,...meta,at:new Date().toISOString()};
+    window.OleiroQueryMetrics=window.OleiroQueryMetrics||[];
+    window.OleiroQueryMetrics.push(row);
+    if(window.OleiroQueryMetrics.length>40)window.OleiroQueryMetrics.splice(0,window.OleiroQueryMetrics.length-40);
+    if(ms>1200)console.warn(`[Firestore lento] ${name}: ${ms}ms • ${row.count} docs`,meta);
+  }
   async function applicationSessions(context,applicationId,{from=null,to=null}={}){
     const {firestore}=context.modules,collection=firestore.collection(context.db,'activity_sessions'),appId=String(applicationId),constraints=[firestore.where('applicationId','==',appId)];
     if(from)constraints.push(firestore.where('date','>=',String(from)));
     if(to)constraints.push(firestore.where('date','<=',String(to)));
     if(from||to)constraints.push(firestore.orderBy('date','asc'));
+    const started=Date.now();
     try{
-      const snapshot=await firestore.getDocs(firestore.query(collection,...constraints));return snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
+      const snapshot=await firestore.getDocs(firestore.query(collection,...constraints));
+      recordQuery('activity_sessions/application',started,snapshot.size,{applicationId:appId,from:from||'',to:to||''});
+      return snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
     }catch(error){
-      if(!(from||to)||!indexUnavailable(error))throw error;
-      console.warn('Índice applicationId + date ainda indisponível; usando leitura compatível temporária.');
-      const fallback=await firestore.getDocs(firestore.query(collection,firestore.where('applicationId','==',appId)));
-      return fallback.docs.map(doc=>({id:doc.id,...doc.data()})).filter(row=>(!from||row.date>=from)&&(!to||row.date<=to));
+      if((from||to)&&indexUnavailable(error)){
+        const safeError=new Error('O índice activity_sessions(applicationId, date) ainda não está pronto. A consulta ampla foi bloqueada para proteger a cota do Firestore.');
+        safeError.code='oleiro/index-not-ready';
+        throw safeError;
+      }
+      throw error;
     }
   }
 
@@ -45,11 +57,12 @@
     async listPendingChanges({limit=100}={}){
       return services.run(async()=>{
         const context=await services.firebase();
-        const {firestore}=context.modules;const max=Math.max(1,Math.min(Number(limit)||100,200));
+        const {firestore}=context.modules;const max=Math.max(1,Math.min(Number(limit)||100,200)),started=Date.now();
         const [changesSnapshot,proposalSnapshot]=await Promise.all([
           firestore.getDocs(firestore.query(firestore.collection(context.db,'activity_sessions'),firestore.where('status','==','change_requested'),firestore.limit(max))),
           firestore.getDocs(firestore.query(firestore.collection(context.db,'activity_sessions'),firestore.where('reviewStatus','==','analysis'),firestore.limit(max)))
         ]);
+        recordQuery('activity_sessions/pending-review',started,changesSnapshot.size+proposalSnapshot.size,{queries:2,limit:max});
         const rows=[
           ...changesSnapshot.docs.map(doc=>({id:doc.id,...doc.data(),reviewKind:'change'})),
           ...proposalSnapshot.docs.map(doc=>({id:doc.id,...doc.data(),reviewKind:'post_approval'}))
@@ -62,15 +75,19 @@
       if(!from||!to)return [];
       return services.run(async()=>{
         const context=await services.firebase();
-        const {firestore}=context.modules,collection=firestore.collection(context.db,'activity_sessions'),normalizedUnit=unitId&&unitId!=='all'?String(unitId).toLowerCase():'';
+        const {firestore}=context.modules,collection=firestore.collection(context.db,'activity_sessions'),normalizedUnit=unitId&&unitId!=='all'?String(unitId).toLowerCase():'',started=Date.now();
         const base=[firestore.where('date','>=',from),firestore.where('date','<=',to),firestore.orderBy('date','asc')];let sessions=[];
         try{
           const constraints=normalizedUnit?[firestore.where('unitId','==',normalizedUnit),...base]:base;
           const snapshot=await firestore.getDocs(firestore.query(collection,...constraints));sessions=snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
+          recordQuery('activity_sessions/manager-schedule',started,snapshot.size,{from,to,unitId:normalizedUnit||'all'});
         }catch(error){
-          if(!normalizedUnit||!indexUnavailable(error))throw error;
-          console.warn('Índice unitId + date ainda indisponível; usando filtro compatível temporário.');
-          const snapshot=await firestore.getDocs(firestore.query(collection,...base));sessions=snapshot.docs.map(doc=>({id:doc.id,...doc.data()})).filter(row=>String(row.unitId||'').toLowerCase()===normalizedUnit);
+          if(normalizedUnit&&indexUnavailable(error)){
+            const safeError=new Error('O índice activity_sessions(unitId, date) ainda não está pronto. A consulta ampla foi bloqueada para proteger a cota do Firestore.');
+            safeError.code='oleiro/index-not-ready';
+            throw safeError;
+          }
+          throw error;
         }
         const missing=sessions.filter(s=>!s.activityName).map(s=>s.activityId);
         const activityMap=missing.length?await fetchActivitiesByIds(context,missing):new Map();
@@ -100,24 +117,26 @@
       if(!applicationId)return [];
       return services.run(async()=>{
         const context=await services.firebase();
-        const {firestore}=context.modules;
+        const {firestore}=context.modules,started=Date.now();
         const snapshot=await firestore.getDocs(
           firestore.query(
             firestore.collection(context.db,'activities'),
             firestore.where('applicationId','==',String(applicationId))
           )
         );
+        recordQuery('activities/application',started,snapshot.size,{applicationId:String(applicationId)});
         const rows=snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
         rows.forEach(row=>activityCache.set(String(row.id),row));
         return rows;
       },{loading:false});
     },
 
-    async saveActivity({activityId=null,applicationId,unitId,createdByUid,ownerName='',data,dates,existingSessions=[],postApprovalProposal=false}){
+    async saveActivity({activityId=null,applicationId,unitId,createdByUid,ownerName='',data,dates,existingSessions=[],postApprovalProposal=false,sessionStatus='proposed',updateApplicationCounts=false}){
       if(!applicationId||!createdByUid)throw new Error('Sessão de voluntariado inválida.');
       return services.run(async()=>{
         const context=await services.firebase();
         const {firestore}=context.modules;
+        const normalizedStatus=['proposed','confirmed'].includes(String(sessionStatus))?String(sessionStatus):'proposed';
         const activityRef=activityId
           ?firestore.doc(context.db,'activities',String(activityId))
           :firestore.doc(firestore.collection(context.db,'activities'));
@@ -173,7 +192,7 @@
             batch.delete(ref);
             deletedSessionIds.push(String(session.id));
           }else{
-            const statusPatch=postApprovalProposal?{status:'proposed'}:{};
+            const statusPatch={status:postApprovalProposal?'proposed':normalizedStatus};
             batch.update(ref,{...sessionDefinition,...statusPatch,updatedAt:now});
             resultSessions.push({...session,...sessionDefinition,...statusPatch,date});
           }
@@ -182,6 +201,7 @@
         for(const date of wanted){
           if(byDate.has(date))continue;
           const sessionRef=firestore.doc(firestore.collection(context.db,'activity_sessions'));
+          const status=postApprovalProposal?'proposed':normalizedStatus;
           const row={
             id:sessionRef.id,
             applicationId:String(applicationId),
@@ -189,12 +209,20 @@
             unitId:String(unitId||''),
             date,
             ...sessionDefinition,
-            status:'proposed',
+            status,
             groupId:null,
             createdByUid:String(createdByUid)
           };
-          batch.set(sessionRef,{...row,createdAt:now,updatedAt:now});
+          batch.set(sessionRef,{...row,...(status==='confirmed'?{confirmedAt:now}:{}),createdAt:now,updatedAt:now});
           resultSessions.push(row);
+        }
+
+        if(updateApplicationCounts&&!activityId&&wanted.size){
+          batch.update(firestore.doc(context.db,'applications',String(applicationId)),{
+            sessionCount:firestore.increment(wanted.size),
+            activityCount:firestore.increment(1),
+            updatedAt:now
+          });
         }
 
         await batch.commit();
