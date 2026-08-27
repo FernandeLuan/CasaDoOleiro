@@ -85,6 +85,11 @@ async function hydrateManagerBaseData(){
   const candidatesPromise=loadManagerCandidates({force:true});
   const [unitsResult]=await Promise.all([unitsPromise,candidatesPromise]);
   state.units=unitsResult||[];
+  const activeUnits=(state.units||[]).filter(unit=>unit.active!==false);
+  if(!activeUnits.some(unit=>String(unit.id)===String(state.groupUnitId||''))){
+    state.groupUnitId=activeUnits.some(unit=>String(unit.id)==='rodeio')?'rodeio':String(activeUnits[0]?.id||'rodeio');
+    state.groupsLoaded=false;state.groupsUnitId=null;
+  }
 }
 
 function scheduleManagerBackgroundWarmup(){
@@ -100,9 +105,27 @@ function scheduleManagerBackgroundWarmup(){
 }
 
 async function hydrateManagerData(){await hydrateManagerBaseData();return state.candidates}
-async function ensureManagerGroups(){
-  if(state.groupsLoaded)return state.groups||[];state.groupsLoading=true;
-  try{state.groups=window.OleiroServices?.groups?.ensureDefaults?await window.OleiroServices.groups.ensureDefaults('rodeio'):[];state.groupsLoaded=true;return state.groups;}finally{state.groupsLoading=false}
+function managerGroupUnitId(){
+  const activeUnits=(state.units||[]).filter(unit=>unit.active!==false),current=String(state.groupUnitId||'');
+  if(activeUnits.some(unit=>String(unit.id)===current))return current;
+  if(activeUnits.some(unit=>String(unit.id)==='rodeio'))return 'rodeio';
+  return String(activeUnits[0]?.id||'rodeio');
+}
+async function ensureManagerGroups({force=false}={}){
+  const unitId=managerGroupUnitId();state.groupUnitId=unitId;
+  if(!force&&state.groupsLoaded&&String(state.groupsUnitId||'')===unitId)return state.groups||[];
+  state.groupsLoading=true;
+  try{
+    if(force)window.OleiroServices?.groups?.invalidate?.(unitId);
+    state.groups=window.OleiroServices?.groups?.ensureDefaults?await window.OleiroServices.groups.ensureDefaults(unitId):[];
+    state.groupsLoaded=true;state.groupsUnitId=unitId;return state.groups;
+  }finally{state.groupsLoading=false}
+}
+async function changeManagerGroupUnit(unitId){
+  const normalized=String(unitId||'').toLowerCase();if(!normalized||normalized===String(state.groupUnitId||''))return;
+  const valid=(state.units||[]).some(unit=>unit.active!==false&&String(unit.id)===normalized);if(!valid)return showToast('Unidade inválida.');
+  state.groupUnitId=normalized;state.groupsLoaded=false;state.groups=[];render();
+  try{await ensureManagerGroups();if(state.managerPage==='groups')render()}catch(error){console.error(error);showToast('Não foi possível carregar os grupos desta unidade.')}
 }
 function renderManager(){
   const pages={home:managerHome,volunteer:managerVolunteers,agenda:managerAgenda,groups:managerGroups,menu:managerMenu};
@@ -111,7 +134,7 @@ function renderManager(){
 function render(){renderManager()}
 async function bootManager(){
   const session=await window.OleiroAuthGuard?.requireRole('manager');if(!session)return;
-  state.role='manager';state.currentSession=session;state.managerPage='home';state.groupsLoaded=false;state.groupsLoading=false;state.sessions=[];state.pendingChangeRequests=[];state.scheduleFrom=null;state.scheduleTo=null;state.dashboardCounts={analysis:0,adjustments:0};state.dashboardArrivals=[];state.dashboardDepartures=[];state.candidateHasMore=false;state.candidateCursor=null;state.candidateLoading=false;render();
+  state.role='manager';state.currentSession=session;state.managerPage='home';state.groupsLoaded=false;state.groupsLoading=false;state.groupsUnitId=null;state.groupUnitId=state.groupUnitId||'';state.sessions=[];state.pendingChangeRequests=[];state.scheduleFrom=null;state.scheduleTo=null;state.dashboardCounts={analysis:0,adjustments:0};state.dashboardArrivals=[];state.dashboardDepartures=[];state.candidateHasMore=false;state.candidateCursor=null;state.candidateLoading=false;render();
   try{
     await hydrateManagerBaseData();if(state.managerPage==='home')render();scheduleManagerBackgroundWarmup();
   }catch(error){console.error('Falha ao carregar a lista principal da gestão:',error);showToast('Não foi possível carregar a lista de voluntários. Tente novamente.')}
