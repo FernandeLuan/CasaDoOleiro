@@ -23,22 +23,21 @@
     const marker='<section class="section"><div class="section-head"><div><h2>Minha estadia</h2>';const at=html.indexOf(marker);return at>=0?`${html.slice(0,at)}${card}${html.slice(at)}`:`${card}${html}`;
   };
 
-  /* Primeiro exclui a sessão/atividade. Só depois atualiza o estado da candidatura. Assim uma falha de regra no status nunca impede a exclusão válida. */
+  /* Primeiro exclui a sessão/atividade. Só depois, se o planejamento ficou vazio, normaliza o status em uma gravação separada. */
   window.deletePlanningSession=async function(activityId,date){
     const session=typeof realSessionFor==='function'?realSessionFor(activityId,date):null,application=state.currentApplication;if(!session||!application?.id)return showToast('Sessão não encontrada.');
     const approved=state.volunteerMode==='approved',activity=(state.activities||[]).find(row=>String(row.id)===String(activityId)),postAdjustment=approved&&activity?.postApprovalProposal===true&&activity?.reviewStatus==='adjustments';if(approved&&!postAdjustment)return showToast('Esta sessão não pode ser excluída neste status.');
-    const active=(state.sessions||[]).filter(row=>row.status!=='rejected'&&row.reviewStatus!=='rejected'),remaining=active.filter(row=>String(row.id)!==String(session.id)),remainingOnDate=remaining.filter(row=>String(row.date)===String(date));
-    const resetEmpty=!approved&&state.volunteerPlanStatus==='adjustments'&&remaining.length===0,nextAdjustments={...(application.dayAdjustments||{})},hadAdjustment=!!nextAdjustments[date];if(hadAdjustment&&!remainingOnDate.length)delete nextAdjustments[date];
+    const active=(state.sessions||[]).filter(row=>row.status!=='rejected'&&row.reviewStatus!=='rejected'),remaining=active.filter(row=>String(row.id)!==String(session.id));
+    const resetEmpty=!approved&&state.volunteerPlanStatus==='adjustments'&&remaining.length===0;
     try{
       const result=await window.OleiroServices.planning.deleteSession(session.id,{applicationId:application.id,activityId,updateApplicationCounts:false});
       state.sessions=(state.sessions||[]).filter(row=>String(row.id)!==String(session.id));
       if(result.deletedActivity)state.activities=(state.activities||[]).filter(row=>String(row.id)!==String(activityId));else{const current=(state.activities||[]).find(row=>String(row.id)===String(activityId));if(current)current.dates=(current.dates||[]).filter(value=>value!==date)}
       application.sessionCount=remaining.length;application.activityCount=(state.activities||[]).length;
       let statusWriteFailed=false;
-      if(!approved&&(resetEmpty||hadAdjustment&&!remainingOnDate.length)){
-        const patch=resetEmpty?{status:'pending',planningSubmittedAt:null,dayAdjustments:{}}:{dayAdjustments:nextAdjustments};
-        try{await window.OleiroServices.applications.update(application.id,patch)}catch(error){statusWriteFailed=true;console.warn('Sessão excluída, mas o estado complementar será normalizado na próxima abertura:',error)}
-        if(resetEmpty){application.status='pending';application.planningSubmittedAt=null;application.dayAdjustments={};state.volunteerPlanStatus='draft'}else application.dayAdjustments=nextAdjustments;
+      if(resetEmpty){
+        try{await window.OleiroServices.applications.update(application.id,{status:'pending',planningSubmittedAt:null,dayAdjustments:{}})}catch(error){statusWriteFailed=true;console.warn('Sessão excluída, mas o status vazio será normalizado na próxima abertura:',error)}
+        application.status='pending';application.planningSubmittedAt=null;application.dayAdjustments={};state.volunteerPlanStatus='draft';
       }
       closeModal();render();showToast(statusWriteFailed?'Atividade excluída. O status será sincronizado ao reabrir.':resetEmpty?'Atividade excluída. Monte seu planejamento novamente.':'Sessão excluída.');
     }catch(error){console.error(error);showToast(error?.message||'Não foi possível excluir a sessão.')}
