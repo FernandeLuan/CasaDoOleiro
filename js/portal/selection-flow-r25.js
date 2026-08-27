@@ -64,6 +64,34 @@
     }
   };
 
+  /* Editar/criar atividade: feedback imediato no próprio botão e bloqueio de duplo clique. */
+  if(typeof saveActivity==='function'){
+    const baseSaveActivity=saveActivity;
+    saveActivity=async function(...args){
+      const button=modalRoot?.querySelector?.('button[onclick*="saveActivity"]');if(button?.disabled)return;
+      const original=button?.innerHTML||'';
+      if(button){button.disabled=true;button.setAttribute('aria-busy','true');button.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Salvando...'}
+      try{return await baseSaveActivity(...args)}finally{
+        if(button?.isConnected){button.disabled=false;button.removeAttribute('aria-busy');button.innerHTML=original||'Salvar alterações'}
+      }
+    };
+    window.saveActivity=saveActivity;
+  }
+
+  /* Mover atividade no fluxo inicial usa o write existente, agora com estado assíncrono local. */
+  if(typeof saveMove==='function'){
+    const baseSaveMove=saveMove;
+    saveMove=async function(...args){
+      const button=modalRoot?.querySelector?.('button[onclick*="saveMove("]');if(button?.disabled)return;
+      const original=button?.innerHTML||'';
+      if(button){button.disabled=true;button.setAttribute('aria-busy','true');button.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Salvando...'}
+      try{return await baseSaveMove(...args)}finally{
+        if(button?.isConnected){button.disabled=false;button.removeAttribute('aria-busy');button.innerHTML=original||'Mover'}
+      }
+    };
+    window.saveMove=saveMove;
+  }
+
   /* Conteúdo inserido/alterado depois do render também recebe i18n; conteúdo do usuário usa data-no-i18n. */
   if(typeof MutationObserver!=='undefined'&&typeof applyI18n==='function'&&typeof modalRoot!=='undefined'&&modalRoot){
     const observer=new MutationObserver(()=>applyI18n(modalRoot));
