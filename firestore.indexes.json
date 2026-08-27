@@ -86,6 +86,14 @@
       ]
     },
     {
+      "collectionGroup": "applications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "planningDeadlineAt", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "activity_sessions",
       "queryScope": "COLLECTION",
       "fields": [
