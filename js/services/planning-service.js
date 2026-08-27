@@ -39,6 +39,21 @@
       },{loading:false});
     },
 
+    async listPendingChanges({limit=100}={}){
+      return services.run(async()=>{
+        const context=await services.firebase();
+        const {firestore}=context.modules;
+        const snapshot=await firestore.getDocs(
+          firestore.query(
+            firestore.collection(context.db,'activity_sessions'),
+            firestore.where('status','==','change_requested'),
+            firestore.limit(Math.max(1,Math.min(Number(limit)||100,200)))
+          )
+        );
+        return snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
+      },{loading:false});
+    },
+
     async listManagerSchedule({from,to,unitId='all'}={}){
       if(!from||!to)return [];
       return services.run(async()=>{
