@@ -85,9 +85,9 @@ async function hydrateManagerBaseData(){
   const candidatesPromise=loadManagerCandidates({force:true});
   const [unitsResult]=await Promise.all([unitsPromise,candidatesPromise]);
   state.units=unitsResult||[];
-  const activeUnits=(state.units||[]).filter(unit=>unit.active!==false);
-  if(!activeUnits.some(unit=>String(unit.id)===String(state.groupUnitId||''))){
-    state.groupUnitId=activeUnits.some(unit=>String(unit.id)==='rodeio')?'rodeio':String(activeUnits[0]?.id||'rodeio');
+  const units=state.units||[];
+  if(!units.some(unit=>String(unit.id)===String(state.groupUnitId||''))){
+    state.groupUnitId=units.some(unit=>String(unit.id)==='rodeio')?'rodeio':String(units[0]?.id||'rodeio');
     state.groupsLoaded=false;state.groupsUnitId=null;
   }
 }
@@ -106,10 +106,10 @@ function scheduleManagerBackgroundWarmup(){
 
 async function hydrateManagerData(){await hydrateManagerBaseData();return state.candidates}
 function managerGroupUnitId(){
-  const activeUnits=(state.units||[]).filter(unit=>unit.active!==false),current=String(state.groupUnitId||'');
-  if(activeUnits.some(unit=>String(unit.id)===current))return current;
-  if(activeUnits.some(unit=>String(unit.id)==='rodeio'))return 'rodeio';
-  return String(activeUnits[0]?.id||'rodeio');
+  const units=state.units||[],current=String(state.groupUnitId||'');
+  if(units.some(unit=>String(unit.id)===current))return current;
+  if(units.some(unit=>String(unit.id)==='rodeio'))return 'rodeio';
+  return String(units[0]?.id||'rodeio');
 }
 async function ensureManagerGroups({force=false}={}){
   const unitId=managerGroupUnitId();state.groupUnitId=unitId;
@@ -123,7 +123,7 @@ async function ensureManagerGroups({force=false}={}){
 }
 async function changeManagerGroupUnit(unitId){
   const normalized=String(unitId||'').toLowerCase();if(!normalized||normalized===String(state.groupUnitId||''))return;
-  const valid=(state.units||[]).some(unit=>unit.active!==false&&String(unit.id)===normalized);if(!valid)return showToast('Unidade inválida.');
+  const valid=(state.units||[]).some(unit=>String(unit.id)===normalized);if(!valid)return showToast('Unidade inválida.');
   state.groupUnitId=normalized;state.groupsLoaded=false;state.groups=[];render();
   try{await ensureManagerGroups();if(state.managerPage==='groups')render()}catch(error){console.error(error);showToast('Não foi possível carregar os grupos desta unidade.')}
 }
