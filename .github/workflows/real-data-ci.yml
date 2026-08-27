@@ -23,155 +23,82 @@ jobs:
         shell: bash
         run: |
           find js -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+          node --check functions/index.js
 
-      - name: Check legacy UI integrations
+      - name: Check JSON configuration
         shell: bash
         run: |
-          grep -q 'css/round3.css' index.html
-          grep -q '../css/round3.css' admin/index.html
-          grep -q '../css/round3.css' portal/index.html
-          grep -q 'js/login-round3.js' index.html
-          grep -q '../js/admin/round3-ui.js' admin/index.html
-          grep -q '../js/portal/round3-ui.js' portal/index.html
-          grep -q '../js/admin/round4-ui.js' admin/index.html
-          grep -q '../js/portal/round4-ui.js' portal/index.html
-          grep -q '../js/admin/round5-ui.js' admin/index.html
-          grep -q '../js/admin/round5-refresh.js' admin/index.html
-          grep -q '../js/portal/round5-ui.js' portal/index.html
-          grep -q '../js/admin/round6-ui.js' admin/index.html
-          grep -q '../js/portal/round6-ui.js' portal/index.html
-          grep -q '../js/admin/round7-ui.js' admin/index.html
-          grep -q '../js/portal/round7-ui.js' portal/index.html
-          grep -q '../js/shared/round7-ui.js' admin/index.html
-          grep -q '../js/shared/round7-ui.js' portal/index.html
+          python - <<'PY'
+          import json
+          for path in ['firebase.json', 'firestore.indexes.json', 'functions/package.json']:
+              with open(path, encoding='utf-8') as f:
+                  json.load(f)
+          PY
 
-      - name: Check consolidated services
+      - name: Check paginated data architecture
         shell: bash
         run: |
-          test ! -e js/shared/round3-services.js
-          test ! -e js/shared/round5-services.js
-          test ! -e js/shared/round6-services.js
-          test ! -e js/shared/round7-services.js
-          if grep -RInE 'round(3|5|6|7)-services\.js' admin portal index.html; then
-            echo 'Legacy service patch layer is still loaded.'
+          grep -q 'limit:10' js/admin/app.js
+          grep -q 'startAfter' js/services/application-service.js
+          grep -q 'candidateHasMore' js/admin/app.js
+          grep -q 'Ver mais 10' js/admin/voluntariado.js
+          grep -q 'getCountFromServer' js/services/application-service.js
+          grep -q 'listUpcoming' js/services/application-service.js
+          grep -q 'listOccupancyMonth' js/services/application-service.js
+          grep -q 'processExpiredPending' js/services/application-maintenance-service.js
+          test -e js/admin/occupancy-data.js
+          if grep -RInE 'MANAGER_APPLICATION_MAX_RECORDS|hydrateRemainingManagerCandidates' js/admin; then
+            echo 'Legacy full volunteer preload is still present.'
             exit 1
           fi
-          grep -q 'const activityCache=new Map' js/services/planning-service.js
-          grep -q 'O candidato não atualiza o documento applications' js/services/planning-service.js
-          if grep -q "firestore.doc(context.db,'applications'" js/services/planning-service.js; then
-            echo 'Planning service must not write application documents from candidate operations.'
-            exit 1
-          fi
-          grep -q 'const memory=new Map' js/services/group-service.js
-          grep -q 'resetPlanning' js/services/application-service.js
-          grep -q 'sessionCount:sessions.length,activityCount' js/services/application-service.js
 
-      - name: Check current UX fixes
+      - name: Check secure account administration
         shell: bash
         run: |
-          grep -q 'Solicitar ajuste neste dia' js/admin/round6-ui.js
-          grep -q 'stay-support-link' js/portal/round4-ui.js
-          grep -q 'planning-note-button' js/admin/round5-ui.js
-          grep -q 'pending-grid-two' js/admin/round5-ui.js
-          grep -q 'Suporte pelo WhatsApp' js/portal/round5-ui.js
-          grep -q 'Grupo definido pela Casa' js/portal/round6-ui.js
-          grep -q "state.volunteerPlanStatus!=='adjustments'" js/portal/round6-ui.js
-          grep -q 'modal-back-button' js/admin/round6-ui.js
+          test -e functions/index.js
+          test -e js/services/admin-access-service.js
+          test -e js/admin/access-management.js
+          grep -q 'southamerica-east1' js/firebase/firebase-client.js
+          grep -q 'adminUpdateVolunteerEmail' functions/index.js
+          grep -q 'adminDeleteVolunteerApplication' functions/index.js
+          grep -q 'firstPortalAccessAt' js/services/onboarding-service.js
+          grep -q 'markFirstPortalAccess' js/services/auth-service.js
+          grep -q 'participantMarksFirstAccess' firestore.rules
+          grep -q '../js/services/admin-access-service.js' admin/index.html
+          grep -q '../js/admin/access-management.js' admin/index.html
+
+      - name: Check post-approval proposal workflow
+        shell: bash
+        run: |
+          grep -q 'postApprovalProposal' js/services/planning-service.js
+          grep -q 'reviewPostApprovalProposal' js/services/planning-service.js
+          grep -q 'reviewStatus.*analysis' js/services/planning-service.js
+          grep -q 'Nova proposta de atividade' js/portal/app.js
+          grep -q 'Aguardando análise' js/portal/post-approval.js
+          grep -q 'Reajustar' js/portal/post-approval.js
+          grep -q 'Nova atividade' js/admin/post-approval.js
+          grep -q 'Aprovar' js/admin/post-approval.js
+          grep -q 'Recusar' js/admin/post-approval.js
+          grep -q 'createsApprovedProposal' firestore.rules
+          grep -q 'updatesApprovedProposal' firestore.rules
+          grep -q '../js/portal/post-approval.js' portal/index.html
+          grep -q '../js/admin/post-approval.js' admin/index.html
+
+      - name: Check current UX safeguards
+        shell: bash
+        run: |
+          grep -q 'Sem conexão' js/services/auth-guard.js
+          grep -q 'offline-action' css/round12.css
+          grep -q 'unit-admin-card' css/round12.css
+          grep -q 'volunteer-change-pending' js/portal/round12-ui.js
+          grep -q 'Aprovar mudança' js/admin/round12-ui.js
+          grep -q 'Reiniciar planejamento' js/admin/round7-ui.js
+          grep -q 'Digite para buscar o país' js/admin/candidate-form.js
           grep -q 'overscroll-behavior-y:none' css/round6.css
           grep -q 'format-detection' admin/index.html
           grep -q 'format-detection' portal/index.html
-          grep -q 'Carregando atividades' js/portal/round7-ui.js
-          grep -q 'stay-date-editor-native' js/admin/round7-ui.js
-          grep -q 'stay-date-input-native' css/round7.css
-          grep -q 'saveStayDatesWithFeedback' js/admin/round7-ui.js
-          grep -q 'Reiniciar planejamento' js/admin/round7-ui.js
-          grep -q "pending:\['Em preparação'" js/shared/round7-ui.js
-          grep -q 'x-apple-data-detectors' css/round7.css
-          grep -q 'MANAGER_APPLICATION_MAX_RECORDS=500' js/admin/app.js
-          grep -q 'hydrateRemainingManagerCandidates' js/admin/app.js
-          grep -q 'planningOwnerName' js/portal/planejamento.js
-          if grep -q 'needsAdminAttention=true' js/portal/planejamento.js; then
-            echo 'Removed notification state is still being set by the portal.'
-            exit 1
-          fi
-          if grep -RInE 'stay-date-(editor|field|input|native)-v(2|3)|syncStayDateEditorV3|syncStayDateEditorBounds' js/admin css; then
-            echo 'Obsolete stay-date editor implementation found.'
-            exit 1
-          fi
 
-      - name: Check current product layer
-        shell: bash
-        run: |
-          grep -q '../css/product-current.css' admin/index.html
-          grep -q '../css/product-current.css' portal/index.html
-          grep -q '../js/shared/product-current.js' admin/index.html
-          grep -q '../js/shared/product-current.js' portal/index.html
-          grep -q '../js/admin/product-current.js' admin/index.html
-          grep -q '../js/portal/product-current.js' portal/index.html
-          grep -q 'js/services/auth-service.js?v=20260826-r10' index.html
-          grep -q 'SCHEDULE_READ_TTL=5\*60\*1000' js/admin/product-current.js
-          grep -q 'APPLICATION_READ_TTL=2\*60\*1000' js/admin/product-current.js
-          grep -q 'Fim de semana — dia sem atividade' js/portal/product-current.js
-          grep -q 'Mudança solicitada' js/portal/product-current.js
-          grep -q 'moveSessionById' js/shared/product-current.js
-          grep -q 'signedIn() && request.auth.uid == uid' firestore.rules
-          python - <<'PY'
-          from pathlib import Path
-          admin = Path('admin/index.html').read_text()
-          portal = Path('portal/index.html').read_text()
-          assert admin.index('../js/admin/product-current.js') > admin.index('../js/admin/app.js')
-          assert portal.index('../js/portal/product-current.js') > portal.index('../js/portal/round7-ui.js')
-          PY
-
-      - name: Check round 11 portal polish
-        shell: bash
-        run: |
-          grep -q 'product-current.css?v=20260826-r11' admin/index.html
-          grep -q 'product-current.css?v=20260826-r11' portal/index.html
-          grep -q 'planning-service.js?v=20260826-r11' admin/index.html
-          grep -q 'planning-service.js?v=20260826-r11' portal/index.html
-          grep -q 'listPendingChanges' js/services/planning-service.js
-          grep -q 'hydrateManagerPendingChanges' js/admin/app.js
-          grep -q 'pendingChangeApplicationIds' js/admin/dashboard.js
-          grep -q "filter==='adjustments'.*changeIds" js/admin/voluntariado.js
-          grep -q 'confirmVolunteerLogout' js/portal/product-current.js
-          grep -q 'volunteer-session-description' js/portal/product-current.js
-          grep -q 'Descrição:' js/portal/product-current.js
-          grep -q 'move-date-select' js/shared/product-current.js
-          grep -q 'date===currentDate.*selected' js/shared/product-current.js
-          grep -q 'Digite para buscar o país' js/admin/candidate-form.js
-          grep -q '>Casal<' js/admin/menu.js
-          grep -q 'oleiro/offline' js/services/auth-service.js
-          grep -q 'Sem conexão' js/services/auth-guard.js
-          grep -q 'info-routine' css/product-current.css
-
-      - name: Check round 12 agenda and adjustments
-        shell: bash
-        run: |
-          grep -q '../css/round12.css' admin/index.html
-          grep -q '../css/round12.css' portal/index.html
-          grep -q '../js/admin/round12-ui.js' admin/index.html
-          grep -q '../js/portal/round12-ui.js' portal/index.html
-          grep -q 'AGENDA_PAGE_SIZE=5' js/portal/round12-ui.js
-          grep -q 'volunteer-change-pending' js/portal/round12-ui.js
-          grep -q 'openCandidateAdjustmentAt' js/admin/round12-ui.js
-          grep -q 'admin-session-description' js/admin/round12-ui.js
-          grep -q 'Aprovar mudança' js/admin/round12-ui.js
-          grep -q '#moveDate,#moveTime' css/round12.css
-          grep -q 'font-size:12px' css/round12.css
-          grep -q 'info-accordion summary' css/round12.css
-          grep -q 'padding:0 0!important' css/round12.css
-          python - <<'PY'
-          from pathlib import Path
-          admin = Path('admin/index.html').read_text()
-          portal = Path('portal/index.html').read_text()
-          assert admin.index('../css/round12.css') > admin.index('../css/product-current.css')
-          assert portal.index('../css/round12.css') > portal.index('../css/product-current.css')
-          assert admin.index('../js/admin/round12-ui.js') > admin.index('../js/admin/product-current.js')
-          assert portal.index('../js/portal/round12-ui.js') > portal.index('../js/portal/product-current.js')
-          PY
-
-      - name: Reject removed features and prototype residues
+      - name: Reject prototype runtime residues
         shell: bash
         run: |
           test ! -e inactive.html
@@ -188,10 +115,6 @@ jobs:
           fi
           if grep -RInE '\?dev=1|URLSearchParams\([^)]*\).*dev|chooseDevRole|devPanel|syncPrototype|Thomas Miller|Maria Gómez|Sophie Martin|Teste regressivo|2026-09-' index.html admin portal js --exclude='i18n.js'; then
             echo 'Prototype runtime residue found.'
-            exit 1
-          fi
-          if grep -RInE 'oleiro-candidate-lifecycle|oleiro-dismissed-notifications|oleiro-volunteer-mode|oleiro-volunteer-plan-status' index.html admin portal js; then
-            echo 'Prototype browser persistence found.'
             exit 1
           fi
 
