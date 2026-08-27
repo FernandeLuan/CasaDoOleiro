@@ -34,8 +34,9 @@
       const normalized=normalizeUnit(unitId);
       if(!force){const cached=readCache(normalized);if(cached)return cached}
       const rows=await services.run(async()=>{
-        const context=await services.firebase();const {firestore}=context.modules;
+        const context=await services.firebase();const {firestore}=context.modules,started=Date.now();
         const snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'groups'),firestore.where('unitId','==',normalized)));
+        services.recordQuery?.('groups/unit',started,snapshot.size,{unitId:normalized});
         return snapshot.docs.map(mapGroup).sort((a,b)=>String(a.code).localeCompare(String(b.code)));
       },{loading:false});
       return writeCache(normalized,rows);
