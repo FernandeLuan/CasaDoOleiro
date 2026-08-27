@@ -1,3 +1,5 @@
+@import url('./round21.css?v=20260827-r21');
+
 /* Round 20 — alinhamento fino de status, Conta, Agenda e Home do portal. */
 .candidate-status-row{display:flex!important;align-items:center!important;gap:6px!important;flex-wrap:wrap!important}
 .candidate-deadline-inline{display:inline-flex;align-items:center;gap:4px;font-size:.58rem;color:var(--warning);font-weight:600;line-height:1.2}
