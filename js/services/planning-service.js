@@ -42,15 +42,16 @@
     async listPendingChanges({limit=100}={}){
       return services.run(async()=>{
         const context=await services.firebase();
-        const {firestore}=context.modules;
-        const snapshot=await firestore.getDocs(
-          firestore.query(
-            firestore.collection(context.db,'activity_sessions'),
-            firestore.where('status','==','change_requested'),
-            firestore.limit(Math.max(1,Math.min(Number(limit)||100,200)))
-          )
-        );
-        return snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
+        const {firestore}=context.modules;const max=Math.max(1,Math.min(Number(limit)||100,200));
+        const [changesSnapshot,proposalSnapshot]=await Promise.all([
+          firestore.getDocs(firestore.query(firestore.collection(context.db,'activity_sessions'),firestore.where('status','==','change_requested'),firestore.limit(max))),
+          firestore.getDocs(firestore.query(firestore.collection(context.db,'activity_sessions'),firestore.where('reviewStatus','==','analysis'),firestore.limit(max)))
+        ]);
+        const rows=[
+          ...changesSnapshot.docs.map(doc=>({id:doc.id,...doc.data(),reviewKind:'change'})),
+          ...proposalSnapshot.docs.map(doc=>({id:doc.id,...doc.data(),reviewKind:'post_approval'}))
+        ];
+        const unique=new Map();rows.forEach(row=>unique.set(String(row.id),row));return [...unique.values()].slice(0,max);
       },{loading:false});
     },
 
@@ -110,7 +111,7 @@
       },{loading:false});
     },
 
-    async saveActivity({activityId=null,applicationId,unitId,createdByUid,ownerName='',data,dates,existingSessions=[]}){
+    async saveActivity({activityId=null,applicationId,unitId,createdByUid,ownerName='',data,dates,existingSessions=[],postApprovalProposal=false}){
       if(!applicationId||!createdByUid)throw new Error('Sessão de voluntariado inválida.');
       return services.run(async()=>{
         const context=await services.firebase();
@@ -121,6 +122,7 @@
         const batch=firestore.writeBatch(context.db);
         const now=firestore.serverTimestamp();
         const previousActivity=activityId?activityCache.get(String(activityId)):null;
+        const reviewFields=postApprovalProposal?{postApprovalProposal:true,reviewStatus:'analysis',reviewNote:'',reviewSubmittedAt:now}:{};
         const editableDefinition={
           applicationId:String(applicationId),
           ownerName:String(ownerName||''),
@@ -132,6 +134,7 @@
           notes:data.notes||'',
           period:data.period||'Sem preferência',
           time:data.time||'',
+          ...reviewFields,
           updatedAt:now
         };
 
@@ -156,7 +159,8 @@
           ownerName:String(ownerName||''),
           time:data.time||'',
           period:data.period||'Sem preferência',
-          duration:Number(data.duration)||60
+          duration:Number(data.duration)||60,
+          ...reviewFields
         };
         const resultSessions=[];
         const deletedSessionIds=[];
@@ -167,8 +171,9 @@
             batch.delete(ref);
             deletedSessionIds.push(String(session.id));
           }else{
-            batch.update(ref,{...sessionDefinition,updatedAt:now});
-            resultSessions.push({...session,...sessionDefinition,date});
+            const statusPatch=postApprovalProposal?{status:'proposed'}:{};
+            batch.update(ref,{...sessionDefinition,...statusPatch,updatedAt:now});
+            resultSessions.push({...session,...sessionDefinition,...statusPatch,date});
           }
         }
 
@@ -190,8 +195,6 @@
           resultSessions.push(row);
         }
 
-        // O candidato não atualiza o documento applications. As regras preservam
-        // essa separação; contadores são persistidos pelo gestor ao aprovar ou editar datas.
         await batch.commit();
         const activity={
           id:activityRef.id,
@@ -200,6 +203,32 @@
         };
         activityCache.set(String(activityRef.id),activity);
         return {activityId:activityRef.id,activity,sessions:resultSessions,deletedSessionIds};
+      },{loading:false});
+    },
+
+    async reviewPostApprovalProposal({applicationId,activityId,decision,note=''}){
+      if(!applicationId||!activityId||!['approve','reject','adjustments'].includes(decision))throw new Error('Decisão inválida.');
+      const reviewNote=String(note||'').trim();if(decision==='adjustments'&&!reviewNote)throw new Error('Informe o reajuste solicitado.');
+      return services.run(async()=>{
+        const context=await services.firebase();const {firestore}=context.modules;
+        const allSessions=await applicationSessions(context,applicationId),sessions=allSessions.filter(row=>String(row.activityId)===String(activityId));
+        if(!sessions.length)throw new Error('Proposta não encontrada.');
+        const activityRef=firestore.doc(context.db,'activities',String(activityId)),batch=firestore.writeBatch(context.db),now=firestore.serverTimestamp();
+        const reviewStatus=decision==='approve'?'approved':decision==='reject'?'rejected':'adjustments';
+        const sessionStatus=decision==='approve'?'confirmed':decision==='reject'?'rejected':'proposed';
+        const reviewPatch={postApprovalProposal:true,reviewStatus,reviewNote:decision==='adjustments'?reviewNote:'',reviewedAt:now,updatedAt:now};
+        batch.update(activityRef,reviewPatch);
+        sessions.forEach(session=>batch.update(firestore.doc(context.db,'activity_sessions',String(session.id)),{...reviewPatch,status:sessionStatus,...(decision==='approve'?{confirmedAt:now}:{} )}));
+        let counts=null;
+        if(decision==='approve'){
+          const simulated=allSessions.map(row=>String(row.activityId)===String(activityId)?{...row,status:'confirmed'}:row).filter(row=>row.status==='confirmed');
+          const activityCount=new Set(simulated.map(row=>String(row.activityId||'')).filter(Boolean)).size;
+          counts={sessionCount:simulated.length,activityCount};
+          batch.update(firestore.doc(context.db,'applications',String(applicationId)),{sessionCount:counts.sessionCount,activityCount:counts.activityCount,updatedAt:now});
+        }
+        await batch.commit();
+        const cached=activityCache.get(String(activityId));if(cached)Object.assign(cached,{postApprovalProposal:true,reviewStatus,reviewNote:decision==='adjustments'?reviewNote:''});
+        return {reviewStatus,status:sessionStatus,sessionIds:sessions.map(row=>String(row.id)),counts};
       },{loading:false});
     },
 
@@ -218,7 +247,6 @@
           batch.delete(firestore.doc(context.db,'activities',String(activityId)));
           activityCache.delete(String(activityId));
         }
-        // Assim como no save, o participante não escreve contadores administrativos.
         await batch.commit();
         return {
           deletedActivity:!remainingForActivity.length,
