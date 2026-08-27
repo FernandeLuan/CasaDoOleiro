@@ -21,6 +21,10 @@ function searchTokens(names,emails,countries){
   });
   return [...tokens].slice(0,200);
 }
+function legacyAccountAlreadyUsed(user){
+  const created=Date.parse(user?.metadata?.creationTime||''),last=Date.parse(user?.metadata?.lastSignInTime||'');
+  return Number.isFinite(created)&&Number.isFinite(last)&&last-created>120000;
+}
 async function requireManager(request){
   const uid=request.auth?.uid;if(!uid)throw new HttpsError('unauthenticated','Faça login novamente.');
   const snapshot=await db.doc(`users/${uid}`).get();const data=snapshot.data()||{};
@@ -44,6 +48,7 @@ exports.adminUpdateVolunteerEmail=onCall(async request=>{
   if(access.firstPortalAccessAt)throw new HttpsError('failed-precondition','O e-mail só pode ser alterado antes do primeiro acesso.');
   let oldAuthUser=null;
   try{oldAuthUser=await auth.getUser(uid)}catch{throw new HttpsError('not-found','Conta de autenticação não encontrada.')}
+  if(legacyAccountAlreadyUsed(oldAuthUser))throw new HttpsError('failed-precondition','O e-mail só pode ser alterado antes do primeiro acesso.');
   const oldEmail=normalizeEmail(oldAuthUser.email||access.email||'');
   if(oldEmail===email)return {email};
   try{await auth.updateUser(uid,{email,emailVerified:false})}
