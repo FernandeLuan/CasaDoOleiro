@@ -1,0 +1,27 @@
+/* Round 19 — gênero na ocupação, destaque de pendências e acabamento da Conta. */
+.occupancy-screen-legend{margin-bottom:22px!important;gap:14px!important}
+.occupancy-person-dot.male,.legend-dot.male{background:#527fb4!important}
+.occupancy-person-dot.female,.legend-dot.female{background:#b86f94!important}
+.occupancy-person-dot.couple,.occupancy-person-dot.other,.legend-dot.couple{background:#8b9490!important}
+
+.planning-day-card.review-day-warning{background:#fff2d7!important;border-color:#ead29b!important}
+.planning-day-card.review-day-info{background:#e5f0f7!important;border-color:#c7dce9!important}
+.planning-day-card.review-day-warning .planning-day-content,.planning-day-card.review-day-info .planning-day-content{background:transparent!important}
+
+.person-title-line{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}
+.person-title-line h2{min-width:0}
+.person-title-line .badge{flex:0 0 auto}
+.account-person-gender{display:flex!important;align-items:center;gap:7px!important;margin-top:3px}
+.account-person-gender>span{font-size:.6rem!important;color:var(--muted)!important}
+.account-inline-edit{border:0;background:transparent;color:var(--primary);font:inherit;font-size:.58rem;font-weight:600;padding:2px 0}
+.account-registration-card{display:grid;gap:8px}
+.account-registration-link{display:inline-flex;align-items:center;gap:6px;color:var(--primary);font-size:.68rem;font-weight:600;text-decoration:none;overflow-wrap:anywhere}
+.account-registration-link i{font-size:.58rem}
+.account-registration-card .account-card-head>div{min-width:0}
+
+.new-candidate-form select[id^="ncGender"]{min-height:44px}
+
+@media(max-width:390px){
+  .occupancy-screen-legend{margin-bottom:20px!important;column-gap:12px!important;row-gap:8px!important}
+  .person-title-line{gap:6px}
+}
