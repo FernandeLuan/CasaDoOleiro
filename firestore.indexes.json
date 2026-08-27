@@ -113,6 +113,14 @@
       "collectionGroup": "activity_sessions",
       "queryScope": "COLLECTION",
       "fields": [
+        { "fieldPath": "applicationId", "order": "ASCENDING" },
+        { "fieldPath": "activityId", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "activity_sessions",
+      "queryScope": "COLLECTION",
+      "fields": [
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "date", "order": "ASCENDING" }
       ]
