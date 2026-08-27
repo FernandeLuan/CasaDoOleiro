@@ -1,0 +1,16 @@
+/* Round 20 — alinhamento fino de status, Conta, Agenda e Home do portal. */
+.candidate-status-row{display:flex!important;align-items:center!important;gap:6px!important;flex-wrap:wrap!important}
+.candidate-deadline-inline{display:inline-flex;align-items:center;gap:4px;font-size:.58rem;color:var(--warning);font-weight:600;line-height:1.2}
+.candidate-deadline-inline i{font-size:.55rem}
+
+.account-person-gender{margin-top:0!important;min-height:0!important;line-height:1.2!important}
+.account-person-gender>span{font-size:.62rem!important;line-height:1.2!important}
+
+.session-detail-modal .modal-action-row{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important;width:100%!important}
+.session-detail-modal .modal-action-row .btn{width:100%!important;min-width:0!important;padding-left:6px!important;padding-right:6px!important;white-space:nowrap!important;justify-content:center!important}
+
+.home-unit-copy .home-unit-label{display:block;font-size:.67rem!important;line-height:1.25;margin:0 0 2px!important;overflow-wrap:anywhere}
+
+@media(max-width:350px){
+  .session-detail-modal .modal-action-row .btn{font-size:.58rem!important;padding-left:4px!important;padding-right:4px!important}
+}
