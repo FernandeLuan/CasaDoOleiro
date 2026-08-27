@@ -20,6 +20,10 @@
 .selection-meeting-actions,.selection-final-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .selection-meeting-actions .btn,.selection-final-actions .btn{width:100%;min-width:0;min-height:43px;justify-content:center;text-align:center}
 
+/* Portal: proposta aprovada que voltou para ajuste. Reajustar e Excluir sempre ocupam duas colunas iguais. */
+.post-approval-proposal .candidate-session-actions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important;width:100%!important;align-items:stretch!important}
+.post-approval-proposal .candidate-session-actions .btn{width:100%!important;min-width:0!important;min-height:42px!important;justify-content:center!important;text-align:center!important;margin:0!important}
+
 /* Safari/iPhone: o date nativo usa uma string localizada longa. Em telas estreitas,
    Data e Horário ficam empilhados para não depender da largura intrínseca do WebKit. */
 .field-row>.field{min-width:0}
