@@ -73,11 +73,17 @@ jobs:
           grep -q 'declaredEmpty' js/portal/app.js
           grep -q 'openAdminPlanningActivity' js/admin/refinements-r20.js
           grep -q 'managerUpdateSession' js/admin/refinements-r20.js
-          grep -q "sessionStatus:'confirmed'" js/admin/refinements-r20.js
+          grep -q 'manager_confirmed' js/services/planning-r22-service.js
           grep -q 'requestAdminDeletePlanningSession' js/admin/refinements-r20.js
+          grep -q "where('status','==','confirmed')" js/services/selection-flow-r25-service.js
+          grep -q 'activity_sessions/operational-schedule' js/services/selection-flow-r25-service.js
+          grep -q 'selection/planning-docs' js/services/selection-flow-r25-service.js
+          grep -q 'A consulta ampla foi bloqueada para proteger a cota do Firestore' js/services/selection-flow-r25-service.js
+          grep -q 'hydrateCandidatePlanning(p.id,{force:true})' js/admin/selection-flow-r25.js
           grep -q '../js/services/planning-r23-service.js' admin/index.html
           grep -q '../js/services/planning-r23-service.js' portal/index.html
-          grep -q '../js/portal/refinements-r23.js' portal/index.html
+          grep -q '../js/services/selection-flow-r25-service.js' admin/index.html
+          grep -q '../js/services/selection-flow-r25-service.js' portal/index.html
           if grep -RInE 'usando leitura compatível|leitura compatível temporária' js/services; then
             echo 'Unsafe Firestore wide-query fallback found in services.'
             exit 1
@@ -97,6 +103,27 @@ jobs:
           grep -q 'participantMarksFirstAccess' firestore.rules
           grep -q '../js/services/admin-access-service.js' admin/index.html
           grep -q '../js/admin/access-management.js' admin/index.html
+
+      - name: Check selection lifecycle
+        shell: bash
+        run: |
+          grep -q "status:'meeting'" js/services/selection-flow-r25-service.js
+          grep -q "status:'plan_approved'" js/services/selection-flow-r25-service.js
+          grep -q 'scheduleSelectionMeeting' js/services/selection-flow-r25-service.js
+          grep -q 'completeSelectionMeeting' js/services/selection-flow-r25-service.js
+          grep -q 'finalizeSelection' js/services/selection-flow-r25-service.js
+          grep -q "status:'rejected'" js/services/selection-flow-r25-service.js
+          grep -q 'Aprovar candidato' js/admin/selection-flow-r25.js
+          grep -q 'Não aprovar' js/admin/selection-flow-r25.js
+          grep -q 'Motivo interno da não aprovação' js/admin/selection-flow-r25.js
+          grep -q 'selection-flow-card' js/admin/selection-flow-r25.js
+          grep -q 'Próximos compromissos' js/portal/selection-flow-r25.js
+          grep -q 'Entrar na reunião' js/portal/selection-flow-r25.js
+          grep -q 'candidateEditable' firestore.rules
+          grep -q 'managerCreated' firestore.rules
+          grep -q '"status"' firestore.indexes.json
+          grep -q '../js/admin/selection-flow-r25.js' admin/index.html
+          grep -q '../js/portal/selection-flow-r25.js' portal/index.html
 
       - name: Check post-approval proposal workflow
         shell: bash
@@ -134,6 +161,8 @@ jobs:
           grep -q 'aria-busy' js/portal/refinements-r23.js
           grep -q 'Reenviando' js/portal/refinements-r23.js
           grep -q 'Enviando' js/portal/refinements-r23.js
+          grep -q 'deleteSession(session.id' js/portal/selection-flow-r25.js
+          grep -q 'applications.update(application.id' js/portal/selection-flow-r25.js
           grep -q 'Digite para buscar o país' js/admin/candidate-form.js
           grep -q 'overscroll-behavior-y:none' css/round6.css
           grep -q 'participantGenders' js/services/onboarding-service.js
@@ -144,7 +173,8 @@ jobs:
           grep -q 'managerCreated' js/portal/refinements-r20.js
           grep -q 'Adicione uma atividade para enviar' js/portal/refinements-r20.js
           grep -q 'participantMayResetEmptyAdjustment' firestore.rules
-          grep -q '../js/admin/refinements-r23.js' admin/index.html
+          grep -q '../js/shared/i18n-r25.js' admin/index.html
+          grep -q '../js/shared/i18n-r25.js' portal/index.html
           grep -q 'format-detection' admin/index.html
           grep -q 'format-detection' portal/index.html
 
