@@ -57,6 +57,20 @@ jobs:
             exit 1
           fi
 
+      - name: Check Firestore query budget
+        shell: bash
+        run: |
+          grep -q 'PLAN_CACHE_MS=5\*60\*1000' js/admin/refactor-r18.js
+          grep -q "listSessions({applicationId:p.id,from:dates\[0\],to:dates\[dates.length-1\]})" js/admin/refactor-r18.js
+          grep -q 'A consulta ampla foi bloqueada para proteger a cota do Firestore' js/services/planning-service.js
+          grep -q 'OleiroQueryMetrics' js/services/planning-service.js
+          grep -q 'openAdminPlanningActivity' js/admin/refinements-r20.js
+          grep -q 'updateAdminPlanCacheAfterCreate' js/admin/refinements-r20.js
+          if grep -q 'usando leitura compatível temporária' js/services/planning-service.js; then
+            echo 'Unsafe Firestore wide-query fallback found.'
+            exit 1
+          fi
+
       - name: Check secure account administration
         shell: bash
         run: |
@@ -104,6 +118,7 @@ jobs:
           grep -q 'registrationLink' js/services/onboarding-service.js
           grep -q 'review-day-warning' js/admin/refinements-r19.js
           grep -q 'Voltar ao calendário' js/admin/refinements-r19.js
+          grep -q 'home-unit-support-link' js/portal/refinements-r20.js
           grep -q 'format-detection' admin/index.html
           grep -q 'format-detection' portal/index.html
 
