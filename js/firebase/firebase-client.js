@@ -10,16 +10,18 @@
     const config=window.OLEIRO_FIREBASE_CONFIG;
     if(!hasConfig(config))return {configured:false};
 
-    const [appModule,authModule,firestoreModule]=await Promise.all([
+    const [appModule,authModule,firestoreModule,functionsModule]=await Promise.all([
       import(`https://www.gstatic.com/firebasejs/${SDK_VERSION}/firebase-app.js`),
       import(`https://www.gstatic.com/firebasejs/${SDK_VERSION}/firebase-auth.js`),
-      import(`https://www.gstatic.com/firebasejs/${SDK_VERSION}/firebase-firestore.js`)
+      import(`https://www.gstatic.com/firebasejs/${SDK_VERSION}/firebase-firestore.js`),
+      import(`https://www.gstatic.com/firebasejs/${SDK_VERSION}/firebase-functions.js`)
     ]);
 
     const app=appModule.getApps().length?appModule.getApp():appModule.initializeApp(config);
     const auth=authModule.getAuth(app);
     const db=firestoreModule.getFirestore(app);
-    return {configured:true,app,auth,db,modules:{app:appModule,auth:authModule,firestore:firestoreModule}};
+    const functions=functionsModule.getFunctions(app,'southamerica-east1');
+    return {configured:true,app,auth,db,functions,modules:{app:appModule,auth:authModule,firestore:firestoreModule,functions:functionsModule}};
   }
 
   window.OleiroFirebase={
