@@ -10,18 +10,30 @@
     const config=window.OLEIRO_FIREBASE_CONFIG;
     if(!hasConfig(config))return {configured:false};
 
-    const [appModule,authModule,firestoreModule,functionsModule]=await Promise.all([
+    /* Auth e Firestore são críticos para o bootstrap. Functions é administrativo e fica lazy. */
+    const [appModule,authModule,firestoreModule]=await Promise.all([
       import(`https://www.gstatic.com/firebasejs/${SDK_VERSION}/firebase-app.js`),
       import(`https://www.gstatic.com/firebasejs/${SDK_VERSION}/firebase-auth.js`),
-      import(`https://www.gstatic.com/firebasejs/${SDK_VERSION}/firebase-firestore.js`),
-      import(`https://www.gstatic.com/firebasejs/${SDK_VERSION}/firebase-functions.js`)
+      import(`https://www.gstatic.com/firebasejs/${SDK_VERSION}/firebase-firestore.js`)
     ]);
 
     const app=appModule.getApps().length?appModule.getApp():appModule.initializeApp(config);
     const auth=authModule.getAuth(app);
     const db=firestoreModule.getFirestore(app);
-    const functions=functionsModule.getFunctions(app,'southamerica-east1');
-    return {configured:true,app,auth,db,functions,modules:{app:appModule,auth:authModule,firestore:firestoreModule,functions:functionsModule}};
+    const context={configured:true,app,auth,db,functions:null,modules:{app:appModule,auth:authModule,firestore:firestoreModule,functions:null}};
+    let functionsPromise=null;
+    context.ensureFunctions=async function(){
+      if(context.functions&&context.modules.functions)return {functions:context.functions,module:context.modules.functions};
+      if(!functionsPromise){
+        functionsPromise=import(`https://www.gstatic.com/firebasejs/${SDK_VERSION}/firebase-functions.js`).then(functionsModule=>{
+          context.modules.functions=functionsModule;
+          context.functions=functionsModule.getFunctions(app,'southamerica-east1');
+          return {functions:context.functions,module:functionsModule};
+        }).catch(error=>{functionsPromise=null;throw error});
+      }
+      return functionsPromise;
+    };
+    return context;
   }
 
   window.OleiroFirebase={
