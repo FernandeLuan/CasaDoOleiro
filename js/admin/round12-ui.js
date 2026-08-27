@@ -2,6 +2,7 @@
 (function round12Admin(){
   const basePersonCompact=personCompact;
   const basePersonTabContent=personTabContent;
+  const baseManagerHome=managerHome;
 
   function safe(value){return encodeURIComponent(String(value??''))}
   function compactDay(date){try{return new Intl.DateTimeFormat(typeof currentLocale==='function'?currentLocale():'pt-BR',{day:'2-digit',month:'2-digit'}).format(new Date(`${date}T12:00:00`))}catch{return fmtDate(date,true)}}
@@ -10,6 +11,14 @@
   function pendingSessionChange(p){return (state.pendingChangeRequests||[]).find(row=>String(row.applicationId)===String(p?.id))||null}
   function requestedDayAdjustment(p){return Object.entries(p?.dayAdjustments||{}).filter(([,value])=>!value?.status||value.status==='requested').map(([date])=>date).sort()[0]||null}
   function adjustmentTargetDate(p){return pendingSessionChange(p)?.date||requestedDayAdjustment(p)||null}
+
+  /* Abrir a fila força uma atualização somente nesse momento, sem polling. */
+  window.openManagerAdjustments=async function(){
+    state.candidateFilter='adjustments';
+    navigateManager('volunteer');
+    try{await hydrateManagerPendingChanges({force:true});if(state.managerPage==='volunteer'&&state.candidateFilter==='adjustments')render()}catch(error){console.error(error)}
+  };
+  managerHome=function(){return baseManagerHome().replace("state.candidateFilter='adjustments';navigateManager('volunteer')","openManagerAdjustments()")};
 
   /* Na fila Ajustes, abrir já no planejamento e no dia que exige decisão. */
   window.openCandidateAdjustmentAt=async function(id,date=''){
@@ -60,6 +69,7 @@
     return `<div class="activity-card clickable" onclick='openManagerSession(${JSON.stringify(s.sessionId)})'><div class="activity-row"><div><h4>${a.time||'—'} • ${escapeHtml(a.name||'Atividade')}</h4><p>${Number(a.duration)||0} min • ${escapeHtml(a.period||'Sem preferência')} • ${escapeHtml(a.participation||'Livre')}</p>${description?`<p class="admin-session-description"><strong>Descrição:</strong> ${escapeHtml(description)}</p>`:''}<div class="session-person"><i class="fa-regular fa-user"></i>${escapeHtml(a.owner||'Voluntário')}</div></div><div style="display:flex;align-items:flex-start;gap:7px">${badge(label,type)}<i class="fa-solid fa-chevron-right chevron"></i></div></div><div class="item-meta">${badge(s.group||'A definir','primary')}</div></div>`;
   };
 
+  window.managerHome=managerHome;
   window.personCompact=personCompact;
   window.personTabContent=personTabContent;
   window.adminPlanningDayCard=adminPlanningDayCard;
