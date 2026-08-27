@@ -19,8 +19,9 @@
 
 /* Depois que a pendência deixa de existir, nenhuma dessas classes é renderizada e o verde padrão volta normalmente. */
 
-/* Card de unidade usa o mesmo respiro acima e abaixo. */
-.home-unit-support{margin-top:12px!important;margin-bottom:12px!important}
+/* O card de unidade é anexado após uma .section que já possui 22px de margem inferior.
+   Compensamos essa margem para manter aproximadamente 12px entre a lista anterior e o card. */
+.home-unit-support{margin-top:-10px!important;margin-bottom:12px!important}
 
 @media(max-width:390px){
   .day-review-summary{margin-left:6px;gap:4px}
