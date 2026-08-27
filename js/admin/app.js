@@ -59,13 +59,15 @@ async function refreshManagerApplications({force=false}={}){return loadManagerCa
 async function hydrateManagerDashboardData(){
   if(!window.OleiroServices?.applications)return;
   const service=window.OleiroServices.applications;
-  const [analysis,adjustments,arrivals,departures]=await Promise.all([
+  const results=await Promise.allSettled([
     service.countStatus?.('analysis')??0,service.countStatus?.('adjustments')??0,
     service.listUpcoming?.({field:'stayStart',from:_oleiroToday,limit:3})??[],
     service.listUpcoming?.({field:'stayEnd',from:_oleiroToday,limit:3})??[]
   ]);
-  state.dashboardCounts={analysis:Number(analysis)||0,adjustments:Number(adjustments)||0};
-  state.dashboardArrivals=arrivals||[];state.dashboardDepartures=departures||[];
+  const value=(index,fallback)=>results[index]?.status==='fulfilled'?results[index].value:fallback;
+  results.forEach((result,index)=>{if(result.status==='rejected')console.warn(['Contagem em análise','Contagem de ajustes','Próximas chegadas','Próximas saídas'][index]+' indisponível:',result.reason)});
+  state.dashboardCounts={analysis:Number(value(0,state.dashboardCounts?.analysis||0))||0,adjustments:Number(value(1,state.dashboardCounts?.adjustments||0))||0};
+  state.dashboardArrivals=value(2,state.dashboardArrivals||[])||[];state.dashboardDepartures=value(3,state.dashboardDepartures||[])||[];
   if(state.managerPage==='home')render();
 }
 
@@ -73,7 +75,8 @@ async function hydrateManagerBaseData(){
   const unitsResult=await (window.OleiroServices?.units?.list?window.OleiroServices.units.list({includeInactive:true}):[]);
   state.units=unitsResult||[];
   state.candidateFilter=state.candidateFilter||'approved';state.candidateUnit=state.candidateUnit||'all';state.candidateSearch=state.candidateSearch||'';
-  await Promise.all([loadManagerCandidates({force:true}),hydrateManagerDashboardData()]);
+  await loadManagerCandidates({force:true});
+  hydrateManagerDashboardData().catch(error=>console.warn('Dados secundários do painel indisponíveis:',error));
 }
 
 async function hydrateManagerData(){await hydrateManagerBaseData();return state.candidates}
@@ -92,9 +95,9 @@ async function bootManager(){
   try{
     await hydrateManagerBaseData();if(state.managerPage==='home')render();
     processExpiredCandidatesOnStartup?.().then(()=>hydrateManagerDashboardData()).catch(error=>console.error('Falha ao processar prazos:',error));
-    hydrateManagerSchedule(_oleiroToday,_oleiroToday).then(()=>{if(state.managerPage==='home')render()}).catch(error=>console.error('Falha ao carregar agenda de hoje:',error));
-    hydrateManagerPendingChanges().catch(console.error);
-  }catch(error){console.error('Falha ao carregar dados da gestão:',error);showToast('Não foi possível atualizar os dados da gestão.')}
+    hydrateManagerSchedule(_oleiroToday,_oleiroToday).then(()=>{if(state.managerPage==='home')render()}).catch(error=>console.warn('Agenda de hoje indisponível:',error));
+    hydrateManagerPendingChanges().catch(error=>console.warn('Pendências indisponíveis:',error));
+  }catch(error){console.error('Falha ao carregar a lista principal da gestão:',error);showToast('Não foi possível carregar a lista de voluntários. Tente novamente.')}
 }
 
 document.addEventListener('visibilitychange',()=>{
