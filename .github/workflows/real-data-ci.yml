@@ -64,10 +64,19 @@ jobs:
           grep -q "listSessions({applicationId:p.id,from:dates\[0\],to:dates\[dates.length-1\]})" js/admin/refactor-r18.js
           grep -q 'A consulta ampla foi bloqueada para proteger a cota do Firestore' js/services/planning-service.js
           grep -q 'OleiroQueryMetrics' js/services/planning-service.js
+          grep -q 'hasSessions' js/services/planning-r22-service.js
+          grep -q "firestore.limit(1)" js/services/planning-r22-service.js
+          grep -q 'activity-delete-check' js/services/planning-r22-service.js
+          grep -q 'getCountFromServer' js/services/planning-r22-service.js
+          grep -q 'declaredEmpty' js/portal/app.js
           grep -q 'openAdminPlanningActivity' js/admin/refinements-r20.js
-          grep -q 'updateAdminPlanCacheAfterCreate' js/admin/refinements-r20.js
-          if grep -q 'usando leitura compatível temporária' js/services/planning-service.js; then
-            echo 'Unsafe Firestore wide-query fallback found.'
+          grep -q 'managerUpdateSession' js/admin/refinements-r20.js
+          grep -q "sessionStatus:'confirmed'" js/admin/refinements-r20.js
+          grep -q 'requestAdminDeletePlanningSession' js/admin/refinements-r20.js
+          grep -q '../js/services/planning-r22-service.js' admin/index.html
+          grep -q '../js/services/planning-r22-service.js' portal/index.html
+          if grep -RInE 'usando leitura compatível|leitura compatível temporária' js/services; then
+            echo 'Unsafe Firestore wide-query fallback found in services.'
             exit 1
           fi
 
@@ -119,6 +128,9 @@ jobs:
           grep -q 'review-day-warning' js/admin/refinements-r19.js
           grep -q 'Voltar ao calendário' js/admin/refinements-r19.js
           grep -q 'home-unit-support-link' js/portal/refinements-r20.js
+          grep -q 'managerCreated' js/portal/refinements-r20.js
+          grep -q 'Adicione uma atividade para enviar' js/portal/refinements-r20.js
+          grep -q 'participantMayResetEmptyAdjustment' firestore.rules
           grep -q 'format-detection' admin/index.html
           grep -q 'format-detection' portal/index.html
 
