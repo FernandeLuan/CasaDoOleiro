@@ -4,6 +4,7 @@
   async function callable(name,payload){
     return services.run(async()=>{
       const context=await services.firebase();
+      try{if(typeof context.ensureFunctions==='function')await context.ensureFunctions()}catch(error){console.error('Falha ao carregar Firebase Functions:',error);throw new Error('Serviço administrativo indisponível.')}
       const functionsModule=context.modules?.functions;if(!context.functions||!functionsModule?.httpsCallable)throw new Error('Serviço administrativo indisponível.');
       try{const response=await functionsModule.httpsCallable(context.functions,name)(payload||{});return response?.data||null}
       catch(error){
