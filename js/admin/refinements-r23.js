@@ -4,7 +4,7 @@
 
   function reviewActions(p){
     const id=safe(p.id);
-    return `<button class="btn btn-plan-clear-warning" type="button" onclick="requestClearCandidatePlanning('${id}')"><i class="fa-solid fa-broom"></i>Limpar</button><button class="btn btn-danger" type="button" onclick="rejectCandidate(decodeURIComponent('${id}'))"><i class="fa-solid fa-xmark"></i>Recusar</button><button class="btn btn-primary" type="button" onclick="approveCandidate(decodeURIComponent('${id}'))"><i class="fa-solid fa-check"></i>Aprovar</button>`;
+    return `<button class="btn btn-plan-clear-warning" type="button" onclick="requestClearCandidatePlanning('${id}')"><i class="fa-solid fa-broom"></i>Limpar</button><button class="btn btn-primary" type="button" onclick="approveCandidate(decodeURIComponent('${id}'))"><i class="fa-solid fa-check"></i>Aprovar</button>`;
   }
 
   function standardizeReviewFooter(p){
