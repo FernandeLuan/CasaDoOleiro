@@ -1,6 +1,6 @@
 /* Round 25 — reunião, decisão final e ações de planejamento. */
-.admin-review-actions-r24{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important;margin-top:18px!important;padding-top:16px!important;border-top:1px solid var(--border)!important}
-.admin-review-actions-r24 .btn{width:100%!important;min-width:0!important;min-height:48px!important}
+.admin-review-actions-r24{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:10px!important;width:min(100%,520px)!important;margin:18px auto 0!important;padding-top:16px!important;border-top:1px solid var(--border)!important;align-items:stretch!important}
+.admin-review-actions-r24 .btn{width:100%!important;min-width:0!important;min-height:48px!important;justify-content:center!important}
 .btn-plan-clear-warning{background:#fff2d7!important;color:var(--warning)!important;border:1px solid #ead29b!important}
 .admin-plan-clear-r23{margin-top:18px!important;padding-top:4px!important}
 .admin-plan-clear-r23 .btn{min-height:48px!important}
@@ -15,9 +15,15 @@
 .selection-meeting-details span{display:block;font-size:.55rem;color:var(--muted);margin-bottom:3px}
 .selection-meeting-details strong{display:block;font-size:.65rem;overflow-wrap:anywhere}
 .selection-meeting-notes{font-size:.65rem;line-height:1.5;color:var(--muted);white-space:pre-wrap}
+.selection-meeting-notes strong,.selection-meeting-card>p strong{color:var(--text);font-weight:600}
 .selection-meeting-link{min-height:40px!important}
 .selection-meeting-actions,.selection-final-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .selection-meeting-actions .btn,.selection-final-actions .btn{width:100%;min-width:0;min-height:43px}
+
+/* Safari/iPhone pode impor largura intrínseca em date/time. Mantém ambos dentro do grid/modal. */
+#selectionMeetingDate,#selectionMeetingTime{display:block;width:100%!important;min-width:0!important;max-width:100%!important;box-sizing:border-box!important}
+.field:has(#selectionMeetingDate),.field:has(#selectionMeetingTime){min-width:0!important;max-width:100%!important}
+.field-row:has(#selectionMeetingDate){grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;min-width:0!important;max-width:100%!important}
 
 .selection-portal-meeting{margin-bottom:22px}
 .selection-meeting-card{display:grid;gap:11px}
@@ -30,6 +36,10 @@
 .selection-meeting-card-meta span{display:inline-flex;align-items:center;gap:5px}
 .selection-meeting-card>p{font-size:.64rem;color:var(--muted);line-height:1.5;white-space:pre-wrap}
 
+@media(max-width:480px){
+  .field-row:has(#selectionMeetingDate){gap:8px!important}
+  #selectionMeetingDate,#selectionMeetingTime{font-size:16px!important}
+}
 @media(max-width:390px){
   .selection-meeting-details{grid-template-columns:1fr 1fr}
   .selection-meeting-details>div:last-child{grid-column:1/-1}
