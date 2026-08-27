@@ -1,18 +1,9 @@
-/* Round 22/25 — operações administrativas e validações de planejamento com orçamento de leitura limitado. */
+/* Round 22/26 — operações administrativas e validações de planejamento com orçamento de leitura limitado. */
 (function planningR22Service(){
   const services=window.OleiroServices=window.OleiroServices||{};
   if(!services.planning)return;
 
-  const baseSaveActivity=services.planning.saveActivity?.bind(services.planning);
   const baseSubmitPlanning=services.applications?.submitPlanning?.bind(services.applications);
-
-  function metric(name,started,count,meta={}){
-    const row={name,ms:Date.now()-started,count:Number(count)||0,...meta,at:new Date().toISOString()};
-    window.OleiroQueryMetrics=window.OleiroQueryMetrics||[];
-    window.OleiroQueryMetrics.push(row);
-    if(window.OleiroQueryMetrics.length>40)window.OleiroQueryMetrics.splice(0,window.OleiroQueryMetrics.length-40);
-    if(row.ms>1200)console.warn(`[Firestore lento] ${name}: ${row.ms}ms • ${row.count} docs`,meta);
-  }
   function cleanGroup(value){const group=String(value||'').trim();return ['A','B','C','D','Livre'].includes(group)?group:null}
 
   services.planning.hasSessions=async function({applicationId}={}){
@@ -24,42 +15,10 @@
         firestore.where('applicationId','==',String(applicationId)),
         firestore.limit(1)
       ));
-      metric('activity_sessions/exists',started,snapshot.size,{applicationId:String(applicationId),limit:1});
+      services.recordQuery?.('activity_sessions/exists',started,snapshot.size,{applicationId:String(applicationId),limit:1});
       return !snapshot.empty;
     },{loading:false});
   };
-
-  if(baseSaveActivity){
-    services.planning.saveActivity=async function(args={}){
-      const result=await baseSaveActivity(args);
-      const groupRequested=Object.prototype.hasOwnProperty.call(args,'groupId');
-      const managerCreated=args.managerCreated===true;
-      const markCounts=args.updateApplicationCounts===true;
-      if(!groupRequested&&!managerCreated&&!markCounts)return result;
-
-      await services.run(async()=>{
-        const context=await services.firebase(),{firestore}=context.modules,batch=firestore.writeBatch(context.db),now=firestore.serverTimestamp();
-        const groupId=cleanGroup(args.groupId);let changed=false;
-        (result?.sessions||[]).forEach(session=>{
-          const patch={};
-          if(groupRequested)patch.groupId=groupId;
-          if(managerCreated){patch.managerCreated=true;patch.status='manager_confirmed'}
-          if(!Object.keys(patch).length)return;
-          batch.update(firestore.doc(context.db,'activity_sessions',String(session.id)),{...patch,updatedAt:now});
-          Object.assign(session,patch);changed=true;
-        });
-        if(managerCreated&&result?.activityId){
-          batch.update(firestore.doc(context.db,'activities',String(result.activityId)),{managerCreated:true,status:'manager_confirmed',updatedAt:now});
-          if(result.activity){result.activity.managerCreated=true;result.activity.status='manager_confirmed'}changed=true;
-        }
-        if(markCounts&&args.applicationId){
-          batch.update(firestore.doc(context.db,'applications',String(args.applicationId)),{planningCountVersion:1,updatedAt:now});changed=true;
-        }
-        if(changed)await batch.commit();
-      },{loading:false});
-      return result;
-    };
-  }
 
   services.planning.managerUpdateSession=async function({sessionId,activityId,patch={}}={}){
     if(!sessionId)throw new Error('Sessão não encontrada.');
@@ -88,7 +47,7 @@
             firestore.where('activityId','==',actId),
             firestore.limit(2)
           ));
-          metric('activity_sessions/activity-delete-check',started,occurrenceSnapshot.size,{applicationId:appId,activityId:actId,limit:2});
+          services.recordQuery?.('activity_sessions/activity-delete-check',started,occurrenceSnapshot.size,{applicationId:appId,activityId:actId,limit:2});
           deletedActivity=!occurrenceSnapshot.docs.some(doc=>String(doc.id)!==String(sessionId));
         }
       }
@@ -105,7 +64,7 @@
             firestore.getCountFromServer(firestore.query(firestore.collection(context.db,'activity_sessions'),firestore.where('applicationId','==',appId))),
             firestore.getCountFromServer(firestore.query(firestore.collection(context.db,'activities'),firestore.where('applicationId','==',appId)))
           ]);
-          nextSessionCount=Math.max(0,(Number(sessionCountSnapshot.data().count)||0)-1);nextActivityCount=Math.max(0,(Number(activityCountSnapshot.data().count)||0)-(deletedActivity?1:0));metric('planning/delete-counts',started,2,{applicationId:appId,aggregations:2});
+          nextSessionCount=Math.max(0,(Number(sessionCountSnapshot.data().count)||0)-1);nextActivityCount=Math.max(0,(Number(activityCountSnapshot.data().count)||0)-(deletedActivity?1:0));services.recordQuery?.('planning/delete-counts',started,2,{applicationId:appId,aggregations:2});
         }
       }
 
