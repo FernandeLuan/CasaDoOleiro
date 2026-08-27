@@ -1,16 +1,8 @@
-/* Round 15 — consultas focadas e operações consistentes. */
+/* Round 15 — operações consistentes que ainda complementam os serviços-base. */
 (function consistencyR15Services(){
   const services=window.OleiroServices=window.OleiroServices||{};
-  const baseListSessions=services.planning?.listSessions?.bind(services.planning);
   const baseSaveActivity=services.planning?.saveActivity?.bind(services.planning);
 
-  function iso(value){
-    if(!value)return '';
-    if(typeof value==='string')return value.slice(0,10);
-    if(typeof value?.toDate==='function')return value.toDate().toISOString().slice(0,10);
-    return '';
-  }
-  function addIsoDays(value,days){const d=new Date(`${value}T12:00:00`);d.setDate(d.getDate()+days);return d.toISOString().slice(0,10)}
   function stayMonths(start,end){
     if(!start||!end)return [];
     const from=new Date(`${start}T12:00:00`),to=new Date(`${end}T12:00:00`),out=[];
@@ -32,23 +24,8 @@
       const fallback=await firestore.getDocs(firestore.query(collection,firestore.where('applicationId','==',String(applicationId))));return map(fallback);
     }
   }
-  function approvedInitialRange(){
-    const app=window.state?.currentApplication||{},start=iso(app.stayStart),end=iso(app.stayEnd);if(!start||!end)return null;
-    const today=typeof _oleiroToday==='string'?_oleiroToday:new Date().toISOString().slice(0,10),target=today>=start&&today<=end?today:start;
-    const total=Math.max(0,Math.floor((new Date(`${target}T12:00:00`)-new Date(`${start}T12:00:00`))/86400000)),page=Math.floor(total/7),from=addIsoDays(start,page*7),to=[addIsoDays(from,6),end].sort()[0];
-    window.state.volunteerAgendaPageIndex=page;return {from,to};
-  }
 
-  if(services.planning&&baseListSessions){
-    services.planning.listSessions=async function({applicationId,from,to}={}){
-      if(!applicationId)return [];
-      if(from||to)return services.run(()=>focusedSessions(applicationId,from||'',to||''),{loading:false});
-      if(window.state?.role==='volunteer'&&window.state?.volunteerMode==='approved'){
-        const range=approvedInitialRange();if(range)return services.run(()=>focusedSessions(applicationId,range.from,range.to),{loading:false});
-      }
-      return baseListSessions({applicationId,from,to});
-    };
-
+  if(services.planning){
     if(baseSaveActivity){
       services.planning.saveActivity=async function(args={}){
         if(args.postApprovalProposal===true&&args.activityId&&args.applicationId){
