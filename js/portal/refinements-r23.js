@@ -1,4 +1,4 @@
-/* Round 23 — sincronização pontual após mover e acabamento de consistência do planejamento. */
+/* Round 23/24 — sincronização pontual após mover e feedback de envio do planejamento. */
 (function refinementsR23Portal(){
   function sessionById(id){return (state.sessions||[]).find(row=>String(row.id||row.sessionId)===String(id))||null}
   function activityFor(session){return (state.activities||[]).find(row=>String(row.id)===String(session?.activityId))||{id:session?.activityId,name:session?.activityName||'Atividade',time:session?.time||''}}
@@ -38,4 +38,20 @@
       showToast(byVolunteer&&session.status==='confirmed'?'Mudança enviada para confirmação.':'Cronograma atualizado.');
     }catch(error){console.error(error);showToast(error?.message||'Não foi possível mover a sessão.');if(button?.isConnected){button.disabled=false;button.textContent=byVolunteer&&session.status==='confirmed'?'Solicitar mudança':'Mover'}}
   };
+
+  /* Enviar planejamento pode envolver uma leitura de existência + gravação. O botão mostra o estado imediatamente e bloqueia duplo envio. */
+  const baseSubmitPlan=window.submitPlan;
+  if(typeof baseSubmitPlan==='function'){
+    window.submitPlan=async function(){
+      const button=app?.querySelector?.('button[onclick="submitPlan()"]')||document.querySelector('button[onclick="submitPlan()"]');
+      if(button?.disabled)return;
+      const wasAdjustment=state.volunteerPlanStatus==='adjustments';
+      const original=button?.innerHTML||'';
+      if(button){button.disabled=true;button.setAttribute('aria-busy','true');button.innerHTML=`<i class="fa-solid fa-circle-notch fa-spin"></i>${wasAdjustment?'Reenviando...':'Enviando...'}`}
+      await baseSubmitPlan();
+      if(button?.isConnected&&state.volunteerPlanStatus!=='submitted'){
+        button.disabled=false;button.removeAttribute('aria-busy');button.innerHTML=original;
+      }
+    };
+  }
 })();
