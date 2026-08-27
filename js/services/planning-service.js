@@ -16,13 +16,20 @@
     return new Map(unique.map(id=>[id,activityCache.get(id)]).filter(([,row])=>row));
   }
 
+  function indexUnavailable(error){return /index|failed-precondition/i.test(`${error?.code||''} ${error?.message||''}`)}
   async function applicationSessions(context,applicationId,{from=null,to=null}={}){
-    const {firestore}=context.modules;const constraints=[firestore.where('applicationId','==',String(applicationId))];
+    const {firestore}=context.modules,collection=firestore.collection(context.db,'activity_sessions'),appId=String(applicationId),constraints=[firestore.where('applicationId','==',appId)];
     if(from)constraints.push(firestore.where('date','>=',String(from)));
     if(to)constraints.push(firestore.where('date','<=',String(to)));
     if(from||to)constraints.push(firestore.orderBy('date','asc'));
-    const snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'activity_sessions'),...constraints));
-    return snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
+    try{
+      const snapshot=await firestore.getDocs(firestore.query(collection,...constraints));return snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
+    }catch(error){
+      if(!(from||to)||!indexUnavailable(error))throw error;
+      console.warn('Índice applicationId + date ainda indisponível; usando leitura compatível temporária.');
+      const fallback=await firestore.getDocs(firestore.query(collection,firestore.where('applicationId','==',appId)));
+      return fallback.docs.map(doc=>({id:doc.id,...doc.data()})).filter(row=>(!from||row.date>=from)&&(!to||row.date<=to));
+    }
   }
 
   services.planning={
@@ -55,11 +62,16 @@
       if(!from||!to)return [];
       return services.run(async()=>{
         const context=await services.firebase();
-        const {firestore}=context.modules;const constraints=[];
-        if(unitId&&unitId!=='all')constraints.push(firestore.where('unitId','==',String(unitId).toLowerCase()));
-        constraints.push(firestore.where('date','>=',from),firestore.where('date','<=',to),firestore.orderBy('date','asc'));
-        const snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'activity_sessions'),...constraints));
-        const sessions=snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
+        const {firestore}=context.modules,collection=firestore.collection(context.db,'activity_sessions'),normalizedUnit=unitId&&unitId!=='all'?String(unitId).toLowerCase():'';
+        const base=[firestore.where('date','>=',from),firestore.where('date','<=',to),firestore.orderBy('date','asc')];let sessions=[];
+        try{
+          const constraints=normalizedUnit?[firestore.where('unitId','==',normalizedUnit),...base]:base;
+          const snapshot=await firestore.getDocs(firestore.query(collection,...constraints));sessions=snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
+        }catch(error){
+          if(!normalizedUnit||!indexUnavailable(error))throw error;
+          console.warn('Índice unitId + date ainda indisponível; usando filtro compatível temporário.');
+          const snapshot=await firestore.getDocs(firestore.query(collection,...base));sessions=snapshot.docs.map(doc=>({id:doc.id,...doc.data()})).filter(row=>String(row.unitId||'').toLowerCase()===normalizedUnit);
+        }
         const missing=sessions.filter(s=>!s.activityName).map(s=>s.activityId);
         const activityMap=missing.length?await fetchActivitiesByIds(context,missing):new Map();
         return sessions.map(session=>{
