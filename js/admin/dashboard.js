@@ -6,14 +6,19 @@ function managerGreeting(){
 }
 function openTodayAgenda(){state.agendaAnchor=_oleiroToday;state.selectedDate=_oleiroToday;state.agendaFrom=_oleiroToday;state.agendaTo=_oleiroToday;navigateManager('agenda')}
 function pendingChangeApplicationIds(){return new Set((state.pendingChangeRequests||[]).map(row=>String(row.applicationId||'')).filter(Boolean))}
-function dashboardCount(status){if(status==='adjustments'){const ids=new Set((state.candidates||[]).filter(p=>p.status==='adjustments').map(p=>String(p.id)));pendingChangeApplicationIds().forEach(id=>ids.add(id));return ids.size}return (state.candidates||[]).filter(p=>p.status===status).length}
+function dashboardCount(status){
+  const base=Number(state.dashboardCounts?.[status])||0;
+  if(status!=='adjustments')return base;
+  const postApproval=new Set((state.pendingChangeRequests||[]).filter(row=>row.reviewKind==='post_approval'||row.status==='change_requested').map(row=>String(row.applicationId||'')).filter(Boolean));
+  return base+postApproval.size;
+}
 function movementDaysLabel(iso){if(!iso)return '';const diff=Math.ceil((new Date(iso+'T12:00:00')-new Date(_oleiroToday+'T12:00:00'))/86400000);return diff===0?'hoje':diff===1?'amanhã':diff>1?`em ${diff} dias`:diff===-1?'ontem':`${Math.abs(diff)} dias atrás`}
-function nextMovements(field,limit=3){return (state.candidates||[]).filter(p=>p.status==='approved'&&!p.inactive&&p[field]&&p[field]>=_oleiroToday).sort((a,b)=>a[field].localeCompare(b[field])).slice(0,limit)}
+function nextMovements(field,limit=3){const rows=field==='from'?(state.dashboardArrivals||[]):(state.dashboardDepartures||[]);return rows.slice(0,limit)}
 function movementList(rows,field){return rows.length?rows.map(p=>miniMove(p.name,fmtDate(p[field],true),movementDaysLabel(p[field]))).join(''):'<div class="empty">Nenhuma movimentação prevista.</div>'}
 function managerHome(){
   const todaySessions=getSessions(_oleiroToday),arrivals=nextMovements('from'),departures=nextMovements('to');
   return `<section class="hero"><div class="eyebrow" style="color:#d9eadf">Gestão</div><h1>${managerGreeting()}</h1><p class="muted">Veja o que precisa da sua atenção e o que acontece hoje na Casa.</p><div class="hero-actions"><button class="btn btn-light" onclick="navigateManager('volunteer')"><i class="fa-solid fa-users"></i>Voluntariado</button><button class="btn btn-outline" style="border-color:rgba(255,255,255,.28);color:white" onclick="openTodayAgenda()"><i class="fa-regular fa-calendar"></i>Ver agenda</button></div></section>
-  <section class="section"><div class="section-head"><div><h2>Pendências</h2><p>Ações que merecem atenção</p></div></div><div class="grid-2 pending-grid">${metric(dashboardCount('analysis'),'fa-clipboard-check','Em análise',"state.candidateFilter='analysis';navigateManager('volunteer')")}${metric(dashboardCount('adjustments'),'fa-rotate','Ajustes',"state.candidateFilter='adjustments';navigateManager('volunteer')")}</div></section>
+  <section class="section"><div class="section-head"><div><h2>Pendências</h2><p>Ações que merecem atenção</p></div></div><div class="grid-2 pending-grid">${metric(dashboardCount('analysis'),'fa-clipboard-check','Em análise',"state.candidateFilter='analysis';navigateManager('volunteer')")}${metric(dashboardCount('adjustments'),'fa-rotate','Ajustes',"openManagerAdjustments()")}</div></section>
   <section class="section"><div class="section-head"><div><h2>Hoje na Casa</h2><p>${longDate(_oleiroToday)}</p></div></div><div class="list">${todaySessions.length?todaySessions.map(s=>agendaItem(s.activity.time,s.activity.name,s.activity.owner,s.group,s.status)).join(''):'<div class="empty">Nenhuma atividade prevista para hoje.</div>'}</div></section>
   <section class="section"><div class="section-head"><div><h2>Próximas movimentações</h2><p>Chegadas e saídas confirmadas</p></div></div><div class="grid-2"><div class="card"><span class="eyebrow">Chegadas</span><div style="margin-top:10px" class="list">${movementList(arrivals,'from')}</div></div><div class="card"><span class="eyebrow">Saídas</span><div style="margin-top:10px" class="list">${movementList(departures,'to')}</div></div></div></section>`;
 }
