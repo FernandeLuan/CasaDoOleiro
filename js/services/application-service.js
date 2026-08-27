@@ -33,21 +33,25 @@
     if(!item||item.profileHydrated)return item;
     const {firestore}=context.modules;const uids=(item.participantUids||[]).map(String).filter(Boolean);
     if(!uids.length)return {...item,profileHydrated:true};
+    const started=Date.now();
     const snapshots=await Promise.all(uids.map(uid=>firestore.getDoc(firestore.doc(context.db,'volunteer_profiles',uid))));
+    services.recordQuery?.('applications/profile-enrichment',started,snapshots.filter(snapshot=>snapshot.exists()).length,{pointReads:uids.length});
     const profiles=snapshots.filter(snapshot=>snapshot.exists()).map(snapshot=>snapshot.data());
     const phones=profiles.map(profile=>profile.phone||profile.whatsapp||'').filter(Boolean);
     return {...item,phone:item.phone||phones.join(' / '),participantPhones:item.participantPhones?.length?item.participantPhones:phones,profileHydrated:true};
   }
 
   async function applicationSessions(context,id){
-    const {firestore}=context.modules;
-    const snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'activity_sessions'),firestore.where('applicationId','==',String(id))));
+    const {firestore}=context.modules,applicationId=String(id),started=Date.now();
+    const snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'activity_sessions'),firestore.where('applicationId','==',applicationId)));
+    services.recordQuery?.('applications/all-sessions',started,snapshot.size,{applicationId});
     return snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
   }
 
   async function applicationActivities(context,id){
-    const {firestore}=context.modules;
-    const snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'activities'),firestore.where('applicationId','==',String(id))));
+    const {firestore}=context.modules,applicationId=String(id),started=Date.now();
+    const snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'activities'),firestore.where('applicationId','==',applicationId)));
+    services.recordQuery?.('applications/all-activities',started,snapshot.size,{applicationId});
     return snapshot.docs.map(doc=>({id:doc.id,ref:doc.ref,...doc.data()}));
   }
 
@@ -60,7 +64,8 @@
         if(term)constraints.push(firestore.where('searchTokens','array-contains',term.slice(0,24)));
         if(cursor)constraints.push(firestore.startAfter(cursor));
         const pageSize=Math.max(1,Math.min(Number(limit)||10,50));constraints.push(firestore.limit(pageSize));
-        const snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'applications'),...constraints));
+        const started=Date.now(),snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'applications'),...constraints));
+        services.recordQuery?.('applications/list-page',started,snapshot.size,{status:status||'all',unit:unit||'all',search:!!term,pageSize,append:!!cursor});
         const items=snapshot.docs.map(mapApplication),last=snapshot.docs.at(-1)||null;
         return {items,nextCursor:snapshot.size===pageSize?last:null,hasMore:snapshot.size===pageSize};
       },{loading:false});
@@ -70,23 +75,24 @@
       if(!status||status==='all')return 0;
       return services.run(async()=>{
         const context=await services.firebase();const {firestore}=context.modules;
-        const q=firestore.query(firestore.collection(context.db,'applications'),firestore.where('status','==',String(status)));
-        if(typeof firestore.getCountFromServer==='function'){const snapshot=await firestore.getCountFromServer(q);return Number(snapshot.data().count)||0}
-        const snapshot=await firestore.getDocs(q);return snapshot.size;
+        if(typeof firestore.getCountFromServer!=='function')throw new Error('Contagem agregada do Firestore indisponível. A leitura ampla foi bloqueada.');
+        const q=firestore.query(firestore.collection(context.db,'applications'),firestore.where('status','==',String(status))),started=Date.now();
+        const snapshot=await firestore.getCountFromServer(q),count=Number(snapshot.data().count)||0;services.recordQuery?.('applications/count-status',started,count,{status:String(status),aggregation:true});return count;
       },{loading:false});
     },
 
     async listUpcoming({field='stayStart',from,limit=3}={}){
       if(!from||!['stayStart','stayEnd'].includes(field))return [];
       return services.run(async()=>{
-        const context=await services.firebase();const {firestore}=context.modules;
+        const context=await services.firebase();const {firestore}=context.modules,max=Math.max(1,Math.min(Number(limit)||3,10)),started=Date.now();
         const snapshot=await firestore.getDocs(firestore.query(
           firestore.collection(context.db,'applications'),
           firestore.where('status','==','approved'),
           firestore.where(field,'>=',String(from)),
           firestore.orderBy(field,'asc'),
-          firestore.limit(Math.max(1,Math.min(Number(limit)||3,10)))
+          firestore.limit(max)
         ));
+        services.recordQuery?.('applications/upcoming',started,snapshot.size,{field,from:String(from),limit:max});
         return snapshot.docs.map(mapApplication).filter(row=>!row.inactive);
       },{loading:false});
     },
@@ -94,20 +100,22 @@
     async listOccupancyMonth(month){
       if(!month)return [];
       return services.run(async()=>{
-        const context=await services.firebase();const {firestore}=context.modules;
+        const context=await services.firebase();const {firestore}=context.modules,started=Date.now();
         const snapshot=await firestore.getDocs(firestore.query(
           firestore.collection(context.db,'applications'),
           firestore.where('status','==','approved'),
           firestore.where('stayMonths','array-contains',String(month))
         ));
+        services.recordQuery?.('applications/occupancy-month',started,snapshot.size,{month:String(month)});
         return snapshot.docs.map(mapApplication).filter(row=>!row.inactive);
       },{loading:false});
     },
 
     async getById(id,{enrichProfiles=true}={}){
       return services.run(async()=>{
-        const context=await services.firebase();const {firestore}=context.modules;
-        const snapshot=await firestore.getDoc(firestore.doc(context.db,'applications',String(id)));
+        const context=await services.firebase();const {firestore}=context.modules,applicationId=String(id),started=Date.now();
+        const snapshot=await firestore.getDoc(firestore.doc(context.db,'applications',applicationId));
+        services.recordQuery?.('applications/by-id',started,snapshot.exists()?1:0,{applicationId});
         if(!snapshot.exists())return null;
         const item=mapApplication(snapshot);return enrichProfiles?enrichApplicationProfiles(context,item):item;
       },{loading:false});
@@ -128,23 +136,6 @@
           [...new Set((participantUids||[]).filter(Boolean).map(String))].forEach(uid=>batch.update(firestore.doc(context.db,'users',uid),{active:participantActive===true,updatedAt:now}));
         }
         await batch.commit();return true;
-      },{loading:false});
-    },
-
-    async approvePlanning(id,{participantUids=[]}={}){
-      return services.run(async()=>{
-        const context=await services.firebase();const {firestore}=context.modules;
-        const sessions=await applicationSessions(context,id);
-        const activityCount=new Set(sessions.map(row=>String(row.activityId||'')).filter(Boolean)).size;
-        const batch=firestore.writeBatch(context.db);const now=firestore.serverTimestamp();
-        batch.update(firestore.doc(context.db,'applications',String(id)),{
-          status:'approved',active:true,planningDeadlineAt:null,approvedAt:now,dayAdjustments:{},
-          sessionCount:sessions.length,activityCount,updatedAt:now
-        });
-        sessions.forEach(session=>batch.update(firestore.doc(context.db,'activity_sessions',String(session.id)),{status:'confirmed',confirmedAt:now,changeNote:'',updatedAt:now}));
-        [...new Set((participantUids||[]).filter(Boolean).map(String))].forEach(uid=>batch.update(firestore.doc(context.db,'users',uid),{active:true,updatedAt:now}));
-        await batch.commit();
-        return {confirmedSessions:sessions.length,sessionCount:sessions.length,activityCount};
       },{loading:false});
     },
 
