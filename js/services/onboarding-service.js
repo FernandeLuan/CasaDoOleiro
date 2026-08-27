@@ -3,6 +3,12 @@
 
   function normalizeEmail(value){return String(value||'').trim().toLowerCase()}
   function normalizeText(value){return String(value||'').trim()}
+  function normalizeGender(value){const gender=String(value||'').toLowerCase();return ['male','female'].includes(gender)?gender:''}
+  function normalizeRegistrationLink(value){
+    const link=normalizeText(value);if(!link)return '';
+    try{const url=new URL(link);if(!['http:','https:'].includes(url.protocol))throw new Error();return url.toString()}
+    catch{throw new Error('Informe um link válido do cadastro no Worldpackers.')}
+  }
   function randomPassword(){
     const bytes=new Uint8Array(24);crypto.getRandomValues(bytes);
     return `Aa1!${Array.from(bytes,b=>b.toString(36).padStart(2,'0')).join('')}`;
@@ -29,15 +35,16 @@
     return [...tokens].slice(0,200);
   }
   function validatePayload(payload){
-    const participants=(payload?.participants||[]).map(p=>({...p,name:normalizeText(p.name),email:normalizeEmail(p.email),country:normalizeText(p.country),phone:normalizeText(p.phone),language:String(p.language||'en').toLowerCase()}));
+    const participants=(payload?.participants||[]).map(p=>({...p,name:normalizeText(p.name),email:normalizeEmail(p.email),country:normalizeText(p.country),phone:normalizeText(p.phone),language:String(p.language||'en').toLowerCase(),gender:normalizeGender(p.gender)}));
     if(![1,2].includes(participants.length))throw new Error('Escolha uma candidatura individual ou em dupla.');
     if(participants.some(p=>!p.name||!p.email||!p.email.includes('@')))throw new Error('Informe nome e e-mail de todos os participantes.');
+    if(participants.some(p=>!p.gender))throw new Error('Informe o gênero de todos os participantes.');
     if(new Set(participants.map(p=>p.email)).size!==participants.length)throw new Error('Os participantes precisam usar e-mails diferentes.');
     const stayStart=String(payload.stayStart||'');const stayEnd=String(payload.stayEnd||'');
     if(!stayStart||!stayEnd)throw new Error('Informe chegada e saída.');
     if(stayEnd<stayStart)throw new Error('A saída deve ser igual ou posterior à chegada.');
     const unitId=String(payload.unitId||'').trim().toLowerCase();if(!unitId)throw new Error('Selecione a unidade.');
-    return {participants,stayStart,stayEnd,unitId,unitName:normalizeText(payload.unitName)||unitId.replace(/^./,c=>c.toUpperCase()),note:normalizeText(payload.note)};
+    return {participants,stayStart,stayEnd,unitId,unitName:normalizeText(payload.unitName)||unitId.replace(/^./,c=>c.toUpperCase()),note:normalizeText(payload.note),registrationLink:normalizeRegistrationLink(payload.registrationLink)};
   }
 
   async function createAuthAccount(context,participant,index){
@@ -82,6 +89,7 @@
           const deadlineDate=new Date();deadlineDate.setDate(deadlineDate.getDate()+7);
           const participantUids=accounts.map(a=>a.uid);
           const participantStatus=Object.fromEntries(participantUids.map(uid=>[uid,'active']));
+          const participantGenders=accounts.map(a=>a.participant.gender||'');
 
           accounts.forEach(account=>{
             const p=account.participant;const uid=account.uid;
@@ -89,17 +97,17 @@
               role:'volunteer',active:true,language:p.language||'en',unitIds:[data.unitId],email:p.email,firstPortalAccessAt:null,createdAt:now,updatedAt:now
             });
             batch.set(firestore.doc(context.db,'volunteer_profiles',uid),{
-              name:p.name,fullName:p.name,email:p.email,phone:p.phone||'',whatsapp:p.phone||'',country:p.country||'',nationality:p.country||'',language:p.language||'en',createdAt:now,updatedAt:now
+              name:p.name,fullName:p.name,email:p.email,phone:p.phone||'',whatsapp:p.phone||'',country:p.country||'',nationality:p.country||'',language:p.language||'en',gender:p.gender||'',createdAt:now,updatedAt:now
             });
           });
 
           batch.set(applicationRef,{
             type:accounts.length===2?'couple':'individual',participantUids,
-            participantNames:accounts.map(a=>a.participant.name),participantEmails:accounts.map(a=>a.participant.email),participantCountries:accounts.map(a=>a.participant.country||''),participantPhones:accounts.map(a=>a.participant.phone||''),
-            participantCount:accounts.length,participantStatus,unitId:data.unitId,unitName:data.unitName,
+            participantNames:accounts.map(a=>a.participant.name),participantEmails:accounts.map(a=>a.participant.email),participantCountries:accounts.map(a=>a.participant.country||''),participantPhones:accounts.map(a=>a.participant.phone||''),participantGenders,
+            gender:accounts.length===1?participantGenders[0]:'',participantCount:accounts.length,participantStatus,unitId:data.unitId,unitName:data.unitName,
             status:'pending',active:true,stayStart:data.stayStart,stayEnd:data.stayEnd,stayMonths:stayMonths(data.stayStart,data.stayEnd),
             planningDeadlineAt:firestore.Timestamp.fromDate(deadlineDate),planningSubmittedAt:null,
-            activityCount:0,sessionCount:0,source:'portal',internalNote:data.note||'',
+            activityCount:0,sessionCount:0,source:'portal',registrationLink:data.registrationLink||'',internalNote:data.note||'',
             searchTokens:searchTokens(data.participants),createdAt:now,updatedAt:now
           });
 
