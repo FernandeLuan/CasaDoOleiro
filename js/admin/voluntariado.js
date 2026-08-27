@@ -1,5 +1,5 @@
 const CANDIDATE_STATUS_OPTIONS=[
-  ['all','Todos os status'],['pending','Em preparação'],['analysis','Em análise'],['adjustments','Ajustes'],['approved','Aprovado'],['rejected','Recusado']
+  ['all','Todos os status'],['pending','Em preparação'],['analysis','Em análise'],['adjustments','Ajustes'],['meeting','Planejamento aprovado'],['approved','Aprovado'],['rejected','Recusado']
 ];
 const CANDIDATE_PAGE_SIZE=10;
 let _candidateSearchTimer=null;
@@ -25,4 +25,4 @@ function openCandidateFilters(){const filter=normalizeCandidateFilter(state.cand
 function applyCandidateFilters(){state.candidateFilter=normalizeCandidateFilter(document.getElementById('candidateStatusFilter')?.value);state.candidateUnit=document.getElementById('candidateUnitFilter')?.value||'all';closeModal();render();if(typeof loadManagerCandidates==='function')loadManagerCandidates({force:true}).catch(error=>{console.error(error);showToast('Não foi possível aplicar os filtros.')})}
 function clearCandidateFilters(){state.candidateFilter='approved';state.candidateUnit='all';closeModal();render();if(typeof loadManagerCandidates==='function')loadManagerCandidates({force:true}).catch(console.error)}
 function countFilter(id){if(id==='all')return state.candidates.length;if(id==='adjustments')return dashboardCount('adjustments');return state.candidates.filter(p=>p.status===id).length;}
-function countTab(id){if(id==='candidates')return state.candidates.filter(p=>['pending','analysis','adjustments'].includes(p.status)).length;return state.candidates.filter(p=>p.status===id).length}
+function countTab(id){if(id==='candidates')return state.candidates.filter(p=>['pending','analysis','adjustments','meeting'].includes(p.status)).length;return state.candidates.filter(p=>p.status===id).length}
