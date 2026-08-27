@@ -178,7 +178,6 @@ service cloud.firestore {
             approvedApplication(resource.data.applicationId)
             && resource.data.postApprovalProposal == true
             && resource.data.reviewStatus == 'adjustments'
-            && resource.data.createdByUid == request.auth.uid
           )
         )
       );
@@ -256,7 +255,6 @@ service cloud.firestore {
             && resource.data.status == 'proposed'
             && resource.data.postApprovalProposal == true
             && resource.data.reviewStatus == 'adjustments'
-            && resource.data.createdByUid == request.auth.uid
           )
         )
       );
