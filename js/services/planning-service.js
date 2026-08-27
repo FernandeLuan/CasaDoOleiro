@@ -2,28 +2,8 @@
   const services=window.OleiroServices=window.OleiroServices||{};
   const activityCache=new Map();
 
-  async function fetchActivitiesByIds(context,ids){
-    const {firestore}=context.modules;
-    const unique=[...new Set((ids||[]).filter(Boolean).map(String))];
-    const missing=unique.filter(id=>!activityCache.has(id));
-    if(missing.length){
-      const rows=await Promise.all(missing.map(async id=>{
-        const snap=await firestore.getDoc(firestore.doc(context.db,'activities',id));
-        return snap.exists()?{id:snap.id,...snap.data()}:null;
-      }));
-      rows.filter(Boolean).forEach(row=>activityCache.set(String(row.id),row));
-    }
-    return new Map(unique.map(id=>[id,activityCache.get(id)]).filter(([,row])=>row));
-  }
-
   function indexUnavailable(error){return /index|failed-precondition/i.test(`${error?.code||''} ${error?.message||''}`)}
-  function recordQuery(name,started,count,meta={}){
-    const ms=Date.now()-started,row={name,ms,count:Number(count)||0,...meta,at:new Date().toISOString()};
-    window.OleiroQueryMetrics=window.OleiroQueryMetrics||[];
-    window.OleiroQueryMetrics.push(row);
-    if(window.OleiroQueryMetrics.length>40)window.OleiroQueryMetrics.splice(0,window.OleiroQueryMetrics.length-40);
-    if(ms>1200)console.warn(`[Firestore lento] ${name}: ${ms}ms • ${row.count} docs`,meta);
-  }
+  function cleanGroup(value){const group=String(value||'').trim();return ['A','B','C','D','Livre'].includes(group)?group:null}
   async function applicationSessions(context,applicationId,{from=null,to=null}={}){
     const {firestore}=context.modules,collection=firestore.collection(context.db,'activity_sessions'),appId=String(applicationId),constraints=[firestore.where('applicationId','==',appId)];
     if(from)constraints.push(firestore.where('date','>=',String(from)));
@@ -32,7 +12,7 @@
     const started=Date.now();
     try{
       const snapshot=await firestore.getDocs(firestore.query(collection,...constraints));
-      recordQuery('activity_sessions/application',started,snapshot.size,{applicationId:appId,from:from||'',to:to||''});
+      services.recordQuery?.('activity_sessions/application',started,snapshot.size,{applicationId:appId,from:from||'',to:to||''});
       return snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
     }catch(error){
       if((from||to)&&indexUnavailable(error)){
@@ -62,54 +42,12 @@
           firestore.getDocs(firestore.query(firestore.collection(context.db,'activity_sessions'),firestore.where('status','==','change_requested'),firestore.limit(max))),
           firestore.getDocs(firestore.query(firestore.collection(context.db,'activity_sessions'),firestore.where('reviewStatus','==','analysis'),firestore.limit(max)))
         ]);
-        recordQuery('activity_sessions/pending-review',started,changesSnapshot.size+proposalSnapshot.size,{queries:2,limit:max});
+        services.recordQuery?.('activity_sessions/pending-review',started,changesSnapshot.size+proposalSnapshot.size,{queries:2,limit:max});
         const rows=[
           ...changesSnapshot.docs.map(doc=>({id:doc.id,...doc.data(),reviewKind:'change'})),
           ...proposalSnapshot.docs.map(doc=>({id:doc.id,...doc.data(),reviewKind:'post_approval'}))
         ];
         const unique=new Map();rows.forEach(row=>unique.set(String(row.id),row));return [...unique.values()].slice(0,max);
-      },{loading:false});
-    },
-
-    async listManagerSchedule({from,to,unitId='all'}={}){
-      if(!from||!to)return [];
-      return services.run(async()=>{
-        const context=await services.firebase();
-        const {firestore}=context.modules,collection=firestore.collection(context.db,'activity_sessions'),normalizedUnit=unitId&&unitId!=='all'?String(unitId).toLowerCase():'',started=Date.now();
-        const base=[firestore.where('date','>=',from),firestore.where('date','<=',to),firestore.orderBy('date','asc')];let sessions=[];
-        try{
-          const constraints=normalizedUnit?[firestore.where('unitId','==',normalizedUnit),...base]:base;
-          const snapshot=await firestore.getDocs(firestore.query(collection,...constraints));sessions=snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
-          recordQuery('activity_sessions/manager-schedule',started,snapshot.size,{from,to,unitId:normalizedUnit||'all'});
-        }catch(error){
-          if(normalizedUnit&&indexUnavailable(error)){
-            const safeError=new Error('O índice activity_sessions(unitId, date) ainda não está pronto. A consulta ampla foi bloqueada para proteger a cota do Firestore.');
-            safeError.code='oleiro/index-not-ready';
-            throw safeError;
-          }
-          throw error;
-        }
-        const missing=sessions.filter(s=>!s.activityName).map(s=>s.activityId);
-        const activityMap=missing.length?await fetchActivitiesByIds(context,missing):new Map();
-        return sessions.map(session=>{
-          const definition=activityMap.get(String(session.activityId))||{};
-          return {
-            ...session,
-            activity:{
-              id:session.activityId,
-              name:session.activityName||definition.name||'Atividade',
-              description:session.activityDescription||definition.description||'',
-              duration:Number(session.duration||definition.duration||60),
-              participation:session.participation||definition.participation||'Livre',
-              materials:session.materials||definition.materials||'',
-              notes:session.notes||definition.notes||'',
-              period:session.period||definition.period||'Sem preferência',
-              time:session.time||definition.time||'',
-              owner:session.ownerName||definition.ownerName||'Voluntário',
-              applicationId:session.applicationId
-            }
-          };
-        });
       },{loading:false});
     },
 
@@ -124,19 +62,22 @@
             firestore.where('applicationId','==',String(applicationId))
           )
         );
-        recordQuery('activities/application',started,snapshot.size,{applicationId:String(applicationId)});
+        services.recordQuery?.('activities/application',started,snapshot.size,{applicationId:String(applicationId)});
         const rows=snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
         rows.forEach(row=>activityCache.set(String(row.id),row));
         return rows;
       },{loading:false});
     },
 
-    async saveActivity({activityId=null,applicationId,unitId,createdByUid,ownerName='',data,dates,existingSessions=[],postApprovalProposal=false,sessionStatus='proposed',updateApplicationCounts=false}){
+    async saveActivity(args={}){
+      const {activityId=null,applicationId,unitId,createdByUid,ownerName='',data,dates,existingSessions=[],postApprovalProposal=false,sessionStatus='proposed',updateApplicationCounts=false,managerCreated=false}=args;
       if(!applicationId||!createdByUid)throw new Error('Sessão de voluntariado inválida.');
       return services.run(async()=>{
         const context=await services.firebase();
         const {firestore}=context.modules;
         const normalizedStatus=['proposed','confirmed'].includes(String(sessionStatus))?String(sessionStatus):'proposed';
+        const groupRequested=Object.prototype.hasOwnProperty.call(args,'groupId'),groupId=groupRequested?cleanGroup(args.groupId):null;
+        const finalStatus=managerCreated?'manager_confirmed':postApprovalProposal?'proposed':normalizedStatus;
         const activityRef=activityId
           ?firestore.doc(context.db,'activities',String(activityId))
           :firestore.doc(firestore.collection(context.db,'activities'));
@@ -144,6 +85,7 @@
         const now=firestore.serverTimestamp();
         const previousActivity=activityId?activityCache.get(String(activityId)):null;
         const reviewFields=postApprovalProposal?{postApprovalProposal:true,reviewStatus:'analysis',reviewNote:'',reviewSubmittedAt:now}:{};
+        const managerFields=managerCreated?{managerCreated:true,status:'manager_confirmed'}:{};
         const editableDefinition={
           applicationId:String(applicationId),
           ownerName:String(ownerName||''),
@@ -156,6 +98,7 @@
           period:data.period||'Sem preferência',
           time:data.time||'',
           ...reviewFields,
+          ...managerFields,
           updatedAt:now
         };
 
@@ -181,7 +124,8 @@
           time:data.time||'',
           period:data.period||'Sem preferência',
           duration:Number(data.duration)||60,
-          ...reviewFields
+          ...reviewFields,
+          ...(managerCreated?{managerCreated:true}:{} )
         };
         const resultSessions=[];
         const deletedSessionIds=[];
@@ -192,16 +136,15 @@
             batch.delete(ref);
             deletedSessionIds.push(String(session.id));
           }else{
-            const statusPatch={status:postApprovalProposal?'proposed':normalizedStatus};
-            batch.update(ref,{...sessionDefinition,...statusPatch,updatedAt:now});
-            resultSessions.push({...session,...sessionDefinition,...statusPatch,date});
+            const statusPatch={status:finalStatus},groupPatch=groupRequested?{groupId}:{};
+            batch.update(ref,{...sessionDefinition,...statusPatch,...groupPatch,updatedAt:now});
+            resultSessions.push({...session,...sessionDefinition,...statusPatch,...groupPatch,date});
           }
         }
 
         for(const date of wanted){
           if(byDate.has(date))continue;
           const sessionRef=firestore.doc(firestore.collection(context.db,'activity_sessions'));
-          const status=postApprovalProposal?'proposed':normalizedStatus;
           const row={
             id:sessionRef.id,
             applicationId:String(applicationId),
@@ -209,11 +152,11 @@
             unitId:String(unitId||''),
             date,
             ...sessionDefinition,
-            status,
-            groupId:null,
+            status:finalStatus,
+            groupId:groupRequested?groupId:null,
             createdByUid:String(createdByUid)
           };
-          batch.set(sessionRef,{...row,...(status==='confirmed'?{confirmedAt:now}:{}),createdAt:now,updatedAt:now});
+          batch.set(sessionRef,{...row,...(finalStatus==='confirmed'?{confirmedAt:now}:{}),createdAt:now,updatedAt:now});
           resultSessions.push(row);
         }
 
@@ -221,6 +164,7 @@
           batch.update(firestore.doc(context.db,'applications',String(applicationId)),{
             sessionCount:firestore.increment(wanted.size),
             activityCount:firestore.increment(1),
+            planningCountVersion:1,
             updatedAt:now
           });
         }
@@ -259,30 +203,6 @@
         await batch.commit();
         const cached=activityCache.get(String(activityId));if(cached)Object.assign(cached,{postApprovalProposal:true,reviewStatus,reviewNote:decision==='adjustments'?reviewNote:''});
         return {reviewStatus,status:sessionStatus,sessionIds:sessions.map(row=>String(row.id)),counts};
-      },{loading:false});
-    },
-
-    async deleteSession(sessionId,{applicationId,activityId}={}){
-      if(!sessionId||!applicationId)throw new Error('Sessão não encontrada.');
-      return services.run(async()=>{
-        const context=await services.firebase();
-        const {firestore}=context.modules;
-        const sessions=await applicationSessions(context,applicationId);
-        const remaining=sessions.filter(s=>String(s.id)!==String(sessionId));
-        const remainingForActivity=remaining.filter(s=>String(s.activityId)===String(activityId));
-        const remainingActivityIds=new Set(remaining.map(s=>String(s.activityId||'')).filter(Boolean));
-        const batch=firestore.writeBatch(context.db);
-        batch.delete(firestore.doc(context.db,'activity_sessions',String(sessionId)));
-        if(!remainingForActivity.length&&activityId){
-          batch.delete(firestore.doc(context.db,'activities',String(activityId)));
-          activityCache.delete(String(activityId));
-        }
-        await batch.commit();
-        return {
-          deletedActivity:!remainingForActivity.length,
-          sessionCount:remaining.length,
-          activityCount:remainingActivityIds.size
-        };
       },{loading:false});
     },
 
