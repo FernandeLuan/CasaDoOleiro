@@ -1,7 +1,94 @@
-/* Round 25 — reaplica i18n após camadas que injetam conteúdo no modal. */
+/* Round 25 — acabamento final das injeções Admin: i18n, estados de reunião e feedback assíncrono. */
 (function i18nAfterAdminInjectionsR25(){
-  if(typeof renderPersonModal!=='function')return;
-  const baseRenderPersonModal=renderPersonModal;
-  renderPersonModal=function(...args){const result=baseRenderPersonModal(...args);if(typeof applyI18n==='function')applyI18n(modalRoot);return result};
-  window.renderPersonModal=renderPersonModal;
+  if(typeof OLEIRO_TRANSLATIONS!=='undefined'){
+    Object.assign(OLEIRO_TRANSLATIONS.en,{
+      'Observação:':'Note:','Motivo:':'Reason:','Não definida':'Not set','Não definido':'Not set',
+      'Salvando...':'Saving...','Excluindo...':'Deleting...','Aprovando...':'Approving...','Confirmando...':'Confirming...','Enviando...':'Sending...','Reenviando...':'Resending...','Alterando...':'Updating...',
+      'Salvar unidade':'Save unit','Unidade alterada.':'Unit changed.','Selecione uma unidade.':'Select a unit.','Não foi possível alterar a unidade.':'Could not change the unit.'
+    });
+    Object.assign(OLEIRO_TRANSLATIONS.es,{
+      'Observação:':'Observación:','Motivo:':'Motivo:','Não definida':'No definida','Não definido':'No definido',
+      'Salvando...':'Guardando...','Excluindo...':'Eliminando...','Aprovando...':'Aprobando...','Confirmando...':'Confirmando...','Enviando...':'Enviando...','Reenviando...':'Reenviando...','Alterando...':'Actualizando...',
+      'Salvar unidade':'Guardar unidad','Unidade alterada.':'Unidad cambiada.','Selecione uma unidade.':'Selecciona una unidad.','Não foi possível alterar a unidade.':'No fue posible cambiar la unidad.'
+    });
+  }
+
+  function meetingStageLabel(p){
+    if(p?.status!=='meeting')return '';
+    const status=String(p.meetingStatus||'pending');
+    if(status==='completed')return 'Reunião realizada';
+    if(status==='scheduled')return 'Reunião agendada';
+    return 'Aguardando reunião';
+  }
+  function setProtectedLabeledText(node,label,value){
+    if(!node)return;
+    node.replaceChildren();
+    const strong=document.createElement('strong');strong.textContent=label;
+    const text=document.createElement('span');text.setAttribute('data-no-i18n','');text.textContent=String(value||'');
+    node.append(strong,document.createTextNode(' '),text);
+  }
+  function applyAdminI18n(){if(typeof applyI18n==='function'&&typeof modalRoot!=='undefined'&&modalRoot)applyI18n(modalRoot)}
+
+  /* Lista de voluntários: status da etapa de reunião deriva também de meetingStatus. */
+  const basePersonCompact=typeof window.personCompact==='function'?window.personCompact:null;
+  if(basePersonCompact){
+    personCompact=function(p){
+      const html=basePersonCompact(p);if(p?.status!=='meeting')return html;
+      const template=document.createElement('template');template.innerHTML=html;
+      const statusBadge=template.content.querySelector('.candidate-status-row .badge');if(statusBadge)statusBadge.textContent=meetingStageLabel(p);
+      return template.innerHTML;
+    };
+    window.personCompact=personCompact;
+  }
+
+  /* Render de perfil/Conta: status específico, observação rotulada e motivo administrativo protegido do i18n. */
+  if(typeof renderPersonModal==='function'){
+    const baseRenderPersonModal=renderPersonModal;
+    renderPersonModal=function(p,...args){
+      const result=baseRenderPersonModal(p,...args);
+      if(p?.status==='meeting'){
+        const label=meetingStageLabel(p),titleBadge=modalRoot.querySelector('.person-title-line .badge');if(titleBadge)titleBadge.textContent=label;
+        const accountRoot=modalRoot.querySelector('.admin-account-refactor'),statusLine=accountRoot?.querySelector('.account-status-line');
+        if(statusLine){
+          let meetingBadge=statusLine.querySelector('.meeting-stage-badge');
+          if(!meetingBadge){meetingBadge=document.createElement('span');meetingBadge.className='badge info meeting-stage-badge';statusLine.prepend(meetingBadge)}
+          meetingBadge.textContent=label;
+        }
+      }
+      const meetingNotes=String(p?.meetingNotes||'').trim(),notesNode=modalRoot.querySelector('.selection-meeting-notes');
+      if(notesNode&&meetingNotes)setProtectedLabeledText(notesNode,'Observação:',meetingNotes);
+      const reason=String(p?.rejectedReason||'').trim(),reasonNode=modalRoot.querySelector('.account-reason > div');
+      if(reasonNode&&reason)setProtectedLabeledText(reasonNode,'Motivo:',reason);
+      applyAdminI18n();
+      return result;
+    };
+    window.renderPersonModal=renderPersonModal;
+  }
+
+  /* Alterar unidade: loading local imediato, bloqueio de duplo clique e restauração automática se o modal permanecer aberto. */
+  const baseOpenVolunteerUnitEditor=typeof window.openVolunteerUnitEditor==='function'?window.openVolunteerUnitEditor:null;
+  if(baseOpenVolunteerUnitEditor){
+    window.openVolunteerUnitEditor=function(...args){
+      const result=baseOpenVolunteerUnitEditor(...args),button=modalRoot.querySelector('button[onclick*="saveVolunteerUnit"]');
+      if(button)button.id='saveVolunteerUnitButton';applyAdminI18n();return result;
+    };
+  }
+  const baseSaveVolunteerUnit=typeof window.saveVolunteerUnit==='function'?window.saveVolunteerUnit:null;
+  if(baseSaveVolunteerUnit){
+    window.saveVolunteerUnit=async function(...args){
+      const button=document.getElementById('saveVolunteerUnitButton')||modalRoot.querySelector('button[onclick*="saveVolunteerUnit"]');
+      if(button?.disabled)return;
+      const original=button?.innerHTML||'';
+      if(button){button.disabled=true;button.setAttribute('aria-busy','true');button.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Salvando...';applyAdminI18n()}
+      try{return await baseSaveVolunteerUnit(...args)}finally{
+        if(button?.isConnected){button.disabled=false;button.removeAttribute('aria-busy');button.innerHTML=original||'Salvar unidade';applyAdminI18n()}
+      }
+    };
+  }
+
+  /* Qualquer conteúdo inserido no modal depois de applyI18n recebe tradução, inclusive estados de loading. */
+  if(typeof MutationObserver!=='undefined'&&typeof modalRoot!=='undefined'&&modalRoot&&typeof applyI18n==='function'){
+    const observer=new MutationObserver(()=>applyI18n(modalRoot));
+    observer.observe(modalRoot,{childList:true,subtree:true});
+  }
 })();
