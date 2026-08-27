@@ -19,8 +19,29 @@
 .admin-session-description{margin:6px 0 0!important;font-size:.61rem!important;line-height:1.45!important;color:var(--muted)!important;overflow-wrap:anywhere}
 .admin-session-description strong{color:var(--text);font-weight:600}
 
-/* Agenda aprovada: cinco registros/dias por página. */
-.volunteer-agenda-pagination{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
-.volunteer-agenda-pagination span{font-size:.62rem;color:var(--muted);min-width:72px;text-align:center}
-.volunteer-agenda-pagination .icon-btn{width:36px;height:36px;border:1px solid var(--border);box-shadow:none}
-.volunteer-agenda-pagination .icon-btn:disabled{opacity:.35;pointer-events:none}
+/* Sem conexão: centro informativo + ação no rodapé no mobile. */
+.offline-page{min-height:100dvh;padding:0!important;margin:0!important;background:var(--bg)}
+.offline-state{min-height:100dvh;display:grid;grid-template-rows:1fr auto;gap:22px;padding:24px 18px calc(18px + env(safe-area-inset-bottom));box-sizing:border-box}
+.offline-center{align-self:center;justify-self:center;max-width:320px;text-align:center;display:grid;gap:14px;color:var(--text)}
+.offline-icon{width:58px;height:58px;border-radius:18px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;margin:0 auto;font-size:1.2rem}
+.offline-center h1{font-size:1.08rem;margin:0 0 5px}
+.offline-center p{font-size:.7rem;line-height:1.55;color:var(--muted);margin:0}
+.offline-action{align-self:end;width:100%;max-width:440px;margin:0 auto}
+
+/* Administração das unidades. */
+.unit-admin-list{display:grid;gap:10px}
+.unit-admin-card{display:grid;gap:12px;padding:13px!important}
+.unit-admin-head{display:grid;grid-template-columns:38px minmax(0,1fr);gap:10px;align-items:center}
+.unit-admin-head .metric-icon{width:38px;height:38px}
+.unit-admin-head h3{font-size:.76rem;margin:0}
+.unit-admin-head .item-meta{margin-top:5px}
+.unit-admin-actions{display:flex;flex-wrap:wrap;gap:7px;padding-top:9px;border-top:1px solid var(--border)}
+.unit-admin-actions .btn{flex:1 1 145px;min-height:38px;padding:8px 10px;font-size:.64rem}
+.btn-danger-soft{background:#fce7e7;color:var(--danger);border:1px solid #f2cccc}
+
+@media(min-width:700px){
+  .offline-page{display:grid;place-items:center;padding:24px!important}
+  .offline-state{min-height:0;width:min(430px,100%);grid-template-rows:auto auto;padding:28px;border:1px solid var(--border);border-radius:22px;background:var(--surface);box-shadow:var(--shadow)}
+  .offline-center{align-self:auto}
+  .offline-action{align-self:auto}
+}
