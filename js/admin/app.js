@@ -2,10 +2,13 @@ const _managerScheduleCache=new Map();
 const MANAGER_SCHEDULE_CACHE_MS=60000;
 const MANAGER_APPLICATION_REFRESH_MS=10000;
 const MANAGER_CHANGE_REFRESH_MS=120000;
+const MANAGER_DASHBOARD_REFRESH_MS=120000;
 let _managerApplicationsRefreshAt=0;
 let _managerApplicationsRefreshPromise=null;
 let _managerPendingChangesAt=0;
 let _managerPendingChangesPromise=null;
+let _managerDashboardAt=0;
+let _managerDashboardPromise=null;
 let _managerCandidateRequestKey='';
 function managerScheduleKey(from,to,unit='all'){return `${from}|${to}|${unit}`}
 function mapManagerScheduleRows(rows){
@@ -56,19 +59,23 @@ async function loadManagerCandidates({append=false,force=false}={}){
 async function loadMoreManagerCandidates(){if(state.candidateLoading||!state.candidateHasMore||!state.candidateCursor)return;return loadManagerCandidates({append:true,force:true})}
 async function refreshManagerApplications({force=false}={}){return loadManagerCandidates({append:false,force})}
 
-async function hydrateManagerDashboardData(){
+async function hydrateManagerDashboardData({force=true}={}){
   if(!window.OleiroServices?.applications)return;
+  if(_managerDashboardPromise)return _managerDashboardPromise;
+  if(!force&&Date.now()-_managerDashboardAt<MANAGER_DASHBOARD_REFRESH_MS)return {counts:state.dashboardCounts,arrivals:state.dashboardArrivals,departures:state.dashboardDepartures};
   const service=window.OleiroServices.applications;
-  const results=await Promise.allSettled([
+  _managerDashboardPromise=Promise.allSettled([
     service.countStatus?.('analysis')??0,service.countStatus?.('adjustments')??0,
     service.listUpcoming?.({field:'stayStart',from:_oleiroToday,limit:3})??[],
     service.listUpcoming?.({field:'stayEnd',from:_oleiroToday,limit:3})??[]
-  ]);
-  const value=(index,fallback)=>results[index]?.status==='fulfilled'?results[index].value:fallback;
-  results.forEach((result,index)=>{if(result.status==='rejected')console.warn(['Contagem em análise','Contagem de ajustes','Próximas chegadas','Próximas saídas'][index]+' indisponível:',result.reason)});
-  state.dashboardCounts={analysis:Number(value(0,state.dashboardCounts?.analysis||0))||0,adjustments:Number(value(1,state.dashboardCounts?.adjustments||0))||0};
-  state.dashboardArrivals=value(2,state.dashboardArrivals||[])||[];state.dashboardDepartures=value(3,state.dashboardDepartures||[])||[];
-  if(state.managerPage==='home')render();
+  ]).then(results=>{
+    const value=(index,fallback)=>results[index]?.status==='fulfilled'?results[index].value:fallback;
+    results.forEach((result,index)=>{if(result.status==='rejected')console.warn(['Contagem em análise','Contagem de ajustes','Próximas chegadas','Próximas saídas'][index]+' indisponível:',result.reason)});
+    state.dashboardCounts={analysis:Number(value(0,state.dashboardCounts?.analysis||0))||0,adjustments:Number(value(1,state.dashboardCounts?.adjustments||0))||0};
+    state.dashboardArrivals=value(2,state.dashboardArrivals||[])||[];state.dashboardDepartures=value(3,state.dashboardDepartures||[])||[];_managerDashboardAt=Date.now();
+    if(state.managerPage==='home')render();return {counts:state.dashboardCounts,arrivals:state.dashboardArrivals,departures:state.dashboardDepartures};
+  }).finally(()=>{_managerDashboardPromise=null});
+  return _managerDashboardPromise;
 }
 
 async function hydrateManagerBaseData(){
@@ -76,7 +83,7 @@ async function hydrateManagerBaseData(){
   state.units=unitsResult||[];
   state.candidateFilter=state.candidateFilter||'approved';state.candidateUnit=state.candidateUnit||'all';state.candidateSearch=state.candidateSearch||'';
   await loadManagerCandidates({force:true});
-  hydrateManagerDashboardData().catch(error=>console.warn('Dados secundários do painel indisponíveis:',error));
+  hydrateManagerDashboardData({force:true}).catch(error=>console.warn('Dados secundários do painel indisponíveis:',error));
 }
 
 async function hydrateManagerData(){await hydrateManagerBaseData();return state.candidates}
@@ -94,7 +101,7 @@ async function bootManager(){
   state.role='manager';state.currentSession=session;state.managerPage='home';state.groupsLoaded=false;state.groupsLoading=false;state.sessions=[];state.pendingChangeRequests=[];state.scheduleFrom=null;state.scheduleTo=null;state.dashboardCounts={analysis:0,adjustments:0};state.dashboardArrivals=[];state.dashboardDepartures=[];state.candidateHasMore=false;state.candidateCursor=null;state.candidateLoading=false;render();
   try{
     await hydrateManagerBaseData();if(state.managerPage==='home')render();
-    processExpiredCandidatesOnStartup?.().then(()=>hydrateManagerDashboardData()).catch(error=>console.error('Falha ao processar prazos:',error));
+    processExpiredCandidatesOnStartup?.().catch(error=>console.error('Falha ao processar prazos:',error));
     hydrateManagerSchedule(_oleiroToday,_oleiroToday).then(()=>{if(state.managerPage==='home')render()}).catch(error=>console.warn('Agenda de hoje indisponível:',error));
     hydrateManagerPendingChanges().catch(error=>console.warn('Pendências indisponíveis:',error));
   }catch(error){console.error('Falha ao carregar a lista principal da gestão:',error);showToast('Não foi possível carregar a lista de voluntários. Tente novamente.')}
@@ -103,7 +110,7 @@ async function bootManager(){
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState!=='visible'||state.role!=='manager')return;
   if(state.managerPage==='volunteer')refreshManagerApplications().catch(console.error);
-  if(state.managerPage==='home'){hydrateManagerDashboardData().catch(console.error);hydrateManagerSchedule(_oleiroToday,_oleiroToday,{force:true}).then(()=>render()).catch(console.error)}
+  if(state.managerPage==='home'){hydrateManagerDashboardData({force:false}).catch(console.error);hydrateManagerSchedule(_oleiroToday,_oleiroToday,{force:true}).then(()=>render()).catch(console.error)}
   hydrateManagerPendingChanges().catch(console.error);
   if(state.managerPage==='agenda')hydrateManagerSchedule(state.agendaFrom||_oleiroToday,state.agendaTo||_oleiroToday,{force:true}).then(()=>render()).catch(console.error);
 });
