@@ -88,10 +88,6 @@ service cloud.firestore {
         && resource.data.active == true
         && resource.data.status == 'adjustments'
         && request.resource.data.status == 'pending'
-        && request.resource.data.active == resource.data.active
-        && request.resource.data.participantUids == resource.data.participantUids
-        && request.resource.data.unitId == resource.data.unitId
-        && request.resource.data.planningDeadlineAt == resource.data.planningDeadlineAt
         && request.resource.data.planningSubmittedAt == null
         && request.resource.data.dayAdjustments == {}
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
