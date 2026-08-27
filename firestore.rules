@@ -53,6 +53,18 @@ service cloud.firestore {
       return app.active == true && app.status == 'approved';
     }
 
+    function participantMarksFirstAccess(uid) {
+      return signedIn()
+        && request.auth.uid == uid
+        && resource.data.role == 'volunteer'
+        && (!('firstPortalAccessAt' in resource.data) || resource.data.firstPortalAccessAt == null)
+        && request.resource.data.firstPortalAccessAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'firstPortalAccessAt', 'updatedAt'
+        ]);
+    }
+
     function participantMaySubmitApplication() {
       return isParticipant(resource.data)
         && resource.data.active == true
@@ -71,12 +83,34 @@ service cloud.firestore {
         ]);
     }
 
+    function createsApprovedProposal(data) {
+      return activeUser()
+        && participantOf(data.applicationId)
+        && approvedApplication(data.applicationId)
+        && data.postApprovalProposal == true
+        && data.reviewStatus == 'analysis'
+        && data.reviewNote == ''
+        && data.reviewSubmittedAt == request.time
+        && data.createdByUid == request.auth.uid;
+    }
+
+    function updatesApprovedProposal() {
+      return activeUser()
+        && participantOf(resource.data.applicationId)
+        && approvedApplication(resource.data.applicationId)
+        && resource.data.postApprovalProposal == true
+        && resource.data.reviewStatus == 'adjustments'
+        && request.resource.data.postApprovalProposal == true
+        && request.resource.data.reviewStatus == 'analysis'
+        && request.resource.data.reviewNote == ''
+        && request.resource.data.reviewSubmittedAt == request.time
+        && request.resource.data.createdByUid == resource.data.createdByUid;
+    }
+
     match /users/{uid} {
-      // O próprio usuário pode ler somente seu documento de acesso. Isso permite que
-      // o cliente identifique active=false e mostre a mensagem correta, sem liberar
-      // outros dados protegidos. Gestores continuam podendo consultar usuários.
       allow read: if (signedIn() && request.auth.uid == uid) || isManager();
-      allow create, update, delete: if isManager();
+      allow create, delete: if isManager();
+      allow update: if isManager() || participantMarksFirstAccess(uid);
     }
 
     match /units/{unitId} {
@@ -101,26 +135,52 @@ service cloud.firestore {
       allow create: if isManager() || (
         activeUser()
         && participantOf(request.resource.data.applicationId)
-        && candidateWindowOpen(request.resource.data.applicationId)
-        && request.resource.data.createdByUid == request.auth.uid
+        && (
+          (
+            candidateWindowOpen(request.resource.data.applicationId)
+            && request.resource.data.createdByUid == request.auth.uid
+          )
+          || createsApprovedProposal(request.resource.data)
+        )
       );
 
       allow update: if isManager() || (
         activeUser()
         && participantOf(resource.data.applicationId)
-        && candidateWindowOpen(resource.data.applicationId)
         && request.resource.data.applicationId == resource.data.applicationId
         && request.resource.data.createdByUid == resource.data.createdByUid
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'name', 'description', 'duration', 'participation', 'materials',
-          'notes', 'period', 'time', 'ownerName', 'updatedAt'
-        ])
+        && (
+          (
+            candidateWindowOpen(resource.data.applicationId)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'name', 'description', 'duration', 'participation', 'materials',
+              'notes', 'period', 'time', 'ownerName', 'updatedAt'
+            ])
+          )
+          ||
+          (
+            updatesApprovedProposal()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'name', 'description', 'duration', 'participation', 'materials',
+              'notes', 'period', 'time', 'ownerName', 'postApprovalProposal',
+              'reviewStatus', 'reviewNote', 'reviewSubmittedAt', 'updatedAt'
+            ])
+          )
+        )
       );
 
       allow delete: if isManager() || (
         activeUser()
         && participantOf(resource.data.applicationId)
-        && candidateWindowOpen(resource.data.applicationId)
+        && (
+          candidateWindowOpen(resource.data.applicationId)
+          || (
+            approvedApplication(resource.data.applicationId)
+            && resource.data.postApprovalProposal == true
+            && resource.data.reviewStatus == 'adjustments'
+            && resource.data.createdByUid == request.auth.uid
+          )
+        )
       );
     }
 
@@ -130,11 +190,14 @@ service cloud.firestore {
       allow create: if isManager() || (
         activeUser()
         && participantOf(request.resource.data.applicationId)
-        && candidateWindowOpen(request.resource.data.applicationId)
         && request.resource.data.createdByUid == request.auth.uid
         && request.resource.data.unitId == applicationData(request.resource.data.applicationId).unitId
         && request.resource.data.status == 'proposed'
         && request.resource.data.groupId == null
+        && (
+          candidateWindowOpen(request.resource.data.applicationId)
+          || createsApprovedProposal(request.resource.data)
+        )
       );
 
       allow update: if isManager() || (
@@ -164,14 +227,38 @@ service cloud.firestore {
               'date', 'time', 'status', 'changeNote', 'changeRequestedAt', 'updatedAt'
             ])
           )
+          ||
+          (
+            updatesApprovedProposal()
+            && resource.data.status == 'proposed'
+            && request.resource.data.status == 'proposed'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'activityName', 'activityDescription', 'participation', 'materials',
+              'notes', 'ownerName', 'date', 'time', 'period', 'duration', 'status',
+              'postApprovalProposal', 'reviewStatus', 'reviewNote',
+              'reviewSubmittedAt', 'updatedAt'
+            ])
+          )
         )
       );
 
       allow delete: if isManager() || (
         activeUser()
         && participantOf(resource.data.applicationId)
-        && candidateWindowOpen(resource.data.applicationId)
-        && resource.data.status == 'proposed'
+        && (
+          (
+            candidateWindowOpen(resource.data.applicationId)
+            && resource.data.status == 'proposed'
+          )
+          ||
+          (
+            approvedApplication(resource.data.applicationId)
+            && resource.data.status == 'proposed'
+            && resource.data.postApprovalProposal == true
+            && resource.data.reviewStatus == 'adjustments'
+            && resource.data.createdByUid == request.auth.uid
+          )
+        )
       );
     }
 
