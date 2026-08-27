@@ -1,4 +1,4 @@
-/* Round 23/24 — sincronização pontual após mover e feedback de envio do planejamento. */
+/* Round 23/26 — atualização local após mover e feedback de envio do planejamento. */
 (function refinementsR23Portal(){
   function sessionById(id){return (state.sessions||[]).find(row=>String(row.id||row.sessionId)===String(id))||null}
   function activityFor(session){return (state.activities||[]).find(row=>String(row.id)===String(session?.activityId))||{id:session?.activityId,name:session?.activityName||'Atividade',time:session?.time||''}}
@@ -18,6 +18,7 @@
     if(state.volunteerMode!=='approved'&&application){application.sessionCount=(state.sessions||[]).length;application.activityCount=(state.activities||[]).length}
   }
 
+  /* O write já confirma sucesso. Não há motivo para bloquear a UI aguardando um getDoc da mesma sessão. */
   window.saveMoveBySessionId=async function(encodedId,byVolunteer=false){
     const id=decodeURIComponent(encodedId),session=sessionById(id);if(!session)return showToast('Sessão não encontrada.');
     const activity=activityFor(session),oldDate=String(session.date||''),oldTime=String(session.time||activity.time||''),newDate=document.getElementById('moveDate')?.value||'',newTime=document.getElementById('moveTime')?.value||oldTime;
@@ -29,10 +30,8 @@
     const button=document.getElementById('moveSessionSave');if(button){button.disabled=true;button.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Salvando...'}
     try{
       await window.OleiroServices.planning.updateSession(session.id,patch);
-      let fresh=null;
-      try{fresh=await window.OleiroServices.planning.getSessionById?.(session.id)}catch(error){console.warn('Mini refresh da sessão indisponível; mantendo atualização local.',error)}
       const index=(state.sessions||[]).findIndex(row=>String(row.id)===String(session.id));
-      if(index>=0)state.sessions[index]={...state.sessions[index],...(fresh||patch)};
+      if(index>=0)state.sessions[index]={...state.sessions[index],...patch};
       rebuildVolunteerPlanning();
       closeModal();render();
       showToast(byVolunteer&&session.status==='confirmed'?'Mudança enviada para confirmação.':'Cronograma atualizado.');
