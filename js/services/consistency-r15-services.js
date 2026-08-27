@@ -2,6 +2,7 @@
 (function consistencyR15Services(){
   const services=window.OleiroServices=window.OleiroServices||{};
   const baseListSessions=services.planning?.listSessions?.bind(services.planning);
+  const baseSaveActivity=services.planning?.saveActivity?.bind(services.planning);
 
   function iso(value){
     if(!value)return '';
@@ -41,6 +42,16 @@
       }
       return baseListSessions({applicationId,from,to});
     };
+
+    if(baseSaveActivity){
+      services.planning.saveActivity=async function(args={}){
+        if(args.postApprovalProposal===true&&args.activityId&&args.applicationId){
+          const allSessions=await focusedSessions(args.applicationId,'','');
+          return baseSaveActivity({...args,existingSessions:allSessions});
+        }
+        return baseSaveActivity(args);
+      };
+    }
 
     services.planning.reviewChangeRequest=async function({sessionId,decision,note=''}){
       if(!sessionId||!['approve','reject','adjustments'].includes(decision))throw new Error('Decisão inválida.');
