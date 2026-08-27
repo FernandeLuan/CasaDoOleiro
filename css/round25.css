@@ -1,0 +1,38 @@
+/* Round 25 — reunião, decisão final e ações de planejamento. */
+.admin-review-actions-r24{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important;margin-top:18px!important;padding-top:16px!important;border-top:1px solid var(--border)!important}
+.admin-review-actions-r24 .btn{width:100%!important;min-width:0!important;min-height:48px!important}
+.btn-plan-clear-warning{background:#fff2d7!important;color:var(--warning)!important;border:1px solid #ead29b!important}
+.admin-plan-clear-r23{margin-top:18px!important;padding-top:4px!important}
+.admin-plan-clear-r23 .btn{min-height:48px!important}
+
+.selection-flow-card{margin-top:12px!important;display:grid;gap:13px}
+.selection-flow-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.selection-flow-head>div{display:grid;gap:4px;min-width:0}
+.selection-flow-head strong{font-size:.8rem}
+.selection-flow-head small{font-size:.61rem;line-height:1.45;color:var(--muted)}
+.selection-meeting-details{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.selection-meeting-details>div{background:var(--surface-2);border-radius:12px;padding:9px;min-width:0}
+.selection-meeting-details span{display:block;font-size:.55rem;color:var(--muted);margin-bottom:3px}
+.selection-meeting-details strong{display:block;font-size:.65rem;overflow-wrap:anywhere}
+.selection-meeting-notes{font-size:.65rem;line-height:1.5;color:var(--muted);white-space:pre-wrap}
+.selection-meeting-link{min-height:40px!important}
+.selection-meeting-actions,.selection-final-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.selection-meeting-actions .btn,.selection-final-actions .btn{width:100%;min-width:0;min-height:43px}
+
+.selection-portal-meeting{margin-bottom:22px}
+.selection-meeting-card{display:grid;gap:11px}
+.selection-meeting-card-head{display:grid;grid-template-columns:36px minmax(0,1fr) auto;align-items:center;gap:10px}
+.selection-meeting-card-head .metric-icon{width:36px;height:36px}
+.selection-meeting-card-head>div:nth-child(2){display:grid;gap:2px;min-width:0}
+.selection-meeting-card-head strong{font-size:.75rem}
+.selection-meeting-card-head span:not(.badge){font-size:.6rem;color:var(--muted)}
+.selection-meeting-card-meta{display:flex;gap:8px;flex-wrap:wrap;font-size:.61rem;color:var(--muted)}
+.selection-meeting-card-meta span{display:inline-flex;align-items:center;gap:5px}
+.selection-meeting-card>p{font-size:.64rem;color:var(--muted);line-height:1.5;white-space:pre-wrap}
+
+@media(max-width:390px){
+  .selection-meeting-details{grid-template-columns:1fr 1fr}
+  .selection-meeting-details>div:last-child{grid-column:1/-1}
+  .selection-meeting-card-head{grid-template-columns:34px minmax(0,1fr)}
+  .selection-meeting-card-head>.badge{grid-column:2;justify-self:start}
+}
