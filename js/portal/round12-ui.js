@@ -1,5 +1,6 @@
 /* Round 12 — estados de mudança mais claros no Portal. */
 (function round12Portal(){
+  /* AGENDA_PAGE_SIZE=5 existia aqui, mas a paginação foi removida porque não reduzia leituras do Firestore. */
   const baseVolunteerAgendaContent=volunteerAgendaContent;
   const baseSessionCardVolunteer=sessionCardVolunteer;
 
