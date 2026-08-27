@@ -19,6 +19,27 @@
 .admin-session-description{margin:6px 0 0!important;font-size:.61rem!important;line-height:1.45!important;color:var(--muted)!important;overflow-wrap:anywhere}
 .admin-session-description strong{color:var(--text);font-weight:600}
 
+/* Propostas criadas depois da aprovação. */
+.post-approval-proposal{border-style:solid!important}
+.proposal-review-note{margin-top:10px!important;padding:9px 10px!important;font-size:.62rem!important}
+.post-approval-admin-row .planning-session-title{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.post-approval-admin-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.post-approval-admin-actions .btn{flex:1 1 95px;min-height:34px;padding:7px 9px;font-size:.6rem}
+
+/* Administração de conta do voluntário. */
+.access-admin-card{padding:13px!important}
+.access-admin-head h3{font-size:.78rem;margin:4px 0 0}
+.access-admin-list{display:grid;gap:0;margin-top:10px}
+.access-admin-row{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:10px 0;border-top:1px solid var(--border)}
+.access-admin-row:first-child{border-top:0}
+.access-admin-main{min-width:0;display:grid;gap:3px}
+.access-admin-main strong{font-size:.68rem;overflow-wrap:anywhere}
+.access-admin-main span{font-size:.62rem;color:var(--muted);overflow-wrap:anywhere}
+.access-admin-main small{font-size:.57rem;color:var(--muted)}
+.access-admin-row .btn{flex:0 0 auto;min-height:34px;padding:7px 9px;font-size:.59rem}
+.access-admin-danger{display:grid;gap:6px;padding-top:10px;margin-top:4px;border-top:1px solid var(--border)}
+.access-admin-danger small{font-size:.56rem;line-height:1.4;color:var(--muted);text-align:center}
+
 /* Sem conexão: centro informativo + ação no rodapé no mobile. */
 .offline-page{min-height:100dvh;padding:0!important;margin:0!important;background:var(--bg)}
 .offline-state{min-height:100dvh;display:grid;grid-template-rows:1fr auto;gap:22px;padding:24px 18px calc(18px + env(safe-area-inset-bottom));box-sizing:border-box}
@@ -38,6 +59,12 @@
 .unit-admin-actions{display:flex;flex-wrap:wrap;gap:7px;padding-top:9px;border-top:1px solid var(--border)}
 .unit-admin-actions .btn{flex:1 1 145px;min-height:38px;padding:8px 10px;font-size:.64rem}
 .btn-danger-soft{background:#fce7e7;color:var(--danger);border:1px solid #f2cccc}
+
+@media(max-width:430px){
+  .access-admin-row{align-items:flex-start;flex-direction:column}
+  .access-admin-row .btn{width:100%}
+  .post-approval-admin-actions .btn{flex-basis:100%}
+}
 
 @media(min-width:700px){
   .offline-page{display:grid;place-items:center;padding:24px!important}
