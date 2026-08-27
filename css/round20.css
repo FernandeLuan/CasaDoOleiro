@@ -27,9 +27,7 @@
 .manager-activity-date i{font-size:.72rem}
 .manager-activity-modal .modal-body{overflow-x:hidden}
 
-/* Revisão inicial: ações finais compactas e sem duplicar o reajuste geral. */
-.admin-plan-review-footer.admin-review-actions-r24{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:9px!important;margin-top:18px!important;padding-top:4px!important;width:100%!important}
-.admin-plan-review-footer.admin-review-actions-r24 .btn{width:100%!important;min-width:0!important;min-height:48px!important;padding:9px 7px!important;font-size:.64rem!important;white-space:nowrap!important}
+/* O rodapé da revisão inicial pertence ao Round 25. Não definir colunas aqui. */
 .admin-plan-clear-r23{margin-top:18px!important}
 .btn-plan-clear-warning{background:#fff2d7!important;color:var(--warning)!important;border:1px solid #ead29b!important}
 .btn-plan-clear-warning:disabled{opacity:.65}
@@ -54,11 +52,8 @@
   .day-review-badge{font-size:.49rem!important;padding:4px 6px!important}
   .admin-session-manage-actions{gap:6px}
   .admin-session-manage-actions .btn{font-size:.58rem;padding-left:5px;padding-right:5px}
-  .admin-plan-review-footer.admin-review-actions-r24{gap:7px!important}
-  .admin-plan-review-footer.admin-review-actions-r24 .btn{font-size:.59rem!important;padding-left:5px!important;padding-right:5px!important}
 }
 @media(max-width:350px){
   .session-detail-modal .modal-action-row .btn{font-size:.58rem!important;padding-left:4px!important;padding-right:4px!important}
   .admin-session-manage-actions{grid-template-columns:1fr}
-  .admin-plan-review-footer.admin-review-actions-r24 .btn{font-size:.55rem!important;gap:4px!important}
 }
