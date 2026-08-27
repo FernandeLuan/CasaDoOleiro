@@ -1,15 +1,14 @@
 {
-  "name": "casa-do-oleiro-functions",
+  "name": "casa-do-oleiro-admin-tools",
   "private": true,
-  "main": "index.js",
   "engines": {
     "node": "20"
   },
   "scripts": {
-    "admin:delete": "node tools/delete-volunteer.js"
+    "admin:delete": "node tools/delete-volunteer.js",
+    "admin:update-email": "node tools/update-volunteer-email.js"
   },
   "dependencies": {
-    "firebase-admin": "^13.0.0",
-    "firebase-functions": "^6.0.0"
+    "firebase-admin": "^13.0.0"
   }
 }
