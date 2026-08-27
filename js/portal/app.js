@@ -23,14 +23,28 @@ function render(){renderVolunteer()}
 function planStatusFromApplication(status){return status==='adjustments'?'adjustments':status==='analysis'?'submitted':status==='approved'?'approved':status==='rejected'?'rejected':'draft'}
 function portalPlanActivities(application,sessions){
   const byActivity=new Map();
-  (sessions||[]).forEach(session=>{const id=String(session.activityId||'');if(!id)return;let activity=byActivity.get(id);if(!activity){activity={id,applicationId:String(application?.id||''),name:session.activityName||'Atividade',description:session.activityDescription||'',duration:Number(session.duration)||60,participation:session.participation||'Livre',materials:session.materials||'',notes:session.notes||'',period:session.period||'Sem preferência',time:session.time||'',ownerName:session.ownerName||'',createdByUid:session.createdByUid||'',postApprovalProposal:session.postApprovalProposal===true,reviewStatus:session.reviewStatus||'',reviewNote:session.reviewNote||'',dates:[]};byActivity.set(id,activity)}if(session.date&&!activity.dates.includes(session.date))activity.dates.push(session.date);if(!activity.time&&session.time)activity.time=session.time;if(session.postApprovalProposal===true){activity.postApprovalProposal=true;activity.reviewStatus=session.reviewStatus||activity.reviewStatus;activity.reviewNote=session.reviewNote||activity.reviewNote}});
+  (sessions||[]).forEach(session=>{const id=String(session.activityId||'');if(!id)return;let activity=byActivity.get(id);if(!activity){activity={id,applicationId:String(application?.id||''),name:session.activityName||'Atividade',description:session.activityDescription||'',duration:Number(session.duration)||60,participation:session.participation||'Livre',materials:session.materials||'',notes:session.notes||'',period:session.period||'Sem preferência',time:session.time||'',ownerName:session.ownerName||'',createdByUid:session.createdByUid||'',managerCreated:session.managerCreated===true,postApprovalProposal:session.postApprovalProposal===true,reviewStatus:session.reviewStatus||'',reviewNote:session.reviewNote||'',dates:[]};byActivity.set(id,activity)}if(session.date&&!activity.dates.includes(session.date))activity.dates.push(session.date);if(!activity.time&&session.time)activity.time=session.time;if(session.managerCreated===true)activity.managerCreated=true;if(session.postApprovalProposal===true){activity.postApprovalProposal=true;activity.reviewStatus=session.reviewStatus||activity.reviewStatus;activity.reviewNote=session.reviewNote||activity.reviewNote}});
   byActivity.forEach(activity=>activity.dates.sort());return [...byActivity.values()];
+}
+function applyVolunteerPlanningRows(application,sessions){
+  state.sessions=sessions||[];state.activities=portalPlanActivities(application,state.sessions);state.sessionStatus={};state.sessionGroups={};
+  state.sessions.forEach(session=>{if(session.activityId&&session.date){state.sessionStatus[`${session.activityId}-${session.date}`]=session.status||'proposed';state.sessionGroups[`${session.activityId}-${session.date}`]=session.groupId||'A definir'}});state.volunteerPlanningLoadedFor=String(application.id);state.volunteerPlanningFailedFor=null;
+}
+async function resetEmptyAdjustmentState(application){
+  if(!application?.id||application.status!=='adjustments'||!window.OleiroServices?.applications?.update)return;
+  try{await window.OleiroServices.applications.update(application.id,{status:'pending',planningSubmittedAt:null,dayAdjustments:{}});application.status='pending';application.planningSubmittedAt=null;application.dayAdjustments={};state.volunteerPlanStatus='draft'}catch(error){console.warn('Não foi possível normalizar o planejamento vazio:',error)}
 }
 async function hydrateVolunteerPlanning(application,{force=false}={}){
   if(!application?.id||!window.OleiroServices?.planning)return;const applicationId=String(application.id);if(!force&&state.volunteerPlanningLoadedFor===applicationId)return;
+  const candidate=state.volunteerMode!=='approved',declaredEmpty=candidate&&Number(application.sessionCount||0)===0&&Number(application.activityCount||0)===0;
   try{
-    const sessions=await window.OleiroServices.planning.listSessions({applicationId});state.sessions=sessions||[];state.activities=portalPlanActivities(application,state.sessions);state.sessionStatus={};state.sessionGroups={};
-    state.sessions.forEach(session=>{if(session.activityId&&session.date){state.sessionStatus[`${session.activityId}-${session.date}`]=session.status||'proposed';state.sessionGroups[`${session.activityId}-${session.date}`]=session.groupId||'A definir'}});state.volunteerPlanningLoadedFor=applicationId;state.volunteerPlanningFailedFor=null;
+    if(!force&&declaredEmpty&&window.OleiroServices.planning.hasSessions){
+      applyVolunteerPlanningRows(application,[]);
+      const hasAny=await window.OleiroServices.planning.hasSessions({applicationId});
+      if(!hasAny){await resetEmptyAdjustmentState(application);return []}
+    }
+    const sessions=await window.OleiroServices.planning.listSessions({applicationId});applyVolunteerPlanningRows(application,sessions||[]);
+    if(candidate&&state.sessions.length===0)await resetEmptyAdjustmentState(application);return state.sessions;
   }catch(error){state.volunteerPlanningFailedFor=applicationId;throw error}
 }
 async function bootVolunteer(){
