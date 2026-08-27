@@ -1,4 +1,4 @@
-/* Round 22 — operações administrativas e validações de planejamento com orçamento de leitura limitado. */
+/* Round 22/25 — operações administrativas e validações de planejamento com orçamento de leitura limitado. */
 (function planningR22Service(){
   const services=window.OleiroServices=window.OleiroServices||{};
   if(!services.planning)return;
@@ -72,15 +72,25 @@
     },{loading:false});
   };
 
-  services.planning.deleteSession=async function(sessionId,{applicationId,activityId,knownCounts=null,updateApplicationCounts=false,planningStatePatch=null,resetPlanningWhenEmpty=false}={}){
+  services.planning.deleteSession=async function(sessionId,{applicationId,activityId,knownCounts=null,updateApplicationCounts=false,planningStatePatch=null,resetPlanningWhenEmpty=false,knownActivityOccurrences=null}={}){
     if(!sessionId||!applicationId)throw new Error('Sessão não encontrada.');
     return services.run(async()=>{
       const context=await services.firebase(),{firestore}=context.modules,appId=String(applicationId),actId=String(activityId||'');let deletedActivity=false;
       if(actId){
-        const started=Date.now();
-        const occurrenceSnapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'activity_sessions'),firestore.where('activityId','==',actId),firestore.limit(2)));
-        metric('activity_sessions/activity-delete-check',started,occurrenceSnapshot.size,{activityId:actId,limit:2});
-        deletedActivity=!occurrenceSnapshot.docs.some(doc=>String(doc.id)!==String(sessionId));
+        const supplied=knownActivityOccurrences!==null&&knownActivityOccurrences!==undefined?Number(knownActivityOccurrences):NaN;
+        if(Number.isFinite(supplied)&&supplied>=1){
+          deletedActivity=supplied<=1;
+        }else{
+          const started=Date.now();
+          const occurrenceSnapshot=await firestore.getDocs(firestore.query(
+            firestore.collection(context.db,'activity_sessions'),
+            firestore.where('applicationId','==',appId),
+            firestore.where('activityId','==',actId),
+            firestore.limit(2)
+          ));
+          metric('activity_sessions/activity-delete-check',started,occurrenceSnapshot.size,{applicationId:appId,activityId:actId,limit:2});
+          deletedActivity=!occurrenceSnapshot.docs.some(doc=>String(doc.id)!==String(sessionId));
+        }
       }
 
       let nextSessionCount=null,nextActivityCount=null;
