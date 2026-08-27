@@ -1,0 +1,26 @@
+/* Round 12 — acabamento visual final da agenda, rotina e ajustes. */
+
+/* Informações: alinhar summary e conteúdo na mesma margem interna. */
+.info-accordion summary{min-height:46px;padding:0 0!important;box-sizing:border-box}
+.info-accordion details>p{padding:0!important;margin:0 0 13px!important}
+.info-accordion details .info-routine{margin-top:0!important;padding:0!important}
+.info-accordion details .info-routine p{padding:0!important;margin:0 0 10px!important;line-height:1.45!important}
+.info-accordion details .info-routine p:last-child{margin-bottom:13px!important}
+
+/* Solicitar mudança: texto visualmente menor. */
+#moveDate,#moveTime,.move-date-select{font-size:12px!important;line-height:1.3!important}
+
+/* Mudança aguardando aprovação no Portal: marca-d'água amarela, sem tag duplicada. */
+.volunteer-change-pending,.volunteer-change-pending:disabled{background:#fff4dc!important;color:#8a6116!important;border-color:#f0dcae!important;opacity:.68!important;box-shadow:none!important}
+.volunteer-change-pending i{color:#8a6116!important}
+
+/* Planejamento Admin: a pendência não pinta o card inteiro. */
+.planning-session-row.has-change-request{background:transparent!important;border-color:var(--border)!important}
+.admin-session-description{margin:6px 0 0!important;font-size:.61rem!important;line-height:1.45!important;color:var(--muted)!important;overflow-wrap:anywhere}
+.admin-session-description strong{color:var(--text);font-weight:600}
+
+/* Agenda aprovada: cinco registros/dias por página. */
+.volunteer-agenda-pagination{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
+.volunteer-agenda-pagination span{font-size:.62rem;color:var(--muted);min-width:72px;text-align:center}
+.volunteer-agenda-pagination .icon-btn{width:36px;height:36px;border:1px solid var(--border);box-shadow:none}
+.volunteer-agenda-pagination .icon-btn:disabled{opacity:.35;pointer-events:none}
