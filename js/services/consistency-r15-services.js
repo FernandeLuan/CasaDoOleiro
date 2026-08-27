@@ -19,12 +19,18 @@
     return out;
   }
   async function focusedSessions(applicationId,from,to){
-    const context=await services.firebase(),{firestore}=context.modules,constraints=[firestore.where('applicationId','==',String(applicationId))];
+    const context=await services.firebase(),{firestore}=context.modules,collection=firestore.collection(context.db,'activity_sessions');
+    const map=snapshot=>snapshot.docs.map(doc=>({id:doc.id,...doc.data()})).filter(row=>(!from||row.date>=from)&&(!to||row.date<=to)).sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))||String(a.time||'').localeCompare(String(b.time||'')));
+    const constraints=[firestore.where('applicationId','==',String(applicationId))];
     if(from)constraints.push(firestore.where('date','>=',String(from)));
     if(to)constraints.push(firestore.where('date','<=',String(to)));
     if(from||to)constraints.push(firestore.orderBy('date','asc'));
-    const snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'activity_sessions'),...constraints));
-    return snapshot.docs.map(doc=>({id:doc.id,...doc.data()})).sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))||String(a.time||'').localeCompare(String(b.time||'')));
+    try{return map(await firestore.getDocs(firestore.query(collection,...constraints)))}
+    catch(error){
+      const message=String(error?.message||'');if(!(from||to)||(!/index|failed-precondition/i.test(`${error?.code||''} ${message}`)))throw error;
+      console.warn('Índice de agenda ainda indisponível; usando leitura compatível até o índice ficar pronto.');
+      const fallback=await firestore.getDocs(firestore.query(collection,firestore.where('applicationId','==',String(applicationId))));return map(fallback);
+    }
   }
   function approvedInitialRange(){
     const app=window.state?.currentApplication||{},start=iso(app.stayStart),end=iso(app.stayEnd);if(!start||!end)return null;
