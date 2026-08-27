@@ -45,10 +45,10 @@
     return html;
   };
 
-  /* A visão geral volta a usar o contador já persistido; não espera cálculo de horas. */
+  /* Visão geral: somente quantidade de atividades. Sessões/horas não justificam carregar o plano. */
   personTabContent=function(p,tab){
     let html=basePersonTabContent(p,tab);
-    if(tab==='overview')html=html.replace(/<span class="stat-pill">[^<]* planejadas<\/span>/,`<span class="stat-pill">${Number(p.sessions)||0} sessões</span>`);
+    if(tab==='overview')html=html.replace(/<span class="stat-pill">[^<]*(?:planejadas|sessões)<\/span>/,'');
     return html;
   };
 
