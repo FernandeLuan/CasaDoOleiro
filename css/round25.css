@@ -21,6 +21,7 @@
 .selection-meeting-actions .btn,.selection-final-actions .btn{width:100%;min-width:0;min-height:43px}
 
 /* Safari/iPhone pode impor largura intrínseca em date/time. Mantém ambos dentro do grid/modal. */
+.field-row>.field{min-width:0}
 #selectionMeetingDate,#selectionMeetingTime{display:block;width:100%!important;min-width:0!important;max-width:100%!important;box-sizing:border-box!important}
 .field:has(#selectionMeetingDate),.field:has(#selectionMeetingTime){min-width:0!important;max-width:100%!important}
 .field-row:has(#selectionMeetingDate){grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;min-width:0!important;max-width:100%!important}
