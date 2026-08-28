@@ -196,7 +196,7 @@ test('Volunteer can edit own emergency contact and Admin sees the same profile d
   await expect(adminEmergency).toContainText('Contato E2E',{timeout:20_000});
   await expect(adminEmergency).toContainText('Irmão');
   await expect(adminEmergency).toContainText('+55 47 99999-1111');
-  await expect.poll(()=>page.evaluate(()=>window.OleiroQueryMetrics?.filter(row=>row.name==='profiles/by-ids').reduce((sum,row)=>sum+(Number(row.meta?.pointReads)||0),0)||0)).toBeLessThanOrEqual(1);
+  await expect.poll(()=>page.evaluate(()=>window.OleiroQueryMetrics?.filter(row=>row.name==='profiles/by-ids').reduce((sum,row)=>sum+(Number(row.pointReads)||0),0)||0)).toBe(1);
 });
 
 test('Candidate creates, edits, moves and deletes own proposed activity',async({page})=>{
