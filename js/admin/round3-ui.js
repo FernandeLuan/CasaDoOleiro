@@ -1,11 +1,7 @@
 /* Round 3 — correções de UX do Admin, especialmente Safari/iPhone. */
 (function round3AdminUi(){
-  /* Safari não garante `event` como global em handlers inline. */
-  managerGroups=function(){
-    if(!state.groupsLoaded)return `<section class="section compact-page-top"><div class="empty compact-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando grupos...</div></section>`;
-    const rows=state.groups||[];
-    return `<section class="section compact-page-top">${rows.length?rows.map(g=>`<details class="group-details"><summary><div class="avatar">${escapeHtml(g.code||g.id)}</div><div class="group-summary-copy"><strong>Grupo ${escapeHtml(g.code||g.id)}</strong><span>${(g.members||[]).length} integrantes • capacidade ${Number(g.capacity||5)}</span></div><i class="fa-solid fa-chevron-down" style="color:var(--muted)"></i></summary><div class="group-members">${(g.members||[]).map(m=>`<div class="member-row"><span class="member-name"><span class="member-dot"></span>${escapeHtml(m)}</span></div>`).join('')||'<div class="empty">Nenhum nome cadastrado.</div>'}<button class="btn btn-outline btn-block" type="button" onclick='editGroup(${JSON.stringify(String(g.id))})'><i class="fa-solid fa-pen"></i>Editar</button></div></details>`).join(''):'<div class="empty"><i class="fa-solid fa-people-group"></i>Nenhum grupo cadastrado.</div>'}</section>`;
-  };
+  /* A renderização de Grupos fica em grupos.js. A sobrescrita antiga desta rodada
+     removia o seletor de unidade e impedia alternar Rodeio/Indaial. */
 
   /* Tipo da candidatura: exatamente um flag 1/2, padrão 1. */
   candidateTypeSelector=function(){return `<div class="field candidate-type-field"><label>Tipo da candidatura</label><input id="ncType" type="hidden" value="individual"><div class="candidate-type-flag" role="group" aria-label="Tipo da candidatura"><button id="ncTypeIndividual" class="active" type="button" onclick="setCandidateType('individual')" aria-label="1 pessoa" title="Individual">1</button><button id="ncTypeCouple" type="button" onclick="setCandidateType('couple')" aria-label="2 pessoas" title="Dupla">2</button></div></div>`};
