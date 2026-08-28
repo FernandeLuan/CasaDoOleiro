@@ -28,14 +28,20 @@
 
     const app=appModule.getApps().length?appModule.getApp():appModule.initializeApp(config);
     const auth=authModule.getAuth(app);
-    const db=firestoreModule.getFirestore(app);
+    const useEmulators=shouldUseEmulators();
+    /* O WebChannel padrão do Firestore pode ficar pendente no WebKit contra o emulator
+       local. Long polling é forçado somente em modo emulator; produção continua usando
+       a configuração padrão do SDK. */
+    const db=useEmulators
+      ?firestoreModule.initializeFirestore(app,{experimentalForceLongPolling:true})
+      :firestoreModule.getFirestore(app);
 
-    if(shouldUseEmulators()){
+    if(useEmulators){
       authModule.connectAuthEmulator(auth,'http://127.0.0.1:9099',{disableWarnings:true});
       firestoreModule.connectFirestoreEmulator(db,'127.0.0.1',8080);
     }
 
-    return {configured:true,app,auth,db,modules:{app:appModule,auth:authModule,firestore:firestoreModule},emulated:shouldUseEmulators()};
+    return {configured:true,app,auth,db,modules:{app:appModule,auth:authModule,firestore:firestoreModule},emulated:useEmulators};
   }
 
   window.OleiroFirebase={
