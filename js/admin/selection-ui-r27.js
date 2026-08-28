@@ -62,12 +62,6 @@
     window.openSelectionMeetingEditor=function(...args){
       const result=baseOpenSelectionMeetingEditor(...args),dateInput=document.getElementById('selectionMeetingDate'),row=dateInput?.closest('.field-row');
       if(row)row.classList.add('selection-meeting-datetime');
-      const dateField=dateInput?.closest('.field');
-      if(dateField&&typeof datePickerField==='function'){
-        const holder=document.createElement('div'),label=dateField.querySelector('label')?.textContent?.trim()||'Data';
-        holder.innerHTML=datePickerField('selectionMeetingDate',label,dateInput.value||'',false,'syncVisualDateField');
-        const replacement=holder.firstElementChild;if(replacement)dateField.replaceWith(replacement);
-      }
       modalRoot.querySelector('.modal')?.classList.add('selection-meeting-modal');
       if(typeof applyI18n==='function')applyI18n(modalRoot);
       return result;
