@@ -41,6 +41,25 @@ test('Admin manages independent A/B/C/D groups for Rodeio and Indaial',async({pa
   await expect(page.getByText('Grupo A',{exact:true})).toBeVisible();
 });
 
+test('Candidate History is lazy and loads only after opening its tab',async({page})=>{
+  await login(page,'admin@oleiro.test','Admin123!','admin');
+  await page.getByRole('button',{name:'Voluntariado',exact:true}).click();
+  await page.getByRole('button',{name:'Filtros',exact:true}).click();
+  await page.locator('#candidateStatusFilter').selectOption('pending');
+  await page.locator('#modalRoot').getByRole('button',{name:'Aplicar',exact:true}).click();
+
+  const candidate=page.locator('.list-item.clickable').filter({hasText:'Voluntário E2E'}).first();
+  await expect(candidate).toBeVisible();
+  await candidate.click();
+  await expect(page.getByRole('button',{name:'Histórico',exact:true})).toBeVisible();
+  await expect.poll(()=>page.evaluate(()=>window.OleiroQueryMetrics?.filter(row=>row.name==='applications/history').length||0)).toBe(0);
+
+  await page.getByRole('button',{name:'Histórico',exact:true}).click();
+  await expect(page.getByText('Histórico do candidato',{exact:true})).toBeVisible();
+  await expect(page.getByText('Candidato cadastrado',{exact:true})).toBeVisible();
+  await expect.poll(()=>page.evaluate(()=>window.OleiroQueryMetrics?.filter(row=>row.name==='applications/history').length||0)).toBe(1);
+});
+
 test('Candidate creates, edits, moves and deletes own proposed activity',async({page})=>{
   await login(page,'voluntario@oleiro.test','Volunteer123!','portal');
   await page.getByRole('button',{name:'Planejamento',exact:true}).click();
