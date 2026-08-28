@@ -27,14 +27,14 @@ async function login(page,email,password,target){
 
 test('Admin manages independent A/B/C/D groups for Rodeio and Indaial',async({page})=>{
   await login(page,'admin@oleiro.test','Admin123!','admin');
-  await page.getByRole('button',{name:/Grupos/}).click();
+  await page.getByRole('button',{name:'Grupos',exact:true}).click();
   await expect(page.locator('#managerGroupUnit')).toBeVisible();
 
   await page.locator('#managerGroupUnit').selectOption('indaial');
   await expect(page.locator('.group-details')).toHaveCount(4);
   await expect(page.getByText('Grupo A',{exact:true})).toBeVisible();
   await expect(page.getByText('Grupo D',{exact:true})).toBeVisible();
-  await expect(page.getByText(/Indaial.*inativa/i)).toBeVisible();
+  await expect(page.locator('.section-title').getByText(/Indaial.*inativa/i)).toBeVisible();
 
   await page.locator('#managerGroupUnit').selectOption('rodeio');
   await expect(page.locator('.group-details')).toHaveCount(4);
@@ -43,31 +43,31 @@ test('Admin manages independent A/B/C/D groups for Rodeio and Indaial',async({pa
 
 test('Candidate creates, edits, moves and deletes own proposed activity',async({page})=>{
   await login(page,'voluntario@oleiro.test','Volunteer123!','portal');
-  await page.getByRole('button',{name:/Planejamento/}).click();
+  await page.getByRole('button',{name:'Planejamento',exact:true}).click();
   await expect(page.getByRole('button',{name:'Adicionar atividade'}).first()).toBeVisible();
 
   await page.getByRole('button',{name:'Adicionar atividade'}).first().click();
   await page.locator('#actName').fill('Atividade E2E');
   await page.locator('#actDesc').fill('Fluxo automatizado');
-  await page.getByRole('button',{name:'Adicionar atividade',exact:true}).click();
+  await page.locator('#modalRoot').getByRole('button',{name:'Adicionar atividade',exact:true}).click();
   await expect(page.getByText('Atividade E2E',{exact:true})).toBeVisible();
   await expect(page.getByText(/1 atividades/)).toBeVisible();
 
   let card=page.locator('.activity-card').filter({hasText:'Atividade E2E'}).first();
-  await card.getByRole('button',{name:'Editar'}).click();
+  await card.getByRole('button',{name:'Editar',exact:true}).click();
   await page.locator('#actName').fill('Atividade E2E editada');
-  await page.getByRole('button',{name:'Salvar alterações'}).click();
+  await page.locator('#modalRoot').getByRole('button',{name:'Salvar alterações',exact:true}).click();
   await expect(page.getByText('Atividade E2E editada',{exact:true})).toBeVisible();
 
   card=page.locator('.activity-card').filter({hasText:'Atividade E2E editada'}).first();
-  await card.getByRole('button',{name:'Mover'}).click();
+  await card.getByRole('button',{name:'Mover',exact:true}).click();
   await expect(page.locator('#moveDate')).toBeVisible();
   await page.locator('#modalRoot').getByRole('button',{name:'Mover',exact:true}).click();
   await expect(page.getByText('Atividade E2E editada',{exact:true})).toBeVisible();
 
   card=page.locator('.activity-card').filter({hasText:'Atividade E2E editada'}).first();
-  await card.getByRole('button',{name:'Excluir'}).click();
-  await page.locator('#modalRoot').getByRole('button',{name:'Excluir',exact:true}).last().click();
+  await card.getByRole('button',{name:'Excluir',exact:true}).click();
+  await page.locator('#modalRoot').getByRole('button',{name:'Excluir',exact:true}).click();
   await expect(page.getByText('Atividade E2E editada',{exact:true})).toHaveCount(0);
   await expect(page.getByText(/0 atividades/)).toBeVisible();
 });
