@@ -11,5 +11,15 @@
   };
   const deny=name=>{const base=window[name];if(typeof base!=='function')return;window[name]=function(...args){if(isAssistant())return showToast('Esta ação é exclusiva do administrador.');return base(...args)}};
   ['approveCandidate','confirmApprovePlanningR25','requestClearCandidatePlanning','confirmResetPlanning','rejectCandidate','reactivateCandidate','openStayDateEditor','saveStayDates','confirmStayDates','requestVolunteerEmailEdit','confirmInactivateApprovedVolunteer','openNewCandidate','openSelectionMeetingEditor','requestCompleteSelectionMeeting','confirmCompleteSelectionMeeting','requestFinalSelectionDecision','confirmFinalSelectionDecision','openUnits'].forEach(deny);
+
+  /* A listagem de Voluntariado deve abrir sempre em Planejamento. A camada anterior usava
+     "overview" como padrão e o refactor legado convertia esse valor para Conta. */
+  const baseOpenPerson=window.openPerson||openPerson;
+  openPerson=function(id,tab='plan'){
+    const target=!tab||tab==='overview'?'plan':tab;
+    return baseOpenPerson(id,target);
+  };
+
   window.renderPersonModal=renderPersonModal;
+  window.openPerson=openPerson;
 })();
