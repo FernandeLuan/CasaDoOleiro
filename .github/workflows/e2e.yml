@@ -2,7 +2,9 @@ name: Browser E2E
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - 'fix/**'
     paths:
       - 'index.html'
       - 'admin/**'
