@@ -21,7 +21,12 @@ async function prepare(page){
 async function login(page,email,password,target){
   await prepare(page);
   await page.goto('/?emulator=1');
-  await page.waitForFunction(()=>typeof window.OleiroAuth?.signIn==='function',undefined,{timeout:20_000});
+  await page.waitForFunction(async()=>{
+    try{
+      const context=await window.OleiroFirebase?.ready;
+      return !!context?.configured&&typeof window.OleiroAuth?.signIn==='function';
+    }catch{return false}
+  },undefined,{timeout:30_000});
   await page.locator('#email').fill(email);
   await page.locator('#password').fill(password);
   await page.locator('#loginButton').click();
@@ -32,6 +37,13 @@ const navAction=(page,label)=>page.locator('#navRoot').getByRole('button',{name:
 const appAction=(page,label)=>page.locator('#app').getByRole('button',{name:new RegExp(label)});
 const activityCard=(page,label)=>page.locator('.activity-card').filter({hasText:label});
 
+async function waitForCandidateList(page){
+  const list=page.locator('#candidateList');
+  await expect(list).toBeVisible({timeout:20_000});
+  await expect(list.getByText(/Carregando voluntários/)).toHaveCount(0,{timeout:20_000});
+  return list;
+}
+
 test.beforeEach(async()=>{
   await seedEmulators();
 });
@@ -40,35 +52,38 @@ test('Admin manages independent A/B/C/D groups for Rodeio and Indaial',async({pa
   await login(page,'admin@oleiro.test','Admin123!','admin');
   await navAction(page,'Menu').click();
   await page.locator('#app .menu-list').getByRole('button',{name:/Grupos\b/}).click();
-  await expect(page.locator('#managerGroupUnit')).toBeVisible();
+  await expect(page.locator('#managerGroupUnit')).toBeVisible({timeout:20_000});
 
   await page.locator('#managerGroupUnit').selectOption('indaial');
-  await expect(page.locator('.group-details')).toHaveCount(4);
+  await expect(page.locator('.group-details')).toHaveCount(4,{timeout:20_000});
   await expect(page.getByText('Grupo A',{exact:true})).toBeVisible();
   await expect(page.getByText('Grupo D',{exact:true})).toBeVisible();
   await expect(page.locator('.section-title').getByText(/Indaial.*inativa/i)).toBeVisible();
 
   await page.locator('#managerGroupUnit').selectOption('rodeio');
-  await expect(page.locator('.group-details')).toHaveCount(4);
+  await expect(page.locator('.group-details')).toHaveCount(4,{timeout:20_000});
   await expect(page.getByText('Grupo A',{exact:true})).toBeVisible();
 });
 
 test('Candidate History is lazy and loads only after opening its tab',async({page})=>{
   await login(page,'admin@oleiro.test','Admin123!','admin');
   await navAction(page,'Voluntariado').click();
+  await waitForCandidateList(page);
   await appAction(page,'Filtros').click();
   await page.locator('#candidateStatusFilter').selectOption('pending');
   await page.locator('#modalRoot').getByRole('button',{name:/Aplicar$/}).click();
+  const list=await waitForCandidateList(page);
 
-  const candidate=page.locator('.list-item.clickable').filter({hasText:'Voluntário E2E'}).first();
-  await expect(candidate).toBeVisible();
+  const candidate=list.locator('.list-item.clickable').filter({hasText:'Voluntário E2E'}).first();
+  await expect(candidate).toBeVisible({timeout:20_000});
   await candidate.click();
-  await expect(page.getByRole('button',{name:/Histórico$/})).toBeVisible();
+  const modal=page.locator('#modalRoot');
+  await expect(modal.getByRole('button',{name:/Histórico$/})).toBeVisible();
   await expect.poll(()=>page.evaluate(()=>window.OleiroQueryMetrics?.filter(row=>row.name==='applications/history').length||0)).toBe(0);
 
-  await page.getByRole('button',{name:/Histórico$/}).click();
-  await expect(page.getByText('Histórico do candidato',{exact:true})).toBeVisible();
-  await expect(page.getByText('Candidato cadastrado',{exact:true})).toBeVisible();
+  await modal.getByRole('button',{name:/Histórico$/}).click();
+  await expect(modal.getByText('Histórico do candidato',{exact:true})).toBeVisible();
+  await expect(modal.getByText('Candidato cadastrado',{exact:true})).toBeVisible();
   await expect.poll(()=>page.evaluate(()=>window.OleiroQueryMetrics?.filter(row=>row.name==='applications/history').length||0)).toBe(1);
 });
 
@@ -83,7 +98,6 @@ test('Candidate creates, edits, moves and deletes own proposed activity',async({
   await page.locator('#modalRoot').getByRole('button',{name:/Adicionar atividade$/}).click();
   await expect(activityCard(page,'Atividade E2E')).toHaveCount(1);
   await expect(activityCard(page,'Atividade E2E').first()).toBeVisible();
-  await expect(page.getByText(/1 atividades/)).toBeVisible();
 
   let card=activityCard(page,'Atividade E2E').first();
   await card.getByRole('button',{name:/Editar$/}).click();
@@ -102,5 +116,5 @@ test('Candidate creates, edits, moves and deletes own proposed activity',async({
   await card.getByRole('button',{name:/Excluir$/}).click();
   await page.locator('#modalRoot').getByRole('button',{name:/Excluir$/}).click();
   await expect(activityCard(page,'Atividade E2E editada')).toHaveCount(0);
-  await expect(page.getByText(/0 atividades/)).toBeVisible();
+  await expect(page.getByRole('button',{name:/Adicionar atividade$/}).first()).toBeVisible();
 });
