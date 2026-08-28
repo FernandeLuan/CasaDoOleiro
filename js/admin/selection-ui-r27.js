@@ -1,4 +1,4 @@
-/* Round 27 — acabamento estrutural do fluxo de seleção sem MutationObserver.
+/* Round 27 — acabamento estrutural do fluxo de seleção sem observador de DOM.
    Textos dinâmicos usam t() no momento em que são criados. */
 (function selectionUiR27(){
   const tx=(key,fallback)=>typeof t==='function'?t(key):fallback;
