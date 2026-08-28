@@ -1,0 +1,24 @@
+/* Round 27 — histórico e refinamentos estruturais. */
+.person-history-tabs{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+.candidate-history-panel{display:grid;gap:14px;margin-top:14px}
+.candidate-history-panel .section-head{margin:0}
+.candidate-history-panel .section-head h3{margin:0;font-size:.86rem}
+.candidate-history-panel .section-head p{margin:3px 0 0;font-size:.61rem;color:var(--muted);line-height:1.45}
+.history-state{display:flex;align-items:center;justify-content:center;gap:9px;min-height:110px;color:var(--muted);font-size:.66rem;text-align:center}
+.history-list{display:grid;gap:0;padding-left:3px}
+.history-event{position:relative;display:grid;grid-template-columns:18px minmax(0,1fr);gap:9px;padding:0 0 18px}
+.history-event:not(:last-child)::before{content:"";position:absolute;left:8px;top:14px;bottom:-2px;width:1px;background:var(--border)}
+.history-event-dot{position:relative;z-index:1;width:9px;height:9px;margin:6px 0 0 4px;border-radius:50%;background:var(--primary);box-shadow:0 0 0 4px var(--surface)}
+.history-event-body{min-width:0;display:grid;gap:4px;padding:0 0 1px}
+.history-event-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.history-event-head strong{font-size:.68rem;line-height:1.4}
+.history-event-head time{flex:0 0 auto;font-size:.53rem;color:var(--muted);white-space:nowrap}
+.history-event-body p{margin:0;font-size:.59rem;line-height:1.45;color:var(--text);overflow-wrap:anywhere}
+.history-event-body>span{font-size:.55rem;color:var(--muted);overflow-wrap:anywhere}
+.history-load-more{margin-top:2px}
+@media(max-width:420px){
+  .person-history-tabs button{font-size:.55rem;padding-inline:5px!important}
+  .person-history-tabs button i{font-size:.65rem}
+  .history-event-head{display:grid;gap:2px}
+  .history-event-head time{white-space:normal}
+}
