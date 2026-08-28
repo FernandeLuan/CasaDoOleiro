@@ -42,6 +42,17 @@
 .selection-meeting-card-meta span{display:inline-flex;align-items:center;gap:5px}
 .selection-meeting-card>p{font-size:.64rem;color:var(--muted);line-height:1.5;white-space:pre-wrap}
 
+/* Contato de emergência: perfil compacto, cards separados e ordem visual estável no modal. */
+.volunteer-profile-unified .volunteer-profile-details{gap:0!important}
+.volunteer-profile-unified .volunteer-profile-details>div{padding:7px 0}
+.volunteer-profile-unified .volunteer-profile-details>div:first-child{padding-top:0}
+.volunteer-profile-unified .volunteer-profile-details>div:last-child{padding-bottom:0}
+.volunteer-emergency-card{margin-top:12px!important}
+.volunteer-emergency-card .account-card-head>div,.account-emergency-card .account-card-head>div{gap:0!important}
+.emergency-contact-actions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;width:100%!important;align-items:stretch!important}
+.emergency-contact-actions .btn{width:100%!important;min-width:0!important;justify-content:center!important;text-align:center!important;margin:0!important}
+.emergency-action-placeholder{display:block;min-width:0}
+
 @media(max-width:600px){
   .selection-meeting-datetime{grid-template-columns:minmax(0,1fr)!important;gap:12px!important}
   #selectionMeetingDate,#selectionMeetingTime{font-size:16px!important}
@@ -51,4 +62,6 @@
   .selection-meeting-details>div:last-child{grid-column:1/-1}
   .selection-meeting-card-head{grid-template-columns:34px minmax(0,1fr)}
   .selection-meeting-card-head>.badge{grid-column:2;justify-self:start}
+  .emergency-contact-actions{gap:7px!important}
+  .emergency-contact-actions .btn{padding-left:6px!important;padding-right:6px!important;font-size:.6rem!important}
 }
