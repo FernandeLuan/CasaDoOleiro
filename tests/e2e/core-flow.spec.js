@@ -1,5 +1,6 @@
 // Critical browser regression: isolated Firebase emulators only; never production data.
 import {test,expect} from '@playwright/test';
+import {seedEmulators} from './seed.mjs';
 
 const firebaseConfig={
   apiKey:'demo-api-key',
@@ -20,18 +21,25 @@ async function prepare(page){
 async function login(page,email,password,target){
   await prepare(page);
   await page.goto('/?emulator=1');
+  await page.waitForFunction(()=>typeof window.OleiroAuth?.signIn==='function',undefined,{timeout:20_000});
   await page.locator('#email').fill(email);
   await page.locator('#password').fill(password);
   await page.locator('#loginButton').click();
-  await expect(page).toHaveURL(new RegExp(`/${target}/`));
+  await expect(page).toHaveURL(new RegExp(`/${target}/`),{timeout:30_000});
 }
 
-const action=(page,label)=>page.getByRole('button',{name:new RegExp(`${label}$`)});
+const navAction=(page,label)=>page.locator('#navRoot').getByRole('button',{name:new RegExp(`${label}$`)});
+const appAction=(page,label)=>page.locator('#app').getByRole('button',{name:new RegExp(label)});
+const activityCard=(page,label)=>page.locator('.activity-card').filter({hasText:label});
+
+test.beforeEach(async()=>{
+  await seedEmulators();
+});
 
 test('Admin manages independent A/B/C/D groups for Rodeio and Indaial',async({page})=>{
   await login(page,'admin@oleiro.test','Admin123!','admin');
-  await action(page,'Menu').click();
-  await action(page,'Grupos').click();
+  await navAction(page,'Menu').click();
+  await page.locator('#app .menu-list').getByRole('button',{name:/Grupos\b/}).click();
   await expect(page.locator('#managerGroupUnit')).toBeVisible();
 
   await page.locator('#managerGroupUnit').selectOption('indaial');
@@ -47,8 +55,8 @@ test('Admin manages independent A/B/C/D groups for Rodeio and Indaial',async({pa
 
 test('Candidate History is lazy and loads only after opening its tab',async({page})=>{
   await login(page,'admin@oleiro.test','Admin123!','admin');
-  await action(page,'Voluntariado').click();
-  await action(page,'Filtros').click();
+  await navAction(page,'Voluntariado').click();
+  await appAction(page,'Filtros').click();
   await page.locator('#candidateStatusFilter').selectOption('pending');
   await page.locator('#modalRoot').getByRole('button',{name:/Aplicar$/}).click();
 
@@ -66,31 +74,33 @@ test('Candidate History is lazy and loads only after opening its tab',async({pag
 
 test('Candidate creates, edits, moves and deletes own proposed activity',async({page})=>{
   await login(page,'voluntario@oleiro.test','Volunteer123!','portal');
-  await action(page,'Planejamento').click();
+  await navAction(page,'Planejamento').click();
   await expect(page.getByRole('button',{name:/Adicionar atividade$/}).first()).toBeVisible();
 
   await page.getByRole('button',{name:/Adicionar atividade$/}).first().click();
   await page.locator('#actName').fill('Atividade E2E');
   await page.locator('#actDesc').fill('Fluxo automatizado');
   await page.locator('#modalRoot').getByRole('button',{name:/Adicionar atividade$/}).click();
-  await expect(page.getByText('Atividade E2E',{exact:true})).toBeVisible();
+  await expect(activityCard(page,'Atividade E2E')).toHaveCount(1);
+  await expect(activityCard(page,'Atividade E2E').first()).toBeVisible();
   await expect(page.getByText(/1 atividades/)).toBeVisible();
 
-  let card=page.locator('.activity-card').filter({hasText:'Atividade E2E'}).first();
+  let card=activityCard(page,'Atividade E2E').first();
   await card.getByRole('button',{name:/Editar$/}).click();
   await page.locator('#actName').fill('Atividade E2E editada');
   await page.locator('#modalRoot').getByRole('button',{name:/Salvar alterações$/}).click();
-  await expect(page.getByText('Atividade E2E editada',{exact:true})).toBeVisible();
+  await expect(activityCard(page,'Atividade E2E editada')).toHaveCount(1);
+  await expect(activityCard(page,'Atividade E2E editada').first()).toBeVisible();
 
-  card=page.locator('.activity-card').filter({hasText:'Atividade E2E editada'}).first();
+  card=activityCard(page,'Atividade E2E editada').first();
   await card.getByRole('button',{name:/Mover$/}).click();
   await expect(page.locator('#moveDate')).toBeVisible();
   await page.locator('#modalRoot').getByRole('button',{name:/Mover$/}).click();
-  await expect(page.getByText('Atividade E2E editada',{exact:true})).toBeVisible();
+  await expect(activityCard(page,'Atividade E2E editada')).toHaveCount(1);
 
-  card=page.locator('.activity-card').filter({hasText:'Atividade E2E editada'}).first();
+  card=activityCard(page,'Atividade E2E editada').first();
   await card.getByRole('button',{name:/Excluir$/}).click();
   await page.locator('#modalRoot').getByRole('button',{name:/Excluir$/}).click();
-  await expect(page.getByText('Atividade E2E editada',{exact:true})).toHaveCount(0);
+  await expect(activityCard(page,'Atividade E2E editada')).toHaveCount(0);
   await expect(page.getByText(/0 atividades/)).toBeVisible();
 });
