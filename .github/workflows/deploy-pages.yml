@@ -64,6 +64,43 @@ jobs:
           )
           PY
 
+      - name: Stamp release and asset cache keys
+        env:
+          RELEASE_SHA: ${{ github.sha }}
+          RELEASE_RUN: ${{ github.run_number }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import re
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          sha = os.environ['RELEASE_SHA'].strip()
+          run = int(os.environ['RELEASE_RUN'])
+          published = datetime.now(timezone.utc)
+          release = {
+              'version': f"{published:%Y.%m.%d}.{run}",
+              'build': run,
+              'commit': sha,
+              'publishedAt': published.isoformat().replace('+00:00', 'Z'),
+          }
+          Path('_site/release.json').write_text(
+              json.dumps(release, ensure_ascii=False, separators=(',', ':')) + '\n',
+              encoding='utf-8',
+          )
+
+          asset_key = sha[:12]
+          pattern = re.compile(r'((?:src|href)="(?:\.\./)?(?:js|css)/[^"?]+)(?:\?[^\"]*)?(\")')
+          for relative in ('index.html', 'admin/index.html', 'portal/index.html'):
+              path = Path('_site') / relative
+              if not path.exists():
+                  continue
+              text = path.read_text(encoding='utf-8')
+              text = pattern.sub(lambda match: f'{match.group(1)}?v={asset_key}{match.group(2)}', text)
+              path.write_text(text, encoding='utf-8')
+          PY
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
