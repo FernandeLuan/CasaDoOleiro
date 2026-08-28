@@ -17,7 +17,8 @@
 .activity-group-picker>small{font-size:.57rem;line-height:1.4;color:var(--muted)}
 .activity-group-source{display:none!important}
 .activity-group-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
-.activity-group-grid .check-card{min-width:0;padding:9px 8px}
+.activity-group-grid .check-card{min-width:0;padding:9px 8px;gap:10px}
+.activity-group-grid .check-card input{flex:0 0 auto;margin:0}
 .activity-group-grid .check-card span{min-width:0;overflow-wrap:anywhere}
 
 .activity-inline-details{display:grid;gap:5px;margin-top:8px;padding-top:7px;border-top:1px solid var(--border)}
