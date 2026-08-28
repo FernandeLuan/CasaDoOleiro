@@ -2,7 +2,7 @@ name: Browser E2E
 
 on:
   push:
-    branches: [main, feature/emergency-contact-r32]
+    branches: [main]
     paths:
       - 'index.html'
       - 'admin/**'
