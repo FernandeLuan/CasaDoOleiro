@@ -26,12 +26,15 @@
 .admin-portal-actions>.post-approval-admin-actions,.post-approval-admin-actions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important;width:100%!important}
 .post-approval-admin-actions .btn{min-width:0!important;width:100%!important;padding-left:7px!important;padding-right:7px!important;white-space:nowrap}
 
-/* No Portal, descrição/detalhes/revisão ocupam toda a largura do card. */
+/* No Portal, o badge fica apenas no cabeçalho e o conteúdo usa 100% da largura. */
 .activity-card.volunteer-session-card{min-width:0}
-.activity-card.volunteer-session-card>.activity-row{min-width:0;width:100%}
-.activity-card.volunteer-session-card>.volunteer-session-description,.activity-card.volunteer-session-card>.activity-inline-details,.activity-card.volunteer-session-card>.r31-review-divider,.activity-card.volunteer-session-card>.r31-review-details{width:100%;min-width:0;box-sizing:border-box}
-.activity-card.volunteer-session-card>.volunteer-session-description{margin-top:9px;overflow-wrap:anywhere}
-.activity-card.volunteer-session-card>.activity-inline-details{margin-top:8px}
+.activity-card.volunteer-session-card>.activity-row{display:block!important;position:relative!important;min-width:0!important;width:100%!important}
+.activity-card.volunteer-session-card>.activity-row>div:first-child{display:block!important;width:100%!important;min-width:0!important;max-width:none!important}
+.activity-card.volunteer-session-card>.activity-row>div:first-child>h4{padding-right:118px;box-sizing:border-box}
+.activity-card.volunteer-session-card>.activity-row>.badge{position:absolute!important;top:0!important;right:0!important;max-width:112px;text-align:center}
+.activity-card.volunteer-session-card .volunteer-session-description,.activity-card.volunteer-session-card .activity-inline-details,.activity-card.volunteer-session-card>.r31-review-divider,.activity-card.volunteer-session-card>.r31-review-details{width:100%!important;min-width:0!important;max-width:none!important;box-sizing:border-box!important}
+.activity-card.volunteer-session-card .volunteer-session-description{margin-top:9px;overflow-wrap:anywhere}
+.activity-card.volunteer-session-card .activity-inline-details{margin-top:8px}
 .activity-card.volunteer-session-card>.candidate-session-actions,.activity-card.volunteer-session-card>.approved-card-actions{display:block!important;width:100%!important}
 .activity-card.volunteer-session-card>.candidate-session-actions .btn,.activity-card.volunteer-session-card>.approved-card-actions .btn{display:flex!important;width:100%!important;max-width:none!important;justify-content:center}
 
@@ -45,4 +48,6 @@
 @media (max-width:520px){
   .admin-portal-actions>.post-approval-admin-actions,.post-approval-admin-actions{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:5px!important}
   .post-approval-admin-actions .btn{font-size:.56rem!important;padding:7px 4px!important;gap:3px!important}
+  .activity-card.volunteer-session-card>.activity-row>div:first-child>h4{padding-right:108px}
+  .activity-card.volunteer-session-card>.activity-row>.badge{max-width:102px}
 }
