@@ -1,11 +1,16 @@
 (function initApplicationService(){
   const services=window.OleiroServices=window.OleiroServices||{};
+  const STAY_PREVIEW_TTL=2*60*1000;
+  const stayPreviewCache=new Map();
 
   function normalize(value){return String(value||'').trim().toLocaleLowerCase('pt-BR')}
   function isoDate(value){if(!value)return null;if(typeof value==='string')return value.slice(0,10);if(typeof value.toDate==='function')return value.toDate().toISOString().slice(0,10);return null}
   function isoDateTime(value){if(!value)return null;if(typeof value==='string')return value;if(typeof value.toDate==='function')return value.toDate().toISOString();return null}
   function unitLabel(id){const value=String(id||'');return value?value.charAt(0).toUpperCase()+value.slice(1):'—'}
   function stayMonths(start,end){if(!start||!end)return [];const from=new Date(`${start}T12:00:00`),to=new Date(`${end}T12:00:00`);const out=[];let y=from.getFullYear(),m=from.getMonth();const ey=to.getFullYear(),em=to.getMonth();while(y<ey||(y===ey&&m<=em)){out.push(`${y}-${String(m+1).padStart(2,'0')}`);m+=1;if(m===12){m=0;y+=1}}return out}
+  function stayPreviewKey(id,start,end){return `${String(id)}|${String(start)}|${String(end)}`}
+  function cachedStayPreview(id,start,end){const key=stayPreviewKey(id,start,end),cached=stayPreviewCache.get(key);if(!cached||Date.now()-cached.at>STAY_PREVIEW_TTL){stayPreviewCache.delete(key);return null}return cached}
+  function clearStayPreview(id){const prefix=`${String(id)}|`;for(const key of stayPreviewCache.keys())if(key.startsWith(prefix))stayPreviewCache.delete(key)}
 
   function mapApplication(doc){
     const data=doc.data();
@@ -143,7 +148,8 @@
       if(!stayStart||!stayEnd||stayEnd<stayStart)throw new Error('Período inválido.');
       return services.run(async()=>{
         const context=await services.firebase();const sessions=await applicationSessions(context,id);
-        const outside=sessions.filter(s=>!s.date||s.date<stayStart||s.date>stayEnd);
+        const outside=sessions.filter(s=>!s.date||s.date<stayStart||s.date>stayEnd),key=stayPreviewKey(id,stayStart,stayEnd);
+        clearStayPreview(id);stayPreviewCache.set(key,{at:Date.now(),sessions});
         return {outsideCount:outside.length,outsideDates:[...new Set(outside.map(s=>s.date).filter(Boolean))].sort(),sessionCount:sessions.length};
       },{loading:false});
     },
@@ -151,20 +157,20 @@
     async changeStayDates(id,{stayStart,stayEnd,removeOutside=true}={}){
       if(!stayStart||!stayEnd||stayEnd<stayStart)throw new Error('Período inválido.');
       return services.run(async()=>{
-        const context=await services.firebase();const {firestore}=context.modules;
-        const [sessions,activities]=await Promise.all([applicationSessions(context,id),applicationActivities(context,id)]);
+        const context=await services.firebase();const {firestore}=context.modules,cached=cachedStayPreview(id,stayStart,stayEnd);
+        const sessions=cached?.sessions||await applicationSessions(context,id);
         const outside=sessions.filter(s=>!s.date||s.date<stayStart||s.date>stayEnd);
         if(outside.length&&!removeOutside)throw new Error('Existem sessões fora do novo período.');
-        const outsideIds=new Set(outside.map(s=>String(s.id)));
-        const remaining=sessions.filter(s=>!outsideIds.has(String(s.id)));
-        const remainingActivityIds=new Set(remaining.map(s=>String(s.activityId||'')).filter(Boolean));
-        const batch=firestore.writeBatch(context.db);const now=firestore.serverTimestamp();
+        const outsideIds=new Set(outside.map(s=>String(s.id))),remaining=sessions.filter(s=>!outsideIds.has(String(s.id)));
+        const allActivityIds=new Set(sessions.map(s=>String(s.activityId||'')).filter(Boolean)),remainingActivityIds=new Set(remaining.map(s=>String(s.activityId||'')).filter(Boolean));
+        const orphanActivityIds=[...allActivityIds].filter(activityId=>!remainingActivityIds.has(activityId));
+        const batch=firestore.writeBatch(context.db),now=firestore.serverTimestamp();
         outside.forEach(s=>batch.delete(firestore.doc(context.db,'activity_sessions',String(s.id))));
-        activities.forEach(activity=>{if(!remainingActivityIds.has(String(activity.id)))batch.delete(activity.ref)});
+        orphanActivityIds.forEach(activityId=>batch.delete(firestore.doc(context.db,'activities',activityId)));
         batch.update(firestore.doc(context.db,'applications',String(id)),{
           stayStart,stayEnd,stayMonths:stayMonths(stayStart,stayEnd),sessionCount:remaining.length,activityCount:remainingActivityIds.size,updatedAt:now
         });
-        await batch.commit();return {removedSessions:outside.length,sessionCount:remaining.length,activityCount:remainingActivityIds.size};
+        await batch.commit();clearStayPreview(id);return {removedSessions:outside.length,sessionCount:remaining.length,activityCount:remainingActivityIds.size};
       },{loading:false});
     },
 
@@ -189,7 +195,7 @@
     async resetPlanning(id,{deadlineDays=7,participantUids=[]}={}){
       if(!id)throw new Error('Candidatura não encontrada.');
       return services.run(async()=>{
-        const context=await services.firebase();const {firestore}=context.modules;const applicationId=String(id);
+        const context=await services.firebase();const {firestore}=context.modules;const applicationId=String(id);clearStayPreview(applicationId);
         const [sessions,activities]=await Promise.all([applicationSessions(context,applicationId),applicationActivities(context,applicationId)]);
         const refs=[...sessions.map(row=>firestore.doc(context.db,'activity_sessions',String(row.id))),...activities.map(row=>row.ref)];
         for(let i=0;i<refs.length;i+=400){const batch=firestore.writeBatch(context.db);refs.slice(i,i+400).forEach(ref=>batch.delete(ref));await batch.commit()}
