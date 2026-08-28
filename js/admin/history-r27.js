@@ -46,7 +46,9 @@
     openModal(p.name,`${escapeHtml(p.country||'—')} • ${escapeHtml(p.unit||p.unitName||'—')}`,body);modalRoot.dataset.personId=String(p.id);modalRoot.dataset.personTab='history';modalRoot.querySelector('.modal')?.classList.add('person-modal','person-refactor-modal','person-history-modal');
   }
   function injectHistoryTab(p,tab){
-    const root=modalRoot.querySelector('.person-refactor-tabs');if(!root||root.querySelector('[data-history-tab]'))return;
+    const root=modalRoot.querySelector('.person-refactor-tabs');if(!root)return;
+    root.classList.add('person-history-tabs');
+    if(root.querySelector('[data-history-tab]'))return;
     const button=document.createElement('button');button.type='button';button.dataset.historyTab='1';button.className=tab==='history'?'active':'';button.innerHTML=`<i class="fa-solid fa-clock-rotate-left"></i>${escapeHtml(tx('history.tab','Histórico'))}`;button.onclick=()=>openPerson(String(p.id),'history');root.append(button);
   }
   async function hydrate(p,{append=false,force=false}={}){
