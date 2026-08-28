@@ -6,6 +6,14 @@
     return !!config&&['apiKey','authDomain','projectId','appId'].every(key=>typeof config[key]==='string'&&config[key].trim());
   }
 
+  function shouldUseEmulators(){
+    const local=['localhost','127.0.0.1'].includes(location.hostname);
+    if(!local)return false;
+    const requested=new URLSearchParams(location.search).get('emulator')==='1';
+    if(requested){try{sessionStorage.setItem('oleiro-use-emulators','1')}catch{}}
+    try{return requested||sessionStorage.getItem('oleiro-use-emulators')==='1'}catch{return requested}
+  }
+
   async function initialize(){
     const config=window.OLEIRO_FIREBASE_CONFIG;
     if(!hasConfig(config))return {configured:false};
@@ -21,7 +29,13 @@
     const app=appModule.getApps().length?appModule.getApp():appModule.initializeApp(config);
     const auth=authModule.getAuth(app);
     const db=firestoreModule.getFirestore(app);
-    return {configured:true,app,auth,db,modules:{app:appModule,auth:authModule,firestore:firestoreModule}};
+
+    if(shouldUseEmulators()){
+      authModule.connectAuthEmulator(auth,'http://127.0.0.1:9099',{disableWarnings:true});
+      firestoreModule.connectFirestoreEmulator(db,'127.0.0.1',8080);
+    }
+
+    return {configured:true,app,auth,db,modules:{app:appModule,auth:authModule,firestore:firestoreModule},emulated:shouldUseEmulators()};
   }
 
   window.OleiroFirebase={
