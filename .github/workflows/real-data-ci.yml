@@ -9,6 +9,10 @@ on:
       - 'fix-*'
   workflow_dispatch:
 
+concurrency:
+  group: real-data-regression-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -23,13 +27,15 @@ jobs:
         shell: bash
         run: |
           find js functions/tools -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+          find tests/e2e -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
+          node --check playwright.config.js
 
       - name: Check JSON configuration
         shell: bash
         run: |
           python - <<'PY'
           import json
-          for path in ['firebase.json', 'firestore.indexes.json', 'functions/package.json']:
+          for path in ['firebase.json', 'firestore.indexes.json', 'functions/package.json', 'package.json']:
               with open(path, encoding='utf-8') as f:
                   json.load(f)
           PY
@@ -107,9 +113,11 @@ jobs:
           test ! -e functions/index.js
           test -e functions/tools/delete-volunteer.js
           test -e functions/tools/update-volunteer-email.js
+          test -e functions/tools/audit-volunteer.js
           test -e js/services/admin-access-service.js
           test -e js/admin/access-management.js
           grep -q 'firebase-admin' functions/package.json
+          grep -q 'admin:audit' functions/package.json
           if grep -RInE 'firebase-functions|ensureFunctions|httpsCallable|adminUpdateVolunteerEmail|adminDeleteVolunteerApplication' firebase.json functions/package.json js/firebase js/services/admin-access-service.js js/admin/access-management.js; then
             echo 'Cloud Functions dependency was reintroduced into the Spark runtime.'
             exit 1
@@ -137,6 +145,44 @@ jobs:
             echo 'Hard-coded Rodeio group loading was reintroduced.'
             exit 1
           fi
+
+      - name: Check keyed i18n and history
+        shell: bash
+        run: |
+          test -e js/shared/i18n-r27.js
+          test -e js/services/history-service.js
+          test -e js/services/history-hooks-r27.js
+          test -e js/admin/history-r27.js
+          test -e js/admin/selection-ui-r27.js
+          test ! -e js/admin/i18n-after-injections-r25.js
+          grep -q 'window.t=t' js/shared/i18n-r27.js
+          grep -q "collection(context.db,'applications',String(applicationId),'history')" js/services/history-service.js
+          grep -q 'PAGE_SIZE=20' js/admin/history-r27.js
+          grep -q "tab==='history'" js/admin/history-r27.js
+          grep -q 'managerHasUnit' firestore.rules
+          grep -q 'match /history/{eventId}' firestore.rules
+          grep -q '../js/services/history-service.js' admin/index.html
+          grep -q '../js/services/history-hooks-r27.js' admin/index.html
+          grep -q '../js/admin/history-r27.js' admin/index.html
+          grep -q '../js/shared/i18n-r27.js' portal/index.html
+          if grep -RIn 'MutationObserver' js; then
+            echo 'MutationObserver-based i18n patch was reintroduced.'
+            exit 1
+          fi
+
+      - name: Check browser E2E harness
+        shell: bash
+        run: |
+          test -e package.json
+          test -e playwright.config.js
+          test -e tests/e2e/seed.mjs
+          test -e tests/e2e/core-flow.spec.js
+          test -e .github/workflows/e2e.yml
+          grep -q 'connectAuthEmulator' js/firebase/firebase-client.js
+          grep -q 'connectFirestoreEmulator' js/firebase/firebase-client.js
+          grep -q 'iphone-webkit' playwright.config.js
+          grep -q 'cancel-in-progress: true' .github/workflows/e2e.yml
+          grep -q 'firebase emulators:exec' package.json
 
       - name: Check selection lifecycle
         shell: bash
