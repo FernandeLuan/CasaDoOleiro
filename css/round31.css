@@ -5,15 +5,14 @@
 .r31-day-signal.warning{color:var(--warning)}
 .r31-day-signal.info{color:var(--info)}
 .r31-day-signal.danger{color:var(--danger)}
-.r31-day-signal-popover{display:none;position:absolute;z-index:40;top:calc(100% + 7px);left:50%;transform:translateX(-50%);width:max-content;max-width:min(245px,72vw);padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface);box-shadow:var(--shadow);color:var(--text);font-size:.64rem;font-weight:600;line-height:1.35;text-transform:none;letter-spacing:0;white-space:normal}
-.r31-day-signal-wrap.open .r31-day-signal-popover{display:block}
-.r31-day-signal-popover::before{content:"";position:absolute;top:-5px;left:50%;width:8px;height:8px;transform:translateX(-50%) rotate(45deg);background:var(--surface);border-left:1px solid var(--border);border-top:1px solid var(--border)}
+/* O balão é anexado ao body e posicionado via JS. Assim não altera nem é cortado pelo card/modal. */
+.r31-day-signal-popover{position:fixed!important;z-index:10000!important;left:12px;top:12px;width:max-content;max-width:min(245px,calc(100vw - 24px));padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface);box-shadow:var(--shadow);color:var(--text);font-size:.64rem;font-weight:600;line-height:1.35;text-transform:none;letter-spacing:0;white-space:normal;pointer-events:none}
 
 .planning-session-row.admin-portal-activity-card.r31-card-warning,.activity-card.volunteer-session-card.r31-card-warning{background:color-mix(in srgb,var(--warning) 8%,var(--surface-2))!important;border-color:color-mix(in srgb,var(--warning) 30%,var(--border))!important}
 .planning-session-row.admin-portal-activity-card.r31-card-info,.activity-card.volunteer-session-card.r31-card-info{background:color-mix(in srgb,var(--info) 8%,var(--surface-2))!important;border-color:color-mix(in srgb,var(--info) 28%,var(--border))!important}
 .planning-session-row.admin-portal-activity-card.r31-card-danger,.activity-card.volunteer-session-card.r31-card-danger{background:color-mix(in srgb,var(--danger) 7%,var(--surface-2))!important;border-color:color-mix(in srgb,var(--danger) 28%,var(--border))!important}
 .r31-review-divider{margin-top:11px!important}
-.r31-review-details{display:grid;gap:8px;margin-top:9px}
+.r31-review-details{display:grid;gap:8px;margin-top:9px;min-width:0}
 .r31-review-block{display:grid;gap:4px;font-size:.65rem;line-height:1.45;min-width:0}
 .r31-review-block>strong{font-size:.62rem;color:var(--text)}
 .r31-review-block.warning>strong{color:var(--warning)}
@@ -23,8 +22,18 @@
 .r31-change-pair b{color:var(--text)}
 .r31-awaiting-action{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:.64rem;font-weight:600;padding:6px 2px}
 .admin-portal-actions>.post-approval-admin-actions,.admin-portal-actions>.admin-session-manage-actions{margin-top:0!important}
-.post-approval-admin-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
-.post-approval-admin-actions .btn{min-width:0;padding-left:7px;padding-right:7px}
+/* Três decisões sempre lado a lado, inclusive no mobile. CSS posteriores não podem voltar ao grid vertical. */
+.admin-portal-actions>.post-approval-admin-actions,.post-approval-admin-actions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important;width:100%!important}
+.post-approval-admin-actions .btn{min-width:0!important;width:100%!important;padding-left:7px!important;padding-right:7px!important;white-space:nowrap}
+
+/* No Portal, descrição/detalhes/revisão ocupam toda a largura do card. */
+.activity-card.volunteer-session-card{min-width:0}
+.activity-card.volunteer-session-card>.activity-row{min-width:0;width:100%}
+.activity-card.volunteer-session-card>.volunteer-session-description,.activity-card.volunteer-session-card>.activity-inline-details,.activity-card.volunteer-session-card>.r31-review-divider,.activity-card.volunteer-session-card>.r31-review-details{width:100%;min-width:0;box-sizing:border-box}
+.activity-card.volunteer-session-card>.volunteer-session-description{margin-top:9px;overflow-wrap:anywhere}
+.activity-card.volunteer-session-card>.activity-inline-details{margin-top:8px}
+.activity-card.volunteer-session-card>.candidate-session-actions,.activity-card.volunteer-session-card>.approved-card-actions{display:block!important;width:100%!important}
+.activity-card.volunteer-session-card>.candidate-session-actions .btn,.activity-card.volunteer-session-card>.approved-card-actions .btn{display:flex!important;width:100%!important;max-width:none!important;justify-content:center}
 
 .r31-occupancy-unit-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;padding:4px;margin:8px 0 12px;border:1px solid var(--border);border-radius:12px;background:var(--surface-2)}
 .r31-unit-tab{border:0;border-radius:9px;background:transparent;color:var(--muted);font:inherit;font-size:.68rem;font-weight:700;padding:8px 10px;cursor:pointer}
@@ -34,8 +43,6 @@
 .r31-assistant-unit-lock{display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:var(--surface-2);color:var(--primary);font-size:.7rem}
 
 @media (max-width:520px){
-  .post-approval-admin-actions{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
-  .post-approval-admin-actions .btn{font-size:.56rem;padding:7px 4px;gap:3px}
-  .r31-day-signal-popover{left:auto;right:-10px;transform:none}
-  .r31-day-signal-popover::before{left:auto;right:15px;transform:rotate(45deg)}
+  .admin-portal-actions>.post-approval-admin-actions,.post-approval-admin-actions{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:5px!important}
+  .post-approval-admin-actions .btn{font-size:.56rem!important;padding:7px 4px!important;gap:3px!important}
 }
