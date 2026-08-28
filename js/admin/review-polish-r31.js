@@ -1,7 +1,23 @@
 /* Round 31 — final color/status semantics for planning review cards. */
 (function reviewPolishR31(){
   const R=window.OleiroR31AdminReview;if(!R)return;
-  function signal(tone,message,label){return `<span class="r31-day-signal-wrap"><button class="r31-day-signal ${tone}" type="button" aria-label="${escapeHtml(label)}" onclick="toggleR31DaySignal(this,event)"><i class="fa-solid fa-circle-info"></i></button><span class="r31-day-signal-popover" role="status">${escapeHtml(message)}</span></span>`}
+  function signal(tone,message,label){return `<span class="r31-day-signal-wrap"><button class="r31-day-signal ${tone}" type="button" aria-label="${escapeHtml(label)}" data-r31-message="${escapeHtml(message)}" onclick="toggleR31DaySignal(this,event)"><i class="fa-solid fa-circle-info"></i></button></span>`}
+  function closeSignalPopover(){document.getElementById('r31DaySignalPopover')?.remove()}
+  window.toggleR31DaySignal=function(button,event){
+    event?.preventDefault?.();event?.stopPropagation?.();
+    const current=document.getElementById('r31DaySignalPopover');
+    if(current&&current.dataset.owner===String(button?.dataset.r31SignalId||'')){current.remove();return}
+    closeSignalPopover();if(!button)return;
+    if(!button.dataset.r31SignalId)button.dataset.r31SignalId=`r31-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const popover=document.createElement('div');popover.id='r31DaySignalPopover';popover.className='r31-day-signal-popover';popover.setAttribute('role','status');popover.dataset.owner=button.dataset.r31SignalId;popover.textContent=button.dataset.r31Message||'';document.body.appendChild(popover);
+    const rect=button.getBoundingClientRect(),box=popover.getBoundingClientRect(),pad=12;
+    let left=rect.left+rect.width/2-box.width/2;left=Math.max(pad,Math.min(left,window.innerWidth-box.width-pad));
+    let top=rect.bottom+7;if(top+box.height>window.innerHeight-pad)top=Math.max(pad,rect.top-box.height-7);
+    popover.style.left=`${Math.round(left)}px`;popover.style.top=`${Math.round(top)}px`;
+  };
+  document.addEventListener('click',event=>{if(!event.target.closest?.('.r31-day-signal'))closeSignalPopover()});
+  window.addEventListener('scroll',closeSignalPopover,true);window.addEventListener('resize',closeSignalPopover);
+
   R.daySignals=function(day){
     const sessions=day?.sessions||[],out=[],count=fn=>sessions.filter(fn).length;let n;
     n=count(s=>s.adminAdjustmentStatus==='requested');if(n)out.push(signal('warning',`${n} ${n===1?'atividade com ajuste solicitado':'atividades com ajuste solicitado'} neste dia.`,'Ajuste solicitado'));
