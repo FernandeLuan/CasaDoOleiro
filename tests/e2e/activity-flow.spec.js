@@ -30,7 +30,7 @@ test('Admin emergency profile uses participant card and icon-only edit action',a
 });
 
 test('Admin creates same activity at two times with independent multi-group selections',async({page})=>{
-  await login(page,'admin@oleiro.test','Admin123!','admin');const modal=await openPendingVolunteer(page);await expect(modal.getByRole('button',{name:/Adicionar atividade$/}).first()).toBeVisible({timeout:20_000});await modal.getByRole('button',{name:/Adicionar atividade$/}).first().click();
+  await login(page,'admin@oleiro.test','Admin123!','admin');const modal=await openPendingVolunteer(page);const day=modal.locator('details[data-plan-date]').first();await day.locator('summary').click();await expect(day).toHaveAttribute('open','');const add=day.getByRole('button',{name:/Adicionar atividade$/}).first();await expect(add).toBeVisible({timeout:20_000});await add.click();
   await page.locator('#managerActName').fill('Oficina repetida E2E');await page.locator('#managerActDesc').fill('Descrição visível no card');await page.locator('#managerActNotes').fill('Observação visível');await page.locator('#managerActMaterials').fill('Cartolina');
   const time=page.locator('#managerActTime');await time.fill('09:00');await time.evaluate(el=>Object.defineProperty(el,'showPicker',{configurable:true,value(){this.dataset.pickerProbe='opened'}}));await time.click({position:{x:20,y:20}});await expect(time).toHaveAttribute('data-picker-probe','opened');
   const primary=page.locator('[data-group-picker="manager-primary"]');await primary.locator('input[value="A"]').check();await primary.locator('input[value="B"]').check();await expect(page.locator('#managerActGroup')).toHaveValue('A + B');
