@@ -1,0 +1,15 @@
+{
+  "name": "casa-do-oleiro-web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:seed": "node tests/e2e/seed.mjs",
+    "test:e2e:emulated": "firebase emulators:exec --only auth,firestore --project demo-casadooleiro \"npm run test:e2e:seed && npm run test:e2e\""
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "firebase-admin": "^13.4.0",
+    "firebase-tools": "^14.14.0"
+  }
+}
