@@ -125,16 +125,18 @@ test('Candidate creates, edits, moves and deletes own proposed activity',async({
 });
 
 for(const locale of [
-  {lang:'en',infoNav:'Information',infoTitle:'House information',planning:'Planning',add:'Add activity',namePlaceholder:'E.g. English conversation',descriptionPlaceholder:'How does the activity work?'},
-  {lang:'es',infoNav:'Información',infoTitle:'Información de la Casa',planning:'Planificación',add:'Agregar actividad',namePlaceholder:'Ej.: Conversación en inglés',descriptionPlaceholder:'¿Cómo funciona la actividad?'}
+  {lang:'en',infoNav:'Information',arrival:'How to get here',software:'Software version',planning:'Planning',add:'Add activity',namePlaceholder:'E.g. English conversation',descriptionPlaceholder:'How does the activity work?'},
+  {lang:'es',infoNav:'Información',arrival:'Cómo llegar',software:'Versión del software',planning:'Planificación',add:'Agregar actividad',namePlaceholder:'Ej.: Conversación en inglés',descriptionPlaceholder:'¿Cómo funciona la actividad?'}
 ]){
   test(`Volunteer critical information and activity placeholders render in ${locale.lang}`,async({page})=>{
     await login(page,'voluntario@oleiro.test','Volunteer123!','portal',locale.lang);
     await navAction(page,locale.infoNav).click();
-    await expect(page.getByText(locale.infoTitle,{exact:true})).toBeVisible();
     await expect(page.locator('#info-arrival')).toBeVisible();
+    await expect(page.locator('#info-arrival summary')).toContainText(locale.arrival);
     await expect(page.locator('#info-accommodation')).toBeVisible();
     await expect(page.locator('#info-meals')).toBeVisible();
+    await expect(page.locator('#info-software')).toBeVisible();
+    await expect(page.locator('#info-software summary')).toContainText(locale.software);
 
     await navAction(page,locale.planning).click();
     await page.getByRole('button',{name:new RegExp(`${locale.add}$`)}).first().click();
@@ -144,3 +146,20 @@ for(const locale of [
     await expect(page.locator('#actPeriod option[value="Manhã"]')).not.toHaveText('Manhã');
   });
 }
+
+test('New release is announced without automatic reload',async({page})=>{
+  let commit='release-a-000000000000';
+  await page.route('**/release.json*',route=>route.fulfill({
+    status:200,
+    contentType:'application/json',
+    body:JSON.stringify({version:'2026.08.28.1',build:1,commit,publishedAt:'2026-08-28T12:00:00Z'})
+  }));
+  await login(page,'voluntario@oleiro.test','Volunteer123!','portal');
+  await expect.poll(()=>page.evaluate(()=>window.OleiroRelease?.current()?.commit||''),{timeout:20_000}).toBe('release-a-000000000000');
+  const before=page.url();
+  commit='release-b-000000000000';
+  await page.evaluate(()=>window.OleiroRelease.check());
+  await expect(page.locator('#oleiroUpdateBanner')).toBeVisible();
+  await expect(page.locator('#oleiroUpdateBanner')).toContainText('Nova versão disponível');
+  await expect(page).toHaveURL(before);
+});
