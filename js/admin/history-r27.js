@@ -41,9 +41,14 @@
     const more=entry.hasMore?`<button class="btn btn-soft btn-block history-load-more" type="button" onclick="loadMoreCandidateHistory('${safe(p.id)}')" ${entry.loading?'disabled':''}><i class="fa-solid ${entry.loading?'fa-circle-notch fa-spin':'fa-chevron-down'}"></i>${escapeHtml(tx('history.more','Carregar mais eventos'))}</button>`:'';
     return `<div class="history-list">${list}</div>${more}`;
   }
+  function decorateHistoryHeader(p){
+    const title=modalRoot.querySelector('.modal-head h2');if(!title||modalRoot.querySelector('.person-title-line'))return;
+    const [label,type]=typeof statusMeta==='function'?statusMeta(p.status):[p.status||'Status',''],line=document.createElement('div');
+    line.className='person-title-line';title.parentNode.insertBefore(line,title);line.appendChild(title);line.insertAdjacentHTML('beforeend',`<span class="badge ${escapeHtml(type||'')}">${escapeHtml(label)}</span>`);
+  }
   function renderHistory(p){
     const body=`${tabs(p,'history')}<section class="candidate-history-panel"><div class="section-head"><div><h3>${escapeHtml(tx('history.title','Histórico do candidato'))}</h3><p>${escapeHtml(tx('history.subtitle','Ações e mudanças registradas neste processo.'))}</p></div></div>${historyContent(p)}</section>`;
-    openModal(p.name,`${escapeHtml(p.country||'—')} • ${escapeHtml(p.unit||p.unitName||'—')}`,body);modalRoot.dataset.personId=String(p.id);modalRoot.dataset.personTab='history';modalRoot.querySelector('.modal')?.classList.add('person-modal','person-refactor-modal','person-history-modal');
+    openModal(p.name,`${escapeHtml(p.country||'—')} • ${escapeHtml(p.unit||p.unitName||'—')}`,body);modalRoot.dataset.personId=String(p.id);modalRoot.dataset.personTab='history';modalRoot.querySelector('.modal')?.classList.add('person-modal','person-refactor-modal','person-history-modal');decorateHistoryHeader(p);
   }
   function injectHistoryTab(p,tab){
     const root=modalRoot.querySelector('.person-refactor-tabs');if(!root)return;
