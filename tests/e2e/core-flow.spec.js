@@ -9,8 +9,8 @@ const firebaseConfig={
   appId:'1:123:web:e2e'
 };
 
-async function prepare(page){
-  await page.addInitScript(()=>localStorage.setItem('oleiro-language','pt'));
+async function prepare(page,language='pt'){
+  await page.addInitScript(lang=>localStorage.setItem('oleiro-language',lang),language);
   await page.route('**/js/firebase/firebase-config.js*',route=>route.fulfill({
     status:200,
     contentType:'application/javascript',
@@ -18,8 +18,8 @@ async function prepare(page){
   }));
 }
 
-async function login(page,email,password,target){
-  await prepare(page);
+async function login(page,email,password,target,language='pt'){
+  await prepare(page,language);
   await page.goto('/?emulator=1');
   await page.waitForFunction(async()=>{
     try{
@@ -108,8 +108,13 @@ test('Candidate creates, edits, moves and deletes own proposed activity',async({
 
   card=activityCard(page,'Atividade E2E editada').first();
   await card.getByRole('button',{name:/Mover$/}).click();
-  await expect(page.locator('#moveDate')).toBeVisible();
-  await page.locator('#modalRoot').getByRole('button',{name:/Mover$/}).click();
+  const moveDate=page.locator('#moveDate');
+  await expect(moveDate).toBeVisible();
+  const optionCount=await moveDate.locator('option').count();
+  expect(optionCount).toBeGreaterThan(1);
+  await moveDate.selectOption({index:1});
+  await page.locator('#moveSessionSave').click();
+  await expect(page.locator('#moveDate')).toHaveCount(0,{timeout:20_000});
   await expect(activityCard(page,'Atividade E2E editada')).toHaveCount(1);
 
   card=activityCard(page,'Atividade E2E editada').first();
@@ -118,3 +123,24 @@ test('Candidate creates, edits, moves and deletes own proposed activity',async({
   await expect(activityCard(page,'Atividade E2E editada')).toHaveCount(0);
   await expect(page.getByRole('button',{name:/Adicionar atividade$/}).first()).toBeVisible();
 });
+
+for(const locale of [
+  {lang:'en',infoNav:'Information',infoTitle:'House information',planning:'Planning',add:'Add activity',namePlaceholder:'E.g. English conversation',descriptionPlaceholder:'How does the activity work?'},
+  {lang:'es',infoNav:'Información',infoTitle:'Información de la Casa',planning:'Planificación',add:'Agregar actividad',namePlaceholder:'Ej.: Conversación en inglés',descriptionPlaceholder:'¿Cómo funciona la actividad?'}
+]){
+  test(`Volunteer critical information and activity placeholders render in ${locale.lang}`,async({page})=>{
+    await login(page,'voluntario@oleiro.test','Volunteer123!','portal',locale.lang);
+    await navAction(page,locale.infoNav).click();
+    await expect(page.getByText(locale.infoTitle,{exact:true})).toBeVisible();
+    await expect(page.locator('#info-arrival')).toBeVisible();
+    await expect(page.locator('#info-accommodation')).toBeVisible();
+    await expect(page.locator('#info-meals')).toBeVisible();
+
+    await navAction(page,locale.planning).click();
+    await page.getByRole('button',{name:new RegExp(`${locale.add}$`)}).first().click();
+    await expect(page.locator('#actName')).toHaveAttribute('placeholder',locale.namePlaceholder);
+    await expect(page.locator('#actDesc')).toHaveAttribute('placeholder',locale.descriptionPlaceholder);
+    await expect(page.locator('#actParticipation option[value="Até 5"]')).not.toHaveText('Até 5');
+    await expect(page.locator('#actPeriod option[value="Manhã"]')).not.toHaveText('Manhã');
+  });
+}
