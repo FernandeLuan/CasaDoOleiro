@@ -1,4 +1,4 @@
-/* Round 23/26 — atualização local após mover e feedback de envio do planejamento. */
+/* Round 23/28 — atualização local após mover e feedback de envio do planejamento. */
 (function refinementsR23Portal(){
   function sessionById(id){return (state.sessions||[]).find(row=>String(row.id||row.sessionId)===String(id))||null}
   function activityFor(session){return (state.activities||[]).find(row=>String(row.id)===String(session?.activityId))||{id:session?.activityId,name:session?.activityName||'Atividade',time:session?.time||''}}
@@ -20,22 +20,22 @@
 
   /* O write já confirma sucesso. Não há motivo para bloquear a UI aguardando um getDoc da mesma sessão. */
   window.saveMoveBySessionId=async function(encodedId,byVolunteer=false){
-    const id=decodeURIComponent(encodedId),session=sessionById(id);if(!session)return showToast('Sessão não encontrada.');
+    const id=decodeURIComponent(encodedId),session=sessionById(id);if(!session)return showToast(t('portal.move.error'));
     const activity=activityFor(session),oldDate=String(session.date||''),oldTime=String(session.time||activity.time||''),newDate=document.getElementById('moveDate')?.value||'',newTime=document.getElementById('moveTime')?.value||oldTime;
-    if(!newDate)return showToast('Escolha a nova data.');
-    if(!moveDates(session).includes(newDate))return showToast('Essa data não está disponível para atividade.');
-    if(byVolunteer&&session.status==='confirmed'&&newDate===oldDate&&newTime===oldTime)return showToast('Altere a data ou o horário antes de solicitar a mudança.');
+    if(!newDate)return showToast(t('portal.move.chooseDate'));
+    if(!moveDates(session).includes(newDate))return showToast(t('portal.move.unavailableDate'));
+    if(byVolunteer&&session.status==='confirmed'&&newDate===oldDate&&newTime===oldTime)return showToast(t('portal.move.changeRequired'));
     const patch={date:newDate,time:newTime};
     if(byVolunteer&&session.status==='confirmed'){patch.status='change_requested';patch.changeRequestedAt=new Date();patch.changeNote=newDate===oldDate?'Alteração de horário solicitada pelo voluntário.':'Mudança solicitada pelo voluntário.'}
-    const button=document.getElementById('moveSessionSave');if(button){button.disabled=true;button.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Salvando...'}
+    const pendingConfirmation=byVolunteer&&session.status==='confirmed',button=document.getElementById('moveSessionSave');if(button){button.disabled=true;button.innerHTML=`<i class="fa-solid fa-circle-notch fa-spin"></i> ${escapeHtml(t('action.saving'))}`}
     try{
       await window.OleiroServices.planning.updateSession(session.id,patch);
       const index=(state.sessions||[]).findIndex(row=>String(row.id)===String(session.id));
       if(index>=0)state.sessions[index]={...state.sessions[index],...patch};
       rebuildVolunteerPlanning();
       closeModal();render();
-      showToast(byVolunteer&&session.status==='confirmed'?'Mudança enviada para confirmação.':'Cronograma atualizado.');
-    }catch(error){console.error(error);showToast(error?.message||'Não foi possível mover a sessão.');if(button?.isConnected){button.disabled=false;button.textContent=byVolunteer&&session.status==='confirmed'?'Solicitar mudança':'Mover'}}
+      showToast(pendingConfirmation?t('portal.move.sent'):t('portal.move.updated'));
+    }catch(error){console.error(error);showToast(error?.message||t('portal.move.error'));if(button?.isConnected){button.disabled=false;button.textContent=pendingConfirmation?t('action.sendReview'):t('action.saveChange')}}
   };
 
   /* Enviar planejamento pode envolver uma leitura de existência + gravação. O botão mostra o estado imediatamente e bloqueia duplo envio. */
@@ -46,7 +46,7 @@
       if(button?.disabled)return;
       const wasAdjustment=state.volunteerPlanStatus==='adjustments';
       const original=button?.innerHTML||'';
-      if(button){button.disabled=true;button.setAttribute('aria-busy','true');button.innerHTML=`<i class="fa-solid fa-circle-notch fa-spin"></i>${wasAdjustment?'Reenviando...':'Enviando...'}`}
+      if(button){button.disabled=true;button.setAttribute('aria-busy','true');button.innerHTML=`<i class="fa-solid fa-circle-notch fa-spin"></i>${escapeHtml(wasAdjustment?t('action.resendReview'):t('action.sending'))}`}
       await baseSubmitPlan();
       if(button?.isConnected&&state.volunteerPlanStatus!=='submitted'){
         button.disabled=false;button.removeAttribute('aria-busy');button.innerHTML=original;
