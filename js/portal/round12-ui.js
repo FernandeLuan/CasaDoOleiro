@@ -1,23 +1,20 @@
-/* Round 12 — estados de mudança mais claros no Portal. */
+/* Round 12/28 — estados de mudança claros sem depender do texto renderizado. */
 (function round12Portal(){
-  /* AGENDA_PAGE_SIZE=5 existia aqui, mas a paginação foi removida porque não reduzia leituras do Firestore. */
   const baseVolunteerAgendaContent=volunteerAgendaContent;
   const baseSessionCardVolunteer=sessionCardVolunteer;
 
-  /* A paginação client-side foi removida: ela não reduzia leituras do Firestore,
-     pois os dados já estavam carregados antes de paginar. */
   volunteerAgenda=function(){
-    return `<section class="section"><div class="section-head"><div><span class="eyebrow">Estadia confirmada</span><h2>Minha agenda</h2><p>Cronograma operacional atualizado</p></div></div><div>${baseVolunteerAgendaContent(true)}</div></section>`;
+    return `<section class="section"><div class="section-head"><div><span class="eyebrow">${escapeHtml(t('portal.agenda.eyebrow'))}</span><h2>${escapeHtml(t('portal.agenda.title'))}</h2><p>${escapeHtml(t('portal.agenda.subtitle'))}</p></div></div><div>${baseVolunteerAgendaContent(true)}</div></section>`;
   };
 
-  /* No Portal, a pendência fica somente no botão em marca-d'água amarelo. */
+  /* A pendência fica somente no botão. Seleção por estrutura/status, não por idioma. */
   sessionCardVolunteer=function(s,editable){
-    let html=baseSessionCardVolunteer(s,editable);
-    if(state.volunteerMode==='approved'&&s?.status==='change_requested'){
-      html=html.replace(/<span class="badge warning">Mudança solicitada<\/span>/g,'');
-      html=html.replace('class="btn btn-soft" type="button" disabled><i class="fa-solid fa-clock"></i>Mudança solicitada','class="btn btn-soft volunteer-change-pending" type="button" disabled><i class="fa-solid fa-clock"></i>Mudança solicitada');
-    }
-    return html;
+    const html=baseSessionCardVolunteer(s,editable);if(state.volunteerMode!=='approved'||s?.status!=='change_requested')return html;
+    const root=document.createElement('div');root.innerHTML=html;const card=root.firstElementChild;if(!card)return html;
+    card.querySelector('.activity-row > .badge.warning')?.remove();
+    const pending=[...card.querySelectorAll('.activity-actions button[disabled]')].find(button=>button.querySelector('.fa-clock'));
+    pending?.classList.add('volunteer-change-pending');
+    return root.innerHTML;
   };
 
   window.volunteerAgenda=volunteerAgenda;
