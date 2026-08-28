@@ -1,4 +1,4 @@
-/* Round 16 — portal mais compacto, estados padronizados e agenda com cache por página. */
+/* Round 16/28 — portal compacto, cache de agenda e movimentação sem dependência de texto. */
 (function uxR16Portal(){
   const AGENDA_CACHE_MS=5*60*1000;
   const baseVolunteerAgendaContent=volunteerAgendaContent;
@@ -48,9 +48,9 @@
     const card=root.firstElementChild;if(!card)return html;
     card.querySelectorAll('.activity-actions').forEach(actions=>actions.classList.add('approved-card-actions'));
     card.querySelectorAll('.activity-actions > .btn').forEach(button=>{
-      const text=String(button.textContent||'').trim();
-      if(text==='Solicitar mudança')button.classList.add('review-action-neutral');
-      if(text==='Reajustar mudança')button.classList.add('review-action-warning');
+      const action=String(button.getAttribute('onclick')||'');
+      if(action.includes('moveSessionById'))button.classList.add('review-action-neutral');
+      if(card.classList.contains('post-approval-proposal')&&action.includes('openActivityModal'))button.classList.add('review-action-warning');
     });
     return root.innerHTML;
   };
@@ -66,20 +66,20 @@
   };
 
   window.moveSessionById=function(encodedId,byVolunteer=false){
-    const id=decodeURIComponent(String(encodedId||'')),session=(state.sessions||[]).find(row=>String(row.id||row.sessionId)===String(id));if(!session)return showToast('Sessão não encontrada.');
+    const id=decodeURIComponent(String(encodedId||'')),session=(state.sessions||[]).find(row=>String(row.id||row.sessionId)===String(id));if(!session)return showToast(t('portal.activity.deleteError'));
     const a=session.activity||(state.activities||[]).find(row=>String(row.id)===String(session.activityId))||{},currentDate=String(session.date||''),dates=volunteerStayDates().filter((date,index,all)=>index>0&&index<all.length-1).filter(date=>{const day=new Date(`${date}T12:00:00`).getDay();return day!==0&&day!==6}).sort();
-    if(!dates.length)return showToast('Não há outra data disponível no período da estadia.');
-    const approved=state.volunteerMode==='approved'&&byVolunteer,title=approved?'Solicitar mudança':'Mover atividade';
-    openModal(title,`${escapeHtml(a.name||session.activityName||'Atividade')} • atual: ${fmtDate(currentDate,true)}`,`<div class="change-request-card"><div class="field"><label>Nova data</label><select id="moveDate" class="select move-date-select">${dates.map(date=>`<option value="${date}" ${date===currentDate?'selected':''}>${dayName(date)} • ${fmtDate(date,true)}${date===currentDate?' — atual':''}</option>`).join('')}</select></div><div class="field"><label>Novo horário sugerido</label><input id="moveTime" class="input" type="time" value="${escapeHtml(session.time||a.time||'')}"></div>${approved?`<div class="field"><label>Descrição da mudança</label><input id="moveReason" class="input" type="text" placeholder="Ex.: preciso mudar o horário."></div>`:''}</div>`,`<button id="moveSessionSave" class="btn btn-primary btn-block" type="button" onclick="saveMoveBySessionId('${safe(id)}',${byVolunteer})">${approved?'Enviar para análise':'Salvar mudança'}</button>`);
+    if(!dates.length)return showToast(t('portal.move.noOtherDate'));
+    const approved=state.volunteerMode==='approved'&&byVolunteer,title=approved?t('portal.move.requestTitle'):t('portal.move.title');
+    openModal(title,`${escapeHtml(a.name||session.activityName||'Atividade')} • ${escapeHtml(t('portal.move.current'))}: ${fmtDate(currentDate,true)}`,`<div class="change-request-card"><div class="field"><label>${escapeHtml(t('portal.move.newDate'))}</label><select id="moveDate" class="select move-date-select">${dates.map(date=>`<option value="${date}" ${date===currentDate?'selected':''}>${dayName(date)} • ${fmtDate(date,true)}${date===currentDate?` — ${escapeHtml(t('portal.move.current'))}`:''}</option>`).join('')}</select></div><div class="field"><label>${escapeHtml(t('portal.move.newTime'))}</label><input id="moveTime" class="input" type="time" value="${escapeHtml(session.time||a.time||'')}"></div>${approved?`<div class="field"><label>${escapeHtml(t('portal.move.reason'))}</label><input id="moveReason" class="input" type="text" placeholder="${escapeHtml(t('portal.move.reasonPlaceholder'))}"></div>`:''}</div>`,`<button id="moveSessionSave" class="btn btn-primary btn-block" type="button" onclick="saveMoveBySessionId('${safe(id)}',${byVolunteer})">${escapeHtml(approved?t('action.sendReview'):t('action.saveChange'))}</button>`);
   };
 
   window.saveMoveBySessionId=async function(encodedId,byVolunteer=false){
-    const id=decodeURIComponent(String(encodedId||'')),session=(state.sessions||[]).find(row=>String(row.id||row.sessionId)===String(id));if(!session)return showToast('Sessão não encontrada.');
+    const id=decodeURIComponent(String(encodedId||'')),session=(state.sessions||[]).find(row=>String(row.id||row.sessionId)===String(id));if(!session)return showToast(t('portal.activity.deleteError'));
     const a=session.activity||(state.activities||[]).find(row=>String(row.id)===String(session.activityId))||{},oldDate=String(session.date||''),oldTime=String(session.time||a.time||''),newDate=document.getElementById('moveDate')?.value||'',newTime=document.getElementById('moveTime')?.value||oldTime,reason=document.getElementById('moveReason')?.value.trim()||'';
-    if(!newDate)return showToast('Escolha a nova data.');if(newDate===oldDate&&newTime===oldTime)return showToast('Altere a data ou o horário antes de enviar.');
+    if(!newDate)return showToast(t('portal.move.chooseDate'));if(newDate===oldDate&&newTime===oldTime)return showToast(t('portal.move.changeRequired'));
     const approved=state.volunteerMode==='approved'&&byVolunteer,patch={date:newDate,time:newTime};if(approved){patch.status='change_requested';patch.changeRequestedAt=new Date();patch.changeNote=`move|${oldDate}|${oldTime}|${newDate}|${newTime}|${encodeURIComponent(reason)}`}
-    const button=document.getElementById('moveSessionSave');if(button){button.disabled=true;button.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Enviando...'}
-    try{await window.OleiroServices.planning.updateSession(session.id,patch);Object.assign(session,patch);cacheCurrentAgendaPage();closeModal();render();showToast(approved?'Mudança enviada para análise.':'Cronograma atualizado.')}catch(error){console.error(error);showToast(error?.message||'Não foi possível solicitar a mudança.');if(button?.isConnected){button.disabled=false;button.textContent=approved?'Enviar para análise':'Salvar mudança'}}
+    const button=document.getElementById('moveSessionSave');if(button){button.disabled=true;button.innerHTML=`<i class="fa-solid fa-circle-notch fa-spin"></i> ${escapeHtml(t('action.saving'))}`}
+    try{await window.OleiroServices.planning.updateSession(session.id,patch);Object.assign(session,patch);cacheCurrentAgendaPage();closeModal();render();showToast(approved?t('portal.session.changeSent'):t('portal.move.updated'))}catch(error){console.error(error);showToast(error?.message||t('portal.move.error'));if(button?.isConnected){button.disabled=false;button.textContent=approved?t('action.sendReview'):t('action.saveChange')}}
   };
 
   window.volunteerAgendaContent=volunteerAgendaContent;window.volunteerAgenda=volunteerAgenda;window.volunteerInfo=volunteerInfo;window.volunteerProfile=volunteerProfile;window.sessionCardVolunteer=sessionCardVolunteer;
