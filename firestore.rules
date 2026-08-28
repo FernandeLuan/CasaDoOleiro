@@ -21,8 +21,24 @@ service cloud.firestore {
       return hasUser() && currentUser().active == true;
     }
 
+    function isAdmin() {
+      return activeUser() && currentUser().role == 'admin';
+    }
+
+    function isCoordinator() {
+      return activeUser() && currentUser().role == 'coordinator';
+    }
+
     function isManager() {
-      return activeUser() && currentUser().role in ['admin', 'coordinator'];
+      return isAdmin() || isCoordinator();
+    }
+
+    function managerHasUnit(unitId) {
+      return isAdmin() || (
+        isCoordinator()
+        && ('unitIds' in currentUser())
+        && currentUser().unitIds.hasAny([unitId])
+      );
     }
 
     function isParticipant(data) {
@@ -37,6 +53,11 @@ service cloud.firestore {
 
     function participantOf(applicationId) {
       return isParticipant(applicationData(applicationId));
+    }
+
+    function managerOfApplication(applicationId) {
+      let app = applicationData(applicationId);
+      return managerHasUnit(app.unitId);
     }
 
     function candidateEditable(applicationId) {
@@ -55,6 +76,14 @@ service cloud.firestore {
     function approvedApplication(applicationId) {
       let app = applicationData(applicationId);
       return app.active == true && app.status == 'approved';
+    }
+
+    function participantHistoryTypeAllowed(type) {
+      return type in [
+        'planning_submitted', 'planning_resent',
+        'activity_created', 'activity_updated', 'activity_deleted',
+        'session_moved'
+      ];
     }
 
     function participantMarksFirstAccess(uid) {
@@ -146,6 +175,23 @@ service cloud.firestore {
       allow read: if activeUser() && (isManager() || isParticipant(resource.data));
       allow create, delete: if isManager();
       allow update: if isManager() || participantMaySubmitApplication() || participantMayResetEmptyAdjustment();
+
+      match /history/{eventId} {
+        allow read: if activeUser() && managerOfApplication(applicationId);
+        allow create: if activeUser()
+          && request.resource.data.applicationId == applicationId
+          && request.resource.data.actorUid == request.auth.uid
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.unitId == applicationData(applicationId).unitId
+          && (
+            managerOfApplication(applicationId)
+            || (
+              participantOf(applicationId)
+              && participantHistoryTypeAllowed(request.resource.data.type)
+            )
+          );
+        allow update, delete: if false;
+      }
     }
 
     match /activities/{activityId} {
