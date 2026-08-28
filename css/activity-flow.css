@@ -28,10 +28,10 @@
 .planning-session-row .activity-inline-detail{display:block}
 
 /* Admin: cada data continua expansível; dentro dela as atividades seguem a leitura do Portal. */
-.planning-day-sessions{display:grid!important;gap:12px!important}
+.planning-day-sessions{display:grid!important}
 .admin-period-section{display:grid;gap:8px;min-width:0}
 .admin-period-section+.admin-period-section{margin-top:3px}
-.admin-period-heading{display:flex;align-items:center;gap:7px;padding:0 2px;color:var(--primary);font-size:.58rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.admin-period-heading{display:flex;align-items:center;gap:7px;padding:10px 2px 5px;color:var(--primary);font-size:.58rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
 .admin-period-heading::after{content:"";height:1px;flex:1;background:var(--border)}
 .admin-period-heading i{font-size:.58rem}
 .admin-period-activities{display:grid;gap:9px;min-width:0}
