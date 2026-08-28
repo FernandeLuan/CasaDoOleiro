@@ -1,3 +1,4 @@
+// Critical browser regression: isolated Firebase emulators only; never production data.
 import {test,expect} from '@playwright/test';
 
 const firebaseConfig={
