@@ -26,9 +26,12 @@ async function login(page,email,password,target){
   await expect(page).toHaveURL(new RegExp(`/${target}/`));
 }
 
+const action=(page,label)=>page.getByRole('button',{name:new RegExp(`${label}$`)});
+
 test('Admin manages independent A/B/C/D groups for Rodeio and Indaial',async({page})=>{
   await login(page,'admin@oleiro.test','Admin123!','admin');
-  await page.getByRole('button',{name:'Grupos',exact:true}).click();
+  await action(page,'Menu').click();
+  await action(page,'Grupos').click();
   await expect(page.locator('#managerGroupUnit')).toBeVisible();
 
   await page.locator('#managerGroupUnit').selectOption('indaial');
@@ -44,18 +47,18 @@ test('Admin manages independent A/B/C/D groups for Rodeio and Indaial',async({pa
 
 test('Candidate History is lazy and loads only after opening its tab',async({page})=>{
   await login(page,'admin@oleiro.test','Admin123!','admin');
-  await page.getByRole('button',{name:'Voluntariado',exact:true}).click();
-  await page.getByRole('button',{name:'Filtros',exact:true}).click();
+  await action(page,'Voluntariado').click();
+  await action(page,'Filtros').click();
   await page.locator('#candidateStatusFilter').selectOption('pending');
-  await page.locator('#modalRoot').getByRole('button',{name:'Aplicar',exact:true}).click();
+  await page.locator('#modalRoot').getByRole('button',{name:/Aplicar$/}).click();
 
   const candidate=page.locator('.list-item.clickable').filter({hasText:'Voluntário E2E'}).first();
   await expect(candidate).toBeVisible();
   await candidate.click();
-  await expect(page.getByRole('button',{name:'Histórico',exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:/Histórico$/})).toBeVisible();
   await expect.poll(()=>page.evaluate(()=>window.OleiroQueryMetrics?.filter(row=>row.name==='applications/history').length||0)).toBe(0);
 
-  await page.getByRole('button',{name:'Histórico',exact:true}).click();
+  await page.getByRole('button',{name:/Histórico$/}).click();
   await expect(page.getByText('Histórico do candidato',{exact:true})).toBeVisible();
   await expect(page.getByText('Candidato cadastrado',{exact:true})).toBeVisible();
   await expect.poll(()=>page.evaluate(()=>window.OleiroQueryMetrics?.filter(row=>row.name==='applications/history').length||0)).toBe(1);
@@ -63,31 +66,31 @@ test('Candidate History is lazy and loads only after opening its tab',async({pag
 
 test('Candidate creates, edits, moves and deletes own proposed activity',async({page})=>{
   await login(page,'voluntario@oleiro.test','Volunteer123!','portal');
-  await page.getByRole('button',{name:'Planejamento',exact:true}).click();
-  await expect(page.getByRole('button',{name:'Adicionar atividade'}).first()).toBeVisible();
+  await action(page,'Planejamento').click();
+  await expect(page.getByRole('button',{name:/Adicionar atividade$/}).first()).toBeVisible();
 
-  await page.getByRole('button',{name:'Adicionar atividade'}).first().click();
+  await page.getByRole('button',{name:/Adicionar atividade$/}).first().click();
   await page.locator('#actName').fill('Atividade E2E');
   await page.locator('#actDesc').fill('Fluxo automatizado');
-  await page.locator('#modalRoot').getByRole('button',{name:'Adicionar atividade',exact:true}).click();
+  await page.locator('#modalRoot').getByRole('button',{name:/Adicionar atividade$/}).click();
   await expect(page.getByText('Atividade E2E',{exact:true})).toBeVisible();
   await expect(page.getByText(/1 atividades/)).toBeVisible();
 
   let card=page.locator('.activity-card').filter({hasText:'Atividade E2E'}).first();
-  await card.getByRole('button',{name:'Editar',exact:true}).click();
+  await card.getByRole('button',{name:/Editar$/}).click();
   await page.locator('#actName').fill('Atividade E2E editada');
-  await page.locator('#modalRoot').getByRole('button',{name:'Salvar alterações',exact:true}).click();
+  await page.locator('#modalRoot').getByRole('button',{name:/Salvar alterações$/}).click();
   await expect(page.getByText('Atividade E2E editada',{exact:true})).toBeVisible();
 
   card=page.locator('.activity-card').filter({hasText:'Atividade E2E editada'}).first();
-  await card.getByRole('button',{name:'Mover',exact:true}).click();
+  await card.getByRole('button',{name:/Mover$/}).click();
   await expect(page.locator('#moveDate')).toBeVisible();
-  await page.locator('#modalRoot').getByRole('button',{name:'Mover',exact:true}).click();
+  await page.locator('#modalRoot').getByRole('button',{name:/Mover$/}).click();
   await expect(page.getByText('Atividade E2E editada',{exact:true})).toBeVisible();
 
   card=page.locator('.activity-card').filter({hasText:'Atividade E2E editada'}).first();
-  await card.getByRole('button',{name:'Excluir',exact:true}).click();
-  await page.locator('#modalRoot').getByRole('button',{name:'Excluir',exact:true}).click();
+  await card.getByRole('button',{name:/Excluir$/}).click();
+  await page.locator('#modalRoot').getByRole('button',{name:/Excluir$/}).click();
   await expect(page.getByText('Atividade E2E editada',{exact:true})).toHaveCount(0);
   await expect(page.getByText(/0 atividades/)).toBeVisible();
 });
