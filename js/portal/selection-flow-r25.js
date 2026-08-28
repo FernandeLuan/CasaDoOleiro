@@ -1,15 +1,7 @@
-/* Round 25 — etapa de reunião no Portal e exclusão do candidato sem batch cruzado de permissões. */
+/* Round 25/27 — etapa de reunião no Portal, exclusão segura e i18n dinâmico por chave. */
 (function selectionFlowR25Portal(){
+  const tx=(key,fallback)=>typeof t==='function'?t(key):fallback;
   function validUrl(value){try{const url=new URL(String(value||''));return ['http:','https:'].includes(url.protocol)?url.toString():''}catch{return ''}}
-
-  if(typeof OLEIRO_TRANSLATIONS!=='undefined'){
-    Object.assign(OLEIRO_TRANSLATIONS.en,{
-      'Observação:':'Note:','Excluindo...':'Deleting...','Esta atividade foi criada pela gestão e não pode ser excluída pelo candidato.':'This activity was created by management and cannot be deleted by the candidate.','Você só pode excluir atividades criadas por você.':'You can only delete activities created by you.','Não foi possível excluir a sessão.':'Could not delete the session.','Salvando...':'Saving...','Enviando...':'Sending...','Reenviando...':'Resending...'
-    });
-    Object.assign(OLEIRO_TRANSLATIONS.es,{
-      'Observação:':'Observación:','Excluindo...':'Eliminando...','Esta atividade foi criada pela gestão e não pode ser excluída pelo candidato.':'Esta actividad fue creada por la gestión y no puede ser eliminada por el candidato.','Você só pode excluir atividades criadas por você.':'Solo puedes eliminar actividades creadas por ti.','Não foi possível excluir a sessão.':'No fue posible eliminar la sesión.','Salvando...':'Guardando...','Enviando...':'Enviando...','Reenviando...':'Reenviando...'
-    });
-  }
 
   const basePlanStatusFromApplication=planStatusFromApplication;
   planStatusFromApplication=function(status){return status==='meeting'?'plan_approved':basePlanStatusFromApplication(status)};
@@ -29,11 +21,10 @@
     html=html.replace('Enviado para análise','Planejamento aprovado').replace('A equipe da Casa recebeu seu planejamento. Enquanto ele estiver em análise, a edição fica bloqueada.','Seu planejamento foi aprovado. A próxima etapa é a reunião de definição com a equipe da Casa.');
     const status=String(application.meetingStatus||'pending');if(!['scheduled','completed'].includes(status))return html;
     const date=application.meetingDate?fmtDate(String(application.meetingDate).slice(0,10)):null,time=String(application.meetingTime||''),duration=Number(application.meetingDuration)||30,link=validUrl(application.meetingLink||''),notes=String(application.meetingNotes||'').trim();
-    const card=`<section class="section selection-portal-meeting"><div class="section-head"><div><h2>Próximos compromissos</h2><p>Reunião de definição</p></div></div><div class="card selection-meeting-card"><div class="selection-meeting-card-head"><div class="metric-icon"><i class="fa-solid fa-video"></i></div><div><strong>Reunião de definição</strong><span>${escapeHtml([date,time].filter(Boolean).join(' • '))}</span></div><span class="badge ${status==='completed'?'success':'info'}">${status==='completed'?'Realizada':'Agendada'}</span></div><div class="selection-meeting-card-meta"><span><i class="fa-regular fa-clock"></i>${duration} min</span></div>${notes?`<p><strong>Observação:</strong> <span data-no-i18n>${escapeHtml(notes)}</span></p>`:''}${link&&status!=='completed'?`<a class="btn btn-primary btn-block" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-video"></i>Entrar na reunião</a>`:''}</div></section>`;
+    const card=`<section class="section selection-portal-meeting"><div class="section-head"><div><h2>Próximos compromissos</h2><p>Reunião de definição</p></div></div><div class="card selection-meeting-card"><div class="selection-meeting-card-head"><div class="metric-icon"><i class="fa-solid fa-video"></i></div><div><strong>Reunião de definição</strong><span>${escapeHtml([date,time].filter(Boolean).join(' • '))}</span></div><span class="badge ${status==='completed'?'success':'info'}">${escapeHtml(status==='completed'?tx('meeting.completed','Reunião realizada'):tx('meeting.scheduled','Reunião agendada'))}</span></div><div class="selection-meeting-card-meta"><span><i class="fa-regular fa-clock"></i>${duration} min</span></div>${notes?`<p><strong>${escapeHtml(tx('meeting.note','Observação:'))}</strong> <span data-no-i18n>${escapeHtml(notes)}</span></p>`:''}${link&&status!=='completed'?`<a class="btn btn-primary btn-block" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-video"></i>Entrar na reunião</a>`:''}</div></section>`;
     const marker='<section class="section"><div class="section-head"><div><h2>Minha estadia</h2>';const at=html.indexOf(marker);return at>=0?`${html.slice(0,at)}${card}${html.slice(at)}`:`${card}${html}`;
   };
 
-  /* Primeiro exclui sessão/atividade. Só depois, se um ajuste ficou vazio, normaliza a candidatura em write separado. */
   window.deletePlanningSession=async function(activityId,date){
     const session=typeof realSessionFor==='function'?realSessionFor(activityId,date):null,application=state.currentApplication;if(!session||!application?.id)return showToast('Sessão não encontrada.');
     const approved=state.volunteerMode==='approved',activity=(state.activities||[]).find(row=>String(row.id)===String(activityId)),postAdjustment=approved&&activity?.postApprovalProposal===true&&activity?.reviewStatus==='adjustments';if(approved&&!postAdjustment)return showToast('Esta sessão não pode ser excluída neste status.');
@@ -45,7 +36,7 @@
     const loaded=state.volunteerPlanningLoadedFor===String(application.id),occurrences=active.filter(row=>String(row.activityId)===String(activityId)).length;
     const knownActivityOccurrences=loaded&&occurrences>=1?occurrences:null;
     const button=modalRoot?.querySelector?.('button[onclick*="deletePlanningSession"]'),original=button?.innerHTML||'';
-    if(button){button.disabled=true;button.setAttribute('aria-busy','true');button.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Excluindo...'}
+    if(button){button.disabled=true;button.setAttribute('aria-busy','true');button.innerHTML=`<i class="fa-solid fa-circle-notch fa-spin"></i> ${escapeHtml(tx('action.deleting','Excluindo...'))}`}
 
     try{
       const result=await window.OleiroServices.planning.deleteSession(session.id,{applicationId:application.id,activityId,updateApplicationCounts:false,knownActivityOccurrences});
@@ -60,42 +51,28 @@
       closeModal();render();showToast(statusWriteFailed?'Atividade excluída. O status será sincronizado ao reabrir.':resetEmpty?'Atividade excluída. Monte seu planejamento novamente.':'Sessão excluída.');
     }catch(error){
       console.error(error);showToast(error?.message||'Não foi possível excluir a sessão.');
-      if(button?.isConnected){button.disabled=false;button.removeAttribute('aria-busy');button.innerHTML=original||'Excluir'}
+      if(button?.isConnected){button.disabled=false;button.removeAttribute('aria-busy');button.innerHTML=original||escapeHtml(tx('action.delete','Excluir'))}
     }
   };
 
-  /* Editar/criar atividade: feedback imediato no próprio botão e bloqueio de duplo clique. */
   if(typeof saveActivity==='function'){
     const baseSaveActivity=saveActivity;
     saveActivity=async function(...args){
       const button=modalRoot?.querySelector?.('button[onclick*="saveActivity"]');if(button?.disabled)return;
       const original=button?.innerHTML||'';
-      if(button){button.disabled=true;button.setAttribute('aria-busy','true');button.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Salvando...'}
-      try{return await baseSaveActivity(...args)}finally{
-        if(button?.isConnected){button.disabled=false;button.removeAttribute('aria-busy');button.innerHTML=original||'Salvar alterações'}
-      }
-    };
-    window.saveActivity=saveActivity;
+      if(button){button.disabled=true;button.setAttribute('aria-busy','true');button.innerHTML=`<i class="fa-solid fa-circle-notch fa-spin"></i> ${escapeHtml(tx('action.saving','Salvando...'))}`}
+      try{return await baseSaveActivity(...args)}finally{if(button?.isConnected){button.disabled=false;button.removeAttribute('aria-busy');button.innerHTML=original||escapeHtml(tx('action.save','Salvar'))}}
+    };window.saveActivity=saveActivity;
   }
 
-  /* Mover atividade no fluxo inicial usa o write existente, agora com estado assíncrono local. */
   if(typeof saveMove==='function'){
     const baseSaveMove=saveMove;
     saveMove=async function(...args){
       const button=modalRoot?.querySelector?.('button[onclick*="saveMove("]');if(button?.disabled)return;
       const original=button?.innerHTML||'';
-      if(button){button.disabled=true;button.setAttribute('aria-busy','true');button.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Salvando...'}
-      try{return await baseSaveMove(...args)}finally{
-        if(button?.isConnected){button.disabled=false;button.removeAttribute('aria-busy');button.innerHTML=original||'Mover'}
-      }
-    };
-    window.saveMove=saveMove;
-  }
-
-  /* Conteúdo inserido/alterado depois do render também recebe i18n; conteúdo do usuário usa data-no-i18n. */
-  if(typeof MutationObserver!=='undefined'&&typeof applyI18n==='function'&&typeof modalRoot!=='undefined'&&modalRoot){
-    const observer=new MutationObserver(()=>applyI18n(modalRoot));
-    observer.observe(modalRoot,{childList:true,subtree:true});
+      if(button){button.disabled=true;button.setAttribute('aria-busy','true');button.innerHTML=`<i class="fa-solid fa-circle-notch fa-spin"></i> ${escapeHtml(tx('action.saving','Salvando...'))}`}
+      try{return await baseSaveMove(...args)}finally{if(button?.isConnected){button.disabled=false;button.removeAttribute('aria-busy');button.innerHTML=original||escapeHtml(tx('action.move','Mover'))}}
+    };window.saveMove=saveMove;
   }
 
   window.planStatusFromApplication=planStatusFromApplication;window.volunteerPlan=volunteerPlan;window.volunteerHome=volunteerHome;
