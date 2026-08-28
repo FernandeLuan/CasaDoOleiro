@@ -40,7 +40,7 @@ test('Admin creates same activity at two times with independent multi-group sele
   void rows;
   const stored=await page.evaluate(()=>Object.values(state.adminPlanPageCache||{}).flatMap(cache=>cache?.sessions||[]).filter(row=>row.activityName==='Oficina repetida E2E').map(row=>({time:row.time,groupId:row.groupId})).sort((a,b)=>a.time.localeCompare(b.time)));
   expect(stored).toEqual([{time:'09:00',groupId:'A + B'},{time:'10:30',groupId:'C'}]);
-  const activityRows=modal.locator('.planning-session-row').filter({hasText:'Oficina repetida E2E'});await expect(activityRows).toHaveCount(2);await expect(activityRows.first()).toContainText('Descrição visível no card');await expect(activityRows.first()).toContainText('Observação visível');await expect(activityRows.first()).toContainText('Cartolina');await expect(activityRows.first().locator('.planning-note-button')).toHaveCount(0);
+  const activityRows=modal.locator('.planning-session-row').filter({hasText:'Oficina repetida E2E'});await expect(activityRows).toHaveCount(2);await expect(activityRows.first()).toContainText('Descrição visível no card');await expect(activityRows.first().getByText('Descrição visível no card',{exact:true})).toHaveCount(1);await expect(activityRows.first()).toContainText('Observação visível');await expect(activityRows.first()).toContainText('Cartolina');await expect(activityRows.first().locator('.planning-note-button')).toHaveCount(0);
 });
 
 test('Volunteer repeats an activity on the same day and sees notes and materials inline',async({page})=>{
