@@ -1,0 +1,6 @@
+{
+  "version": "development",
+  "build": "local",
+  "commit": "local-development",
+  "publishedAt": null
+}
