@@ -124,8 +124,17 @@ async function ensureManagerGroups({force=false}={}){
 async function changeManagerGroupUnit(unitId){
   const normalized=String(unitId||'').toLowerCase();if(!normalized||normalized===String(state.groupUnitId||''))return;
   const valid=(state.units||[]).some(unit=>String(unit.id)===normalized);if(!valid)return showToast('Unidade inválida.');
-  state.groupUnitId=normalized;state.groupsLoaded=false;state.groups=[];render();
-  try{await ensureManagerGroups();if(state.managerPage==='groups')render()}catch(error){console.error(error);showToast('Não foi possível carregar os grupos desta unidade.')}
+  const previous={unitId:state.groupUnitId,groups:state.groups,groupsLoaded:state.groupsLoaded,groupsUnitId:state.groupsUnitId};
+  const select=document.getElementById('managerGroupUnit');if(select){select.disabled=true;select.setAttribute('aria-busy','true')}
+  state.groupUnitId=normalized;state.groupsLoaded=false;state.groups=[];
+  try{
+    await new Promise(resolve=>setTimeout(resolve,0));
+    await ensureManagerGroups();
+  }catch(error){
+    console.error(error);state.groupUnitId=previous.unitId;state.groups=previous.groups;state.groupsLoaded=previous.groupsLoaded;state.groupsUnitId=previous.groupsUnitId;showToast('Não foi possível carregar os grupos desta unidade.');
+  }finally{
+    if(state.managerPage==='groups')render();
+  }
 }
 function renderManager(){
   const pages={home:managerHome,volunteer:managerVolunteers,agenda:managerAgenda,groups:managerGroups,menu:managerMenu};
