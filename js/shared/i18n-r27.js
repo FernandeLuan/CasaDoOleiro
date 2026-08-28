@@ -1,5 +1,5 @@
 /* Round 27 — i18n por chave para componentes dinâmicos. Novos componentes devem usar t(),
-   sem depender de MutationObserver ou tradução de texto já renderizado. */
+   sem depender de observador de DOM ou tradução de texto já renderizado. */
 (function keyedI18nR27(){
   const messages={
     pt:{
