@@ -7,7 +7,8 @@
   function cardHtml(){
     const row=normalize(state.currentSession?.profile?.emergencyContact),has=hasContact(row);
     const details=has?`<div class="profile-details volunteer-profile-details emergency-profile-details"><div><span>${escapeHtml(text('emergency.name'))}</span><strong>${escapeHtml(row.name||text('emergency.none'))}</strong></div><div><span>${escapeHtml(text('emergency.relationship'))}</span><strong>${escapeHtml(row.relationship||text('emergency.none'))}</strong></div><div><span>${escapeHtml(text('emergency.phone'))}</span><strong>${escapeHtml(row.phone||text('emergency.none'))}</strong></div></div>`:`<div class="empty">${escapeHtml(text('emergency.none'))}</div>`;
-    return `<div class="card volunteer-emergency-card"><div class="account-card-head"><div><span class="eyebrow">${escapeHtml(text('emergency.title'))}</span></div><button class="btn btn-outline btn-xs" type="button" onclick="openMyEmergencyContactEditor()"><i class="fa-solid fa-pen"></i>${escapeHtml(has?text('emergency.edit'):text('emergency.add'))}</button></div>${details}</div>`;
+    const action=has?`<button class="btn btn-outline btn-xs emergency-edit-icon" type="button" onclick="openMyEmergencyContactEditor()" aria-label="${escapeHtml(text('emergency.edit'))}" title="${escapeHtml(text('emergency.edit'))}"><i class="fa-solid fa-pen" aria-hidden="true"></i></button>`:`<button class="btn btn-outline btn-xs" type="button" onclick="openMyEmergencyContactEditor()"><i class="fa-solid fa-pen" aria-hidden="true"></i>${escapeHtml(text('emergency.add'))}</button>`;
+    return `<div class="card volunteer-emergency-card"><div class="account-card-head"><div><span class="eyebrow">${escapeHtml(text('emergency.title'))}</span></div>${action}</div>${details}</div>`;
   }
 
   const baseVolunteerProfile=volunteerProfile;
