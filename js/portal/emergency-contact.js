@@ -7,7 +7,7 @@
   function cardHtml(){
     const row=normalize(state.currentSession?.profile?.emergencyContact),has=hasContact(row);
     const details=has?`<div class="profile-details volunteer-profile-details emergency-profile-details"><div><span>${escapeHtml(text('emergency.name'))}</span><strong>${escapeHtml(row.name||text('emergency.none'))}</strong></div><div><span>${escapeHtml(text('emergency.relationship'))}</span><strong>${escapeHtml(row.relationship||text('emergency.none'))}</strong></div><div><span>${escapeHtml(text('emergency.phone'))}</span><strong>${escapeHtml(row.phone||text('emergency.none'))}</strong></div></div>`:`<div class="empty">${escapeHtml(text('emergency.none'))}</div>`;
-    return `<div class="card volunteer-emergency-card"><div class="account-card-head"><div><span class="eyebrow">${escapeHtml(text('emergency.title'))}</span><small>${escapeHtml(text('emergency.subtitle'))}</small></div><button class="btn btn-outline btn-xs" type="button" onclick="openMyEmergencyContactEditor()"><i class="fa-solid fa-pen"></i>${escapeHtml(has?text('emergency.edit'):text('emergency.add'))}</button></div>${details}</div>`;
+    return `<div class="card volunteer-emergency-card"><div class="account-card-head"><div><span class="eyebrow">${escapeHtml(text('emergency.title'))}</span></div><button class="btn btn-outline btn-xs" type="button" onclick="openMyEmergencyContactEditor()"><i class="fa-solid fa-pen"></i>${escapeHtml(has?text('emergency.edit'):text('emergency.add'))}</button></div>${details}</div>`;
   }
 
   const baseVolunteerProfile=volunteerProfile;
@@ -16,8 +16,8 @@
   window.openMyEmergencyContactEditor=function(){
     const row=normalize(state.currentSession?.profile?.emergencyContact),has=hasContact(row);
     const body=`<div class="form-grid"><div class="field"><label for="myEmergencyName">${escapeHtml(text('emergency.name'))}</label><input id="myEmergencyName" class="input" value="${escapeHtml(row.name)}" placeholder="${escapeHtml(text('emergency.namePlaceholder'))}"></div><div class="field"><label for="myEmergencyRelationship">${escapeHtml(text('emergency.relationship'))}</label><input id="myEmergencyRelationship" class="input" value="${escapeHtml(row.relationship)}" placeholder="${escapeHtml(text('emergency.relationshipPlaceholder'))}"></div><div class="field"><label for="myEmergencyPhone">${escapeHtml(text('emergency.phone'))}</label><input id="myEmergencyPhone" class="input" type="tel" value="${escapeHtml(row.phone)}" placeholder="${escapeHtml(text('emergency.phonePlaceholder'))}"></div></div>`;
-    const footer=`<div class="confirm-actions">${has?`<button class="btn btn-danger-soft" type="button" onclick="clearMyEmergencyContact()">${escapeHtml(text('emergency.clear'))}</button>`:''}<button class="btn btn-outline" type="button" onclick="closeModal()">${escapeHtml(typeof t==='function'?t('common.cancel'):'Cancelar')}</button><button id="saveMyEmergencyButton" class="btn btn-primary" type="button" onclick="saveMyEmergencyContact()">${escapeHtml(text('emergency.save'))}</button></div>`;
-    openModal(text('emergency.title'),text('emergency.optional'),body,footer);
+    const footer=`<div class="confirm-actions emergency-contact-actions">${has?`<button class="btn btn-danger-soft" type="button" onclick="clearMyEmergencyContact()">${escapeHtml(text('emergency.clear'))}</button>`:'<span class="emergency-action-placeholder" aria-hidden="true"></span>'}<button class="btn btn-outline" type="button" onclick="closeModal()">${escapeHtml(typeof t==='function'?t('common.cancel'):'Cancelar')}</button><button id="saveMyEmergencyButton" class="btn btn-primary" type="button" onclick="saveMyEmergencyContact()">${escapeHtml(text('emergency.save'))}</button></div>`;
+    openModal(text('emergency.title'),'',body,footer);
   };
 
   window.saveMyEmergencyContact=async function(){
