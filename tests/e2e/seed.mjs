@@ -58,11 +58,13 @@ export async function seedEmulators(){
       type:'individual',participantUids:[approved.uid],participantNames:['Aprovado E2E'],participantEmails:[approved.email],participantCountries:['Brasil'],participantPhones:[''],participantGenders:['female'],participantCount:1,participantStatus:{[approved.uid]:'active'},
       unitId:'rodeio',unitName:'Rodeio',status:'approved',active:true,stayStart:'2026-09-21',stayEnd:'2026-09-25',stayMonths:['2026-09'],planningDeadlineAt:null,planningSubmittedAt:now,activityCount:1,sessionCount:1,planningCountVersion:1,source:'e2e',searchTokens:['a','ap','apr','apro','aprov','aprova','aprova','aprovado','e','e2','e2e'],createdAt:now,updatedAt:now
     });
+    /* Simula um registro já existente em produção, criado pela equipe: manager_confirmed
+       e sem createdByUid. O voluntário deve conseguir PROPOR mudança sem regravar o legado. */
     batch.set(db.doc('activities/e2e-approved-activity'),{
-      applicationId:'e2e-approved-application',ownerName:'Aprovado E2E',name:'Atividade confirmada E2E',description:'Descrição aprovada',duration:60,participation:'Livre',materials:'Bola',notes:'Observação aprovada',period:'Manhã',time:'09:00',status:'confirmed',createdByUid:approved.uid,createdAt:now,updatedAt:now
+      applicationId:'e2e-approved-application',ownerName:'Aprovado E2E',name:'Atividade confirmada E2E',description:'Descrição aprovada',duration:60,participation:'Livre',materials:'Bola',notes:'Observação aprovada',period:'Manhã',time:'09:00',status:'manager_confirmed',managerCreated:true,createdAt:now,updatedAt:now
     });
     batch.set(db.doc('activity_sessions/e2e-approved-session'),{
-      applicationId:'e2e-approved-application',activityId:'e2e-approved-activity',unitId:'rodeio',date:'2026-09-22',activityName:'Atividade confirmada E2E',activityDescription:'Descrição aprovada',participation:'Livre',materials:'Bola',notes:'Observação aprovada',ownerName:'Aprovado E2E',time:'09:00',period:'Manhã',duration:60,status:'confirmed',groupId:'Livre',createdByUid:approved.uid,confirmedAt:now,createdAt:now,updatedAt:now
+      applicationId:'e2e-approved-application',activityId:'e2e-approved-activity',unitId:'rodeio',date:'2026-09-22',activityName:'Atividade confirmada E2E',activityDescription:'Descrição aprovada',participation:'Livre',materials:'Bola',notes:'Observação aprovada',ownerName:'Aprovado E2E',time:'09:00',period:'Manhã',duration:60,status:'manager_confirmed',groupId:'Livre',managerCreated:true,confirmedAt:now,createdAt:now,updatedAt:now
     });
 
     batch.set(db.doc('applications/e2e-indaial-application'),{
