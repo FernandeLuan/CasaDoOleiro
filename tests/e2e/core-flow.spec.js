@@ -205,19 +205,31 @@ for(const locale of [
   });
 }
 
-test('New release is announced without automatic reload',async({page})=>{
-  let commit='release-a-000000000000';
-  await page.route('**/release.json*',route=>route.fulfill({
-    status:200,
-    contentType:'application/json',
-    body:JSON.stringify({version:'2026.08.28.1',build:1,commit,publishedAt:'2026-08-28T12:00:00Z'})
-  }));
-  await login(page,'voluntario@oleiro.test','Volunteer123!','portal');
-  await expect.poll(()=>page.evaluate(()=>window.OleiroRelease?.current()?.commit||''),{timeout:20_000}).toBe('release-a-000000000000');
-  const before=page.url();
-  commit='release-b-000000000000';
-  await page.evaluate(()=>window.OleiroRelease.check());
-  await expect(page.locator('#oleiroUpdateBanner')).toBeVisible();
-  await expect(page.locator('#oleiroUpdateBanner')).toContainText('Nova versão disponível');
-  await expect(page).toHaveURL(before);
-});
+for(const locale of [
+  {lang:'pt',title:'Nova versão disponível',button:'Atualizar agora'},
+  {lang:'en',title:'New version available',button:'Update now'},
+  {lang:'es',title:'Nueva versión disponible',button:'Actualizar ahora'}
+]){
+  test(`Release update is localized and never opens a browser confirm in ${locale.lang}`,async({page})=>{
+    let commit='release-a-000000000000',dialogCount=0;
+    page.on('dialog',async dialog=>{dialogCount+=1;await dialog.dismiss()});
+    await page.route('**/release.json*',route=>route.fulfill({
+      status:200,
+      contentType:'application/json',
+      body:JSON.stringify({version:'2026.08.28.1',build:1,commit,publishedAt:'2026-08-28T12:00:00Z'})
+    }));
+    await login(page,'voluntario@oleiro.test','Volunteer123!','portal',locale.lang);
+    await expect.poll(()=>page.evaluate(()=>window.OleiroRelease?.current()?.commit||''),{timeout:20_000}).toBe('release-a-000000000000');
+    const before=new URL(page.url());
+    commit='release-b-000000000000';
+    await page.evaluate(()=>window.OleiroRelease.check());
+    const banner=page.locator('#oleiroUpdateBanner');
+    await expect(banner).toBeVisible();
+    await expect(banner).toContainText(locale.title);
+    await expect(banner.getByRole('button',{name:locale.button})).toBeVisible();
+    await expect(page).toHaveURL(before.toString());
+    await banner.getByRole('button',{name:locale.button}).click();
+    await expect.poll(()=>dialogCount).toBe(0);
+    await expect(page).toHaveURL(/_build=release-b-0+/,{timeout:20_000});
+  });
+}
