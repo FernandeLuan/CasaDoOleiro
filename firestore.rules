@@ -93,6 +93,13 @@ service cloud.firestore {
       return app.active == true && app.status == 'approved';
     }
 
+    /* Legacy production records may predate createdByUid. They remain editable only
+       during the candidate planning window and never when explicitly manager-created. */
+    function participantOwnsEditableLegacy(data) {
+      return (!('managerCreated' in data) || data.managerCreated != true)
+        && (!('createdByUid' in data) || data.createdByUid == request.auth.uid);
+    }
+
     function participantHistoryTypeAllowed(type) {
       return type in [
         'planning_submitted', 'planning_resent',
@@ -224,6 +231,7 @@ service cloud.firestore {
         && resource.data.adminAdjustmentStatus == 'requested'
         && request.resource.data.adminAdjustmentStatus == 'analysis'
         && request.resource.data.adminAdjustmentSubmittedAt == request.time
+        && request.resource.data.updatedAt == request.time
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'adminAdjustmentStatus', 'adminAdjustmentSubmittedAt', 'updatedAt'
         ]);
@@ -234,7 +242,9 @@ service cloud.firestore {
       return activeUser()
         && participantOf(resource.data.applicationId)
         && approvedApplication(resource.data.applicationId)
-        && resource.data.status == 'confirmed'
+        /* Admin-created sessions use manager_confirmed; volunteer-created confirmed sessions
+           use confirmed. Both must support a proposal without mutating the accepted values. */
+        && resource.data.status in ['confirmed', 'manager_confirmed']
         && request.resource.data.status == 'change_requested'
         && request.resource.data.changeProposal is map
         && request.resource.data.changeReviewStatus == 'analysis'
@@ -349,16 +359,21 @@ service cloud.firestore {
         || (
           assistantOfApplication(resource.data.applicationId)
           && request.resource.data.applicationId == resource.data.applicationId
-          && request.resource.data.createdByUid == resource.data.createdByUid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'name', 'description', 'duration', 'participation', 'materials',
+            'notes', 'period', 'time', 'ownerName',
+            'reviewStatus', 'reviewNote', 'reviewSubmittedAt', 'reviewRequestNote',
+            'reviewBaseline', 'updatedAt'
+          ])
         )
         || (
           activeUser()
           && participantOf(resource.data.applicationId)
           && request.resource.data.applicationId == resource.data.applicationId
-          && request.resource.data.createdByUid == resource.data.createdByUid
           && (
             (
               candidateWindowOpen(resource.data.applicationId)
+              && participantOwnsEditableLegacy(resource.data)
               && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
                 'name', 'description', 'duration', 'participation', 'materials',
                 'notes', 'period', 'time', 'ownerName', 'updatedAt'
@@ -381,8 +396,7 @@ service cloud.firestore {
         || (
           activeUser()
           && participantOf(resource.data.applicationId)
-          && resource.data.createdByUid == request.auth.uid
-          && (!('managerCreated' in resource.data) || resource.data.managerCreated != true)
+          && participantOwnsEditableLegacy(resource.data)
           && (
             candidateEditable(resource.data.applicationId)
             || (
@@ -404,7 +418,7 @@ service cloud.firestore {
       allow create: if isManager()
         || (
           isActivityAssistant()
-          && assistantHasUnit(request.resource.data.unitId)
+          && assistantOfApplication(request.resource.data.applicationId)
           && request.resource.data.unitId == applicationData(request.resource.data.applicationId).unitId
         )
         || (
@@ -425,22 +439,29 @@ service cloud.firestore {
           assistantOfApplication(resource.data.applicationId)
           && request.resource.data.applicationId == resource.data.applicationId
           && request.resource.data.activityId == resource.data.activityId
-          && request.resource.data.createdByUid == resource.data.createdByUid
-          && request.resource.data.unitId == resource.data.unitId
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'activityName', 'activityDescription', 'participation', 'materials',
+            'notes', 'ownerName', 'date', 'time', 'period', 'duration', 'groupId',
+            'status', 'changeNote', 'changeRequestedAt', 'changeProposal',
+            'changeReviewStatus', 'changeReviewNote', 'changeReviewedAt',
+            'changeReviewRequestNote', 'changeReviewBaseline',
+            'adminAdjustmentStatus', 'adminAdjustmentNote',
+            'adminAdjustmentRequestedAt', 'adminAdjustmentSubmittedAt',
+            'adminAdjustmentBaseline', 'reviewStatus', 'reviewNote',
+            'reviewSubmittedAt', 'reviewRequestNote', 'reviewBaseline', 'updatedAt'
+          ])
         )
         || (
           activeUser()
           && participantOf(resource.data.applicationId)
           && request.resource.data.applicationId == resource.data.applicationId
           && request.resource.data.activityId == resource.data.activityId
-          && request.resource.data.createdByUid == resource.data.createdByUid
-          && request.resource.data.unitId == resource.data.unitId
-          && request.resource.data.groupId == resource.data.groupId
           && (
             (
               candidateWindowOpen(resource.data.applicationId)
               && resource.data.status == 'proposed'
               && request.resource.data.status == 'proposed'
+              && participantOwnsEditableLegacy(resource.data)
               && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
                 'activityName', 'activityDescription', 'participation', 'materials',
                 'notes', 'ownerName', 'date', 'time', 'period', 'duration', 'updatedAt'
@@ -468,8 +489,7 @@ service cloud.firestore {
         || (
           activeUser()
           && participantOf(resource.data.applicationId)
-          && resource.data.createdByUid == request.auth.uid
-          && (!('managerCreated' in resource.data) || resource.data.managerCreated != true)
+          && participantOwnsEditableLegacy(resource.data)
           && (
             (
               candidateEditable(resource.data.applicationId)
