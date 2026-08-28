@@ -44,6 +44,19 @@ async function waitForCandidateList(page){
   return list;
 }
 
+async function openPendingVolunteer(page){
+  await navAction(page,'Voluntariado').click();
+  await waitForCandidateList(page);
+  await appAction(page,'Filtros').click();
+  await page.locator('#candidateStatusFilter').selectOption('pending');
+  await page.locator('#modalRoot').getByRole('button',{name:/Aplicar$/}).click();
+  const list=await waitForCandidateList(page);
+  const candidate=list.locator('.list-item.clickable').filter({hasText:'Voluntário E2E'}).first();
+  await expect(candidate).toBeVisible({timeout:20_000});
+  await candidate.click();
+  return page.locator('#modalRoot');
+}
+
 test.beforeEach(async()=>{
   await seedEmulators();
 });
@@ -123,19 +136,33 @@ test('Admin date controls work in candidate, agenda and meeting flows',async({pa
   expect(usableDateInputs).toBe(true);
 });
 
-test('Candidate History is lazy and loads only after opening its tab',async({page})=>{
+test('Emergency contact is optional at registration and rejects incomplete data',async({page})=>{
   await login(page,'admin@oleiro.test','Admin123!','admin');
   await navAction(page,'Voluntariado').click();
   await waitForCandidateList(page);
-  await appAction(page,'Filtros').click();
-  await page.locator('#candidateStatusFilter').selectOption('pending');
-  await page.locator('#modalRoot').getByRole('button',{name:/Aplicar$/}).click();
-  const list=await waitForCandidateList(page);
+  await page.getByRole('button',{name:'Novo candidato'}).click();
 
-  const candidate=list.locator('.list-item.clickable').filter({hasText:'Voluntário E2E'}).first();
-  await expect(candidate).toBeVisible({timeout:20_000});
-  await candidate.click();
-  const modal=page.locator('#modalRoot');
+  await expect(page.locator('#ncEmergencyName1')).toBeVisible();
+  await expect(page.locator('#ncEmergencyRelationship1')).toBeVisible();
+  await expect(page.locator('#ncEmergencyPhone1')).toBeVisible();
+
+  await page.locator('#ncName1').fill('Cadastro Opcional E2E');
+  await page.locator('#ncEmail1').fill('opcional@oleiro.test');
+  await page.locator('#ncGender1').selectOption('male');
+  await page.locator('#ncFrom').fill('2026-10-05');
+  await page.locator('#ncTo').fill('2026-10-16');
+  await expect(page.locator('#ncSubmit')).toBeEnabled();
+
+  await page.locator('#ncEmergencyRelationship1').fill('Irmão');
+  await expect(page.locator('#ncSubmit')).toBeDisabled();
+  await page.locator('#ncEmergencyName1').fill('Contato E2E');
+  await page.locator('#ncEmergencyPhone1').fill('+55 47 99999-1111');
+  await expect(page.locator('#ncSubmit')).toBeEnabled();
+});
+
+test('Candidate History is lazy and loads only after opening its tab',async({page})=>{
+  await login(page,'admin@oleiro.test','Admin123!','admin');
+  const modal=await openPendingVolunteer(page);
   await expect(modal.getByRole('button',{name:/Histórico$/})).toBeVisible();
   await expect.poll(()=>page.evaluate(()=>window.OleiroQueryMetrics?.filter(row=>row.name==='applications/history').length||0)).toBe(0);
 
@@ -143,6 +170,33 @@ test('Candidate History is lazy and loads only after opening its tab',async({pag
   await expect(modal.getByText('Histórico do candidato',{exact:true})).toBeVisible();
   await expect(modal.getByText('Candidato cadastrado',{exact:true})).toBeVisible();
   await expect.poll(()=>page.evaluate(()=>window.OleiroQueryMetrics?.filter(row=>row.name==='applications/history').length||0)).toBe(1);
+});
+
+test('Volunteer can edit own emergency contact and Admin sees the same profile data',async({page})=>{
+  await login(page,'voluntario@oleiro.test','Volunteer123!','portal');
+  await navAction(page,'Perfil').click();
+  const emergency=page.locator('.volunteer-emergency-card');
+  await expect(emergency).toBeVisible();
+  await expect(emergency).toContainText('Contato de emergência');
+  await expect(emergency).toContainText('Não informado');
+  await emergency.getByRole('button',{name:/Adicionar contato$/}).click();
+  await page.locator('#myEmergencyName').fill('Contato E2E');
+  await page.locator('#myEmergencyRelationship').fill('Irmão');
+  await page.locator('#myEmergencyPhone').fill('+55 47 99999-1111');
+  await page.locator('#modalRoot').getByRole('button',{name:/Salvar contato$/}).click();
+  await expect(emergency).toContainText('Contato E2E');
+  await expect(emergency).toContainText('+55 47 99999-1111');
+
+  await page.evaluate(()=>window.OleiroAuth.signOut());
+  await login(page,'admin@oleiro.test','Admin123!','admin');
+  const modal=await openPendingVolunteer(page);
+  await modal.getByRole('button',{name:/Conta$/}).click();
+  const adminEmergency=modal.locator('.account-emergency-card');
+  await expect(adminEmergency).toBeVisible();
+  await expect(adminEmergency).toContainText('Contato E2E',{timeout:20_000});
+  await expect(adminEmergency).toContainText('Irmão');
+  await expect(adminEmergency).toContainText('+55 47 99999-1111');
+  await expect.poll(()=>page.evaluate(()=>window.OleiroQueryMetrics?.filter(row=>row.name==='profiles/by-ids').reduce((sum,row)=>sum+(Number(row.meta?.pointReads)||0),0)||0)).toBeLessThanOrEqual(1);
 });
 
 test('Candidate creates, edits, moves and deletes own proposed activity',async({page})=>{
@@ -183,10 +237,10 @@ test('Candidate creates, edits, moves and deletes own proposed activity',async({
 });
 
 for(const locale of [
-  {lang:'en',infoNav:'Information',arrival:'How to get here',software:'Software version',planning:'Planning',add:'Add activity',namePlaceholder:'E.g. English conversation',descriptionPlaceholder:'How does the activity work?'},
-  {lang:'es',infoNav:'Información',arrival:'Cómo llegar',software:'Versión del software',planning:'Planificación',add:'Agregar actividad',namePlaceholder:'Ej.: Conversación en inglés',descriptionPlaceholder:'¿Cómo funciona la actividad?'}
+  {lang:'en',infoNav:'Information',arrival:'How to get here',software:'Software version',planning:'Planning',add:'Add activity',namePlaceholder:'E.g. English conversation',descriptionPlaceholder:'How does the activity work?',profileNav:'Profile',emergencyTitle:'Emergency contact',emergencyAdd:'Add contact'},
+  {lang:'es',infoNav:'Información',arrival:'Cómo llegar',software:'Versión del software',planning:'Planificación',add:'Agregar actividad',namePlaceholder:'Ej.: Conversación en inglés',descriptionPlaceholder:'¿Cómo funciona la actividad?',profileNav:'Perfil',emergencyTitle:'Contacto de emergencia',emergencyAdd:'Agregar contacto'}
 ]){
-  test(`Volunteer critical information and activity placeholders render in ${locale.lang}`,async({page})=>{
+  test(`Volunteer critical information, profile and activity placeholders render in ${locale.lang}`,async({page})=>{
     await login(page,'voluntario@oleiro.test','Volunteer123!','portal',locale.lang);
     await navAction(page,locale.infoNav).click();
     await expect(page.locator('#info-arrival')).toBeVisible();
@@ -202,6 +256,12 @@ for(const locale of [
     await expect(page.locator('#actDesc')).toHaveAttribute('placeholder',locale.descriptionPlaceholder);
     await expect(page.locator('#actParticipation option[value="Até 5"]')).not.toHaveText('Até 5');
     await expect(page.locator('#actPeriod option[value="Manhã"]')).not.toHaveText('Manhã');
+    await page.evaluate(()=>closeModal());
+
+    await navAction(page,locale.profileNav).click();
+    const emergency=page.locator('.volunteer-emergency-card');
+    await expect(emergency).toContainText(locale.emergencyTitle);
+    await expect(emergency.getByRole('button',{name:new RegExp(`${locale.emergencyAdd}$`)})).toBeVisible();
   });
 }
 
