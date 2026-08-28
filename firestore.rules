@@ -98,6 +98,39 @@ service cloud.firestore {
         ]);
     }
 
+    function participantUpdatesEmergencyContact(uid) {
+      return activeUser()
+        && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'emergencyContact', 'updatedAt'
+        ])
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.emergencyContact is map
+        && request.resource.data.emergencyContact.keys().hasAll([
+          'name', 'relationship', 'phone'
+        ])
+        && request.resource.data.emergencyContact.keys().hasOnly([
+          'name', 'relationship', 'phone'
+        ])
+        && request.resource.data.emergencyContact.name is string
+        && request.resource.data.emergencyContact.relationship is string
+        && request.resource.data.emergencyContact.phone is string
+        && request.resource.data.emergencyContact.name.size() <= 120
+        && request.resource.data.emergencyContact.relationship.size() <= 80
+        && request.resource.data.emergencyContact.phone.size() <= 40
+        && (
+          (
+            request.resource.data.emergencyContact.name == ''
+            && request.resource.data.emergencyContact.relationship == ''
+            && request.resource.data.emergencyContact.phone == ''
+          )
+          || (
+            request.resource.data.emergencyContact.name.size() > 0
+            && request.resource.data.emergencyContact.phone.size() > 0
+          )
+        );
+    }
+
     function participantMaySubmitApplication() {
       return isParticipant(resource.data)
         && resource.data.active == true
@@ -168,7 +201,8 @@ service cloud.firestore {
 
     match /volunteer_profiles/{uid} {
       allow read: if activeUser() && (request.auth.uid == uid || isManager());
-      allow create, update, delete: if isManager();
+      allow create, delete: if isManager();
+      allow update: if isManager() || participantUpdatesEmergencyContact(uid);
     }
 
     match /applications/{applicationId} {

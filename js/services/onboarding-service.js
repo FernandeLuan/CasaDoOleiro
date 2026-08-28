@@ -4,6 +4,10 @@
   function normalizeEmail(value){return String(value||'').trim().toLowerCase()}
   function normalizeText(value){return String(value||'').trim()}
   function normalizeGender(value){const gender=String(value||'').toLowerCase();return ['male','female'].includes(gender)?gender:''}
+  function normalizeEmergencyContact(value){
+    const row=value&&typeof value==='object'?value:{};
+    return {name:normalizeText(row.name).slice(0,120),relationship:normalizeText(row.relationship).slice(0,80),phone:normalizeText(row.phone).slice(0,40)};
+  }
   function normalizeRegistrationLink(value){
     const link=normalizeText(value);if(!link)return '';
     try{const url=new URL(link);if(!['http:','https:'].includes(url.protocol))throw new Error();return url.toString()}
@@ -35,10 +39,11 @@
     return [...tokens].slice(0,200);
   }
   function validatePayload(payload){
-    const participants=(payload?.participants||[]).map(p=>({...p,name:normalizeText(p.name),email:normalizeEmail(p.email),country:normalizeText(p.country),phone:normalizeText(p.phone),language:String(p.language||'en').toLowerCase(),gender:normalizeGender(p.gender)}));
+    const participants=(payload?.participants||[]).map(p=>({...p,name:normalizeText(p.name),email:normalizeEmail(p.email),country:normalizeText(p.country),phone:normalizeText(p.phone),language:String(p.language||'en').toLowerCase(),gender:normalizeGender(p.gender),emergencyContact:normalizeEmergencyContact(p.emergencyContact)}));
     if(![1,2].includes(participants.length))throw new Error('Escolha uma candidatura individual ou em dupla.');
     if(participants.some(p=>!p.name||!p.email||!p.email.includes('@')))throw new Error('Informe nome e e-mail de todos os participantes.');
     if(participants.some(p=>!p.gender))throw new Error('Informe o gênero de todos os participantes.');
+    if(participants.some(p=>(p.emergencyContact.name||p.emergencyContact.relationship||p.emergencyContact.phone)&&(!p.emergencyContact.name||!p.emergencyContact.phone)))throw new Error('Se informar um contato de emergência, preencha pelo menos o nome e o telefone.');
     if(new Set(participants.map(p=>p.email)).size!==participants.length)throw new Error('Os participantes precisam usar e-mails diferentes.');
     const stayStart=String(payload.stayStart||'');const stayEnd=String(payload.stayEnd||'');
     if(!stayStart||!stayEnd)throw new Error('Informe chegada e saída.');
@@ -97,7 +102,7 @@
               role:'volunteer',active:true,language:p.language||'en',unitIds:[data.unitId],email:p.email,firstPortalAccessAt:null,createdAt:now,updatedAt:now
             });
             batch.set(firestore.doc(context.db,'volunteer_profiles',uid),{
-              name:p.name,fullName:p.name,email:p.email,phone:p.phone||'',whatsapp:p.phone||'',country:p.country||'',nationality:p.country||'',language:p.language||'en',gender:p.gender||'',createdAt:now,updatedAt:now
+              name:p.name,fullName:p.name,email:p.email,phone:p.phone||'',whatsapp:p.phone||'',country:p.country||'',nationality:p.country||'',language:p.language||'en',gender:p.gender||'',emergencyContact:p.emergencyContact||{name:'',relationship:'',phone:''},createdAt:now,updatedAt:now
             });
           });
 
