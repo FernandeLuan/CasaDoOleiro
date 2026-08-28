@@ -44,6 +44,15 @@ async function waitForCandidateList(page){
   return list;
 }
 
+async function openPendingCandidates(page){
+  await navAction(page,'Voluntariado').click();
+  await waitForCandidateList(page);
+  await appAction(page,'Filtros').click();
+  await page.locator('#candidateStatusFilter').selectOption('pending');
+  await page.locator('#modalRoot').getByRole('button',{name:/Aplicar$/}).click();
+  return waitForCandidateList(page);
+}
+
 test.beforeEach(async()=>{
   await seedEmulators();
 });
@@ -67,12 +76,7 @@ test('Admin manages independent A/B/C/D groups for Rodeio and Indaial',async({pa
 
 test('Candidate History is lazy and loads only after opening its tab',async({page})=>{
   await login(page,'admin@oleiro.test','Admin123!','admin');
-  await navAction(page,'Voluntariado').click();
-  await waitForCandidateList(page);
-  await appAction(page,'Filtros').click();
-  await page.locator('#candidateStatusFilter').selectOption('pending');
-  await page.locator('#modalRoot').getByRole('button',{name:/Aplicar$/}).click();
-  const list=await waitForCandidateList(page);
+  const list=await openPendingCandidates(page);
 
   const candidate=list.locator('.list-item.clickable').filter({hasText:'Voluntário E2E'}).first();
   await expect(candidate).toBeVisible({timeout:20_000});
@@ -85,6 +89,38 @@ test('Candidate History is lazy and loads only after opening its tab',async({pag
   await expect(modal.getByText('Histórico do candidato',{exact:true})).toBeVisible();
   await expect(modal.getByText('Candidato cadastrado',{exact:true})).toBeVisible();
   await expect.poll(()=>page.evaluate(()=>window.OleiroQueryMetrics?.filter(row=>row.name==='applications/history').length||0)).toBe(1);
+});
+
+test('Meeting scheduler reuses the standard date picker without mobile overflow',async({page})=>{
+  await login(page,'admin@oleiro.test','Admin123!','admin');
+  await openPendingCandidates(page);
+  await page.evaluate(()=>{
+    const candidate=window.candidateById?.('e2e-application');
+    if(!candidate)throw new Error('E2E candidate not loaded');
+    Object.assign(candidate,{status:'meeting',meetingStatus:'pending',meetingDate:'2026-09-15',meetingTime:'14:30'});
+    window.openSelectionMeetingEditor(encodeURIComponent(candidate.id));
+  });
+
+  const modal=page.locator('#modalRoot .modal');
+  await expect(modal).toBeVisible();
+  await expect(page.locator('.selection-meeting-datetime .date-picker-shell')).toHaveCount(1);
+  await expect(page.locator('#selectionMeetingDate')).toHaveValue('2026-09-15');
+  await expect(page.locator('#selectionMeetingDateText')).toHaveText('15/09/2026');
+  await expect(page.locator('#selectionMeetingTime')).toHaveValue('14:30');
+
+  const layout=await page.evaluate(()=>{
+    const modal=document.querySelector('#modalRoot .modal');
+    const row=document.querySelector('.selection-meeting-datetime');
+    const dateShell=document.querySelector('.selection-meeting-datetime .date-picker-shell');
+    const time=document.getElementById('selectionMeetingTime');
+    const dateLabel=document.querySelector('label[for="selectionMeetingDate"]');
+    const durationLabel=document.querySelector('label[for="selectionMeetingDuration"]');
+    if(!modal||!row||!dateShell||!time||!dateLabel||!durationLabel)return {inside:false,sameLabelSize:false};
+    const outer=modal.getBoundingClientRect(),inside=node=>{const box=node.getBoundingClientRect();return box.left>=outer.left-1&&box.right<=outer.right+1};
+    return {inside:inside(dateShell)&&inside(time)&&row.scrollWidth<=row.clientWidth+1,sameLabelSize:getComputedStyle(dateLabel).fontSize===getComputedStyle(durationLabel).fontSize};
+  });
+  expect(layout.inside).toBe(true);
+  expect(layout.sameLabelSize).toBe(true);
 });
 
 test('Candidate creates, edits, moves and deletes own proposed activity',async({page})=>{
