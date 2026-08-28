@@ -104,8 +104,25 @@ jobs:
             echo 'Broad countStatus document fallback was reintroduced.'
             exit 1
           fi
+          if grep -RInE 'firestore\.(getDocs|getDoc|query)\(' js/admin js/portal; then
+            echo 'Firestore read/query leaked into UI layer; keep reads in services.'
+            exit 1
+          fi
           grep -q '"fieldPath": "applicationId"' firestore.indexes.json
           grep -q '"fieldPath": "activityId"' firestore.indexes.json
+
+      - name: Check stay-date query reuse
+        shell: bash
+        run: |
+          grep -q 'stayPreviewCache' js/services/application-service.js
+          grep -q 'cachedStayPreview' js/services/application-service.js
+          python - <<'PY'
+          text=open('js/services/application-service.js',encoding='utf-8').read()
+          segment=text.split('async changeStayDates',1)[1].split('async requestDayAdjustment',1)[0]
+          assert 'cachedStayPreview' in segment, 'changeStayDates no longer reuses preview data'
+          assert 'applicationActivities' not in segment, 'changeStayDates reintroduced redundant activities query'
+          assert 'orphanActivityIds' in segment, 'orphan activities must be derived from loaded sessions'
+          PY
 
       - name: Check Spark-only account administration
         shell: bash
@@ -145,6 +162,10 @@ jobs:
             echo 'Hard-coded Rodeio group loading was reintroduced.'
             exit 1
           fi
+          if grep -q 'managerGroups=function' js/admin/round3-ui.js; then
+            echo 'Legacy Round 3 groups override was reintroduced.'
+            exit 1
+          fi
 
       - name: Check keyed i18n and history
         shell: bash
@@ -156,6 +177,12 @@ jobs:
           test -e js/admin/selection-ui-r27.js
           test ! -e js/admin/i18n-after-injections-r25.js
           grep -q 'window.t=t' js/shared/i18n-r27.js
+          grep -q 'window.tValue=tValue' js/shared/i18n-r27.js
+          grep -q "portal.info.arrivalTitle" js/shared/ui.js
+          grep -q "portal.info.accommodationBody" js/shared/ui.js
+          grep -q "portal.activity.namePlaceholder" js/portal/app.js
+          grep -q "portal.activity.descriptionPlaceholder" js/portal/app.js
+          grep -q "portal.move.reasonPlaceholder" js/portal/ux-r16.js
           grep -q "collection(context.db,'applications',String(applicationId),'history')" js/services/history-service.js
           grep -q 'PAGE_SIZE=20' js/admin/history-r27.js
           grep -q "tab==='history'" js/admin/history-r27.js
@@ -167,6 +194,21 @@ jobs:
           grep -q '../js/shared/i18n-r27.js' portal/index.html
           if grep -RIn 'MutationObserver' js; then
             echo 'MutationObserver-based i18n patch was reintroduced.'
+            exit 1
+          fi
+
+      - name: Check removed activity suggestions and dead layers
+        shell: bash
+        run: |
+          test ! -e js/shared/activity-catalog-r26.js
+          test ! -e js/portal/activity-catalog-r26.js
+          test ! -e js/admin/activity-catalog-r26.js
+          if grep -RInE 'activity-catalog-r26|OleiroActivityCatalog|activity-catalog-field|activity-catalog-meta' admin portal js css; then
+            echo 'Removed House activity suggestion catalog was reintroduced.'
+            exit 1
+          fi
+          if grep -RIn 'Reajustar mudança' js/portal; then
+            echo 'Language-dependent legacy action matching was reintroduced.'
             exit 1
           fi
 
@@ -183,6 +225,9 @@ jobs:
           grep -q 'iphone-webkit' playwright.config.js
           grep -q 'cancel-in-progress: true' .github/workflows/e2e.yml
           grep -q 'firebase emulators:exec' package.json
+          grep -q "locator('#moveSessionSave')" tests/e2e/core-flow.spec.js
+          grep -q "lang:'en'" tests/e2e/core-flow.spec.js
+          grep -q "lang:'es'" tests/e2e/core-flow.spec.js
 
       - name: Check selection lifecycle
         shell: bash
@@ -197,8 +242,8 @@ jobs:
           grep -q 'Não aprovar' js/admin/selection-flow-r25.js
           grep -q 'Motivo interno da não aprovação' js/admin/selection-flow-r25.js
           grep -q 'selection-flow-card' js/admin/selection-flow-r25.js
-          grep -q 'Próximos compromissos' js/portal/selection-flow-r25.js
-          grep -q 'Entrar na reunião' js/portal/selection-flow-r25.js
+          grep -q "portal.meeting.next" js/portal/selection-flow-r25.js
+          grep -q "action.enterMeeting" js/portal/selection-flow-r25.js
           grep -q 'candidateEditable' firestore.rules
           grep -q 'managerCreated' firestore.rules
           grep -q '"status"' firestore.indexes.json
@@ -211,9 +256,9 @@ jobs:
           grep -q 'postApprovalProposal' js/services/planning-service.js
           grep -q 'reviewPostApprovalProposal' js/services/planning-service.js
           grep -q 'reviewStatus.*analysis' js/services/planning-service.js
-          grep -q 'Nova proposta de atividade' js/portal/app.js
-          grep -q 'Aguardando análise' js/portal/post-approval.js
-          grep -q 'Reajustar' js/portal/post-approval.js
+          grep -q "portal.activity.newProposal" js/portal/app.js
+          grep -q "portal.session.reviewing" js/portal/post-approval.js
+          grep -q "action.adjust" js/portal/post-approval.js
           grep -q 'Nova atividade' js/admin/post-approval.js
           grep -q 'Aprovar' js/admin/post-approval.js
           grep -q 'Recusar' js/admin/post-approval.js
@@ -239,8 +284,8 @@ jobs:
           grep -q 'day-initial-analysis' js/admin/refinements-r23.js
           grep -q 'Em análise' js/admin/refinements-r23.js
           grep -q 'aria-busy' js/portal/refinements-r23.js
-          grep -q 'Reenviando' js/portal/refinements-r23.js
-          grep -q 'Enviando' js/portal/refinements-r23.js
+          grep -q "action.resendReview" js/portal/refinements-r23.js
+          grep -q "action.sending" js/portal/refinements-r23.js
           grep -q 'deleteSession(session.id' js/portal/selection-flow-r25.js
           grep -q 'applications.update(application.id' js/portal/selection-flow-r25.js
           grep -q 'Digite para buscar o país' js/admin/candidate-form.js
@@ -251,7 +296,7 @@ jobs:
           grep -q 'Voltar ao calendário' js/admin/refinements-r19.js
           grep -q 'home-unit-support-link' js/portal/refinements-r20.js
           grep -q 'managerCreated' js/portal/refinements-r20.js
-          grep -q 'Adicione uma atividade para enviar' js/portal/refinements-r20.js
+          grep -q "portal.plan.addBeforeSend" js/portal/refinements-r20.js
           grep -q 'participantMayResetEmptyAdjustment' firestore.rules
           grep -q '../js/shared/i18n-r25.js' admin/index.html
           grep -q '../js/shared/i18n-r25.js' portal/index.html
