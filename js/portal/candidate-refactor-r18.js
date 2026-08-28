@@ -1,29 +1,30 @@
-/* Round 18 — planejamento do candidato direto ao conteúdo operacional. */
+/* Round 18/28 — planejamento do candidato direto ao conteúdo operacional. */
 (function candidateRefactorR18(){
   const baseVolunteerPlan=volunteerPlan;
 
+  function remainingLabel(days){return days===1?t('portal.profile.remainingOne'):t('portal.profile.remainingMany',{days})}
   function statusMetaCandidate(){
     const status=state.volunteerPlanStatus||'draft',application=state.currentApplication||{};
-    if(status==='submitted')return {label:'Em análise',tone:'info'};
+    if(status==='submitted')return {label:t('portal.profile.analysis'),tone:'info'};
     if(status==='adjustments'){
-      let label='Reajuste solicitado';
+      let label=t('portal.activity.adjustRequested');
       const deadline=application.planningDeadlineAt||application.pendingUntil;
-      if(deadline){try{const date=typeof deadline?.toDate==='function'?deadline.toDate():new Date(deadline),days=Math.max(0,Math.ceil((date.getTime()-Date.now())/86400000));label=`${days===0?'Vence hoje':days===1?'1 dia restante':`${days} dias restantes`} · Reajuste solicitado`}catch{}}
+      if(deadline){try{const date=typeof deadline?.toDate==='function'?deadline.toDate():new Date(deadline),days=Math.max(0,Math.ceil((date.getTime()-Date.now())/86400000));label=`${remainingLabel(days)} · ${t('portal.activity.adjustRequested')}`}catch{}}
       return {label,tone:'warning'};
     }
     const deadline=application.planningDeadlineAt||application.pendingUntil;
-    if(deadline){try{const date=typeof deadline?.toDate==='function'?deadline.toDate():new Date(deadline),days=Math.max(0,Math.ceil((date.getTime()-Date.now())/86400000));return {label:days===0?'Vence hoje':days===1?'1 dia restante':`${days} dias restantes`,tone:''}}catch{}}
-    return {label:'Em preparação',tone:''};
+    if(deadline){try{const date=typeof deadline?.toDate==='function'?deadline.toDate():new Date(deadline),days=Math.max(0,Math.ceil((date.getTime()-Date.now())/86400000));return {label:remainingLabel(days),tone:''}}catch{}}
+    return {label:t('portal.profile.preparing'),tone:''};
   }
   function compactHeader(){
-    const app=state.currentApplication||{},start=portalIsoDate(app.stayStart),end=portalIsoDate(app.stayEnd),meta=statusMetaCandidate(),period=start&&end?`${fmtDate(start,true)}–${fmtDate(end,true)}`:'Período a confirmar';
+    const app=state.currentApplication||{},start=portalIsoDate(app.stayStart),end=portalIsoDate(app.stayEnd),meta=statusMetaCandidate(),period=start&&end?`${fmtDate(start,true)}–${fmtDate(end,true)}`:t('portal.home.periodConfirm');
     return `<div class="candidate-plan-compact-head ${meta.tone}"><strong>${escapeHtml(period)}</strong><span>${escapeHtml(meta.label)}</span></div>`;
   }
   function submitControl(){
     const status=state.volunteerPlanStatus||'draft';
-    if(status==='submitted')return `<button class="btn btn-soft btn-block candidate-plan-submit" type="button" disabled><i class="fa-solid fa-paper-plane"></i>Enviado</button>`;
+    if(status==='submitted')return `<button class="btn btn-soft btn-block candidate-plan-submit" type="button" disabled><i class="fa-solid fa-paper-plane"></i>${escapeHtml(t('portal.plan.sentButton'))}</button>`;
     if(status==='rejected')return '';
-    return `<button class="btn btn-primary btn-block candidate-plan-submit" type="button" onclick="submitPlan()"><i class="fa-solid fa-paper-plane"></i>${status==='adjustments'?'Reenviar planejamento':'Enviar planejamento'}</button>`;
+    return `<button class="btn btn-primary btn-block candidate-plan-submit" type="button" onclick="submitPlan()"><i class="fa-solid fa-paper-plane"></i>${escapeHtml(status==='adjustments'?t('portal.plan.resendButton'):t('portal.plan.sendButton'))}</button>`;
   }
 
   volunteerPlan=function(){
