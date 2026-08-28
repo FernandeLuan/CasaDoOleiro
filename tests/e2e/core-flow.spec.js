@@ -53,16 +53,74 @@ test('Admin manages independent A/B/C/D groups for Rodeio and Indaial',async({pa
   await navAction(page,'Menu').click();
   await page.locator('#app .menu-list').getByRole('button',{name:/Grupos\b/}).click();
   await expect(page.locator('#managerGroupUnit')).toBeVisible({timeout:20_000});
+  await expect(page.locator('.group-details')).toHaveCount(4,{timeout:20_000});
+
+  const firstGroup=page.locator('.group-details').first();
+  await firstGroup.locator('summary').click();
+  await expect(firstGroup).toHaveAttribute('open','');
 
   await page.locator('#managerGroupUnit').selectOption('indaial');
   await expect(page.locator('.group-details')).toHaveCount(4,{timeout:20_000});
+  await expect(page.locator('#managerGroupUnit')).toHaveValue('indaial');
   await expect(page.getByText('Grupo A',{exact:true})).toBeVisible();
   await expect(page.getByText('Grupo D',{exact:true})).toBeVisible();
   await expect(page.locator('.section-title').getByText(/Indaial.*inativa/i)).toBeVisible();
 
+  await page.locator('.group-details').first().locator('summary').click();
   await page.locator('#managerGroupUnit').selectOption('rodeio');
   await expect(page.locator('.group-details')).toHaveCount(4,{timeout:20_000});
+  await expect(page.locator('#managerGroupUnit')).toHaveValue('rodeio');
   await expect(page.getByText('Grupo A',{exact:true})).toBeVisible();
+});
+
+test('Admin date controls work in candidate, agenda and meeting flows',async({page})=>{
+  await login(page,'admin@oleiro.test','Admin123!','admin');
+  await navAction(page,'Voluntariado').click();
+  await waitForCandidateList(page);
+  await page.getByRole('button',{name:'Novo candidato'}).click();
+
+  const candidateFrom=page.locator('#ncFrom'),candidateTo=page.locator('#ncTo');
+  await expect(candidateFrom).toBeVisible();
+  await expect(candidateTo).toBeVisible();
+  await expect(candidateFrom).toHaveAttribute('type','date');
+  await candidateFrom.evaluate(el=>Object.defineProperty(el,'showPicker',{configurable:true,value(){this.dataset.pickerProbe='opened'}}));
+  await candidateFrom.click();
+  await expect(candidateFrom).toHaveAttribute('data-picker-probe','opened');
+  await candidateFrom.fill('2026-09-21');
+  await candidateTo.fill('2026-10-02');
+  await expect(candidateFrom).toHaveValue('2026-09-21');
+  await expect(candidateTo).toHaveValue('2026-10-02');
+  await expect(page.locator('#ncFromText')).toHaveText('21/09/2026');
+  await expect(page.locator('#ncToText')).toHaveText('02/10/2026');
+
+  await page.evaluate(()=>closeModal());
+  await page.evaluate(()=>openAgendaRangeModal());
+  const agendaFrom=page.locator('#agendaFromInput'),agendaTo=page.locator('#agendaToInput');
+  await expect(agendaFrom).toBeVisible();
+  await expect(agendaTo).toBeVisible();
+  await agendaFrom.evaluate(el=>Object.defineProperty(el,'showPicker',{configurable:true,value(){this.dataset.pickerProbe='opened'}}));
+  await agendaFrom.click();
+  await expect(agendaFrom).toHaveAttribute('data-picker-probe','opened');
+  await agendaFrom.fill('2026-09-01');
+  await agendaTo.fill('2026-09-30');
+  await expect(agendaFrom).toHaveValue('2026-09-01');
+  await expect(agendaTo).toHaveValue('2026-09-30');
+
+  await page.evaluate(()=>closeModal());
+  await page.evaluate(()=>{
+    const fake={id:'meeting-date-e2e',name:'Data E2E',status:'meeting',meetingStatus:'pending',meetingDuration:30};
+    state.candidates=[fake,...(state.candidates||[]).filter(row=>row.id!==fake.id)];
+    openSelectionMeetingEditor(encodeURIComponent(fake.id));
+  });
+  const meetingDate=page.locator('#selectionMeetingDate'),meetingTime=page.locator('#selectionMeetingTime');
+  await expect(meetingDate).toBeVisible();
+  await expect(meetingDate).toHaveAttribute('type','date');
+  await meetingDate.fill('2026-09-15');
+  await meetingTime.fill('14:30');
+  await expect(meetingDate).toHaveValue('2026-09-15');
+  await expect(meetingTime).toHaveValue('14:30');
+  const usableDateInputs=await page.locator('input[type="date"]:visible').evaluateAll(inputs=>inputs.every(input=>input.getBoundingClientRect().width>0&&input.getBoundingClientRect().height>0&&!input.disabled));
+  expect(usableDateInputs).toBe(true);
 });
 
 test('Candidate History is lazy and loads only after opening its tab',async({page})=>{
