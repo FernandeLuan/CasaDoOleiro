@@ -1,0 +1,41 @@
+/* Round 31 — review signals, session-scoped review cards, unit occupancy and assistant shell. */
+.r31-day-signals{display:inline-flex;align-items:center;gap:5px;margin-left:6px;position:relative;vertical-align:middle}
+.r31-day-signal-wrap{position:relative;display:inline-flex;align-items:center}
+.r31-day-signal{width:20px;height:20px;border:0;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:transparent;padding:0;cursor:pointer;font-size:.68rem;line-height:1}
+.r31-day-signal.warning{color:var(--warning)}
+.r31-day-signal.info{color:var(--info)}
+.r31-day-signal.danger{color:var(--danger)}
+.r31-day-signal-popover{display:none;position:absolute;z-index:40;top:calc(100% + 7px);left:50%;transform:translateX(-50%);width:max-content;max-width:min(245px,72vw);padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface);box-shadow:var(--shadow);color:var(--text);font-size:.64rem;font-weight:600;line-height:1.35;text-transform:none;letter-spacing:0;white-space:normal}
+.r31-day-signal-wrap.open .r31-day-signal-popover{display:block}
+.r31-day-signal-popover::before{content:"";position:absolute;top:-5px;left:50%;width:8px;height:8px;transform:translateX(-50%) rotate(45deg);background:var(--surface);border-left:1px solid var(--border);border-top:1px solid var(--border)}
+
+.planning-session-row.admin-portal-activity-card.r31-card-warning,.activity-card.volunteer-session-card.r31-card-warning{background:color-mix(in srgb,var(--warning) 8%,var(--surface-2))!important;border-color:color-mix(in srgb,var(--warning) 30%,var(--border))!important}
+.planning-session-row.admin-portal-activity-card.r31-card-info,.activity-card.volunteer-session-card.r31-card-info{background:color-mix(in srgb,var(--info) 8%,var(--surface-2))!important;border-color:color-mix(in srgb,var(--info) 28%,var(--border))!important}
+.planning-session-row.admin-portal-activity-card.r31-card-danger,.activity-card.volunteer-session-card.r31-card-danger{background:color-mix(in srgb,var(--danger) 7%,var(--surface-2))!important;border-color:color-mix(in srgb,var(--danger) 28%,var(--border))!important}
+.r31-review-divider{margin-top:11px!important}
+.r31-review-details{display:grid;gap:8px;margin-top:9px}
+.r31-review-block{display:grid;gap:4px;font-size:.65rem;line-height:1.45;min-width:0}
+.r31-review-block>strong{font-size:.62rem;color:var(--text)}
+.r31-review-block.warning>strong{color:var(--warning)}
+.r31-review-block p{margin:0;color:var(--text);overflow-wrap:anywhere}
+.r31-change-pair{display:grid;gap:4px;margin-top:2px;padding:7px 8px;border-radius:9px;background:color-mix(in srgb,var(--surface) 72%,transparent);border:1px solid var(--border)}
+.r31-change-pair span{display:block;color:var(--muted);overflow-wrap:anywhere}
+.r31-change-pair b{color:var(--text)}
+.r31-awaiting-action{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:.64rem;font-weight:600;padding:6px 2px}
+.admin-portal-actions>.post-approval-admin-actions,.admin-portal-actions>.admin-session-manage-actions{margin-top:0!important}
+.post-approval-admin-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.post-approval-admin-actions .btn{min-width:0;padding-left:7px;padding-right:7px}
+
+.r31-occupancy-unit-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;padding:4px;margin:8px 0 12px;border:1px solid var(--border);border-radius:12px;background:var(--surface-2)}
+.r31-unit-tab{border:0;border-radius:9px;background:transparent;color:var(--muted);font:inherit;font-size:.68rem;font-weight:700;padding:8px 10px;cursor:pointer}
+.r31-unit-tab.active{background:var(--surface);color:var(--primary);box-shadow:0 2px 8px rgba(35,52,43,.07)}
+.r31-unit-tab:disabled{cursor:default;opacity:1}
+.r31-occupancy-unit-tabs:has(.r31-unit-tab:only-child){grid-template-columns:1fr}
+.r31-assistant-unit-lock{display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:var(--surface-2);color:var(--primary);font-size:.7rem}
+
+@media (max-width:520px){
+  .post-approval-admin-actions{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+  .post-approval-admin-actions .btn{font-size:.56rem;padding:7px 4px;gap:3px}
+  .r31-day-signal-popover{left:auto;right:-10px;transform:none}
+  .r31-day-signal-popover::before{left:auto;right:15px;transform:rotate(45deg)}
+}
