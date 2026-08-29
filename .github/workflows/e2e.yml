@@ -2,7 +2,7 @@ name: Browser E2E
 
 on:
   push:
-    branches: [main, fix/activity-flow-r30, fix/planning-assistant-r31, fix/r31-prod-compat-r32, fix/planning-flow-r33]
+    branches: [main, fix/activity-flow-r30, fix/planning-assistant-r31, fix/r31-prod-compat-r32, fix/planning-flow-r33, fix/planning-ui-r34]
     paths:
       - 'index.html'
       - 'admin/**'
