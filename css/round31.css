@@ -35,8 +35,11 @@
 .activity-card.volunteer-session-card .volunteer-session-description,.activity-card.volunteer-session-card .activity-inline-details,.activity-card.volunteer-session-card>.r31-review-divider,.activity-card.volunteer-session-card>.r31-review-details{width:100%!important;min-width:0!important;max-width:none!important;box-sizing:border-box!important}
 .activity-card.volunteer-session-card .volunteer-session-description{margin-top:9px;overflow-wrap:anywhere}
 .activity-card.volunteer-session-card .activity-inline-details{margin-top:8px}
-.activity-card.volunteer-session-card>.candidate-session-actions,.activity-card.volunteer-session-card>.approved-card-actions{display:block!important;width:100%!important}
-.activity-card.volunteer-session-card>.candidate-session-actions .btn,.activity-card.volunteer-session-card>.approved-card-actions .btn{display:flex!important;width:100%!important;max-width:none!important;justify-content:center}
+/* Candidate planning management: Editar | Mover | Excluir stay on one row, including iPhone/mobile. */
+.activity-card.volunteer-session-card>.candidate-session-actions{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:stretch!important;gap:7px!important;width:100%!important;min-width:0!important}
+.activity-card.volunteer-session-card>.candidate-session-actions .btn{display:inline-flex!important;flex:1 1 0!important;min-width:0!important;width:auto!important;max-width:none!important;justify-content:center!important;white-space:nowrap!important;margin:0!important}
+.activity-card.volunteer-session-card>.approved-card-actions{display:block!important;width:100%!important}
+.activity-card.volunteer-session-card>.approved-card-actions .btn{display:flex!important;width:100%!important;max-width:none!important;justify-content:center}
 
 .r31-occupancy-unit-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;padding:4px;margin:8px 0 12px;border:1px solid var(--border);border-radius:12px;background:var(--surface-2)}
 .r31-unit-tab{border:0;border-radius:9px;background:transparent;color:var(--muted);font:inherit;font-size:.68rem;font-weight:700;padding:8px 10px;cursor:pointer}
@@ -50,4 +53,6 @@
   .post-approval-admin-actions .btn{font-size:.56rem!important;padding:7px 4px!important;gap:3px!important}
   .activity-card.volunteer-session-card>.activity-row>div:first-child>h4{padding-right:108px}
   .activity-card.volunteer-session-card>.activity-row>.badge{max-width:102px}
+  .activity-card.volunteer-session-card>.candidate-session-actions{gap:5px!important}
+  .activity-card.volunteer-session-card>.candidate-session-actions .btn{font-size:.56rem!important;padding:7px 3px!important;gap:3px!important}
 }
