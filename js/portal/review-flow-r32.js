@@ -18,11 +18,7 @@
   window.isR32AdjustmentReady=adjustmentReady;
 
   function signalMeta(row){
-    if(row.adminAdjustmentStatus==='requested')return {tone:adjustmentReady(row)?'success':'warning',label:text('review.adjustReason'),message:`${text('review.adjustReason')} ${row.adminAdjustmentNote||text('review.sessionAdjustment')}`};
-    if(row.adminAdjustmentStatus==='analysis'&&row.adminAdjustmentNote)return {tone:'info',label:text('review.adjustSent'),message:`${text('review.adjustSent')}. ${text('review.adjustReason')} ${row.adminAdjustmentNote}`};
-    if(row.status==='change_requested')return {tone:row.changeReviewStatus==='adjustments'?'warning':'info',label:row.changeReviewStatus==='adjustments'?text('review.readjustReason'):text('review.changeReason'),message:`${row.changeReviewStatus==='adjustments'?text('review.readjustReason'):text('review.changeReason')} ${row.changeReviewStatus==='adjustments'?(row.changeReviewNote||row.changeReviewRequestNote||''):(row.changeNote||'')}`.trim()};
-    if(row.postApprovalProposal===true&&row.reviewStatus==='analysis')return {tone:'info',label:text('review.newActivity'),message:row.reviewBaseline?`${text('review.adjustSent')}. ${row.reviewRequestNote||''}`.trim():text('review.newActivityInfo')};
-    if(row.postApprovalProposal===true&&row.reviewStatus==='adjustments')return {tone:'warning',label:text('review.readjustReason'),message:`${text('review.readjustReason')} ${row.reviewNote||''}`.trim()};
+    if(row.postApprovalProposal===true&&row.reviewStatus==='analysis'&&!row.reviewBaseline)return {tone:'info',label:text('review.newActivity'),message:text('review.newActivityInfo')};
     return null;
   }
   function signalHtml(row){const meta=signalMeta(row);if(!meta)return '';return `<span class="r32-session-signal-wrap"><button class="r32-session-signal ${meta.tone}" type="button" aria-label="${escapeHtml(meta.label)}" data-r32-message="${escapeHtml(meta.message)}" onclick="toggleR32SessionSignal(this,event)"><i class="fa-solid fa-circle-info" aria-hidden="true"></i></button></span>`}
