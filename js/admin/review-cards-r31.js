@@ -1,7 +1,7 @@
 /* Round 31 — final admin planning card renderer. */
 (function reviewCardsR31(){
   const R=window.OleiroR31AdminReview;if(!R)return;
-  const preApproval=p=>p?.status!=='approved';
+  const preApproval=p=>!['approved','meeting'].includes(String(p?.status||''));
   function normalActions(p,s,date){
     if(!s?.id||!R.canOperate(p)||!preApproval(p))return '';
     const app=R.safe(p.id),sid=R.safe(s.id),day=R.safe(date),activity=R.safe(s.activityId||'');
