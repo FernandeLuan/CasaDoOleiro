@@ -1,0 +1,53 @@
+/* Round 31 — review signals, session-scoped review cards, unit occupancy and assistant shell. */
+.r31-day-signals{display:inline-flex;align-items:center;gap:5px;margin-left:6px;position:relative;vertical-align:middle}
+.r31-day-signal-wrap{position:relative;display:inline-flex;align-items:center}
+.r31-day-signal{width:20px;height:20px;border:0;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:transparent;padding:0;cursor:pointer;font-size:.68rem;line-height:1}
+.r31-day-signal.warning{color:var(--warning)}
+.r31-day-signal.info{color:var(--info)}
+.r31-day-signal.danger{color:var(--danger)}
+/* O balão é anexado ao body e posicionado via JS. Assim não altera nem é cortado pelo card/modal. */
+.r31-day-signal-popover{position:fixed!important;z-index:10000!important;left:12px;top:12px;width:max-content;max-width:min(245px,calc(100vw - 24px));padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface);box-shadow:var(--shadow);color:var(--text);font-size:.64rem;font-weight:600;line-height:1.35;text-transform:none;letter-spacing:0;white-space:normal;pointer-events:none}
+
+.planning-session-row.admin-portal-activity-card.r31-card-warning,.activity-card.volunteer-session-card.r31-card-warning{background:color-mix(in srgb,var(--warning) 8%,var(--surface-2))!important;border-color:color-mix(in srgb,var(--warning) 30%,var(--border))!important}
+.planning-session-row.admin-portal-activity-card.r31-card-info,.activity-card.volunteer-session-card.r31-card-info{background:color-mix(in srgb,var(--info) 8%,var(--surface-2))!important;border-color:color-mix(in srgb,var(--info) 28%,var(--border))!important}
+.planning-session-row.admin-portal-activity-card.r31-card-danger,.activity-card.volunteer-session-card.r31-card-danger{background:color-mix(in srgb,var(--danger) 7%,var(--surface-2))!important;border-color:color-mix(in srgb,var(--danger) 28%,var(--border))!important}
+.r31-review-divider{margin-top:11px!important}
+.r31-review-details{display:grid;gap:8px;margin-top:9px;min-width:0}
+.r31-review-block{display:grid;gap:4px;font-size:.65rem;line-height:1.45;min-width:0}
+.r31-review-block>strong{font-size:.62rem;color:var(--text)}
+.r31-review-block.warning>strong{color:var(--warning)}
+.r31-review-block p{margin:0;color:var(--text);overflow-wrap:anywhere}
+.r31-change-pair{display:grid;gap:4px;margin-top:2px;padding:7px 8px;border-radius:9px;background:color-mix(in srgb,var(--surface) 72%,transparent);border:1px solid var(--border)}
+.r31-change-pair span{display:block;color:var(--muted);overflow-wrap:anywhere}
+.r31-change-pair b{color:var(--text)}
+.r31-awaiting-action{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:.64rem;font-weight:600;padding:6px 2px}
+.admin-portal-actions>.post-approval-admin-actions,.admin-portal-actions>.admin-session-manage-actions{margin-top:0!important}
+/* Três decisões sempre lado a lado, inclusive no mobile. CSS posteriores não podem voltar ao grid vertical. */
+.admin-portal-actions>.post-approval-admin-actions,.post-approval-admin-actions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important;width:100%!important}
+.post-approval-admin-actions .btn{min-width:0!important;width:100%!important;padding-left:7px!important;padding-right:7px!important;white-space:nowrap}
+
+/* No Portal, o badge fica apenas no cabeçalho e o conteúdo usa 100% da largura. */
+.activity-card.volunteer-session-card{min-width:0}
+.activity-card.volunteer-session-card>.activity-row{display:block!important;position:relative!important;min-width:0!important;width:100%!important}
+.activity-card.volunteer-session-card>.activity-row>div:first-child{display:block!important;width:100%!important;min-width:0!important;max-width:none!important}
+.activity-card.volunteer-session-card>.activity-row>div:first-child>h4{padding-right:118px;box-sizing:border-box}
+.activity-card.volunteer-session-card>.activity-row>.badge{position:absolute!important;top:0!important;right:0!important;max-width:112px;text-align:center}
+.activity-card.volunteer-session-card .volunteer-session-description,.activity-card.volunteer-session-card .activity-inline-details,.activity-card.volunteer-session-card>.r31-review-divider,.activity-card.volunteer-session-card>.r31-review-details{width:100%!important;min-width:0!important;max-width:none!important;box-sizing:border-box!important}
+.activity-card.volunteer-session-card .volunteer-session-description{margin-top:9px;overflow-wrap:anywhere}
+.activity-card.volunteer-session-card .activity-inline-details{margin-top:8px}
+.activity-card.volunteer-session-card>.candidate-session-actions,.activity-card.volunteer-session-card>.approved-card-actions{display:block!important;width:100%!important}
+.activity-card.volunteer-session-card>.candidate-session-actions .btn,.activity-card.volunteer-session-card>.approved-card-actions .btn{display:flex!important;width:100%!important;max-width:none!important;justify-content:center}
+
+.r31-occupancy-unit-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;padding:4px;margin:8px 0 12px;border:1px solid var(--border);border-radius:12px;background:var(--surface-2)}
+.r31-unit-tab{border:0;border-radius:9px;background:transparent;color:var(--muted);font:inherit;font-size:.68rem;font-weight:700;padding:8px 10px;cursor:pointer}
+.r31-unit-tab.active{background:var(--surface);color:var(--primary);box-shadow:0 2px 8px rgba(35,52,43,.07)}
+.r31-unit-tab:disabled{cursor:default;opacity:1}
+.r31-occupancy-unit-tabs:has(.r31-unit-tab:only-child){grid-template-columns:1fr}
+.r31-assistant-unit-lock{display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:var(--surface-2);color:var(--primary);font-size:.7rem}
+
+@media (max-width:520px){
+  .admin-portal-actions>.post-approval-admin-actions,.post-approval-admin-actions{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:5px!important}
+  .post-approval-admin-actions .btn{font-size:.56rem!important;padding:7px 4px!important;gap:3px!important}
+  .activity-card.volunteer-session-card>.activity-row>div:first-child>h4{padding-right:108px}
+  .activity-card.volunteer-session-card>.activity-row>.badge{max-width:102px}
+}

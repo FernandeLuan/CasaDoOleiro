@@ -1,0 +1,51 @@
+/* Round 32 — coherent activity-level review signals and section hierarchy. */
+
+/* Day level shows only the workflow state. The reason/details live on the activity card. */
+.r31-day-signals{display:inline-flex;align-items:center;gap:5px;margin-left:6px;vertical-align:middle}
+.r31-day-signal.r32-day-state{width:auto;height:auto;min-height:20px;padding:3px 7px;border:1px solid currentColor;border-radius:999px;font-size:.56rem;font-weight:700;letter-spacing:.01em;background:transparent;line-height:1.2}
+.r31-day-signal.r32-day-state.success{color:var(--success)}
+
+/* Activity-specific information button. */
+.r32-session-signal-wrap{display:inline-flex;align-items:center;position:relative;flex:0 0 auto}
+.r32-session-signal{width:22px;height:22px;border:0;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;padding:0;background:transparent;cursor:pointer;font-size:.72rem;line-height:1}
+.r32-session-signal.warning{color:var(--warning)}
+.r32-session-signal.info{color:var(--info)}
+.r32-session-signal.danger{color:var(--danger)}
+.r32-session-signal.success{color:var(--success)}
+.r32-session-signal-popover{position:fixed!important;z-index:10020!important;left:12px;top:12px;width:max-content;max-width:min(285px,calc(100vw - 24px));padding:9px 11px;border:1px solid var(--border);border-radius:10px;background:var(--surface);box-shadow:var(--shadow);color:var(--text);font-size:.64rem;font-weight:600;line-height:1.4;text-transform:none;letter-spacing:0;white-space:normal;pointer-events:none}
+.admin-portal-status{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:5px!important;flex-wrap:wrap!important}
+.volunteer-session-title{display:flex!important;align-items:flex-start!important;gap:6px!important;min-width:0!important}
+.volunteer-session-title h4{flex:1 1 auto;min-width:0}
+
+/* Candidate has already edited the requested activity, but has not resent the plan yet. */
+.activity-card.volunteer-session-card.r32-card-ready,.planning-session-row.admin-portal-activity-card.r32-card-ready{background:color-mix(in srgb,var(--success) 8%,var(--surface-2))!important;border-color:color-mix(in srgb,var(--success) 30%,var(--border))!important}
+
+/* Every titled content block is visually separated from the next one. */
+.admin-portal-secondary{gap:0!important}
+.admin-portal-secondary .admin-portal-detail{margin:0!important;padding:9px 0!important}
+.admin-portal-secondary .admin-portal-detail+.admin-portal-detail{border-top:1px solid var(--border)}
+.activity-inline-details{display:grid!important;gap:0!important}
+.activity-inline-details .activity-inline-detail{margin:0!important;padding:9px 0!important}
+.activity-inline-details .activity-inline-detail+.activity-inline-detail{border-top:1px solid var(--border)}
+.r31-review-details{gap:0!important}
+.r31-review-block{padding:9px 0!important}
+.r31-review-block+.r31-review-block{border-top:1px solid var(--border)}
+
+/* Proposed activities must be unmistakable in Admin. */
+.planning-session-row.admin-portal-activity-card.r32-new-activity{box-shadow:inset 3px 0 0 color-mix(in srgb,var(--info) 72%,transparent)}
+
+/* Emergency contact: no avatar/initial/icon; use explicit text labels. */
+.account-emergency-card .emergency-person-row>.account-person-icon{display:none!important}
+.account-emergency-card .emergency-person-row{grid-template-columns:minmax(0,1fr) auto!important;align-items:start!important}
+.r32-emergency-person{min-width:0}
+.r32-emergency-person>small{display:block;margin-bottom:7px;color:var(--muted);font-weight:600}
+.r32-emergency-values{display:grid;gap:6px;min-width:0}
+.r32-emergency-value{display:grid;gap:1px;min-width:0}
+.r32-emergency-value>span{font-size:.58rem;color:var(--muted);font-weight:600}
+.r32-emergency-value>strong{font-size:.67rem;color:var(--text);overflow-wrap:anywhere}
+
+@media (max-width:520px){
+  .r32-session-signal{width:20px;height:20px;font-size:.68rem}
+  .r31-day-signal.r32-day-state{font-size:.53rem;padding:3px 6px}
+  .account-emergency-card .emergency-person-row{grid-template-columns:minmax(0,1fr) auto!important}
+}

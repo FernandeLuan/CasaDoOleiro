@@ -1,6 +1,6 @@
 (function initAuthService(){
   async function firebaseContext(){if(!window.OleiroFirebase)throw new Error('Backend indisponível.');const context=await window.OleiroFirebase.ready;if(!context?.configured)throw new Error('Firebase ainda não foi configurado.');return context;}
-  function normalizeRole(role){if(role==='admin'||role==='coordinator')return 'manager';if(role==='volunteer')return 'volunteer';return 'inactive'}
+  function normalizeRole(role){if(role==='admin'||role==='coordinator'||role==='activity_assistant')return 'manager';if(role==='volunteer')return 'volunteer';return 'inactive'}
   function appRootUrl(){const marker='/CasaDoOleiro/';const index=location.pathname.indexOf(marker);const path=index>=0?location.pathname.slice(0,index+marker.length):'/';return `${location.origin}${path}`}
   function inactiveAccessError(){const error=new Error('Seu cadastro está inativo. Entre em contato com a equipe da Casa do Oleiro para verificar o acesso.');error.code='oleiro/inactive';return error}
   function offlineAccessError(){const error=new Error('Sem conexão com a internet no momento. Verifique sua rede e tente novamente.');error.code='oleiro/offline';return error}
