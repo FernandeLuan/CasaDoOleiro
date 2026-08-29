@@ -33,16 +33,16 @@
 .r31-review-block{padding:9px 0!important}
 .r31-review-block+.r31-review-block{border-top:1px solid var(--border)}
 
-/* Pre-approval management keeps Editar | Mover | Excluir on one row. */
-.admin-portal-actions>.admin-session-manage-actions,.admin-session-manage-actions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important;width:100%!important}
-.admin-session-manage-actions .btn{min-width:0!important;width:100%!important;white-space:nowrap}
+/* Pre-approval management keeps Editar | Mover | Excluir on one row on every viewport. */
+.admin-portal-actions>.admin-session-manage-actions,.admin-session-manage-actions{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:stretch!important;gap:7px!important;width:100%!important;min-width:0!important}
+.admin-session-manage-actions>.btn{display:inline-flex!important;flex:1 1 0!important;min-width:0!important;width:auto!important;max-width:none!important;justify-content:center!important;white-space:nowrap!important;margin:0!important}
 .admin-session-review-action{margin-top:8px;width:100%}
 .admin-session-review-action .btn{width:100%!important;justify-content:center}
 
 /* Proposed activities must be unmistakable in Admin. */
 .planning-session-row.admin-portal-activity-card.r32-new-activity{box-shadow:inset 3px 0 0 color-mix(in srgb,var(--info) 72%,transparent)}
 
-/* Emergency contact: no avatar/initial/icon; use explicit text labels. */
+/* Emergency contact: keep the stable avatar + details + pencil presentation. */
 .account-emergency-card .emergency-person-row>.account-person-icon{display:none!important}
 .account-emergency-card .emergency-person-row{grid-template-columns:minmax(0,1fr) auto!important;align-items:start!important}
 .r32-emergency-person{min-width:0}
@@ -55,7 +55,7 @@
 @media (max-width:520px){
   .r32-session-signal{width:20px;height:20px;font-size:.68rem}
   .r31-day-signal.r32-day-state{font-size:.53rem;padding:3px 6px}
-  .admin-portal-actions>.admin-session-manage-actions,.admin-session-manage-actions{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:5px!important}
-  .admin-session-manage-actions .btn{font-size:.56rem!important;padding:7px 4px!important;gap:3px!important}
+  .admin-portal-actions>.admin-session-manage-actions,.admin-session-manage-actions{gap:5px!important}
+  .admin-session-manage-actions>.btn{font-size:.56rem!important;padding:7px 3px!important;gap:3px!important}
   .account-emergency-card .emergency-person-row{grid-template-columns:minmax(0,1fr) auto!important}
 }
