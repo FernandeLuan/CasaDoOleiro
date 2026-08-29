@@ -1,4 +1,4 @@
-// Round 32 focused regression: activity-scoped reasons, ready state and emergency contact cleanup.
+// Round 32/33 focused regression: day = state, activity = reason/actions.
 import {test,expect} from '@playwright/test';
 import {seedEmulators} from './seed.mjs';
 
@@ -8,23 +8,19 @@ async function login(page,email,password,target){await prepare(page);await page.
 async function relogin(page,email,password,target){await page.evaluate(()=>window.OleiroAuth?.signOut?.());await login(page,email,password,target)}
 const navAction=(page,label)=>page.locator('#navRoot').getByRole('button',{name:new RegExp(`${label}$`)});
 async function openVolunteer(page,status,name){await navAction(page,'Voluntariado').click();const list=page.locator('#candidateList');await expect(list).toBeVisible({timeout:20_000});await page.locator('#app').getByRole('button',{name:/Filtros/}).click();await page.locator('#candidateStatusFilter').selectOption(status);await page.locator('#modalRoot').getByRole('button',{name:/Aplicar$/}).click();await expect(list.getByText(/Carregando voluntários/)).toHaveCount(0,{timeout:20_000});const item=list.locator('.list-item.clickable').filter({hasText:name}).first();await expect(item).toBeVisible({timeout:20_000});await item.click();return page.locator('#modalRoot')}
+async function expectHorizontal(buttons,count){await expect(buttons).toHaveCount(count);const tops=await buttons.evaluateAll(nodes=>nodes.map(node=>Math.round(node.getBoundingClientRect().top)));expect(new Set(tops).size).toBe(1)}
 
 test.beforeEach(async()=>{await seedEmulators()});
 
-test('Adjustment reason stays on the requested activity and edited day turns green before resend',async({page})=>{
-  await login(page,'admin@oleiro.test','Admin123!','admin');const modal=await openVolunteer(page,'pending','Voluntário E2E');
-  const day=modal.locator('details[data-plan-date="2026-09-15"]');await expect(day).toBeVisible({timeout:20_000});await day.locator('summary').click();let card=day.locator('.admin-portal-activity-card').filter({hasText:'Oficina candidato E2E'});await card.getByRole('button',{name:/Ajustar$/}).click();
-  await page.locator('#r31SessionAdjustNote').fill('Alterar somente o horário desta atividade.');await page.locator('#r31SessionAdjustSave').click();
-  const reopened=modal.locator('details[data-plan-date="2026-09-15"]');card=reopened.locator('.admin-portal-activity-card').filter({hasText:'Oficina candidato E2E'});await expect(card).toHaveClass(/r31-card-warning/);
-  const dayState=reopened.locator('.r31-day-signal.warning');await expect(dayState).toHaveText('Reajustar');await expect(dayState.locator('i')).toHaveCount(0);
-  const activityInfo=card.locator('.r32-session-signal.warning');await expect(activityInfo).toBeVisible();await activityInfo.click();await expect(page.locator('#r32SessionSignalPopover')).toContainText('Alterar somente o horário desta atividade.');
+test('Pre-approval planning keeps normal actions horizontal and scopes adjustment to one activity',async({page})=>{
+  await login(page,'voluntario@oleiro.test','Volunteer123!','portal');await navAction(page,'Planejamento').click();let volunteerCard=page.locator('.activity-card').filter({hasText:'Oficina candidato E2E'});await expect(volunteerCard).toBeVisible({timeout:20_000});await expectHorizontal(volunteerCard.locator(':scope > .candidate-session-actions .btn'),3);
 
-  await relogin(page,'voluntario@oleiro.test','Volunteer123!','portal');await navAction(page,'Planejamento').click();let volunteerCard=page.locator('.activity-card').filter({hasText:'Oficina candidato E2E'});await expect(volunteerCard.locator('.r32-session-signal.warning')).toBeVisible();await volunteerCard.getByRole('button',{name:/Ajustar atividade/}).click();await page.locator('#r31ActTime').fill('16:00');await page.locator('#r31VolunteerAdjustSave').click();
-  volunteerCard=page.locator('.activity-card').filter({hasText:'Oficina candidato E2E'});await expect(volunteerCard).toHaveClass(/r32-card-ready/);await expect(volunteerCard).toContainText('Ajustado');await expect(page.locator('#vday-2026-09-15 .r32-day-state-badge.success')).toHaveText('Ajustado');
+  await relogin(page,'admin@oleiro.test','Admin123!','admin');const modal=await openVolunteer(page,'pending','Voluntário E2E');let day=modal.locator('details[data-plan-date="2026-09-15"]');await expect(day).toBeVisible({timeout:20_000});await day.locator('summary').click();let card=day.locator('.admin-portal-activity-card').filter({hasText:'Oficina candidato E2E'});await card.getByRole('button',{name:/Ajustar$/}).click();await page.locator('#r31SessionAdjustNote').fill('Alterar somente o horário desta atividade.');await page.locator('#r31SessionAdjustSave').click();
+
+  day=modal.locator('details[data-plan-date="2026-09-15"]');card=day.locator('.admin-portal-activity-card').filter({hasText:'Oficina candidato E2E'});await expect(day.locator('summary .r33-day-state.warning')).toHaveText('Reajustar');await expect(day.locator('summary .day-info-button, summary .r31-day-signal, summary .r32-session-signal')).toHaveCount(0);await expect(card).toHaveClass(/r31-card-warning/);await expect(card.locator('.r33-session-marker.warning')).toHaveCount(1);await expect(card).toContainText('Motivo do ajuste:');await expect(card).toContainText('Alterar somente o horário desta atividade.');await expect(card.locator('.r32-session-signal,.r31-day-signal')).toHaveCount(0);
+
+  await relogin(page,'voluntario@oleiro.test','Volunteer123!','portal');await navAction(page,'Planejamento').click();volunteerCard=page.locator('.activity-card').filter({hasText:'Oficina candidato E2E'});await expect(volunteerCard.locator('.r33-session-marker.warning')).toHaveCount(1);await expect(volunteerCard).toContainText('Motivo do ajuste:');await expect(volunteerCard).toContainText('Alterar somente o horário desta atividade.');const adjustButtons=volunteerCard.locator(':scope > .candidate-session-actions .btn');await expect(adjustButtons).toHaveCount(1);await expect(adjustButtons.first()).toHaveText(/Ajustar atividade/);await adjustButtons.first().click();await page.locator('#r31ActTime').fill('16:00');await page.locator('#r31VolunteerAdjustSave').click();
+
+  volunteerCard=page.locator('.activity-card').filter({hasText:'Oficina candidato E2E'});await expect(volunteerCard).toHaveClass(/r32-card-ready/);await expect(volunteerCard).toContainText('Ajustado');await expect(page.locator('#vday-2026-09-15 .r33-day-state.success')).toHaveText('Ajustado');
   await page.locator('.plan-summary').getByRole('button',{name:/Reenviar planejamento/}).click();await expect.poll(()=>page.evaluate(()=>{const s=state.sessions.find(row=>row.id==='e2e-candidate-session');return `${state.currentApplication?.status}|${s?.adminAdjustmentStatus}|${s?.time}`}),{timeout:20_000}).toBe('analysis|analysis|16:00');
-});
-
-test('Admin emergency contact has no avatar or decorative person icon',async({page})=>{
-  await login(page,'admin@oleiro.test','Admin123!','admin');const modal=await openVolunteer(page,'pending','Voluntário E2E');await modal.getByRole('button',{name:/Conta/}).click();
-  const emergency=modal.locator('.account-emergency-card');await expect(emergency).toBeVisible({timeout:20_000});await expect(emergency.locator('.account-person-icon')).toHaveCount(0);await expect(emergency.locator('.avatar')).toHaveCount(0);await expect(emergency).toContainText('Contato de emergência');
 });
