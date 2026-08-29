@@ -39,17 +39,7 @@
 
   function signalMeta(session){
     if(!session)return null;
-    if(session.adminAdjustmentStatus==='requested')return {tone:adjustmentReady(session)?'success':'warning',label:'Ver motivo do ajuste',message:`Motivo do ajuste: ${session.adminAdjustmentNote||'Ajuste solicitado pela equipe.'}`};
-    if(session.adminAdjustmentStatus==='analysis'&&session.adminAdjustmentNote)return {tone:'info',label:'Ver ajuste reenviado',message:`Ajuste reenviado. Motivo original: ${session.adminAdjustmentNote}`};
-    if(session.status==='change_requested'){
-      const note=session.changeReviewStatus==='adjustments'?(session.changeReviewNote||session.changeReviewRequestNote):(session.changeNote||'Alteração proposta pelo voluntário.');
-      return {tone:session.changeReviewStatus==='adjustments'?'warning':'info',label:'Ver motivo da alteração',message:`${session.changeReviewStatus==='adjustments'?'Motivo do reajuste':'Motivo da alteração'}: ${note}`};
-    }
-    if(session.postApprovalProposal===true){
-      if(session.reviewStatus==='analysis')return {tone:'info',label:'Informações da nova atividade',message:session.reviewBaseline?`Nova atividade reajustada e reenviada. ${session.reviewRequestNote||''}`.trim():'Nova atividade proposta pelo voluntário. Aguardando análise.'};
-      if(session.reviewStatus==='adjustments')return {tone:'warning',label:'Ver motivo do reajuste',message:`Motivo do reajuste: ${session.reviewNote||'Reajuste solicitado.'}`};
-      if(session.reviewStatus==='rejected')return {tone:'danger',label:'Atividade recusada',message:'Esta proposta de atividade foi recusada.'};
-    }
+    if(session.postApprovalProposal===true&&(session.reviewStatus||'analysis')==='analysis'&&!session.reviewBaseline)return {tone:'info',label:'Informações da nova atividade',message:'Nova atividade proposta pelo voluntário.'};
     return null;
   }
   function signalHtml(session){const meta=signalMeta(session);if(!meta)return '';return `<span class="r32-session-signal-wrap"><button class="r32-session-signal ${meta.tone}" type="button" aria-label="${escapeHtml(meta.label)}" data-r32-message="${escapeHtml(meta.message)}" onclick="toggleR32SessionSignal(this,event)"><i class="fa-solid fa-circle-info" aria-hidden="true"></i></button></span>`}

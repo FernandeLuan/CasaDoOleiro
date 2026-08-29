@@ -12,8 +12,10 @@
     if(state.role==='volunteer')return volunteerMoveDates(session);
     const applicationId=session?.applicationId||state.currentPlanningApplicationId;
     const p=(state.candidates||[]).find(row=>String(row.id)===String(applicationId));
-    if(!p?.from||!p?.to)return [];
-    const dates=[];for(let d=p.from,i=0;i<370&&d<=p.to;i++,d=addDays(d,1))dates.push(d);return dates;
+    if(!p)return [];
+    if(typeof planningEligibleDatesFor==='function')return planningEligibleDatesFor(p);
+    if(!p.from||!p.to)return [];
+    const dates=[];for(let d=addDays(p.from,1),i=0;i<370&&d<p.to;i++,d=addDays(d,1)){const day=new Date(`${d}T12:00:00`).getDay();if(day!==0&&day!==6)dates.push(d)}return dates;
   }
   function sessionDefinition(session){return session?.activity||(state.activities||[]).find(row=>String(row.id)===String(session?.activityId))||{id:session?.activityId,name:session?.activityName||'Atividade',time:session?.time||''}}
   window.moveSessionById=function(sessionId,byVolunteer=false){
