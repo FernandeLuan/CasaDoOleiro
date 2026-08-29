@@ -5,7 +5,7 @@
 .r31-day-signal.r32-day-state{width:auto;height:auto;min-height:20px;padding:3px 7px;border:1px solid currentColor;border-radius:999px;font-size:.56rem;font-weight:700;letter-spacing:.01em;background:transparent;line-height:1.2}
 .r31-day-signal.r32-day-state.success{color:var(--success)}
 
-/* Activity-specific information button. */
+/* Activity-specific information button. It is reserved for information that is not already printed in the card. */
 .r32-session-signal-wrap{display:inline-flex;align-items:center;position:relative;flex:0 0 auto}
 .r32-session-signal{width:22px;height:22px;border:0;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;padding:0;background:transparent;cursor:pointer;font-size:.72rem;line-height:1}
 .r32-session-signal.warning{color:var(--warning)}
@@ -25,11 +25,19 @@
 .admin-portal-secondary .admin-portal-detail{margin:0!important;padding:9px 0!important}
 .admin-portal-secondary .admin-portal-detail+.admin-portal-detail{border-top:1px solid var(--border)}
 .activity-inline-details{display:grid!important;gap:0!important}
+.volunteer-session-description+.activity-inline-details{border-top:1px solid var(--border);margin-top:9px!important;padding-top:9px}
 .activity-inline-details .activity-inline-detail{margin:0!important;padding:9px 0!important}
+.activity-inline-details .activity-inline-detail:first-child{padding-top:0!important}
 .activity-inline-details .activity-inline-detail+.activity-inline-detail{border-top:1px solid var(--border)}
 .r31-review-details{gap:0!important}
 .r31-review-block{padding:9px 0!important}
 .r31-review-block+.r31-review-block{border-top:1px solid var(--border)}
+
+/* Pre-approval management keeps Editar | Mover | Excluir on one row. */
+.admin-portal-actions>.admin-session-manage-actions,.admin-session-manage-actions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important;width:100%!important}
+.admin-session-manage-actions .btn{min-width:0!important;width:100%!important;white-space:nowrap}
+.admin-session-review-action{margin-top:8px;width:100%}
+.admin-session-review-action .btn{width:100%!important;justify-content:center}
 
 /* Proposed activities must be unmistakable in Admin. */
 .planning-session-row.admin-portal-activity-card.r32-new-activity{box-shadow:inset 3px 0 0 color-mix(in srgb,var(--info) 72%,transparent)}
@@ -47,5 +55,7 @@
 @media (max-width:520px){
   .r32-session-signal{width:20px;height:20px;font-size:.68rem}
   .r31-day-signal.r32-day-state{font-size:.53rem;padding:3px 6px}
+  .admin-portal-actions>.admin-session-manage-actions,.admin-session-manage-actions{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:5px!important}
+  .admin-session-manage-actions .btn{font-size:.56rem!important;padding:7px 4px!important;gap:3px!important}
   .account-emergency-card .emergency-person-row{grid-template-columns:minmax(0,1fr) auto!important}
 }
