@@ -26,5 +26,5 @@ test('Pre-approval keeps normal actions separate from an activity-specific adjus
 
 test('Admin emergency contact remains unchanged by planning review cleanup',async({page})=>{
   await login(page,'admin@oleiro.test','Admin123!','admin');const modal=await openVolunteer(page,'pending','Voluntário E2E');await modal.getByRole('button',{name:/Conta/}).click();
-  const emergency=modal.locator('.account-emergency-card');await expect(emergency).toBeVisible({timeout:20_000});await expect(emergency.locator('.account-person-icon')).toHaveCount(0);await expect(emergency.locator('.avatar')).toHaveCount(0);await expect(emergency).toContainText('Contato de emergência');
+  const emergency=modal.locator('.account-emergency-card');await expect(emergency).toBeVisible({timeout:20_000});const person=emergency.locator('.emergency-admin-person').first();await expect(person).toBeVisible({timeout:20_000});await expect(person.locator('.emergency-admin-avatar')).toHaveText('VE');await expect(person.locator('.emergency-admin-owner')).toContainText('Voluntário E2E');const edit=person.getByRole('button',{name:/Adicionar contato|Editar contato/});await expect(edit).toBeVisible({timeout:20_000});await expect(edit.locator('i.fa-pen')).toHaveCount(1);await expect(emergency).toContainText('Contato de emergência');
 });
