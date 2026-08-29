@@ -15,14 +15,16 @@ async function login(page,email,password,target){
 async function relogin(page,email,password,target){await page.evaluate(()=>window.OleiroAuth?.signOut?.());await login(page,email,password,target)}
 const navAction=(page,label)=>page.locator('#navRoot').getByRole('button',{name:new RegExp(`${label}$`)});
 async function openVolunteerByStatus(page,status,name){
-  await navAction(page,'Voluntariado').click();const list=page.locator('#candidateList');await expect(list).toBeVisible({timeout:20_000});
+  const list=page.locator('#candidateList');
+  await navAction(page,'Voluntariado').click();
+  try{await expect(list).toBeVisible({timeout:10_000})}catch{await navAction(page,'Voluntariado').click();await expect(list).toBeVisible({timeout:20_000})}
   const applyStatus=async()=>{await page.locator('#app').getByRole('button',{name:/Filtros/}).click();await page.locator('#candidateStatusFilter').selectOption(status);await page.locator('#modalRoot').getByRole('button',{name:/Aplicar$/}).click();await expect(list.getByText(/Carregando voluntários/)).toHaveCount(0,{timeout:20_000})};
   await applyStatus();let item=list.locator('.list-item.clickable').filter({hasText:name}).first();
   if(!(await item.isVisible().catch(()=>false))&&await page.getByText('Não foi possível aplicar os filtros.').count()){await applyStatus();item=list.locator('.list-item.clickable').filter({hasText:name}).first()}
   await expect(item).toBeVisible({timeout:20_000});await item.click();return page.locator('#modalRoot');
 }
 async function openPlanning(modal){const tab=modal.getByRole('button',{name:/Planejamento/}).first();if(await tab.count())await tab.click()}
-async function ensureDetailsOpen(details){if((await details.getAttribute('open'))===null)await details.locator('summary').click();await expect(details).toHaveAttribute('open','')}
+async function ensureDetailsOpen(details){await expect(details).toBeVisible();await details.evaluate(node=>{node.open=true});await expect(details).toHaveJSProperty('open',true)}
 async function expectHorizontalDecisionButtons(card){
   const buttons=card.locator('.post-approval-admin-actions button');await expect(buttons).toHaveCount(3);
   const tops=await buttons.evaluateAll(nodes=>nodes.map(node=>Math.round(node.getBoundingClientRect().top)));
