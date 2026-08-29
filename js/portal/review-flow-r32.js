@@ -59,6 +59,29 @@
     const pending=(state.sessions||[]).filter(row=>row.adminAdjustmentStatus==='requested');if(pending.some(row=>!adjustmentReady(row)))return showToast(text('review.adjustBeforeResend'));return baseSubmitPlan();
   };
 
+  /* Round 33 — one authoritative post-approval path, including legacy manager_confirmed sessions. */
+  window.saveMoveBySessionId=async function(encodedId,byVolunteer=false){
+    const id=decodeURIComponent(String(encodedId||'')),row=(state.sessions||[]).find(item=>String(item.id||item.sessionId)===id);
+    if(!row)return showToast(text('portal.activity.deleteError'));
+    if(!(state.volunteerMode==='approved'&&byVolunteer)){
+      const newDate=document.getElementById('moveDate')?.value||'',newTime=document.getElementById('moveTime')?.value||row.time||'';
+      if(!newDate)return showToast(text('portal.move.chooseDate'));
+      const button=document.getElementById('moveSessionSave');if(button){button.disabled=true;button.innerHTML=`<i class="fa-solid fa-circle-notch fa-spin"></i> ${escapeHtml(text('action.saving'))}`}
+      try{await window.OleiroServices.planning.updateSession(id,{date:newDate,time:newTime});row.date=newDate;row.time=newTime;closeModal();render();showToast(text('portal.move.updated'))}catch(error){console.error(error);showToast(error?.message||text('portal.move.error'));if(button?.isConnected){button.disabled=false;button.textContent=text('action.saveChange')}}
+      return;
+    }
+    const currentDate=String(row.date||''),currentTime=String(row.time||row.activity?.time||''),newDate=document.getElementById('moveDate')?.value||currentDate,newTime=document.getElementById('moveTime')?.value||currentTime,reason=document.getElementById('moveReason')?.value.trim()||'';
+    if(newDate===currentDate&&newTime===currentTime)return showToast(text('portal.move.changeRequired'));
+    if(!reason)return showToast(text('review.reasonRequired'));
+    const button=document.getElementById('moveSessionSave');if(button){button.disabled=true;button.innerHTML=`<i class="fa-solid fa-circle-notch fa-spin"></i> ${escapeHtml(text('action.saving'))}`}
+    try{
+      const proposal={date:newDate,time:newTime};
+      const patch=await window.OleiroServices.planning.requestExistingChange({sessionId:id,proposal,reason});
+      Object.assign(row,patch,{status:'change_requested',changeProposal:proposal,changeNote:reason,changeReviewStatus:'analysis'});
+      closeModal();render();showToast(text('portal.session.changeSent'));
+    }catch(error){console.error(error);showToast(error?.message||text('portal.move.error'));if(button?.isConnected){button.disabled=false;button.textContent=text('action.sendReview')}}
+  };
+
   window.sessionCardVolunteer=sessionCardVolunteer;window.volunteerAgendaContent=volunteerAgendaContent;window.submitPlan=submitPlan;
   if(state.role==='volunteer'&&typeof render==='function')render();
 })();
