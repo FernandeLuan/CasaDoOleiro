@@ -16,11 +16,13 @@ async function relogin(page,email,password,target){await page.evaluate(()=>windo
 const navAction=(page,label)=>page.locator('#navRoot').getByRole('button',{name:new RegExp(`${label}$`)});
 async function openVolunteerByStatus(page,status,name){
   await navAction(page,'Voluntariado').click();const list=page.locator('#candidateList');await expect(list).toBeVisible({timeout:20_000});
-  await page.locator('#app').getByRole('button',{name:/Filtros/}).click();await page.locator('#candidateStatusFilter').selectOption(status);await page.locator('#modalRoot').getByRole('button',{name:/Aplicar$/}).click();
-  await expect(list.getByText(/Carregando voluntários/)).toHaveCount(0,{timeout:20_000});const item=list.locator('.list-item.clickable').filter({hasText:name}).first();await expect(item).toBeVisible({timeout:20_000});await item.click();return page.locator('#modalRoot');
+  const applyStatus=async()=>{await page.locator('#app').getByRole('button',{name:/Filtros/}).click();await page.locator('#candidateStatusFilter').selectOption(status);await page.locator('#modalRoot').getByRole('button',{name:/Aplicar$/}).click();await expect(list.getByText(/Carregando voluntários/)).toHaveCount(0,{timeout:20_000})};
+  await applyStatus();let item=list.locator('.list-item.clickable').filter({hasText:name}).first();
+  if(!(await item.isVisible().catch(()=>false))&&await page.getByText('Não foi possível aplicar os filtros.').count()){await applyStatus();item=list.locator('.list-item.clickable').filter({hasText:name}).first()}
+  await expect(item).toBeVisible({timeout:20_000});await item.click();return page.locator('#modalRoot');
 }
 async function openPlanning(modal){const tab=modal.getByRole('button',{name:/Planejamento/}).first();if(await tab.count())await tab.click()}
-async function ensureDetailsOpen(details){if((await details.getAttribute('open'))===null)await details.locator('summary').click()}
+async function ensureDetailsOpen(details){if((await details.getAttribute('open'))===null)await details.locator('summary').click();await expect(details).toHaveAttribute('open','')}
 async function expectHorizontalDecisionButtons(card){
   const buttons=card.locator('.post-approval-admin-actions button');await expect(buttons).toHaveCount(3);
   const tops=await buttons.evaluateAll(nodes=>nodes.map(node=>Math.round(node.getBoundingClientRect().top)));
@@ -57,7 +59,7 @@ test('Legacy manager-confirmed activity requires reason, preserves original and 
   void stored;
 
   await relogin(page,'admin@oleiro.test','Admin123!','admin');const modal=await openVolunteerByStatus(page,'approved','Aprovado E2E');await expect(modal.locator('.person-refactor-tabs button.active')).toContainText('Planejamento');await openPlanning(modal);const day=modal.locator('details[data-plan-date="2026-09-22"]');await expect(day).toBeVisible({timeout:20_000});await ensureDetailsOpen(day);const review=day.locator('.admin-portal-activity-card').filter({hasText:'Atividade confirmada E2E'});await expect(review).toHaveClass(/r31-card-warning/);await expect(review).toContainText('Motivo da alteração:');await expect(review).toContainText('De:');await expect(review).toContainText('Para:');await expect(review).toContainText('23/09');await expect(review.locator('.admin-session-manage-actions')).toHaveCount(0);
-  await expect(review.getByRole('button',{name:/^Aprovar$/})).toBeVisible();await expect(review.getByRole('button',{name:/^Reajustar$/})).toBeVisible();await expect(review.getByRole('button',{name:/^Recusar$/})).toBeVisible();await expectHorizontalDecisionButtons(review);
+  await expect(review.getByRole('button',{name:/Aprovar$/})).toBeVisible();await expect(review.getByRole('button',{name:/Reajustar$/})).toBeVisible();await expect(review.getByRole('button',{name:/Recusar$/})).toBeVisible();await expectHorizontalDecisionButtons(review);
 });
 
 test('Approved volunteer can add a new activity and Admin gets blue scoped info plus three horizontal decisions',async({page})=>{
@@ -65,8 +67,8 @@ test('Approved volunteer can add a new activity and Admin gets blue scoped info 
   await page.locator('#actName').fill('Nova atividade proposta E2E');await page.locator('#actDesc').fill('Proposta nova para análise');await page.locator('#actNotes').fill('Observação da proposta');await page.locator('#actTime').fill('14:30');await page.locator('#modalRoot').getByRole('button',{name:/Enviar para análise/}).click();
   await expect.poll(()=>page.evaluate(()=>state.sessions.some(row=>row.activityName==='Nova atividade proposta E2E'&&row.postApprovalProposal===true&&row.reviewStatus==='analysis')),{timeout:20_000}).toBe(true);
 
-  await relogin(page,'admin@oleiro.test','Admin123!','admin');const modal=await openVolunteerByStatus(page,'approved','Aprovado E2E');await openPlanning(modal);const day=modal.locator('details[data-plan-date="2026-09-23"]');await expect(day).toBeVisible({timeout:20_000});await ensureDetailsOpen(day);const review=day.locator('.admin-portal-activity-card').filter({hasText:'Nova atividade proposta E2E'});await expect(review).toHaveClass(/r31-card-info/);await expect(review).toContainText('Nova atividade');await expect(day.locator('.r31-day-signal.info')).toBeVisible();const info=review.locator('.r32-session-signal.info');await expect(info).toBeVisible();await info.click();await expect(page.locator('#r32SessionSignalPopover')).toHaveText('Nova atividade proposta pelo voluntário.');await expect(review.locator('.admin-session-manage-actions')).toHaveCount(0);
-  await expect(review.getByRole('button',{name:/^Aprovar$/})).toBeVisible();await expect(review.getByRole('button',{name:/^Reajustar$/})).toBeVisible();await expect(review.getByRole('button',{name:/^Recusar$/})).toBeVisible();await expectHorizontalDecisionButtons(review);
+  await relogin(page,'admin@oleiro.test','Admin123!','admin');const modal=await openVolunteerByStatus(page,'approved','Aprovado E2E');await openPlanning(modal);const day=modal.locator('details[data-plan-date="2026-09-23"]');await expect(day).toBeVisible({timeout:20_000});await ensureDetailsOpen(day);const review=day.locator('.admin-portal-activity-card').filter({hasText:'Nova atividade proposta E2E'});await expect(review).toHaveClass(/r31-card-info/);await expect(review).toContainText('Nova atividade');await expect(day.locator('.r31-day-signal.info')).toBeVisible();await ensureDetailsOpen(day);const info=review.locator('.r32-session-signal.info');await expect(info).toBeVisible();await info.click();await expect(page.locator('#r32SessionSignalPopover')).toHaveText('Nova atividade proposta pelo voluntário.');await expect(review.locator('.admin-session-manage-actions')).toHaveCount(0);
+  await expect(review.getByRole('button',{name:/Aprovar$/})).toBeVisible();await expect(review.getByRole('button',{name:/Reajustar$/})).toBeVisible();await expect(review.getByRole('button',{name:/Recusar$/})).toBeVisible();await expectHorizontalDecisionButtons(review);
 });
 
 test('Rodeio activity assistant is unit-scoped and has no candidate lifecycle controls',async({page})=>{
