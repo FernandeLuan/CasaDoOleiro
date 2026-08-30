@@ -22,9 +22,11 @@ async function openApprovedVolunteer(page){
 async function createProposal(page){
   await login(page,'approved@oleiro.test','Approved123!','portal');await navAction(page,'Agenda').click();
   const day=page.locator('#vday-2026-09-23');await expect(day).toBeVisible({timeout:20_000});await day.getByRole('button',{name:/Adicionar atividade/}).click();
-  await page.locator('#actName').fill('Proposta reajuste R36');await page.locator('#actDesc').fill('Teste de reajuste pós-aprovação');await page.locator('#actTime').fill('14:30');await page.locator('#actPeriod').selectOption('Tarde');
+  await expect(page.locator('#actTime')).toHaveValue('15:15');await expect(page.locator('#actPeriod')).toHaveValue('Tarde');await expect(page.locator('#actPeriod')).toBeDisabled();
+  await page.locator('#actTime').fill('20:00');await expect(page.locator('#actPeriod')).toHaveValue('Noite');
+  await page.locator('#actName').fill('Proposta reajuste R36');await page.locator('#actDesc').fill('Teste de reajuste pós-aprovação');await page.locator('#actTime').fill('14:30');await expect(page.locator('#actPeriod')).toHaveValue('Tarde');
   await page.locator('#modalRoot').getByRole('button',{name:/Enviar para análise/}).click();
-  await expect.poll(()=>page.evaluate(()=>state.sessions.some(row=>row.activityName==='Proposta reajuste R36'&&row.postApprovalProposal===true&&row.reviewStatus==='analysis')),{timeout:20_000}).toBe(true);
+  await expect.poll(()=>page.evaluate(()=>state.sessions.some(row=>row.activityName==='Proposta reajuste R36'&&row.postApprovalProposal===true&&row.reviewStatus==='analysis'&&row.period==='Tarde')),{timeout:20_000}).toBe(true);
 }
 
 test.beforeEach(async()=>{await seedEmulators()});
@@ -44,6 +46,6 @@ test('new approved proposal can be readjusted and resent by volunteer',async({pa
   const boxes=await actions.evaluateAll(nodes=>nodes.map(node=>{const r=node.getBoundingClientRect();return {top:Math.round(r.top),left:Math.round(r.left),right:Math.round(r.right),width:Math.round(r.width)}}));
   expect(Math.max(...boxes.map(b=>b.top))-Math.min(...boxes.map(b=>b.top))).toBeLessThanOrEqual(2);expect(boxes[0].left).toBeLessThan(boxes[1].left);expect(boxes.every(b=>b.width>0)).toBe(true);
 
-  await volunteerCard.getByRole('button',{name:/Reajustar$/}).click();await page.locator('#actTime').fill('16:00');await page.locator('#actPeriod').selectOption('Tarde');await page.locator('#modalRoot').getByRole('button',{name:/Reenviar para análise|Enviar para análise/}).click();
-  await expect.poll(()=>page.evaluate(async()=>{const rows=await window.OleiroServices.planning.listSessions({applicationId:'e2e-approved-application'});const row=rows.find(item=>item.activityName==='Proposta reajuste R36');return row?`${row.reviewStatus}|${row.time}`:''}),{timeout:20_000}).toBe('analysis|16:00');
+  await volunteerCard.getByRole('button',{name:/Reajustar$/}).click();await page.locator('#actTime').fill('16:00');await expect(page.locator('#actPeriod')).toHaveValue('Tarde');await page.locator('#modalRoot').getByRole('button',{name:/Reenviar para análise|Enviar para análise/}).click();
+  await expect.poll(()=>page.evaluate(async()=>{const rows=await window.OleiroServices.planning.listSessions({applicationId:'e2e-approved-application'});const row=rows.find(item=>item.activityName==='Proposta reajuste R36');return row?`${row.reviewStatus}|${row.time}|${row.period}`:''}),{timeout:20_000}).toBe('analysis|16:00|Tarde');
 });
