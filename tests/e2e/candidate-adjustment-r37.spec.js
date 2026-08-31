@@ -1,3 +1,4 @@
+// Round 37 focused regression for candidate adjustments with new draft activities.
 import {test,expect} from '@playwright/test';
 import {seedEmulators} from './seed.mjs';
 
