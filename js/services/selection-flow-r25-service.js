@@ -1,4 +1,4 @@
-/* Round 25/35 — separa aprovação do planejamento, reunião e decisão final sem leituras de navegação adicionais. */
+/* Round 25/36 — separa aprovação do planejamento, reunião e decisão final sem leituras de navegação adicionais. */
 (function selectionFlowR25Service(){
   const services=window.OleiroServices=window.OleiroServices||{};
   if(!services.applications||!services.planning)return;
@@ -9,15 +9,17 @@
   }
   async function planningDocs(context,applicationId){
     const {firestore}=context.modules,id=String(applicationId),started=Date.now();
-    const [sessionsSnapshot,activitiesSnapshot]=await Promise.all([
-      firestore.getDocs(firestore.query(firestore.collection(context.db,'activity_sessions'),firestore.where('applicationId','==',id))),
-      firestore.getDocs(firestore.query(firestore.collection(context.db,'activities'),firestore.where('applicationId','==',id)))
-    ]);
-    services.recordQuery?.('selection/planning-docs',started,sessionsSnapshot.size+activitiesSnapshot.size,{applicationId:id,queries:2});
-    return {sessions:sessionsSnapshot.docs,activities:activitiesSnapshot.docs};
+    const sessionsSnapshot=await firestore.getDocs(
+      firestore.query(firestore.collection(context.db,'activity_sessions'),firestore.where('applicationId','==',id))
+    );
+    const sessions=sessionsSnapshot.docs;
+    const activityIds=[...new Set(sessions.map(doc=>String(doc.data()?.activityId||'')).filter(Boolean))];
+    const activityRefs=activityIds.map(activityId=>firestore.doc(context.db,'activities',activityId));
+    services.recordQuery?.('selection/planning-docs',started,sessionsSnapshot.size,{applicationId:id,queries:1,derivedActivityRefs:activityRefs.length});
+    return {sessions,activityRefs,activityCount:activityRefs.length};
   }
-  function ensureBatchSize(sessionDocs,activityDocs,participantUids=[]){
-    const total=(sessionDocs?.length||0)+(activityDocs?.length||0)+new Set((participantUids||[]).filter(Boolean)).size+1;
+  function ensureBatchSize(sessionDocs,activityRefs,participantUids=[]){
+    const total=(sessionDocs?.length||0)+(activityRefs?.length||0)+new Set((participantUids||[]).filter(Boolean)).size+1;
     if(total>450)throw new Error('Este planejamento é grande demais para concluir a etapa em uma única operação segura.');
   }
   function resolvedAdjustmentPatch(doc){return doc?.data?.().adminAdjustmentStatus?{adminAdjustmentStatus:'approved'}:{}}
@@ -27,18 +29,18 @@
     if(!id)throw new Error('Candidatura não encontrada.');
     return services.run(async()=>{
       const context=await services.firebase(),{firestore}=context.modules,applicationId=String(id);
-      const {sessions,activities}=await planningDocs(context,applicationId);if(!sessions.length)throw new Error('Não há atividades para aprovar.');
-      ensureBatchSize(sessions,activities,participantUids);
+      const {sessions,activityRefs,activityCount}=await planningDocs(context,applicationId);if(!sessions.length)throw new Error('Não há atividades para aprovar.');
+      ensureBatchSize(sessions,activityRefs,participantUids);
       const batch=firestore.writeBatch(context.db),now=firestore.serverTimestamp();
       batch.update(firestore.doc(context.db,'applications',applicationId),{
         status:'meeting',active:true,planningDeadlineAt:null,planningApprovedAt:now,dayAdjustments:{},
         meetingStatus:'pending',meetingDate:null,meetingTime:'',meetingDuration:30,meetingLink:'',meetingNotes:'',
-        sessionCount:sessions.length,activityCount:activities.length,planningCountVersion:1,updatedAt:now
+        sessionCount:sessions.length,activityCount,planningCountVersion:1,updatedAt:now
       });
       sessions.forEach(doc=>batch.update(doc.ref,{status:'plan_approved',changeNote:'',...resolvedAdjustmentPatch(doc),updatedAt:now}));
-      activities.forEach(doc=>batch.update(doc.ref,{status:'plan_approved',updatedAt:now}));
+      activityRefs.forEach(ref=>batch.update(ref,{status:'plan_approved',updatedAt:now}));
       [...new Set((participantUids||[]).filter(Boolean).map(String))].forEach(uid=>batch.update(firestore.doc(context.db,'users',uid),{active:true,updatedAt:now}));
-      await batch.commit();return {confirmedSessions:sessions.length,sessionCount:sessions.length,activityCount:activities.length,status:'meeting'};
+      await batch.commit();return {confirmedSessions:sessions.length,sessionCount:sessions.length,activityCount,status:'meeting'};
     },{loading:false});
   };
 
@@ -65,7 +67,7 @@
     const internalReason=String(reason||'').trim();if(decision==='reject'&&!internalReason)throw new Error('Informe o motivo interno da não aprovação.');
     return services.run(async()=>{
       const context=await services.firebase(),{firestore}=context.modules,applicationId=String(id);
-      const {sessions,activities}=await planningDocs(context,applicationId);ensureBatchSize(sessions,activities,participantUids);
+      const {sessions,activityRefs,activityCount}=await planningDocs(context,applicationId);ensureBatchSize(sessions,activityRefs,participantUids);
       const batch=firestore.writeBatch(context.db),now=firestore.serverTimestamp(),approved=decision==='approve';
       const appPatch=approved?{
         status:'approved',active:true,meetingStatus:'completed',finalDecision:'approved',finalDecisionAt:now,finalDecisionByUid:String(managerUid||''),rejectedReason:'',rejectedAt:null,updatedAt:now
@@ -74,9 +76,9 @@
       };
       batch.update(firestore.doc(context.db,'applications',applicationId),appPatch);
       sessions.forEach(doc=>batch.update(doc.ref,approved?{status:'confirmed',confirmedAt:now,...resolvedAdjustmentPatch(doc),updatedAt:now}:{status:'rejected',rejectedAt:now,updatedAt:now}));
-      activities.forEach(doc=>batch.update(doc.ref,approved?{status:'confirmed',updatedAt:now}:{status:'rejected',rejectedAt:now,updatedAt:now}));
+      activityRefs.forEach(ref=>batch.update(ref,approved?{status:'confirmed',updatedAt:now}:{status:'rejected',rejectedAt:now,updatedAt:now}));
       [...new Set((participantUids||[]).filter(Boolean).map(String))].forEach(uid=>batch.update(firestore.doc(context.db,'users',uid),{active:approved,updatedAt:now}));
-      await batch.commit();return {status:approved?'approved':'rejected',active:approved,sessionCount:sessions.length,activityCount:activities.length,rejectedReason:approved?'':internalReason};
+      await batch.commit();return {status:approved?'approved':'rejected',active:approved,sessionCount:sessions.length,activityCount,rejectedReason:approved?'':internalReason};
     },{loading:false});
   };
 
