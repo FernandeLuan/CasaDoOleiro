@@ -1,4 +1,4 @@
-/* Round 25/26 — separa aprovação do planejamento, reunião e decisão final sem leituras de navegação adicionais. */
+/* Round 25/35 — separa aprovação do planejamento, reunião e decisão final sem leituras de navegação adicionais. */
 (function selectionFlowR25Service(){
   const services=window.OleiroServices=window.OleiroServices||{};
   if(!services.applications||!services.planning)return;
@@ -20,6 +20,7 @@
     const total=(sessionDocs?.length||0)+(activityDocs?.length||0)+new Set((participantUids||[]).filter(Boolean)).size+1;
     if(total>450)throw new Error('Este planejamento é grande demais para concluir a etapa em uma única operação segura.');
   }
+  function resolvedAdjustmentPatch(doc){return doc?.data?.().adminAdjustmentStatus?{adminAdjustmentStatus:'approved'}:{}}
 
   /* Aprovar aqui significa somente aprovar o planejamento. Ainda não torna o candidato voluntário aprovado. */
   services.applications.approvePlanning=async function(id,{participantUids=[]}={}){
@@ -34,7 +35,7 @@
         meetingStatus:'pending',meetingDate:null,meetingTime:'',meetingDuration:30,meetingLink:'',meetingNotes:'',
         sessionCount:sessions.length,activityCount:activities.length,planningCountVersion:1,updatedAt:now
       });
-      sessions.forEach(doc=>batch.update(doc.ref,{status:'plan_approved',changeNote:'',updatedAt:now}));
+      sessions.forEach(doc=>batch.update(doc.ref,{status:'plan_approved',changeNote:'',...resolvedAdjustmentPatch(doc),updatedAt:now}));
       activities.forEach(doc=>batch.update(doc.ref,{status:'plan_approved',updatedAt:now}));
       [...new Set((participantUids||[]).filter(Boolean).map(String))].forEach(uid=>batch.update(firestore.doc(context.db,'users',uid),{active:true,updatedAt:now}));
       await batch.commit();return {confirmedSessions:sessions.length,sessionCount:sessions.length,activityCount:activities.length,status:'meeting'};
@@ -72,7 +73,7 @@
         status:'rejected',active:false,meetingStatus:'completed',finalDecision:'rejected',finalDecisionAt:now,finalDecisionByUid:String(managerUid||''),rejectedReason:internalReason,rejectedAt:now,autoRejected:false,updatedAt:now
       };
       batch.update(firestore.doc(context.db,'applications',applicationId),appPatch);
-      sessions.forEach(doc=>batch.update(doc.ref,approved?{status:'confirmed',confirmedAt:now,updatedAt:now}:{status:'rejected',rejectedAt:now,updatedAt:now}));
+      sessions.forEach(doc=>batch.update(doc.ref,approved?{status:'confirmed',confirmedAt:now,...resolvedAdjustmentPatch(doc),updatedAt:now}:{status:'rejected',rejectedAt:now,updatedAt:now}));
       activities.forEach(doc=>batch.update(doc.ref,approved?{status:'confirmed',updatedAt:now}:{status:'rejected',rejectedAt:now,updatedAt:now}));
       [...new Set((participantUids||[]).filter(Boolean).map(String))].forEach(uid=>batch.update(firestore.doc(context.db,'users',uid),{active:approved,updatedAt:now}));
       await batch.commit();return {status:approved?'approved':'rejected',active:approved,sessionCount:sessions.length,activityCount:activities.length,rejectedReason:approved?'':internalReason};
