@@ -1,4 +1,4 @@
-/* Round 32 — coherent activity-level review signals and section hierarchy. */
+/* Round 32/35 — coherent activity-level review signals and section hierarchy. */
 
 /* Day level shows only the workflow state. The reason/details live on the activity card. */
 .r31-day-signals{display:inline-flex;align-items:center;gap:5px;margin-left:6px;vertical-align:middle}
@@ -42,6 +42,17 @@
 /* Proposed activities must be unmistakable in Admin. */
 .planning-session-row.admin-portal-activity-card.r32-new-activity{box-shadow:inset 3px 0 0 color-mix(in srgb,var(--info) 72%,transparent)}
 
+/* Volunteer cards: long workflow badges wrap inside the card without shrinking description/details. */
+.activity-card.volunteer-session-card>.activity-row{display:block!important;position:relative!important;width:100%!important;min-width:0!important}
+.activity-card.volunteer-session-card>.activity-row>div:first-child{display:block!important;width:100%!important;min-width:0!important;max-width:none!important}
+.activity-card.volunteer-session-card>.activity-row>div:first-child>h4,.activity-card.volunteer-session-card>.activity-row .volunteer-session-title>h4{padding-right:158px!important;box-sizing:border-box!important}
+.activity-card.volunteer-session-card>.activity-row>.badge{position:absolute!important;top:0!important;right:0!important;max-width:150px!important;min-width:0!important;box-sizing:border-box!important;white-space:normal!important;overflow-wrap:anywhere!important;word-break:normal!important;line-height:1.2!important;text-align:center!important}
+.activity-card.volunteer-session-card .volunteer-session-description,.activity-card.volunteer-session-card .activity-inline-details{width:100%!important;min-width:0!important;max-width:none!important;box-sizing:border-box!important}
+
+/* A post-approval activity returned for readjustment always keeps Reajustar | Excluir side by side. */
+.activity-card.volunteer-session-card.post-approval-proposal>.activity-actions.candidate-session-actions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;width:100%!important;min-width:0!important;align-items:stretch!important}
+.activity-card.volunteer-session-card.post-approval-proposal>.activity-actions.candidate-session-actions>.btn{display:flex!important;width:100%!important;min-width:0!important;max-width:none!important;margin:0!important;justify-content:center!important;white-space:normal!important;text-align:center!important}
+
 /* Emergency contact: keep the stable avatar + details + pencil presentation. */
 .account-emergency-card .emergency-person-row>.account-person-icon{display:none!important}
 .account-emergency-card .emergency-person-row{grid-template-columns:minmax(0,1fr) auto!important;align-items:start!important}
@@ -57,5 +68,8 @@
   .r31-day-signal.r32-day-state{font-size:.53rem;padding:3px 6px}
   .admin-portal-actions>.admin-session-manage-actions,.admin-session-manage-actions{gap:5px!important}
   .admin-session-manage-actions>.btn{font-size:.56rem!important;padding:7px 3px!important;gap:3px!important}
+  .activity-card.volunteer-session-card>.activity-row>div:first-child>h4,.activity-card.volunteer-session-card>.activity-row .volunteer-session-title>h4{padding-right:132px!important}
+  .activity-card.volunteer-session-card>.activity-row>.badge{max-width:126px!important;font-size:.58rem!important;padding-left:8px!important;padding-right:8px!important}
+  .activity-card.volunteer-session-card.post-approval-proposal>.activity-actions.candidate-session-actions{gap:6px!important}
   .account-emergency-card .emergency-person-row{grid-template-columns:minmax(0,1fr) auto!important}
 }
