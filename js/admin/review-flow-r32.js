@@ -1,8 +1,9 @@
-/* Round 32 — activity-scoped review signals, coherent day states and emergency-contact cleanup. */
+/* Round 32/35 — activity-scoped review signals, coherent day states and emergency-contact cleanup. */
 (function reviewFlowR32Admin(){
   const R=window.OleiroR31AdminReview;if(!R)return;
   const baseAdminPlanningDayCard=window.adminPlanningDayCard||adminPlanningDayCard;
   const baseStatusMeta=R.statusMeta;
+  const baseReviewDetails=R.reviewDetails;
   const baseRenderPersonModal=window.renderPersonModal||renderPersonModal;
   const text=key=>typeof t==='function'?t(key):key;
   const safe=value=>encodeURIComponent(String(value??''));
@@ -13,7 +14,7 @@
     const parsed=Date.parse(String(value));return Number.isFinite(parsed)?parsed:0;
   }
   function adjustmentReady(session){
-    if(!session||session.adminAdjustmentStatus!=='requested')return false;
+    if(!session||session.status==='plan_approved'||session.adminAdjustmentStatus!=='requested')return false;
     if(session._r32AdjustmentReady===true)return true;
     const requested=timeMs(session.adminAdjustmentRequestedAt),updated=timeMs(session.updatedAt);
     return requested>0&&updated>requested;
@@ -21,13 +22,15 @@
   R.adjustmentReady=adjustmentReady;
 
   R.statusMeta=function(session){
+    if(session?.status==='plan_approved')return {badges:'<span class="badge info">Planejamento aprovado</span>',classes:''};
     if(adjustmentReady(session))return {badges:'<span class="badge success">Ajustado</span>',classes:'r32-card-ready'};
     return baseStatusMeta(session);
   };
+  R.reviewDetails=function(session){return session?.status==='plan_approved'?'':baseReviewDetails(session)};
 
   function dayButton(tone,label,message){return `<button class="r31-day-signal r32-day-state ${tone}" type="button" data-r31-message="${escapeHtml(message)}" onclick="toggleR31DaySignal(this,event)">${escapeHtml(label)}</button>`}
   R.daySignals=function(day){
-    const sessions=day?.sessions||[],pending=sessions.filter(s=>s.adminAdjustmentStatus==='requested'&&!adjustmentReady(s)),ready=sessions.filter(adjustmentReady),resent=sessions.filter(s=>s.adminAdjustmentStatus==='analysis'),changes=sessions.filter(s=>s.status==='change_requested'&&(s.changeReviewStatus||'analysis')==='analysis'&&s.adminAdjustmentStatus!=='analysis'),newActivities=sessions.filter(s=>s.postApprovalProposal===true&&s.reviewStatus==='analysis'&&!s.reviewBaseline),readjust=sessions.filter(s=>(s.changeReviewStatus==='adjustments')||(s.postApprovalProposal===true&&s.reviewStatus==='adjustments'));
+    const sessions=(day?.sessions||[]).filter(s=>s.status!=='plan_approved'),pending=sessions.filter(s=>s.adminAdjustmentStatus==='requested'&&!adjustmentReady(s)),ready=sessions.filter(adjustmentReady),resent=sessions.filter(s=>s.adminAdjustmentStatus==='analysis'),changes=sessions.filter(s=>s.status==='change_requested'&&(s.changeReviewStatus||'analysis')==='analysis'&&s.adminAdjustmentStatus!=='analysis'),newActivities=sessions.filter(s=>s.postApprovalProposal===true&&s.reviewStatus==='analysis'&&!s.reviewBaseline),readjust=sessions.filter(s=>(s.changeReviewStatus==='adjustments')||(s.postApprovalProposal===true&&s.reviewStatus==='adjustments'));
     if(pending.length)return dayButton('warning','Reajustar',`${pending.length} ${pending.length===1?'atividade precisa de ajuste':'atividades precisam de ajuste'} neste dia.`);
     if(ready.length)return dayButton('success','Ajustado',`${ready.length} ${ready.length===1?'atividade foi ajustada e aguarda reenvio':'atividades foram ajustadas e aguardam reenvio'}.`);
     if(readjust.length)return dayButton('warning','Reajustar',`${readjust.length} ${readjust.length===1?'atividade aguarda reajuste':'atividades aguardam reajuste'} do voluntário.`);
@@ -64,6 +67,7 @@
     (day?.sessions||[]).forEach(session=>{
       const card=template.content.querySelector(`.admin-portal-activity-card[data-session-id="${CSS.escape(String(session.id||''))}"]`);if(!card)return;
       if(adjustmentReady(session)){card.classList.remove('r31-card-warning');card.classList.add('r32-card-ready')}
+      if(session.status==='plan_approved')card.classList.remove('r31-card-warning','r31-card-info','r31-card-danger','r32-card-ready');
       if(session.postApprovalProposal===true&&(session.reviewStatus||'analysis')==='analysis'&&!session.reviewBaseline)card.classList.add('r32-new-activity');
       const signal=signalHtml(session);if(signal){let status=card.querySelector('.admin-portal-status');if(!status){status=document.createElement('div');status.className='admin-portal-status';card.querySelector('.admin-portal-activity-head')?.appendChild(status)}status.insertAdjacentHTML('beforeend',signal)}
       ensureActions(p,session,card);
