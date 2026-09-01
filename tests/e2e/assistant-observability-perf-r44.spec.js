@@ -7,18 +7,27 @@ test('assistant stays unit-scoped and can run candidate lifecycle', async () => 
   const apps=fs.readFileSync('js/services/application-service.js','utf8');
   const scoped=fs.readFileSync('js/services/review-flow-r31-service.js','utf8');
   const groups=fs.readFileSync('js/services/group-service.js','utf8');
+
   expect(rules).toContain('assistantMayManageApplication');
   expect(rules).toContain('assistantMayManageVolunteerUser');
   expect(rules).toContain('resource.data.unitIds.hasAny(currentUser().unitIds)');
   expect(rules).toContain('isActivityAssistant() && assistantHasUnit(resource.data.unitId)');
   expect(ui).toContain('assistantUnitLabel');
   expect(ui).not.toContain("['approveCandidate','rejectCandidate','reactivateCandidate'");
+
   expect(apps).toContain("async listOccupancyMonth(month,{unitId='all'}={})");
   expect(apps).toContain("firestore.where('unitId','==',normalizedUnit)");
-  expect(scoped).toContain("services.applications.list=async function(args={}){const unit=assistantUnit();return baseApplicationsList({...args,...(unit?{unit}: {})})}");
+
+  // Assert the security semantics instead of one exact minified source line.
+  expect(scoped).toContain('const baseApplicationsList=services.applications.list?.bind(services.applications)');
+  expect(scoped).toContain('services.applications.list=async function(args={})');
+  expect(scoped).toContain('const unit=assistantUnit()');
+  expect(scoped).toContain('baseApplicationsList({...args,...(unit?{unit}: {})})');
   expect(scoped).toContain("firestore.where('unitId','==',forced),firestore.where('status','==','approved')");
   expect(scoped).toContain("firestore.where('unitId','==',forced),firestore.where('status','==','change_requested')");
-  expect(scoped).toContain("services.planning.listManagerSchedule=async function(args={}){const forced=assistantUnit();return baseManagerSchedule({...args,...(forced?{unitId:forced}: {})})}");
+  expect(scoped).toContain('services.planning.listManagerSchedule=async function(args={})');
+  expect(scoped).toContain('baseManagerSchedule({...args,...(forced?{unitId:forced}: {})})');
+
   expect(groups).toContain('services.accessScope?.forceUnit?.(requested)');
   expect(groups).toContain("monitor:{area:'groups',action:'list_unit',unitId:normalized}");
 });
