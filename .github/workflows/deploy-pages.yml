@@ -64,6 +64,32 @@ jobs:
           )
           PY
 
+      - name: Inject Sentry monitoring config
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          RELEASE_SHA: ${{ github.sha }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          dsn = os.environ.get('SENTRY_DSN', '').strip()
+          sha = os.environ.get('RELEASE_SHA', '').strip()
+          config = {
+              'dsn': dsn,
+              'enabled': bool(dsn),
+              'environment': 'production',
+              'release': f'casa-do-oleiro@{sha}' if sha else 'casa-do-oleiro@unknown',
+          }
+          Path('_site/js/shared/monitoring-config.js').write_text(
+              'window.OLEIRO_SENTRY_CONFIG = Object.freeze(' + json.dumps(config, separators=(',', ':')) + ');\n',
+              encoding='utf-8',
+          )
+          if not dsn:
+              print('SENTRY_DSN not configured; monitoring remains disabled for this deploy.')
+          PY
+
       - name: Stamp release and asset cache keys
         env:
           RELEASE_SHA: ${{ github.sha }}
