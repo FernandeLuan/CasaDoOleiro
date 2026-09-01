@@ -109,7 +109,7 @@
     const permissionMessage=/missing or insufficient permissions|permission[- ]denied/i.test(message);
     const unexpected=error instanceof TypeError||error instanceof ReferenceError||error instanceof SyntaxError||/index-not-ready/i.test(code);
     if(!criticalCodes.has(code)&&!permissionMessage&&!unexpected)return null;
-    return captureException(error,{...meta,firebaseCode:code||permissionMessage?'permission-denied':'unexpected'});
+    return captureException(error,{...meta,firebaseCode:code||(permissionMessage?'permission-denied':'unexpected')});
   }
   function recordQueryMetric(row={}){
     const name=String(row.name||'firestore/query'),ms=Math.max(0,Number(row.ms)||0),count=Math.max(0,Number(row.count)||0);

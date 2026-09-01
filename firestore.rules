@@ -75,6 +75,96 @@ service cloud.firestore {
       return assistantHasUnit(app.unitId);
     }
 
+    function assistantManagesVolunteer(uid) {
+      let user = get(/databases/$(database)/documents/users/$(uid)).data;
+      return isActivityAssistant()
+        && exists(/databases/$(database)/documents/users/$(uid))
+        && user.role == 'volunteer'
+        && ('unitIds' in user)
+        && user.unitIds.hasAny(currentUser().unitIds);
+    }
+
+    function assistantCreatesVolunteer() {
+      return isActivityAssistant()
+        && request.resource.data.role == 'volunteer'
+        && request.resource.data.active == true
+        && request.resource.data.unitIds is list
+        && request.resource.data.unitIds.size() > 0
+        && request.resource.data.unitIds.hasOnly(currentUser().unitIds);
+    }
+
+    function assistantUpdatesVolunteer(uid) {
+      return assistantManagesVolunteer(uid)
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.unitIds == resource.data.unitIds
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'active', 'updatedAt'
+        ]);
+    }
+
+    function assistantReadsVolunteerProfile(uid) {
+      return assistantManagesVolunteer(uid);
+    }
+
+    function assistantCreatesVolunteerProfile(uid) {
+      let user = getAfter(/databases/$(database)/documents/users/$(uid)).data;
+      return isActivityAssistant()
+        && user.role == 'volunteer'
+        && ('unitIds' in user)
+        && user.unitIds.hasAny(currentUser().unitIds);
+    }
+
+    function assistantUpdatesVolunteerProfile(uid) {
+      return assistantManagesVolunteer(uid)
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'name', 'fullName', 'phone', 'whatsapp', 'country', 'nationality',
+          'language', 'gender', 'emergencyContact', 'updatedAt'
+        ]);
+    }
+
+    function assistantCreatesApplication() {
+      let uids = request.resource.data.participantUids;
+      let unitId = request.resource.data.unitId;
+      let firstUser = getAfter(/databases/$(database)/documents/users/$(uids[0])).data;
+      return isActivityAssistant()
+        && assistantHasUnit(unitId)
+        && uids is list
+        && uids.size() in [1, 2]
+        && firstUser.role == 'volunteer'
+        && ('unitIds' in firstUser)
+        && firstUser.unitIds.hasAny([unitId])
+        && (
+          uids.size() == 1
+          || (
+            getAfter(/databases/$(database)/documents/users/$(uids[1])).data.role == 'volunteer'
+            && getAfter(/databases/$(database)/documents/users/$(uids[1])).data.unitIds.hasAny([unitId])
+          )
+        );
+    }
+
+    function assistantMayOperateApplication() {
+      let changed = request.resource.data.diff(resource.data).affectedKeys();
+      return assistantHasUnit(resource.data.unitId)
+        && request.resource.data.unitId == resource.data.unitId
+        && request.resource.data.participantUids == resource.data.participantUids
+        && changed.hasOnly([
+          'status', 'active', 'planningDeadlineAt', 'planningSubmittedAt',
+          'planningApprovedAt', 'approvedAt', 'dayAdjustments', 'sessionCount',
+          'activityCount', 'planningCountVersion', 'meetingStatus', 'meetingDate',
+          'meetingTime', 'meetingDuration', 'meetingLink', 'meetingNotes',
+          'meetingScheduledAt', 'meetingCompletedAt', 'finalDecision',
+          'finalDecisionAt', 'finalDecisionByUid', 'rejectedReason', 'rejectedAt',
+          'autoRejected', 'needsAdminAttention', 'stayStart', 'stayEnd', 'stayMonths',
+          'internalNote', 'updatedAt'
+        ])
+        && (
+          !changed.hasAny(['finalDecisionByUid'])
+          || request.resource.data.finalDecisionByUid in ['', request.auth.uid]
+        );
+    }
+
     function candidateEditable(applicationId) {
       let app = applicationData(applicationId);
       return app.active == true && app.status in ['pending', 'adjustments'];
@@ -283,9 +373,10 @@ service cloud.firestore {
     }
 
     match /users/{uid} {
-      allow read: if (signedIn() && request.auth.uid == uid) || isManager();
-      allow create, delete: if isManager();
-      allow update: if isManager() || participantMarksFirstAccess(uid);
+      allow read: if (signedIn() && request.auth.uid == uid) || isManager() || assistantManagesVolunteer(uid);
+      allow create: if isManager() || assistantCreatesVolunteer();
+      allow delete: if isManager();
+      allow update: if isManager() || assistantUpdatesVolunteer(uid) || participantMarksFirstAccess(uid);
     }
 
     match /units/{unitId} {
@@ -294,9 +385,10 @@ service cloud.firestore {
     }
 
     match /volunteer_profiles/{uid} {
-      allow read: if activeUser() && (request.auth.uid == uid || isManager());
-      allow create, delete: if isManager();
-      allow update: if isManager() || participantUpdatesEmergencyContact(uid);
+      allow read: if activeUser() && (request.auth.uid == uid || isManager() || assistantReadsVolunteerProfile(uid));
+      allow create: if isManager() || assistantCreatesVolunteerProfile(uid);
+      allow delete: if isManager();
+      allow update: if isManager() || assistantUpdatesVolunteerProfile(uid) || participantUpdatesEmergencyContact(uid);
     }
 
     match /applications/{applicationId} {
@@ -305,14 +397,15 @@ service cloud.firestore {
         || assistantHasUnit(resource.data.unitId)
         || isParticipant(resource.data)
       );
-      allow create, delete: if isManager();
+      allow create: if isManager() || assistantCreatesApplication();
+      allow delete: if isManager();
       allow update: if isManager()
-        || assistantMayRequestApplicationAdjustment()
+        || assistantMayOperateApplication()
         || participantMaySubmitApplication()
         || participantMayResetEmptyAdjustment();
 
       match /history/{eventId} {
-        allow read: if activeUser() && managerOfApplication(applicationId);
+        allow read: if activeUser() && (managerOfApplication(applicationId) || assistantOfApplication(applicationId));
         allow create: if activeUser()
           && request.resource.data.applicationId == applicationId
           && request.resource.data.actorUid == request.auth.uid
@@ -360,9 +453,9 @@ service cloud.firestore {
           && request.resource.data.applicationId == resource.data.applicationId
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
             'name', 'description', 'duration', 'participation', 'materials',
-            'notes', 'period', 'time', 'ownerName',
-            'reviewStatus', 'reviewNote', 'reviewSubmittedAt', 'reviewRequestNote',
-            'reviewBaseline', 'updatedAt'
+            'notes', 'period', 'time', 'ownerName', 'status', 'managerCreated',
+            'postApprovalProposal', 'reviewStatus', 'reviewNote', 'reviewSubmittedAt',
+            'reviewRequestNote', 'reviewBaseline', 'reviewedAt', 'rejectedAt', 'updatedAt'
           ])
         )
         || (
@@ -446,8 +539,9 @@ service cloud.firestore {
             'changeReviewRequestNote', 'changeReviewBaseline',
             'adminAdjustmentStatus', 'adminAdjustmentNote',
             'adminAdjustmentRequestedAt', 'adminAdjustmentSubmittedAt',
-            'adminAdjustmentBaseline', 'reviewStatus', 'reviewNote',
-            'reviewSubmittedAt', 'reviewRequestNote', 'reviewBaseline', 'updatedAt'
+            'adminAdjustmentBaseline', 'postApprovalProposal', 'reviewStatus', 'reviewNote',
+            'reviewSubmittedAt', 'reviewRequestNote', 'reviewBaseline', 'reviewedAt',
+            'confirmedAt', 'rejectedAt', 'managerCreated', 'updatedAt'
           ])
         )
         || (

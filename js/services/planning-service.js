@@ -44,15 +44,18 @@
       },{loading:false});
     },
 
-    async listPendingChanges({limit=100}={}){
+    async listPendingChanges({limit=100,unitId='all'}={}){
       return services.run(async()=>{
         const context=await services.firebase();
-        const {firestore}=context.modules;const max=Math.max(1,Math.min(Number(limit)||100,200)),started=Date.now();
+        const {firestore}=context.modules;const max=Math.max(1,Math.min(Number(limit)||100,200)),normalizedUnit=unitId&&unitId!=='all'?String(unitId).toLowerCase():'',started=Date.now();
+        const changes=[firestore.where('status','==','change_requested')],proposals=[firestore.where('reviewStatus','==','analysis')];
+        if(normalizedUnit){changes.push(firestore.where('unitId','==',normalizedUnit));proposals.push(firestore.where('unitId','==',normalizedUnit))}
+        changes.push(firestore.limit(max));proposals.push(firestore.limit(max));
         const [changesSnapshot,proposalSnapshot]=await Promise.all([
-          firestore.getDocs(firestore.query(firestore.collection(context.db,'activity_sessions'),firestore.where('status','==','change_requested'),firestore.limit(max))),
-          firestore.getDocs(firestore.query(firestore.collection(context.db,'activity_sessions'),firestore.where('reviewStatus','==','analysis'),firestore.limit(max)))
+          firestore.getDocs(firestore.query(firestore.collection(context.db,'activity_sessions'),...changes)),
+          firestore.getDocs(firestore.query(firestore.collection(context.db,'activity_sessions'),...proposals))
         ]);
-        services.recordQuery?.('activity_sessions/pending-review',started,changesSnapshot.size+proposalSnapshot.size,{queries:2,limit:max});
+        services.recordQuery?.('activity_sessions/pending-review',started,changesSnapshot.size+proposalSnapshot.size,{queries:2,limit:max,unitId:normalizedUnit||'all'});
         const rows=[
           ...changesSnapshot.docs.map(doc=>({id:doc.id,...doc.data(),reviewKind:'change'})),
           ...proposalSnapshot.docs.map(doc=>({id:doc.id,...doc.data(),reviewKind:'post_approval'}))

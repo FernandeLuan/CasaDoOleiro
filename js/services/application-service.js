@@ -76,28 +76,26 @@
       },{loading:false});
     },
 
-    async countStatus(status){
+    async countStatus(status,{unit='all'}={}){
       if(!status||status==='all')return 0;
       return services.run(async()=>{
         const context=await services.firebase();const {firestore}=context.modules;
         if(typeof firestore.getCountFromServer!=='function')throw new Error('Contagem agregada do Firestore indisponível. A leitura ampla foi bloqueada.');
-        const q=firestore.query(firestore.collection(context.db,'applications'),firestore.where('status','==',String(status))),started=Date.now();
-        const snapshot=await firestore.getCountFromServer(q),count=Number(snapshot.data().count)||0;services.recordQuery?.('applications/count-status',started,count,{status:String(status),aggregation:true});return count;
+        const normalizedUnit=unit&&unit!=='all'?normalize(unit):'',constraints=[firestore.where('status','==',String(status))];
+        if(normalizedUnit)constraints.push(firestore.where('unitId','==',normalizedUnit));
+        const q=firestore.query(firestore.collection(context.db,'applications'),...constraints),started=Date.now();
+        const snapshot=await firestore.getCountFromServer(q),count=Number(snapshot.data().count)||0;services.recordQuery?.('applications/count-status',started,count,{status:String(status),unit:normalizedUnit||'all',aggregation:true});return count;
       },{loading:false});
     },
 
-    async listUpcoming({field='stayStart',from,limit=3}={}){
+    async listUpcoming({field='stayStart',from,limit=3,unit='all'}={}){
       if(!from||!['stayStart','stayEnd'].includes(field))return [];
       return services.run(async()=>{
-        const context=await services.firebase();const {firestore}=context.modules,max=Math.max(1,Math.min(Number(limit)||3,10)),started=Date.now();
-        const snapshot=await firestore.getDocs(firestore.query(
-          firestore.collection(context.db,'applications'),
-          firestore.where('status','==','approved'),
-          firestore.where(field,'>=',String(from)),
-          firestore.orderBy(field,'asc'),
-          firestore.limit(max)
-        ));
-        services.recordQuery?.('applications/upcoming',started,snapshot.size,{field,from:String(from),limit:max});
+        const context=await services.firebase();const {firestore}=context.modules,max=Math.max(1,Math.min(Number(limit)||3,10)),normalizedUnit=unit&&unit!=='all'?normalize(unit):'',constraints=[firestore.where('status','==','approved')],started=Date.now();
+        if(normalizedUnit)constraints.push(firestore.where('unitId','==',normalizedUnit));
+        constraints.push(firestore.where(field,'>=',String(from)),firestore.orderBy(field,'asc'),firestore.limit(max));
+        const snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'applications'),...constraints));
+        services.recordQuery?.('applications/upcoming',started,snapshot.size,{field,from:String(from),limit:max,unit:normalizedUnit||'all'});
         return snapshot.docs.map(mapApplication).filter(row=>!row.inactive);
       },{loading:false});
     },

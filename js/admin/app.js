@@ -11,6 +11,13 @@ let _managerDashboardAt=0;
 let _managerDashboardPromise=null;
 let _managerCandidateRequestKey='';
 let _managerBackgroundWarmupScheduled=false;
+function managerIsActivityAssistant(){return String(state.currentSession?.user?.role||'')==='activity_assistant'}
+function managerAssignedUnitIds(){return managerIsActivityAssistant()?[...new Set((state.currentSession?.user?.unitIds||[]).map(value=>String(value||'').toLowerCase()).filter(Boolean))]:[]}
+function managerScopeUnitId(requested='all'){
+  const normalized=String(requested||'all').toLowerCase();if(!managerIsActivityAssistant())return normalized||'all';
+  const allowed=managerAssignedUnitIds();return allowed.includes(normalized)?normalized:(allowed[0]||'__no_unit__');
+}
+window.managerIsActivityAssistant=managerIsActivityAssistant;window.managerScopeUnitId=managerScopeUnitId;
 function managerScheduleKey(from,to,unit='all'){return `${from}|${to}|${unit}`}
 function mapManagerScheduleRows(rows){
   const names=new Map((state.candidates||[]).map(p=>[String(p.id),p.name]));
@@ -20,6 +27,7 @@ function deriveAdminNotifications(){return []}
 function invalidateManagerScheduleCache(){_managerScheduleCache.clear();state.scheduleFrom=null;state.scheduleTo=null}
 async function hydrateManagerSchedule(from=_oleiroToday,to=_oleiroToday,{force=false,unitId='all'}={}){
   if(!window.OleiroServices?.planning?.listManagerSchedule)return [];
+  unitId=managerScopeUnitId(unitId);
   const key=managerScheduleKey(from,to,unitId),cached=_managerScheduleCache.get(key);
   if(!force&&cached&&Date.now()-cached.at<MANAGER_SCHEDULE_CACHE_MS){state.sessions=cached.rows;state.activities=[];state.scheduleFrom=from;state.scheduleTo=to;return cached.rows;}
   const rows=mapManagerScheduleRows(await window.OleiroServices.planning.listManagerSchedule({from,to,unitId}));
@@ -30,12 +38,12 @@ async function hydrateManagerPendingChanges({force=false}={}){
   if(!window.OleiroServices?.planning?.listPendingChanges)return state.pendingChangeRequests||[];
   if(_managerPendingChangesPromise)return _managerPendingChangesPromise;
   if(!force&&Date.now()-_managerPendingChangesAt<MANAGER_CHANGE_REFRESH_MS)return state.pendingChangeRequests||[];
-  _managerPendingChangesPromise=window.OleiroServices.planning.listPendingChanges({limit:100}).then(rows=>{state.pendingChangeRequests=rows||[];_managerPendingChangesAt=Date.now();if(state.managerPage==='home'||(state.managerPage==='volunteer'&&state.candidateFilter==='adjustments'))render();return state.pendingChangeRequests}).catch(error=>{console.error('Falha ao carregar mudanças solicitadas:',error);return state.pendingChangeRequests||[]}).finally(()=>{_managerPendingChangesPromise=null});
+  _managerPendingChangesPromise=window.OleiroServices.planning.listPendingChanges({limit:100,unitId:managerScopeUnitId(state.candidateUnit||'all')}).then(rows=>{state.pendingChangeRequests=rows||[];_managerPendingChangesAt=Date.now();if(state.managerPage==='home'||(state.managerPage==='volunteer'&&state.candidateFilter==='adjustments'))render();return state.pendingChangeRequests}).catch(error=>{console.error('Falha ao carregar mudanças solicitadas:',error);return state.pendingChangeRequests||[]}).finally(()=>{_managerPendingChangesPromise=null});
   return _managerPendingChangesPromise;
 }
 function invalidateManagerPendingChanges(){_managerPendingChangesAt=0}
 
-function managerCandidateQueryKey(){return JSON.stringify({status:state.candidateFilter||'approved',unit:state.candidateUnit||'all',search:String(state.candidateSearch||'').trim().toLocaleLowerCase('pt-BR')})}
+function managerCandidateQueryKey(){return JSON.stringify({status:state.candidateFilter||'approved',unit:managerScopeUnitId(state.candidateUnit||'all'),search:String(state.candidateSearch||'').trim().toLocaleLowerCase('pt-BR')})}
 async function loadManagerCandidates({append=false,force=false}={}){
   if(!window.OleiroServices?.applications?.list)return state.candidates||[];
   const key=managerCandidateQueryKey();
@@ -45,7 +53,7 @@ async function loadManagerCandidates({append=false,force=false}={}){
   if(!append){state.candidateCursor=null;state.candidateHasMore=false;state.candidateQueryKey=key;if(state.managerPage==='volunteer')render()}
   try{
     const result=await window.OleiroServices.applications.list({
-      status:state.candidateFilter||'approved',unit:state.candidateUnit||'all',search:state.candidateSearch||'',
+      status:state.candidateFilter||'approved',unit:managerScopeUnitId(state.candidateUnit||'all'),search:state.candidateSearch||'',
       cursor:append?state.candidateCursor:null,limit:10
     });
     if(_managerCandidateRequestKey!==requestKey)return state.candidates||[];
@@ -64,11 +72,11 @@ async function hydrateManagerDashboardData({force=true}={}){
   if(!window.OleiroServices?.applications)return;
   if(_managerDashboardPromise)return _managerDashboardPromise;
   if(!force&&Date.now()-_managerDashboardAt<MANAGER_DASHBOARD_REFRESH_MS)return {counts:state.dashboardCounts,arrivals:state.dashboardArrivals,departures:state.dashboardDepartures};
-  const service=window.OleiroServices.applications;
+  const service=window.OleiroServices.applications,unit=managerScopeUnitId(state.candidateUnit||'all');
   _managerDashboardPromise=Promise.allSettled([
-    service.countStatus?.('analysis')??0,service.countStatus?.('adjustments')??0,
-    service.listUpcoming?.({field:'stayStart',from:_oleiroToday,limit:3})??[],
-    service.listUpcoming?.({field:'stayEnd',from:_oleiroToday,limit:3})??[]
+    service.countStatus?.('analysis',{unit})??0,service.countStatus?.('adjustments',{unit})??0,
+    service.listUpcoming?.({field:'stayStart',from:_oleiroToday,limit:3,unit})??[],
+    service.listUpcoming?.({field:'stayEnd',from:_oleiroToday,limit:3,unit})??[]
   ]).then(results=>{
     const value=(index,fallback)=>results[index]?.status==='fulfilled'?results[index].value:fallback;
     results.forEach((result,index)=>{if(result.status==='rejected')console.warn(['Contagem em análise','Contagem de ajustes','Próximas chegadas','Próximas saídas'][index]+' indisponível:',result.reason)});
@@ -80,11 +88,11 @@ async function hydrateManagerDashboardData({force=true}={}){
 }
 
 async function hydrateManagerBaseData(){
-  state.candidateFilter=state.candidateFilter||'approved';state.candidateUnit=state.candidateUnit||'all';state.candidateSearch=state.candidateSearch||'';
+  state.candidateFilter=state.candidateFilter||'approved';state.candidateUnit=managerScopeUnitId(state.candidateUnit||'all');state.candidateSearch=state.candidateSearch||'';
   const unitsPromise=window.OleiroServices?.units?.list?window.OleiroServices.units.list({includeInactive:true}):Promise.resolve([]);
   const candidatesPromise=loadManagerCandidates({force:true});
   const [unitsResult]=await Promise.all([unitsPromise,candidatesPromise]);
-  state.units=unitsResult||[];
+  state.units=managerIsActivityAssistant()?(unitsResult||[]).filter(unit=>managerAssignedUnitIds().includes(String(unit.id||'').toLowerCase())):(unitsResult||[]);
   const units=state.units||[];
   if(!units.some(unit=>String(unit.id)===String(state.groupUnitId||''))){
     state.groupUnitId=units.some(unit=>String(unit.id)==='rodeio')?'rodeio':String(units[0]?.id||'rodeio');
