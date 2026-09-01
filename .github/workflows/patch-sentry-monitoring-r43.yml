@@ -68,9 +68,7 @@ jobs:
             }
             function beforeSend(event){
               if(event.user)delete event.user;
-              if(event.request){
-                event.request={url:cleanUrl(event.request.url||location.href)};
-              }
+              if(event.request)event.request={url:cleanUrl(event.request.url||location.href)};
               if(event.extra)event.extra=scrub(event.extra);
               if(event.tags)event.tags=scrub(event.tags);
               return event;
@@ -122,9 +120,7 @@ jobs:
               if(!criticalCodes.has(code)&&!permissionMessage)return null;
               return captureException(error,{...meta,firebaseCode:code||'permission-denied'});
             }
-            function flushQueue(){
-              while(queue.length){const item=queue.shift();sendException(item.error,item.meta)}
-            }
+            function flushQueue(){while(queue.length){const item=queue.shift();sendException(item.error,item.meta)}}
             function load(){
               if(loading||initialized||!config.enabled||!config.dsn)return;
               loading=true;
@@ -141,8 +137,7 @@ jobs:
                     beforeSend,
                     beforeBreadcrumb
                   });
-                  initialized=true;
-                  flushQueue();
+                  initialized=true;flushQueue();
                 }catch(error){console.warn('[Monitoring] Sentry init failed',error)}
               };
               script.onerror=()=>console.warn('[Monitoring] Sentry SDK unavailable');
@@ -164,7 +159,6 @@ jobs:
           """
           Path('js/shared/monitoring.js').write_text(monitoring, encoding='utf-8')
 
-          # Central service boundary: report infrastructure/security failures and rethrow unchanged.
           service_path=Path('js/services/service-core.js')
           service=service_path.read_text(encoding='utf-8')
           old="""  async function run(task,{loading=true,delay=config.loadingDelayMs}={}){\n    const execute=()=>Promise.resolve().then(()=>typeof task==='function'?task():task);\n    if(loading&&window.OleiroLoading?.run)return window.OleiroLoading.run(execute,delay);\n    return execute();\n  }\n"""
@@ -172,15 +166,13 @@ jobs:
           if old not in service: raise SystemExit('service-core run block not found')
           service_path.write_text(service.replace(old,new,1),encoding='utf-8')
 
-          # Add precise context to the candidate session edit that triggered the production incident.
           planning_path=Path('js/services/planning-service.js')
           planning=planning_path.read_text(encoding='utf-8')
-          old="""        return true;\n      },{loading:false});\n    }\n  };\n})();\n"""
-          new="""        return true;\n      },{loading:false,monitor:{area:'planning',action:'update_session',sessionId:String(sessionId)}});\n    }\n  };\n})();\n"""
+          old="""        return true;\n      },{loading:false});\n    }\n  };\n})();"""
+          new="""        return true;\n      },{loading:false,monitor:{area:'planning',action:'update_session',sessionId:String(sessionId)}});\n    }\n  };\n})();"""
           if old not in planning: raise SystemExit('planning updateSession tail not found')
           planning_path.write_text(planning.replace(old,new,1),encoding='utf-8')
 
-          # Load monitoring before application code on every entry point.
           html_specs=[
             ('index.html','<script src="js/shared/i18n.js','<script src="js/shared/monitoring-config.js?v=20260901-r43"></script><script src="js/shared/monitoring.js?v=20260901-r43"></script><script src="js/shared/i18n.js'),
             ('portal/index.html','<script src="../js/shared/dom.js','<script src="../js/shared/monitoring-config.js?v=20260901-r43"></script><script src="../js/shared/monitoring.js?v=20260901-r43"></script><script src="../js/shared/dom.js'),
@@ -191,15 +183,44 @@ jobs:
               if marker not in text: raise SystemExit(f'HTML marker not found: {file}')
               path.write_text(text.replace(marker,replacement,1),encoding='utf-8')
 
-          # Inject the public DSN only into the deploy artifact. Missing DSN leaves monitoring disabled and never blocks deploy.
           deploy_path=Path('.github/workflows/deploy-pages.yml')
           deploy=deploy_path.read_text(encoding='utf-8')
           marker='      - name: Stamp release and asset cache keys\n'
-          sentry_step="""      - name: Inject Sentry monitoring config\n        env:\n          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}\n          RELEASE_SHA: ${{ github.sha }}\n        run: |\n          python - <<'PY'\n          import json\n          import os\n          from pathlib import Path\n\n          dsn = os.environ.get('SENTRY_DSN', '').strip()\n          sha = os.environ.get('RELEASE_SHA', '').strip()\n          config = {\n              'dsn': dsn,\n              'enabled': bool(dsn),\n              'environment': 'production',\n              'release': f'casa-do-oleiro@{sha}' if sha else 'casa-do-oleiro@unknown',\n          }\n          Path('_site/js/shared/monitoring-config.js').write_text(\n              'window.OLEIRO_SENTRY_CONFIG = Object.freeze(' + json.dumps(config, separators=(',', ':')) + ');\\n',\n              encoding='utf-8',\n          )\n          if not dsn:\n              print('SENTRY_DSN not configured; monitoring remains disabled for this deploy.')\n          PY\n\n"""
+          dsn_expr='$'+'{{ secrets.SENTRY_DSN }}'
+          sha_expr='$'+'{{ github.sha }}'
+          sentry_step=f"""      - name: Inject Sentry monitoring config\n        env:\n          SENTRY_DSN: {dsn_expr}\n          RELEASE_SHA: {sha_expr}\n        run: |\n          python - <<'PY'\n          import json\n          import os\n          from pathlib import Path\n\n          dsn = os.environ.get('SENTRY_DSN', '').strip()\n          sha = os.environ.get('RELEASE_SHA', '').strip()\n          config = {{\n              'dsn': dsn,\n              'enabled': bool(dsn),\n              'environment': 'production',\n              'release': f'casa-do-oleiro@{{sha}}' if sha else 'casa-do-oleiro@unknown',\n          }}\n          Path('_site/js/shared/monitoring-config.js').write_text(\n              'window.OLEIRO_SENTRY_CONFIG = Object.freeze(' + json.dumps(config, separators=(',', ':')) + ');\\n',\n              encoding='utf-8',\n          )\n          if not dsn:\n              print('SENTRY_DSN not configured; monitoring remains disabled for this deploy.')\n          PY\n\n"""
           if marker not in deploy: raise SystemExit('deploy stamp marker not found')
           deploy_path.write_text(deploy.replace(marker,sentry_step+marker,1),encoding='utf-8')
 
-          test="""import { test, expect } from '@playwright/test';\nimport fs from 'node:fs';\n\ntest('Sentry monitoring is privacy-safe and catches critical Firebase failures', async () => {\n  const monitor = fs.readFileSync('js/shared/monitoring.js', 'utf8');\n  const config = fs.readFileSync('js/shared/monitoring-config.js', 'utf8');\n  const core = fs.readFileSync('js/services/service-core.js', 'utf8');\n  const planning = fs.readFileSync('js/services/planning-service.js', 'utf8');\n  const deploy = fs.readFileSync('.github/workflows/deploy-pages.yml', 'utf8');\n  const portal = fs.readFileSync('portal/index.html', 'utf8');\n  const admin = fs.readFileSync('admin/index.html', 'utf8');\n  const login = fs.readFileSync('index.html', 'utf8');\n\n  expect(config).toContain("dsn: ''");\n  expect(monitor).toContain('sendDefaultPii:false');\n  expect(monitor).toContain("'permission-denied'");\n  expect(monitor).toContain('beforeSend');\n  expect(monitor).toContain("if(event.user)delete event.user");\n  expect(core).toContain('captureServiceError?.(error');\n  expect(planning).toContain("action:'update_session'");\n  expect(deploy).toContain('SENTRY_DSN: ${{ secrets.SENTRY_DSN }}');\n  expect(deploy).toContain("'enabled': bool(dsn)");\n  [portal,admin,login].forEach(html=>{\n    expect(html).toContain('monitoring-config.js');\n    expect(html).toContain('monitoring.js');\n  });\n  expect(`${monitor} ${config}`).not.toMatch(/https:\/\/[^\s'\"]+@o\d+\.ingest[^\s'\"]+/);\n});\n"""
+          test=r"""import { test, expect } from '@playwright/test';
+          import fs from 'node:fs';
+
+          test('Sentry monitoring is privacy-safe and catches critical Firebase failures', async () => {
+            const monitor = fs.readFileSync('js/shared/monitoring.js', 'utf8');
+            const config = fs.readFileSync('js/shared/monitoring-config.js', 'utf8');
+            const core = fs.readFileSync('js/services/service-core.js', 'utf8');
+            const planning = fs.readFileSync('js/services/planning-service.js', 'utf8');
+            const deploy = fs.readFileSync('.github/workflows/deploy-pages.yml', 'utf8');
+            const portal = fs.readFileSync('portal/index.html', 'utf8');
+            const admin = fs.readFileSync('admin/index.html', 'utf8');
+            const login = fs.readFileSync('index.html', 'utf8');
+
+            expect(config).toContain("dsn: ''");
+            expect(monitor).toContain('sendDefaultPii:false');
+            expect(monitor).toContain("'permission-denied'");
+            expect(monitor).toContain('beforeSend');
+            expect(monitor).toContain("if(event.user)delete event.user");
+            expect(core).toContain('captureServiceError?.(error');
+            expect(planning).toContain("action:'update_session'");
+            expect(deploy).toContain('secrets.SENTRY_DSN');
+            expect(deploy).toContain("'enabled': bool(dsn)");
+            [portal,admin,login].forEach(html=>{
+              expect(html).toContain('monitoring-config.js');
+              expect(html).toContain('monitoring.js');
+            });
+            expect(`${monitor} ${config}`).not.toMatch(/https:\/\/[^\s'\"]+@o\d+\.ingest[^\s'\"]+/);
+          });
+          """
           Path('tests/e2e/sentry-monitoring-r43.spec.js').write_text(test,encoding='utf-8')
 
           Path('.github/workflows/patch-sentry-monitoring-r43.yml').unlink()
