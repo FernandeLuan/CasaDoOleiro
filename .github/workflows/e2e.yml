@@ -1,8 +1,8 @@
 name: Browser E2E
 
 on:
-  push:
-    branches: [main, 'fix/**']
+  pull_request:
+    branches: [main]
     paths:
       - 'index.html'
       - 'admin/**'
