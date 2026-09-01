@@ -83,10 +83,14 @@
     const code=codeOf(error);
     const message=String(error?.message||'');
     const permissionMessage=/missing or insufficient permissions|permission[- ]denied/i.test(message);
-    if(!criticalCodes.has(code)&&!permissionMessage)return null;
-    return captureException(error,{...meta,firebaseCode:code||'permission-denied'});
+    const level=criticalCodes.has(code)||permissionMessage?'critical':'application';
+    return captureException(error,{...meta,firebaseCode:code||'',severity:level});
   }
   function flushQueue(){while(queue.length){const item=queue.shift();sendException(item.error,item.meta)}}
+  function captureSlowQuery(row={}) {
+    if(!config.enabled||!config.dsn||Number(row.ms||0)<1200)return null;
+    return captureException(new Error(`Slow Firestore query: ${String(row.name||'unknown')} (${Number(row.ms)||0}ms)`),{area:'performance',action:'slow_firestore_query',extra:{query:String(row.name||''),durationMs:Number(row.ms)||0,count:Number(row.count)||0,unitId:row.unitId||'',status:row.status||''}});
+  }
   function load(){
     if(loading||initialized||!config.enabled||!config.dsn)return;
     loading=true;
@@ -94,12 +98,18 @@
     script.src=sdkUrl;script.crossOrigin='anonymous';script.referrerPolicy='origin';
     script.onload=()=>{
       try{
+        const integrations=[];
+        if(typeof window.Sentry.browserTracingIntegration==='function')integrations.push(window.Sentry.browserTracingIntegration());
+        if(typeof window.Sentry.replayIntegration==='function')integrations.push(window.Sentry.replayIntegration({maskAllText:true,blockAllMedia:true,maskAllInputs:true}));
         window.Sentry.init({
           dsn:String(config.dsn),
           environment:String(config.environment||'production'),
           release:String(config.release||''),
           sendDefaultPii:false,
-          tracesSampleRate:0,
+          integrations,
+          tracesSampleRate:0.1,
+          replaysSessionSampleRate:0,
+          replaysOnErrorSampleRate:0.1,
           beforeSend,
           beforeBreadcrumb
         });
@@ -116,6 +126,7 @@
   window.OleiroMonitoring={
     captureException,
     captureServiceError,
+    captureSlowQuery,
     addBreadcrumb(message,data={}){if(initialized&&window.Sentry?.addBreadcrumb)window.Sentry.addBreadcrumb({category:'oleiro',message:String(message||''),level:'info',data:scrub(data)})},
     isEnabled(){return Boolean(config.enabled&&config.dsn)},
     sdkVersion:'10.53.1'

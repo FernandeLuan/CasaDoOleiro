@@ -186,6 +186,25 @@ service cloud.firestore {
         ]);
     }
 
+    function assistantMayManageApplication() {
+      return assistantHasUnit(resource.data.unitId)
+        && request.resource.data.unitId == resource.data.unitId
+        && request.resource.data.participantUids == resource.data.participantUids;
+    }
+
+    function assistantMayManageVolunteerUser() {
+      return isActivityAssistant()
+        && resource.data.role == 'volunteer'
+        && request.resource.data.role == 'volunteer'
+        && ('unitIds' in resource.data)
+        && ('unitIds' in currentUser())
+        && resource.data.unitIds.hasAny(currentUser().unitIds)
+        && request.resource.data.unitIds == resource.data.unitIds
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'active', 'updatedAt'
+        ]);
+    }
+
     function assistantMayRequestApplicationAdjustment() {
       return assistantHasUnit(resource.data.unitId)
         && request.resource.data.unitId == resource.data.unitId
@@ -283,9 +302,9 @@ service cloud.firestore {
     }
 
     match /users/{uid} {
-      allow read: if (signedIn() && request.auth.uid == uid) || isManager();
+      allow read: if (signedIn() && request.auth.uid == uid) || isManager() || (isActivityAssistant() && ('unitIds' in resource.data) && resource.data.unitIds.hasAny(currentUser().unitIds));
       allow create, delete: if isManager();
-      allow update: if isManager() || participantMarksFirstAccess(uid);
+      allow update: if isManager() || assistantMayManageVolunteerUser() || participantMarksFirstAccess(uid);
     }
 
     match /units/{unitId} {
@@ -307,12 +326,13 @@ service cloud.firestore {
       );
       allow create, delete: if isManager();
       allow update: if isManager()
+        || assistantMayManageApplication()
         || assistantMayRequestApplicationAdjustment()
         || participantMaySubmitApplication()
         || participantMayResetEmptyAdjustment();
 
       match /history/{eventId} {
-        allow read: if activeUser() && managerOfApplication(applicationId);
+        allow read: if activeUser() && (managerOfApplication(applicationId) || assistantOfApplication(applicationId));
         allow create: if activeUser()
           && request.resource.data.applicationId == applicationId
           && request.resource.data.actorUid == request.auth.uid

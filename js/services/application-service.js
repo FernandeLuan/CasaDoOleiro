@@ -102,18 +102,15 @@
       },{loading:false});
     },
 
-    async listOccupancyMonth(month){
+    async listOccupancyMonth(month,{unitId='all'}={}){
       if(!month)return [];
       return services.run(async()=>{
-        const context=await services.firebase();const {firestore}=context.modules,started=Date.now();
-        const snapshot=await firestore.getDocs(firestore.query(
-          firestore.collection(context.db,'applications'),
-          firestore.where('status','==','approved'),
-          firestore.where('stayMonths','array-contains',String(month))
-        ));
-        services.recordQuery?.('applications/occupancy-month',started,snapshot.size,{month:String(month)});
+        const context=await services.firebase();const {firestore}=context.modules,started=Date.now(),constraints=[firestore.where('status','==','approved'),firestore.where('stayMonths','array-contains',String(month))],normalizedUnit=unitId&&unitId!=='all'?normalize(unitId):'';
+        if(normalizedUnit)constraints.push(firestore.where('unitId','==',normalizedUnit));
+        const snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'applications'),...constraints));
+        services.recordQuery?.('applications/occupancy-month',started,snapshot.size,{month:String(month),unitId:normalizedUnit||'all'});
         return snapshot.docs.map(mapApplication).filter(row=>!row.inactive);
-      },{loading:false});
+      },{loading:false,monitor:{area:'applications',action:'occupancy_month'}});
     },
 
     async getById(id,{enrichProfiles=true}={}){
