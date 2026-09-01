@@ -225,8 +225,7 @@ service cloud.firestore {
       return activeUser()
         && participantOf(resource.data.applicationId)
         && candidateWindowOpen(resource.data.applicationId)
-        && resource.data.status == 'proposed'
-        && request.resource.data.status == 'proposed'
+        && request.resource.data.status == resource.data.status
         && ('adminAdjustmentStatus' in resource.data)
         && resource.data.adminAdjustmentStatus == 'requested'
         && request.resource.data.adminAdjustmentStatus == 'analysis'
@@ -459,14 +458,17 @@ service cloud.firestore {
           && (
             (
               candidateWindowOpen(resource.data.applicationId)
-              && resource.data.status == 'proposed'
-              && request.resource.data.status == 'proposed'
               && (
-                participantOwnsEditableLegacy(resource.data)
+                (
+                  resource.data.status == 'proposed'
+                  && request.resource.data.status == 'proposed'
+                  && participantOwnsEditableLegacy(resource.data)
+                )
                 || (
                   ('adminAdjustmentStatus' in resource.data)
                   && resource.data.adminAdjustmentStatus == 'requested'
                   && request.resource.data.adminAdjustmentStatus == 'requested'
+                  && request.resource.data.status == resource.data.status
                 )
               )
               && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
