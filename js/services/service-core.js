@@ -22,7 +22,7 @@
   }
 
   function recordQuery(name,started,count,meta={}){
-    const row={name:String(name||'firestore/query'),ms:Math.max(0,Date.now()-Number(started||Date.now())),count:Number(count)||0,...meta,at:new Date().toISOString()};
+    const row={name:String(name||'firestore/query'),ms:Math.max(0,Date.now()-Number(started||Date.now())),count:Number(count)||0,...meta,coldStart:typeof performance!=='undefined'&&performance.now()<10000,at:new Date().toISOString()};
     window.OleiroQueryMetrics=window.OleiroQueryMetrics||[];
     window.OleiroQueryMetrics.push(row);
     if(window.OleiroQueryMetrics.length>80)window.OleiroQueryMetrics.splice(0,window.OleiroQueryMetrics.length-80);

@@ -5,6 +5,8 @@
   const criticalCodes=new Set(['permission-denied','failed-precondition','unauthenticated','unavailable','resource-exhausted','internal','deadline-exceeded','aborted','data-loss']);
   const sensitiveKey=/(email|phone|password|passwd|token|authorization|cookie|contact|secret|name|messageText)/i;
   const queue=[];
+  const slowQuerySeen=new Map();
+  const monitoringStartedAt=Date.now();
   const reported=typeof WeakSet==='function'?new WeakSet():null;
   let initialized=false;
   let loading=false;
@@ -88,8 +90,14 @@
   }
   function flushQueue(){while(queue.length){const item=queue.shift();sendException(item.error,item.meta)}}
   function captureSlowQuery(row={}) {
-    if(!config.enabled||!config.dsn||Number(row.ms||0)<1200)return null;
-    return captureException(new Error(`Slow Firestore query: ${String(row.name||'unknown')} (${Number(row.ms)||0}ms)`),{area:'performance',action:'slow_firestore_query',extra:{query:String(row.name||''),durationMs:Number(row.ms)||0,count:Number(row.count)||0,unitId:row.unitId||'',status:row.status||''}});
+    const durationMs=Number(row.ms)||0,name=String(row.name||'unknown');
+    if(!config.enabled||!config.dsn||durationMs<1200)return null;
+    const seen=(slowQuerySeen.get(name)||0)+1;slowQuerySeen.set(name,seen);
+    const coldStart=row.coldStart===true||(Date.now()-monitoringStartedAt<10000);
+    if(initialized&&window.Sentry?.addBreadcrumb)window.Sentry.addBreadcrumb({category:'firestore.performance',message:name,level:durationMs>=4000?'warning':'info',data:{durationMs,count:Number(row.count)||0,coldStart,seen}});
+    if(coldStart&&seen<3)return null;
+    if(durationMs<2500&&seen<2)return null;
+    return captureException(new Error(`Slow Firestore query: ${name} (${durationMs}ms)`),{area:'performance',action:'slow_firestore_query',extra:{query:name,durationMs,count:Number(row.count)||0,unitId:row.unitId||'',status:row.status||'',coldStart,seen}});
   }
   function load(){
     if(loading||initialized||!config.enabled||!config.dsn)return;
@@ -120,7 +128,7 @@
     document.head.appendChild(script);
   }
 
-  window.addEventListener('error',event=>{if(!initialized&&event.error)captureException(event.error,{area:'browser',action:'unhandled_error'})});
+  window.addEventListener('error',event=>{const target=event.target,resource=target&&(target.src||target.href);if(resource&&!event.error){captureException(new Error(`Asset failed to load: ${cleanUrl(resource)}`),{area:'browser',action:'asset_load_failed',extra:{tag:String(target.tagName||''),resource:cleanUrl(resource)}});return}if(!initialized&&event.error)captureException(event.error,{area:'browser',action:'unhandled_error'})},true);
   window.addEventListener('unhandledrejection',event=>{if(!initialized)captureException(event.reason instanceof Error?event.reason:new Error(String(event.reason||'Unhandled rejection')),{area:'browser',action:'unhandled_rejection'})});
 
   window.OleiroMonitoring={

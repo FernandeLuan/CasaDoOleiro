@@ -70,10 +70,7 @@
     const raw=rawSession(s),root=document.createElement('div');root.innerHTML=html;const card=root.firstElementChild;if(!card)return html;
     const requested=raw.adminAdjustmentStatus==='requested',draft=isCurrentAdjustmentDraft(raw);
 
-    if(!requested&&!draft){
-      card.querySelectorAll(':scope > .activity-actions').forEach(node=>node.remove());
-      return root.innerHTML;
-    }
+    if(!requested&&!draft)return root.innerHTML;
 
     if(draft){
       const row=card.querySelector('.activity-row');
@@ -86,12 +83,10 @@
   };
 
   openActivityModal=function(date=null,id=null){
-    if(id&&scopedAdjustment()&&!isDraftActivity(id))return showToast(text('portal.activity.locked'));
     return baseOpenActivityModal(date,id);
   };
 
   requestDeletePlanningSession=function(activityId,date){
-    if(scopedAdjustment()&&!isDraftActivity(activityId))return showToast(text('portal.activity.locked'));
     return baseRequestDelete(activityId,date);
   };
 
