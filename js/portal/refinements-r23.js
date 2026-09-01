@@ -1,7 +1,7 @@
 /* Round 23/28 — atualização local após mover e feedback de envio do planejamento. */
 (function refinementsR23Portal(){
   function sessionById(id){return (state.sessions||[]).find(row=>String(row.id||row.sessionId)===String(id))||null}
-  function activityFor(session){return (state.activities||[]).find(row=>String(row.id)===String(session?.activityId))||{id:session?.activityId,name:session?.activityName||'Atividade',time:session?.time||''}}
+  function activityFor(session){return (state.activities||[]).find(row=>String(row.id)===String(session?.activityId))||{id:session?.activityId,name:session?.activityName||'Atividade',period:activityPeriodValue(session||{})}}
   function moveDates(session){
     if(typeof planningEligibleDatesFor==='function')return planningEligibleDatesFor(state.currentApplication||{});
     if(typeof volunteerStayDates==='function')return volunteerStayDates().filter(date=>{const d=new Date(`${date}T12:00:00`).getDay();return d!==0&&d!==6});
@@ -21,12 +21,12 @@
   /* O write já confirma sucesso. Não há motivo para bloquear a UI aguardando um getDoc da mesma sessão. */
   window.saveMoveBySessionId=async function(encodedId,byVolunteer=false){
     const id=decodeURIComponent(encodedId),session=sessionById(id);if(!session)return showToast(t('portal.move.error'));
-    const activity=activityFor(session),oldDate=String(session.date||''),oldTime=String(session.time||activity.time||''),newDate=document.getElementById('moveDate')?.value||'',newTime=document.getElementById('moveTime')?.value||oldTime;
+    const activity=activityFor(session),oldDate=String(session.date||''),oldPeriod=activityPeriodValue(session,activity),newDate=document.getElementById('moveDate')?.value||'',newPeriod=activityPeriodMeta(document.getElementById('movePeriod')?.value||oldPeriod).value;
     if(!newDate)return showToast(t('portal.move.chooseDate'));
     if(!moveDates(session).includes(newDate))return showToast(t('portal.move.unavailableDate'));
-    if(byVolunteer&&session.status==='confirmed'&&newDate===oldDate&&newTime===oldTime)return showToast(t('portal.move.changeRequired'));
-    const patch={date:newDate,time:newTime};
-    if(byVolunteer&&session.status==='confirmed'){patch.status='change_requested';patch.changeRequestedAt=new Date();patch.changeNote=newDate===oldDate?'Alteração de horário solicitada pelo voluntário.':'Mudança solicitada pelo voluntário.'}
+    if(byVolunteer&&session.status==='confirmed'&&newDate===oldDate&&newPeriod===oldPeriod)return showToast(t('portal.move.changeRequired'));
+    const patch={date:newDate,period:newPeriod};
+    if(byVolunteer&&session.status==='confirmed'){patch.status='change_requested';patch.changeRequestedAt=new Date();patch.changeNote=newDate===oldDate?'Alteração de período solicitada pelo voluntário.':'Mudança solicitada pelo voluntário.'}
     const pendingConfirmation=byVolunteer&&session.status==='confirmed',button=document.getElementById('moveSessionSave');if(button){button.disabled=true;button.innerHTML=`<i class="fa-solid fa-circle-notch fa-spin"></i> ${escapeHtml(t('action.saving'))}`}
     try{
       await window.OleiroServices.planning.updateSession(session.id,patch);

@@ -41,9 +41,9 @@
     }
   };
 
-  agendaItem=function(time,name,person,group,status){
+  agendaItem=function(name,person,group,status,period='Sem preferência',duration=0){
     const [label,type]=statusMeta(status),showStatus=status!=='confirmed';
-    return `<div class="list-item"><div class="time-box single"><strong>${time||'—'}</strong></div><div class="item-main"><h3>${escapeHtml(name||'Atividade')}</h3><p>${escapeHtml(person||'Voluntário')} • ${escapeHtml(group||'A definir')}</p>${showStatus?`<div class="item-meta">${badge(label,type)}</div>`:''}</div></div>`;
+    return `<div class="list-item"><div class="item-main"><h3 data-no-i18n>${escapeHtml(name||'Atividade')}</h3><p>${Number(duration)||0} min • ${escapeHtml(period)} • ${escapeHtml(person||'Voluntário')} • ${escapeHtml(group||'A definir')}</p>${showStatus?`<div class="item-meta">${badge(label,type)}</div>`:''}</div></div>`;
   };
 
   const baseCandidatePlanContent=candidatePlanContent;

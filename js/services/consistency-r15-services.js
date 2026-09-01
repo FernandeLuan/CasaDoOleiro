@@ -13,7 +13,7 @@
   function indexUnavailable(error){return /index|failed-precondition/i.test(`${error?.code||''} ${error?.message||''}`)}
   async function focusedSessions(applicationId,from,to){
     const context=await services.firebase(),{firestore}=context.modules,collection=firestore.collection(context.db,'activity_sessions'),appId=String(applicationId),started=Date.now();
-    const map=snapshot=>snapshot.docs.map(doc=>({id:doc.id,...doc.data()})).sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))||String(a.time||'').localeCompare(String(b.time||'')));
+    const map=snapshot=>snapshot.docs.map(doc=>({id:doc.id,...doc.data()})).sort(typeof activityScheduleCompare==='function'?activityScheduleCompare:(a,b)=>String(a.date||'').localeCompare(String(b.date||'')));
     const constraints=[firestore.where('applicationId','==',appId)];
     if(from)constraints.push(firestore.where('date','>=',String(from)));
     if(to)constraints.push(firestore.where('date','<=',String(to)));
@@ -54,11 +54,11 @@
         services.recordQuery?.('activity_sessions/review-by-id',started,snapshot.exists()?1:0,{sessionId:String(sessionId)});
         if(!snapshot.exists())throw new Error('Solicitação não encontrada.');
         const row={id:snapshot.id,...snapshot.data()};if(row.status!=='change_requested')throw new Error('Esta mudança não está mais aguardando análise.');
-        const parts=String(row.changeNote||'').split('|'),isMove=parts[0]==='move',oldDate=isMove?parts[1]:row.date,oldTime=isMove?parts[2]:row.time,newDate=isMove?parts[3]:row.date,newTime=isMove?parts[4]:row.time,now=firestore.serverTimestamp();
+        const parts=String(row.changeNote||'').split('|'),isMove=parts[0]==='move',oldDate=isMove?parts[1]:row.date,oldSchedule=isMove?parts[2]:(row.period||row.time||''),newDate=isMove?parts[3]:row.date,newSchedule=isMove?parts[4]:(row.period||row.time||''),periodValues=new Set(['Sem preferência','Manhã','Tarde','Noite']),oldSchedulePatch=periodValues.has(oldSchedule)?{period:oldSchedule}:(oldSchedule?{time:oldSchedule}:{}),now=firestore.serverTimestamp();
         let patch={updatedAt:now};
         if(decision==='approve')patch={...patch,status:'confirmed',changeNote:'',confirmedAt:now};
-        if(decision==='reject')patch={...patch,date:oldDate||row.date,time:oldTime||row.time,status:'confirmed',changeNote:`rejected|${oldDate||row.date}|${oldTime||row.time}|${newDate||row.date}|${newTime||row.time}`};
-        if(decision==='adjustments')patch={...patch,date:oldDate||row.date,time:oldTime||row.time,status:'confirmed',changeNote:`adjustments|${oldDate||row.date}|${oldTime||row.time}|${newDate||row.date}|${newTime||row.time}|${encodeURIComponent(reviewNote)}`};
+        if(decision==='reject')patch={...patch,date:oldDate||row.date,...oldSchedulePatch,status:'confirmed',changeNote:`rejected|${oldDate||row.date}|${oldSchedule}|${newDate||row.date}|${newSchedule}`};
+        if(decision==='adjustments')patch={...patch,date:oldDate||row.date,...oldSchedulePatch,status:'confirmed',changeNote:`adjustments|${oldDate||row.date}|${oldSchedule}|${newDate||row.date}|${newSchedule}|${encodeURIComponent(reviewNote)}`};
         await firestore.updateDoc(ref,patch);return {...row,...patch,decision,reviewNote};
       },{loading:false});
     };

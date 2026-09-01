@@ -8,6 +8,7 @@
     "admin:delete": "node tools/delete-volunteer.js",
     "admin:update-email": "node tools/update-volunteer-email.js",
     "admin:audit": "node tools/audit-volunteer.js",
+    "admin:audit-schedule": "node tools/audit-activity-schedule.js",
     "admin:staff": "node tools/upsert-staff.js"
   },
   "dependencies": {

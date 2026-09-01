@@ -40,7 +40,7 @@
       if(!activity){activity=activityFromSession(p,row);activities.set(id,activity)}
       if(row.date&&!activity.dates.includes(row.date))activity.dates.push(row.date);
       return {...row,activity};
-    }).sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))||String(a.time||'').localeCompare(String(b.time||'')));
+    }).sort(activityScheduleCompare);
     activities.forEach(activity=>activity.dates.sort());
     return {sessions,activities:[...activities.values()]};
   }
@@ -95,7 +95,7 @@
     if(!cache||loading)return `${planHeader(p)}${planPageNav(p)}<div class="empty compact-loading admin-plan-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando planejamento...</div>`;
     applyPageCache(p,cache);
     const byDate=new Map();cache.sessions.forEach(session=>{const rows=byDate.get(session.date)||[];rows.push(session);byDate.set(session.date,rows)});
-    const dayCards=dates.map(date=>{const sessions=(byDate.get(date)||[]).sort((a,b)=>String(a.time||'').localeCompare(String(b.time||'')));return sessions.length?adminPlanningDayCard(p,{date,sessions}):emptyPlanningDay(p,date)}).join('');
+    const dayCards=dates.map(date=>{const sessions=(byDate.get(date)||[]).sort(activityScheduleCompare);return sessions.length?adminPlanningDayCard(p,{date,sessions}):emptyPlanningDay(p,date)}).join('');
     return `${planHeader(p)}${planPageNav(p)}<div class="planning-by-day admin-refactor-planning">${dayCards}</div>${reviewFooter(p)}`;
   }
 
