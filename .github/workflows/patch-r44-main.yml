@@ -1,0 +1,35 @@
+name: Apply R44 patch
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/patch-r44.py'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Apply patch
+        run: python tools/patch-r44.py
+      - name: Validate syntax
+        run: |
+          node --check js/shared/monitoring.js
+          node --check js/services/service-core.js
+          node --check js/services/application-service.js
+          node --check js/admin/activity-assistant-r31.js
+          node --check functions/tools/upsert-staff.js
+      - name: Commit patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add firestore.rules js/admin/activity-assistant-r31.js js/services/application-service.js js/services/service-core.js js/shared/monitoring.js functions/package.json functions/tools/upsert-staff.js tests/e2e/assistant-observability-perf-r44.spec.js
+          git commit -m "Expand assistant access observability and query performance"
+          git push origin HEAD:main
