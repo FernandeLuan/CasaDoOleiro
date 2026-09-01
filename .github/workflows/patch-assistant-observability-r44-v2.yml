@@ -1,0 +1,38 @@
+name: Patch assistant observability r44 v2
+
+on:
+  push:
+    branches:
+      - feat/assistant-observability-perf-r44
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/assistant-observability-perf-r44
+          fetch-depth: 0
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Apply patch
+        run: python tools/patch_r44.py
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Compile Firestore rules
+        run: npx firebase emulators:exec --only firestore --project demo-casadooleiro "node -e \"console.log('Firestore rules compiled')\""
+      - name: Run focused regression
+        run: npx playwright test tests/e2e/assistant-observability-r44.spec.js
+      - name: Commit validated changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add firestore.rules firestore.indexes.json js/services/application-service.js js/services/planning-service.js js/services/application-maintenance-service.js js/admin/app.js js/admin/expired-maintenance.js js/admin/voluntariado.js js/shared/monitoring.js tests/e2e/assistant-observability-r44.spec.js
+          git commit -m "Expand unit-scoped assistant operations and observability"
+          git push origin HEAD:feat/assistant-observability-perf-r44
