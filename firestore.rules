@@ -77,15 +77,20 @@ service cloud.firestore {
 
     function candidateEditable(applicationId) {
       let app = applicationData(applicationId);
-      return app.active == true && app.status in ['pending', 'adjustments'];
+      return app.active == true && app.status in ['pending', 'analysis', 'adjustments'];
     }
 
     function candidateWindowOpen(applicationId) {
       let app = applicationData(applicationId);
       return candidateEditable(applicationId)
-        && ('planningDeadlineAt' in app)
-        && app.planningDeadlineAt != null
-        && request.time <= app.planningDeadlineAt;
+        && (
+          app.status == 'analysis'
+          || (
+            ('planningDeadlineAt' in app)
+            && app.planningDeadlineAt != null
+            && request.time <= app.planningDeadlineAt
+          )
+        );
     }
 
     function approvedApplication(applicationId) {
@@ -96,8 +101,13 @@ service cloud.firestore {
     /* Legacy production records may predate createdByUid. They remain editable only
        during the candidate planning window and never when explicitly manager-created. */
     function participantOwnsEditableLegacy(data) {
+      let app = applicationData(data.applicationId);
       return (!('managerCreated' in data) || data.managerCreated != true)
-        && (!('createdByUid' in data) || data.createdByUid == request.auth.uid);
+        && (
+          !('createdByUid' in data)
+          || data.createdByUid == request.auth.uid
+          || (('participantUids' in app) && app.participantUids.hasAny([data.createdByUid]))
+        );
     }
 
     function participantHistoryTypeAllowed(type) {
@@ -156,10 +166,15 @@ service cloud.firestore {
     function participantMaySubmitApplication() {
       return isParticipant(resource.data)
         && resource.data.active == true
-        && resource.data.status in ['pending', 'adjustments']
-        && ('planningDeadlineAt' in resource.data)
-        && resource.data.planningDeadlineAt != null
-        && request.time <= resource.data.planningDeadlineAt
+        && resource.data.status in ['pending', 'analysis', 'adjustments']
+        && (
+          resource.data.status == 'analysis'
+          || (
+            ('planningDeadlineAt' in resource.data)
+            && resource.data.planningDeadlineAt != null
+            && request.time <= resource.data.planningDeadlineAt
+          )
+        )
         && request.resource.data.status == 'analysis'
         && request.resource.data.active == resource.data.active
         && request.resource.data.participantUids == resource.data.participantUids
@@ -243,7 +258,7 @@ service cloud.firestore {
     function participantSubmitsSessionAdjustment() {
       return activeUser()
         && participantOf(resource.data.applicationId)
-        && candidateWindowOpen(resource.data.applicationId)
+        && candidateEditable(resource.data.applicationId)
         && request.resource.data.status == resource.data.status
         && ('adminAdjustmentStatus' in resource.data)
         && resource.data.adminAdjustmentStatus == 'requested'
@@ -477,15 +492,16 @@ service cloud.firestore {
           && request.resource.data.activityId == resource.data.activityId
           && (
             (
-              candidateWindowOpen(resource.data.applicationId)
-              && (
+              (
                 (
-                  resource.data.status == 'proposed'
+                  candidateWindowOpen(resource.data.applicationId)
+                  && resource.data.status == 'proposed'
                   && request.resource.data.status == 'proposed'
                   && participantOwnsEditableLegacy(resource.data)
                 )
                 || (
-                  ('adminAdjustmentStatus' in resource.data)
+                  candidateEditable(resource.data.applicationId)
+                  && ('adminAdjustmentStatus' in resource.data)
                   && resource.data.adminAdjustmentStatus == 'requested'
                   && request.resource.data.adminAdjustmentStatus == 'requested'
                   && request.resource.data.status == resource.data.status
