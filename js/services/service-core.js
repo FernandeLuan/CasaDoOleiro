@@ -5,8 +5,11 @@
     loadingDelayMs:600
   });
 
-  async function run(task,{loading=true,delay=config.loadingDelayMs}={}){
-    const execute=()=>Promise.resolve().then(()=>typeof task==='function'?task():task);
+  async function run(task,{loading=true,delay=config.loadingDelayMs,monitor=null}={}){
+    const execute=()=>Promise.resolve().then(()=>typeof task==='function'?task():task).catch(error=>{
+      window.OleiroMonitoring?.captureServiceError?.(error,monitor||{area:'service',action:'firebase_operation'});
+      throw error;
+    });
     if(loading&&window.OleiroLoading?.run)return window.OleiroLoading.run(execute,delay);
     return execute();
   }
