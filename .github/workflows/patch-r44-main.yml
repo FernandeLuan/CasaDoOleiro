@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'tools/patch-r44.py'
+      - 'tools/**'
 
 permissions:
   contents: write
