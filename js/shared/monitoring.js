@@ -1,7 +1,7 @@
 /* Production error monitoring. The public Sentry DSN is injected at deploy time. */
 (function initOleiroMonitoring(){
   const config=window.OLEIRO_SENTRY_CONFIG||{};
-  const sdkUrl='https://browser.sentry-cdn.com/10.53.1/bundle.min.js';
+  const sdkUrl='https://browser.sentry-cdn.com/10.53.1/bundle.tracing.replay.min.js';
   const criticalCodes=new Set(['permission-denied','failed-precondition','unauthenticated','unavailable','resource-exhausted','internal','deadline-exceeded','aborted','data-loss']);
   const sensitiveKey=/(email|phone|password|passwd|token|authorization|cookie|contact|secret|name|messageText)/i;
   const queue=[];
