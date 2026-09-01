@@ -52,7 +52,7 @@ jobs:
 
       - name: Run focused regression test
         run: |
-          npm ci --no-audit --no-fund
+          npm install --no-audit --no-fund
           npx playwright test tests/e2e/requested-adjustment-permission-r39.spec.js
 
       - name: Commit patch
