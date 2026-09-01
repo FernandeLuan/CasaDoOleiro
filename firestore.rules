@@ -461,7 +461,14 @@ service cloud.firestore {
               candidateWindowOpen(resource.data.applicationId)
               && resource.data.status == 'proposed'
               && request.resource.data.status == 'proposed'
-              && participantOwnsEditableLegacy(resource.data)
+              && (
+                participantOwnsEditableLegacy(resource.data)
+                || (
+                  ('adminAdjustmentStatus' in resource.data)
+                  && resource.data.adminAdjustmentStatus == 'requested'
+                  && request.resource.data.adminAdjustmentStatus == 'requested'
+                )
+              )
               && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
                 'activityName', 'activityDescription', 'participation', 'materials',
                 'notes', 'ownerName', 'date', 'time', 'period', 'duration', 'updatedAt'
