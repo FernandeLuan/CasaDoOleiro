@@ -1,0 +1,35 @@
+name: Apply R52 branch patch
+
+on:
+  push:
+    branches: [fix/admin-meeting-add-activity-r52]
+    paths:
+      - '.github/workflows/patch-r52-branch.yml'
+      - 'tools/patch-r52.py'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/admin-meeting-add-activity-r52
+          fetch-depth: 0
+      - name: Apply patch
+        run: python tools/patch-r52.py
+      - name: Validate JavaScript
+        run: node --check js/admin/meeting-activity-r52.js
+      - name: Commit product changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add admin/index.html
+          if git diff --cached --quiet; then
+            echo "No product changes to commit"
+          else
+            git commit -m "Expose add activity action in admin meeting profile"
+            git push origin HEAD:fix/admin-meeting-add-activity-r52
+          fi
