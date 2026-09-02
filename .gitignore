@@ -1,0 +1,7 @@
+node_modules/
+.firebase/
+playwright-report/
+test-results/
+.wrangler/
+workers/email-dispatcher/.dev.vars
+workers/email-dispatcher/.env
