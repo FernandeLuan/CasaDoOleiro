@@ -98,6 +98,11 @@ service cloud.firestore {
       return app.active == true && app.status == 'approved';
     }
 
+    function proposalApplication(applicationId) {
+      let app = applicationData(applicationId);
+      return app.active == true && app.status in ['meeting', 'approved'];
+    }
+
     /* Legacy production records may predate createdByUid. They remain editable only
        during the candidate planning window and never when explicitly manager-created. */
     function participantOwnsEditableLegacy(data) {
@@ -234,7 +239,7 @@ service cloud.firestore {
     function createsApprovedProposal(data) {
       return activeUser()
         && participantOf(data.applicationId)
-        && approvedApplication(data.applicationId)
+        && proposalApplication(data.applicationId)
         && data.postApprovalProposal == true
         && data.reviewStatus == 'analysis'
         && data.reviewNote == ''
@@ -245,7 +250,7 @@ service cloud.firestore {
     function updatesApprovedProposal() {
       return activeUser()
         && participantOf(resource.data.applicationId)
-        && approvedApplication(resource.data.applicationId)
+        && proposalApplication(resource.data.applicationId)
         && resource.data.postApprovalProposal == true
         && resource.data.reviewStatus == 'adjustments'
         && request.resource.data.postApprovalProposal == true
@@ -434,7 +439,7 @@ service cloud.firestore {
           && (
             candidateEditable(resource.data.applicationId)
             || (
-              approvedApplication(resource.data.applicationId)
+              proposalApplication(resource.data.applicationId)
               && resource.data.postApprovalProposal == true
               && resource.data.reviewStatus == 'adjustments'
             )
@@ -541,7 +546,7 @@ service cloud.firestore {
               && resource.data.status == 'proposed'
             )
             || (
-              approvedApplication(resource.data.applicationId)
+              proposalApplication(resource.data.applicationId)
               && resource.data.status == 'proposed'
               && resource.data.postApprovalProposal == true
               && resource.data.reviewStatus == 'adjustments'
