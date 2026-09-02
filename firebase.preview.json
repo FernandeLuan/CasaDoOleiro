@@ -1,0 +1,24 @@
+{
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.preview.json",
+      "firebase.json",
+      "firestore.rules",
+      "firestore.indexes.json",
+      "**/.*",
+      "**/node_modules/**",
+      "functions/**",
+      "tests/**",
+      "docs/**"
+    ],
+    "rewrites": [
+      {"source": "/", "destination": "/homologacao/index.html"}
+    ],
+    "headers": [
+      {"source": "**/*.html", "headers": [{"key": "Cache-Control", "value": "no-store"}]},
+      {"source": "**/*.js", "headers": [{"key": "Cache-Control", "value": "no-cache"}]},
+      {"source": "**/*.css", "headers": [{"key": "Cache-Control", "value": "no-cache"}]}
+    ]
+  }
+}
