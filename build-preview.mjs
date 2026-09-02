@@ -13,10 +13,6 @@ const requiredDirectories = [
   'homologacao',
 ];
 
-// Do not copy the production root index.html into the preview package.
-// Firebase Hosting gives an existing static file precedence over rewrites; if
-// index.html is present at preview-dist/, the preview URL opens the production
-// login instead of /homologacao/index.html.
 const optionalFiles = [
   'manifest.webmanifest',
   'release.json',
@@ -42,4 +38,12 @@ for (const file of optionalFiles) {
   }
 }
 
+// Make the homologation chooser the physical root document. This avoids any
+// dependency on Hosting rewrite precedence or stale production root content.
+await copyFile(
+  path.join(root, 'homologacao', 'index.html'),
+  path.join(out, 'index.html'),
+);
+
 console.log('Preview package ready at preview-dist/');
+console.log('Root index: homologacao/index.html');
