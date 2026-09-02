@@ -11,8 +11,10 @@ test('meeting stage exposes only new activity proposals while keeping approved p
   expect(feature).toContain("state.currentApplication?.status==='meeting'");
   expect(feature).toContain('return baseAgenda(true)');
   expect(feature).toContain("activity?.postApprovalProposal===true&&activity?.reviewStatus==='adjustments'");
-  expect(feature).toContain('postApprovalProposal=proposalMode&&(!id||proposalEditable(existing))');
   expect(feature).toContain("if(id&&!proposalEditable(activity))return showToast(t('portal.activity.adjustLocked'))");
+  expect(feature).toContain('const baseSaveActivity=saveActivity');
+  expect(feature).toContain("state.volunteerMode='approved'");
+  expect(feature).toContain('try{return baseSaveActivity(...args)}finally{state.volunteerMode=previousMode}');
   expect(feature).toContain("onclick=\"navigateVolunteer('plan')\"");
 
   const selectionAt=portal.indexOf('selection-flow-r25.js');
