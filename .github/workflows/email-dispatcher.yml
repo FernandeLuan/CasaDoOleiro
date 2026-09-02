@@ -1,0 +1,40 @@
+name: Transactional Email
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'workers/email-dispatcher/**'
+      - 'tests/email-dispatcher-r48.spec.mjs'
+      - 'js/services/history-hooks-r27.js'
+      - 'firestore.indexes.json'
+      - 'package.json'
+      - '.github/workflows/email-dispatcher.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  email-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate JavaScript syntax
+        run: |
+          node --check workers/email-dispatcher/src/index.js
+          node --check js/services/history-hooks-r27.js
+
+      - name: Validate Firestore indexes JSON
+        run: node -e "JSON.parse(require('fs').readFileSync('firestore.indexes.json','utf8'))"
+
+      - name: Run email regressions
+        run: npm run test:email
