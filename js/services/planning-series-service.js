@@ -1,4 +1,4 @@
-/* Atomic creation of repeated occurrences on the same day. Each occurrence remains an independent activity/session. */
+/* Atomic creation of repeated sessions on the same day. Each session remains an independent activity/session. */
 (function initPlanningSeriesService(){
   const services=window.OleiroServices=window.OleiroServices||{};
   if(!services.planning)return;
@@ -13,10 +13,10 @@
   services.planning.createActivitySeries=async function(args={}){
     const {applicationId,unitId,createdByUid,ownerName='',data,date,occurrences=[],postApprovalProposal=false,sessionStatus='proposed',updateApplicationCounts=false,managerCreated=false}=args;
     if(!applicationId||!createdByUid||!date||!data?.name)throw new Error('Dados da atividade incompletos.');
-    const rows=(occurrences||[]).map(item=>({time:String(item?.time||'').trim(),groupId:item?.groupId??null,participation:item?.participation||data.participation||'Livre'}));
-    if(!rows.length)throw new Error('Informe pelo menos um horário.');
-    if(rows.some(item=>!item.time))throw new Error('Informe todos os horários.');
-    if(new Set(rows.map(item=>item.time)).size!==rows.length)throw new Error('Use horários diferentes para cada ocorrência.');
+    const rows=(occurrences||[]).map(item=>{const time=String(item?.time||'').trim(),period=typeof activityPeriodValue==='function'?activityPeriodValue(item,data):String(item?.period||data.period||'Sem preferência');return {time,period,groupId:item?.groupId??null,participation:item?.participation||data.participation||'Livre'}});
+    if(!rows.length)throw new Error('Informe pelo menos uma sessão.');
+    const signatures=rows.map(item=>item.time?`legacy:${item.time}`:`period:${item.period}|group:${cleanManagerGroup(item.groupId)||''}|participation:${item.participation}`);
+    if(new Set(signatures).size!==rows.length)throw new Error('Use períodos ou grupos diferentes para cada sessão.');
 
     return services.run(async()=>{
       const context=await services.firebase();
@@ -34,14 +34,14 @@
         if(managerCreated&&!groupId)throw new Error('Selecione pelo menos um grupo ou participação livre.');
         const definition={
           applicationId:String(applicationId),ownerName:String(ownerName||''),name:String(data.name||''),description:String(data.description||''),duration:Number(data.duration)||60,
-          participation:item.participation||data.participation||'Livre',materials:String(data.materials||''),notes:String(data.notes||''),period:data.period||'Sem preferência',time:item.time,
+          participation:item.participation||data.participation||'Livre',materials:String(data.materials||''),notes:String(data.notes||''),period:item.period,...(item.time?{time:item.time}:{}),
           ...reviewFields,...managerFields,updatedAt:now
         };
         const activity={id:activityRef.id,...definition,createdByUid:String(createdByUid)};
         batch.set(activityRef,{...definition,createdByUid:String(createdByUid),createdAt:now});
         const session={
           id:sessionRef.id,applicationId:String(applicationId),activityId:activityRef.id,unitId:String(unitId||''),date:String(date),activityName:String(data.name||''),activityDescription:String(data.description||''),
-          participation:item.participation||data.participation||'Livre',materials:String(data.materials||''),notes:String(data.notes||''),ownerName:String(ownerName||''),time:item.time,period:data.period||'Sem preferência',duration:Number(data.duration)||60,
+          participation:item.participation||data.participation||'Livre',materials:String(data.materials||''),notes:String(data.notes||''),ownerName:String(ownerName||''),period:item.period,...(item.time?{time:item.time}:{}),duration:Number(data.duration)||60,
           ...reviewFields,...(managerCreated?{managerCreated:true}:{}),status:finalStatus,groupId,createdByUid:String(createdByUid)
         };
         batch.set(sessionRef,{...session,...(finalStatus==='confirmed'?{confirmedAt:now}:{}),createdAt:now,updatedAt:now});

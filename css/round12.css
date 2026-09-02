@@ -8,7 +8,7 @@
 .info-accordion details .info-routine p:last-child{margin-bottom:13px!important}
 
 /* Solicitar mudança: texto visualmente menor. */
-#moveDate,#moveTime,.move-date-select{font-size:12px!important;line-height:1.3!important}
+#moveDate,#moveTime,#movePeriod,.move-date-select{font-size:12px!important;line-height:1.3!important}
 
 /* Mudança aguardando aprovação no Portal: marca-d'água amarela, sem tag duplicada. */
 .volunteer-change-pending,.volunteer-change-pending:disabled{background:#fff4dc!important;color:#8a6116!important;border-color:#f0dcae!important;opacity:.68!important;box-shadow:none!important}

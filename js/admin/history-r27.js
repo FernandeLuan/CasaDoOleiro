@@ -14,6 +14,7 @@
   function when(value){const date=asDate(value);if(!date)return '—';const locale=typeof currentLocale==='function'?currentLocale():'pt-BR';return new Intl.DateTimeFormat(locale,{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(date)}
   function metadataLine(row){const m=row?.metadata||{};switch(row.type){
     case 'meeting_scheduled':return [m.date,m.time].filter(Boolean).join(' • ');
+    case 'session_moved':return [m.date,m.period].filter(Boolean).join(' • ');
     case 'adjustment_requested':return m.date?`Data: ${m.date}`:'';
     case 'stay_dates_changed':return m.stayStart&&m.stayEnd?`${m.stayStart} → ${m.stayEnd}`:'';
     case 'activity_created':case 'activity_updated':return m.activityName||'';

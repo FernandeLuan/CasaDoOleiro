@@ -27,7 +27,7 @@
 
   function planningShareText(p){
     const days=candidatePlanningDays(p);const lines=[`*Planejamento - ${p.name}*`,`${p.unit} • ${fmtDate(p.from,true)} a ${fmtDate(p.to,true)}`,''];
-    days.forEach(day=>{lines.push(`*${dayName(day.date)} • ${fmtDate(day.date,true)}*`);day.sessions.forEach(session=>{const a=session.activity||{};const time=session.time||a.time||'—',duration=Number(session.duration||a.duration)||0,note=session.notes||a.notes||'';lines.push(`• ${time} — ${a.name||session.activityName||'Atividade'} (${duration} min)${note?`\n  Obs.: ${note}`:''}`)});lines.push('')});
+    days.forEach(day=>{lines.push(`*${dayName(day.date)} • ${fmtDate(day.date,true)}*`);day.sessions.sort(activityScheduleCompare).forEach(session=>{const a=session.activity||{},period=activityPeriodValue(session,a),duration=Number(session.duration||a.duration)||0,note=session.notes||a.notes||'';lines.push(`• ${a.name||session.activityName||'Atividade'} (${duration} min • ${period})${note?`\n  Obs.: ${note}`:''}`)});lines.push('')});
     return lines.join('\n').trim();
   }
   exportCandidatePlanning=function(id){

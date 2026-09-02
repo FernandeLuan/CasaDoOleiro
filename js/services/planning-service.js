@@ -40,7 +40,7 @@
       return services.run(async()=>{
         const context=await services.firebase();
         const rows=await applicationSessions(context,applicationId,{from,to});
-        return rows.sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))||String(a.time||'').localeCompare(String(b.time||'')));
+        return rows.sort(typeof activityScheduleCompare==='function'?activityScheduleCompare:(a,b)=>String(a.date||'').localeCompare(String(b.date||'')));
       },{loading:false});
     },
 
@@ -96,6 +96,7 @@
         const previousActivity=activityId?activityCache.get(String(activityId)):null;
         const reviewFields=postApprovalProposal?{postApprovalProposal:true,reviewStatus:'analysis',reviewNote:'',reviewSubmittedAt:now}:{};
         const managerFields=managerCreated?{managerCreated:true,status:'manager_confirmed'}:{};
+        const legacyTime=String(data?.time||'').trim(),timeFields=legacyTime?{time:legacyTime}:{},period=typeof activityPeriodValue==='function'?activityPeriodValue(data):String(data.period||'Sem preferência');
         const editableDefinition={
           applicationId:String(applicationId),
           ownerName:String(ownerName||''),
@@ -105,8 +106,8 @@
           participation:data.participation||'Livre',
           materials:data.materials||'',
           notes:data.notes||'',
-          period:data.period||'Sem preferência',
-          time:data.time||'',
+          period,
+          ...timeFields,
           ...reviewFields,
           ...managerFields,
           updatedAt:now
@@ -131,8 +132,8 @@
           materials:data.materials||'',
           notes:data.notes||'',
           ownerName:String(ownerName||''),
-          time:data.time||'',
-          period:data.period||'Sem preferência',
+          period,
+          ...timeFields,
           duration:Number(data.duration)||60,
           ...reviewFields,
           ...(managerCreated?{managerCreated:true}:{} )
@@ -182,6 +183,7 @@
         await batch.commit();
         const activity={
           id:activityRef.id,
+          ...(previousActivity?.time?{time:previousActivity.time}:{}),
           ...editableDefinition,
           createdByUid:previousActivity?.createdByUid||String(createdByUid)
         };

@@ -17,14 +17,8 @@
     try{if(typeof value.toMillis==='function')return Number(value.toMillis())||0;if(typeof value.toDate==='function')return Number(value.toDate().getTime())||0}catch{}
     const parsed=Date.parse(String(value));return Number.isFinite(parsed)?parsed:0;
   }
-  function periodForTime(value,fallback='Sem preferência'){
-    const raw=String(value||'').trim();if(!/^\d{2}:\d{2}$/.test(raw))return fallback||'Sem preferência';
-    const hour=Number(raw.slice(0,2));if(hour<12)return 'Manhã';if(hour<18)return 'Tarde';return 'Noite';
-  }
   function normalizeActivityArgs(args={}){
-    const timeInput=document.getElementById('actTime'),periodInput=document.getElementById('actPeriod');if(!timeInput||!args?.data)return args;
-    const time=String(timeInput.value||'').trim(),period=time?periodForTime(time,periodInput?.value||args.data.period):String(periodInput?.value||args.data.period||'Sem preferência');
-    return {...args,data:{...args.data,time,period}};
+    if(!args?.data)return args;const {time:_legacyTime,...data}=args.data;return {...args,data:{...data,period:activityPeriodValue(data)}};
   }
   function adjustmentReady(value){
     const row=rawSession(value);if(row.status==='plan_approved'||row.adminAdjustmentStatus!=='requested')return false;if(row._r32AdjustmentReady===true)return true;const requested=timeMs(row.adminAdjustmentRequestedAt),updated=timeMs(row.updatedAt);return requested>0&&updated>requested;
@@ -35,11 +29,7 @@
   if(baseCreateActivitySeries)planning.createActivitySeries=function(args={}){return baseCreateActivitySeries(normalizeActivityArgs(args))};
 
   openActivityModal=function(date=null,id=null){
-    const result=baseOpenActivityModal(date,id),time=document.getElementById('actTime'),period=document.getElementById('actPeriod');if(!time||!period)return result;
-    if(!id&&time.value==='15:15')time.value='';
-    if(!id&&!time.value)period.value='Sem preferência';
-    const sync=()=>{if(time.value)period.value=periodForTime(time.value,period.value)};
-    time.addEventListener('input',sync);time.addEventListener('change',sync);if(time.value)sync();return result;
+    return baseOpenActivityModal(date,id);
   };
 
   if(typeof baseOpenR31VolunteerSessionEditor==='function')window.openR31VolunteerSessionEditor=function(encodedId){
@@ -101,18 +91,18 @@
     const id=decodeURIComponent(String(encodedId||'')),row=(state.sessions||[]).find(item=>String(item.id||item.sessionId)===id);
     if(!row)return showToast(text('portal.activity.deleteError'));
     if(!(state.volunteerMode==='approved'&&byVolunteer)){
-      const newDate=document.getElementById('moveDate')?.value||'',newTime=document.getElementById('moveTime')?.value||row.time||'';
+      const newDate=document.getElementById('moveDate')?.value||'',newPeriod=document.getElementById('movePeriod')?.value||activityPeriodValue(row,row.activity||{});
       if(!newDate)return showToast(text('portal.move.chooseDate'));
       const button=document.getElementById('moveSessionSave');if(button){button.disabled=true;button.innerHTML=`<i class="fa-solid fa-circle-notch fa-spin"></i> ${escapeHtml(text('action.saving'))}`}
-      try{await window.OleiroServices.planning.updateSession(id,{date:newDate,time:newTime});row.date=newDate;row.time=newTime;closeModal();render();showToast(text('portal.move.updated'))}catch(error){console.error(error);showToast(error?.message||text('portal.move.error'));if(button?.isConnected){button.disabled=false;button.textContent=text('action.saveChange')}}
+      try{await window.OleiroServices.planning.updateSession(id,{date:newDate,period:newPeriod});row.date=newDate;row.period=newPeriod;closeModal();render();showToast(text('portal.move.updated'))}catch(error){console.error(error);showToast(error?.message||text('portal.move.error'));if(button?.isConnected){button.disabled=false;button.textContent=text('action.saveChange')}}
       return;
     }
-    const currentDate=String(row.date||''),currentTime=String(row.time||row.activity?.time||''),newDate=document.getElementById('moveDate')?.value||currentDate,newTime=document.getElementById('moveTime')?.value||currentTime,reason=document.getElementById('moveReason')?.value.trim()||'';
-    if(newDate===currentDate&&newTime===currentTime)return showToast(text('portal.move.changeRequired'));
+    const currentDate=String(row.date||''),currentPeriod=activityPeriodValue(row,row.activity||{}),newDate=document.getElementById('moveDate')?.value||currentDate,newPeriod=document.getElementById('movePeriod')?.value||currentPeriod,reason=document.getElementById('moveReason')?.value.trim()||'';
+    if(newDate===currentDate&&newPeriod===currentPeriod)return showToast(text('portal.move.changeRequired'));
     if(!reason)return showToast(text('review.reasonRequired'));
     const button=document.getElementById('moveSessionSave');if(button){button.disabled=true;button.innerHTML=`<i class="fa-solid fa-circle-notch fa-spin"></i> ${escapeHtml(text('action.saving'))}`}
     try{
-      const proposal={date:newDate,time:newTime};
+      const proposal={date:newDate,period:newPeriod};
       const patch=await window.OleiroServices.planning.requestExistingChange({sessionId:id,proposal,reason});
       Object.assign(row,patch,{status:'change_requested',changeProposal:proposal,changeNote:reason,changeReviewStatus:'analysis'});
       closeModal();render();showToast(text('portal.session.changeSent'));

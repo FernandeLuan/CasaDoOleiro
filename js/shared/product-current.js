@@ -17,24 +17,24 @@
     if(!p.from||!p.to)return [];
     const dates=[];for(let d=addDays(p.from,1),i=0;i<370&&d<p.to;i++,d=addDays(d,1)){const day=new Date(`${d}T12:00:00`).getDay();if(day!==0&&day!==6)dates.push(d)}return dates;
   }
-  function sessionDefinition(session){return session?.activity||(state.activities||[]).find(row=>String(row.id)===String(session?.activityId))||{id:session?.activityId,name:session?.activityName||'Atividade',time:session?.time||''}}
+  function sessionDefinition(session){return session?.activity||(state.activities||[]).find(row=>String(row.id)===String(session?.activityId))||{id:session?.activityId,name:session?.activityName||'Atividade'}}
   window.moveSessionById=function(sessionId,byVolunteer=false){
     const session=sessionById(sessionId);if(!session)return showToast('Sessão não encontrada.');
     const activity=sessionDefinition(session),currentDate=String(session.date||''),options=moveDatesForSession(session);
     if(!options.length)return showToast('Não há data de atividade disponível no período da estadia.');
-    openModal('Mover sessão',`${escapeHtml(activity.name||'Atividade')} • atual: ${fmtDate(currentDate,true)}`,`<div class="field"><label>Nova data</label><select id="moveDate" class="select move-date-select">${options.map(date=>`<option value="${date}" ${date===currentDate?'selected':''}>${dayName(date)} • ${fmtDate(date,true)}${date===currentDate?' — atual':''}</option>`).join('')}</select></div><div class="field" style="margin-top:10px"><label>Novo horário sugerido</label><input id="moveTime" class="input" type="time" value="${escapeHtml(session.time||activity.time||'')}"></div>`,`<button id="moveSessionSave" class="btn btn-primary btn-block" type="button" onclick="saveMoveBySessionId('${encodeURIComponent(String(sessionId))}',${byVolunteer})">${byVolunteer&&session.status==='confirmed'?'Solicitar mudança':'Mover'}</button>`);
+    const currentPeriod=activityPeriodValue(session,activity);openModal('Mover sessão',`${escapeHtml(activity.name||'Atividade')} • atual: ${fmtDate(currentDate,true)}`,`<div class="field"><label>Nova data</label><select id="moveDate" class="select move-date-select">${options.map(date=>`<option value="${date}" ${date===currentDate?'selected':''}>${dayName(date)} • ${fmtDate(date,true)}${date===currentDate?' — atual':''}</option>`).join('')}</select></div><div class="field" style="margin-top:10px"><label>Novo período</label><select id="movePeriod" class="select">${['Sem preferência','Manhã','Tarde','Noite'].map(period=>`<option value="${escapeHtml(period)}" ${period===currentPeriod?'selected':''}>${escapeHtml(typeof tValue==='function'?tValue(period):period)}</option>`).join('')}</select></div>`,`<button id="moveSessionSave" class="btn btn-primary btn-block" type="button" onclick="saveMoveBySessionId('${encodeURIComponent(String(sessionId))}',${byVolunteer})">${byVolunteer&&session.status==='confirmed'?'Solicitar mudança':'Mover'}</button>`);
   };
   window.saveMoveBySessionId=async function(encodedId,byVolunteer=false){
     const id=decodeURIComponent(encodedId),session=sessionById(id);if(!session)return showToast('Sessão não encontrada.');
-    const activity=sessionDefinition(session),oldDate=String(session.date||''),oldTime=String(session.time||activity.time||''),newDate=document.getElementById('moveDate')?.value||'',newTime=document.getElementById('moveTime')?.value||oldTime;
+    const activity=sessionDefinition(session),oldDate=String(session.date||''),oldPeriod=activityPeriodValue(session,activity),newDate=document.getElementById('moveDate')?.value||'',newPeriod=document.getElementById('movePeriod')?.value||oldPeriod;
     if(!newDate)return showToast('Escolha a nova data.');
-    if(byVolunteer&&session.status==='confirmed'&&newDate===oldDate&&newTime===oldTime)return showToast('Altere a data ou o horário antes de solicitar a mudança.');
-    const wasConfirmed=session.status==='confirmed',patch={date:newDate,time:newTime};
-    if(byVolunteer&&wasConfirmed){patch.status='change_requested';patch.changeRequestedAt=new Date();patch.changeNote=newDate===oldDate?'Alteração de horário solicitada pelo voluntário.':'Mudança solicitada pelo voluntário.'}
+    if(byVolunteer&&session.status==='confirmed'&&newDate===oldDate&&newPeriod===oldPeriod)return showToast('Altere a data ou o período antes de solicitar a mudança.');
+    const wasConfirmed=session.status==='confirmed',patch={date:newDate,period:newPeriod};
+    if(byVolunteer&&wasConfirmed){patch.status='change_requested';patch.changeRequestedAt=new Date();patch.changeNote=newDate===oldDate?'Alteração de período solicitada pelo voluntário.':'Mudança solicitada pelo voluntário.'}
     const button=document.getElementById('moveSessionSave');if(button){button.disabled=true;button.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Salvando...'}
     try{
       await window.OleiroServices.planning.updateSession(session.id,patch);Object.assign(session,patch);
-      if(activity?.id){const dates=(activity.dates||[]).filter(date=>date!==oldDate);if(!dates.includes(newDate))dates.push(newDate);activity.dates=dates.sort();activity.time=newTime}
+      if(activity?.id){const dates=(activity.dates||[]).filter(date=>date!==oldDate);if(!dates.includes(newDate))dates.push(newDate);activity.dates=dates.sort();activity.period=newPeriod}
       if(state.role==='manager'){invalidateManagerScheduleCache?.();const cache=typeof candidatePlanningCache==='function'?candidatePlanningCache(session.applicationId):null;if(cache){const cached=cache.sessions.find(row=>String(row.id)===String(session.id));if(cached)Object.assign(cached,patch)}}
       closeModal();render();showToast(byVolunteer&&wasConfirmed?'Mudança enviada para confirmação.':'Cronograma atualizado.');
     }catch(error){console.error(error);showToast(error?.message||'Não foi possível mover a sessão.');if(button?.isConnected){button.disabled=false;button.textContent=byVolunteer&&wasConfirmed?'Solicitar mudança':'Mover'}}

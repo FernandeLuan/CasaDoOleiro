@@ -34,7 +34,7 @@
   wrap(services.planning,'saveActivity',([args],result)=>record(args?.applicationId,args?.activityId?'activity_updated':'activity_created',{unitId:args?.unitId,metadata:{activityId:String(result?.activityId||args?.activityId||''),activityName:String(args?.data?.name||'')}}));
   wrap(services.planning,'deleteSession',([sessionId,options],result)=>record(options?.applicationId,'activity_deleted',{metadata:{activityId:String(options?.activityId||''),sessionId:String(sessionId||''),deletedActivity:result?.deletedActivity===true}}));
   wrap(services.planning,'updateSession',([sessionId,patch])=>{
-    if(!patch?.date)return;const session=(typeof state!=='undefined'?(state.sessions||[]):[]).find(row=>String(row.id)===String(sessionId));record(session?.applicationId,'session_moved',{unitId:session?.unitId,metadata:{sessionId:String(sessionId),date:String(patch.date||''),time:String(patch.time||'')}});
+    if(!patch?.date)return;const session=(typeof state!=='undefined'?(state.sessions||[]):[]).find(row=>String(row.id)===String(sessionId));record(session?.applicationId,'session_moved',{unitId:session?.unitId,metadata:{sessionId:String(sessionId),date:String(patch.date||''),period:activityPeriodValue(patch,session||{})}});
   });
   wrap(services.planning,'reviewPostApprovalProposal',([options])=>record(options?.applicationId,'post_proposal_reviewed',{metadata:{activityId:String(options?.activityId||''),decision:String(options?.decision||'')}}));
 })();

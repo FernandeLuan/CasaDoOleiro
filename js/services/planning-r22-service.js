@@ -4,7 +4,7 @@
   if(!services.planning)return;
 
   const baseSubmitPlanning=services.applications?.submitPlanning?.bind(services.applications);
-  function cleanGroup(value){const group=String(value||'').trim();return ['A','B','C','D','Livre'].includes(group)?group:null}
+  function cleanGroup(value){const parts=String(value||'').split('+').map(item=>item.trim()).filter(Boolean);if(parts.includes('Livre'))return 'Livre';const valid=[...new Set(parts.filter(item=>['A','B','C','D'].includes(item)))];return valid.length?valid.join(' + '):null}
 
   services.planning.hasSessions=async function({applicationId}={}){
     if(!applicationId)return false;
@@ -24,9 +24,9 @@
     if(!sessionId)throw new Error('Sessão não encontrada.');
     return services.run(async()=>{
       const context=await services.firebase(),{firestore}=context.modules,batch=firestore.writeBatch(context.db),now=firestore.serverTimestamp();
-      const sessionPatch={activityName:String(patch.activityName||'').trim()||'Atividade',activityDescription:String(patch.activityDescription||''),duration:Math.max(15,Math.min(Number(patch.duration)||60,240)),participation:String(patch.participation||'Livre'),materials:String(patch.materials||''),notes:String(patch.notes||''),period:String(patch.period||'Sem preferência'),time:String(patch.time||''),groupId:cleanGroup(patch.groupId),updatedAt:now};
+      const legacyTime=String(patch.time||'').trim(),sessionPatch={activityName:String(patch.activityName||'').trim()||'Atividade',activityDescription:String(patch.activityDescription||''),duration:Math.max(15,Math.min(Number(patch.duration)||60,240)),participation:String(patch.participation||'Livre'),materials:String(patch.materials||''),notes:String(patch.notes||''),period:typeof activityPeriodValue==='function'?activityPeriodValue(patch):String(patch.period||'Sem preferência'),...(legacyTime?{time:legacyTime}:{}),groupId:cleanGroup(patch.groupId),updatedAt:now};
       batch.update(firestore.doc(context.db,'activity_sessions',String(sessionId)),sessionPatch);
-      if(activityId)batch.update(firestore.doc(context.db,'activities',String(activityId)),{name:sessionPatch.activityName,description:sessionPatch.activityDescription,duration:sessionPatch.duration,participation:sessionPatch.participation,materials:sessionPatch.materials,notes:sessionPatch.notes,period:sessionPatch.period,time:sessionPatch.time,updatedAt:now});
+      if(activityId)batch.update(firestore.doc(context.db,'activities',String(activityId)),{name:sessionPatch.activityName,description:sessionPatch.activityDescription,duration:sessionPatch.duration,participation:sessionPatch.participation,materials:sessionPatch.materials,notes:sessionPatch.notes,period:sessionPatch.period,...(legacyTime?{time:legacyTime}:{}),updatedAt:now});
       await batch.commit();return {...sessionPatch,updatedAt:null};
     },{loading:false});
   };

@@ -41,7 +41,7 @@
     return {badges:[...new Set(badges)].join(''),classes:[...new Set(classes)].join(' ')};
   };
   R.reviewDetails=function(session){
-    const rows=[],current={date:session.date,time:session.time,duration:session.duration,period:session.period,activityName:session.activityName,activityDescription:session.activityDescription,participation:session.participation,materials:session.materials,notes:session.notes};
+    const rows=[],current={date:session.date,duration:session.duration,period:activityPeriodValue(session,session.activity||{}),activityName:session.activityName,activityDescription:session.activityDescription,participation:session.participation,materials:session.materials,notes:session.notes};
     if(session.adminAdjustmentStatus==='requested'&&session.adminAdjustmentNote)rows.push(`<div class="r31-review-block warning"><strong>Motivo do ajuste:</strong><p>${escapeHtml(session.adminAdjustmentNote)}</p></div>`);
     if(session.adminAdjustmentStatus==='analysis'&&session.adminAdjustmentNote){const target=session.changeProposal?{...current,...session.changeProposal}:current,diff=session.adminAdjustmentBaseline?R.snapshotDiff(session.adminAdjustmentBaseline,target):null;rows.push(`<div class="r31-review-block"><strong>Motivo do ajuste:</strong><p>${escapeHtml(session.adminAdjustmentNote)}</p>${diff?`<div class="r31-change-pair"><span><b>De:</b> ${escapeHtml(diff.from)}</span><span><b>Para:</b> ${escapeHtml(diff.to)}</span></div>`:''}</div>`)}
     if(session.status==='change_requested'&&session.adminAdjustmentStatus!=='analysis'){
