@@ -30,3 +30,12 @@ if('scrollRestoration' in history)history.scrollRestoration='manual';
 document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
 function openDatePicker(inputOrId){const input=typeof inputOrId==='string'?document.getElementById(inputOrId):inputOrId;if(!input||input.disabled)return;try{if(typeof input.showPicker==='function')input.showPicker();else input.focus()}catch{input.focus()}}
 document.addEventListener('click',event=>{if(event.target.closest?.('input[type="date"]'))return;const input=event.target.closest?.('.date-field')?.querySelector?.('input[type="date"]');if(input)openDatePicker(input);});
+
+/* R59: carrega o redesign sobre o DOM real. No canal de homologação, injeta também a camada de dados em memória antes do boot. */
+(function loadR59Layers(){
+  const current=document.currentScript?.src;if(!current||typeof document.write!=='function')return;
+  const sharedBase=new URL('./',current),redesign=new URL('redesign-r59.js?v=20260902-r59',sharedBase).href;
+  document.write(`<script src="${redesign}"><\/script>`);
+  const params=new URLSearchParams(location.search),demo=params.has('demo')||/--visual-redesign-|--realbase-|localhost|127\.0\.0\.1/.test(location.hostname);
+  if(demo){const adapter=new URL('../demo/realbase-r59.js?v=20260902-r59',sharedBase).href;document.write(`<script src="${adapter}"><\/script>`)}
+})();
