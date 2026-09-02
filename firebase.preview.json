@@ -1,0 +1,20 @@
+{
+  "hosting": {
+    "public": "visual-preview",
+    "ignore": [
+      "firebase.preview.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "cleanUrls": true,
+    "trailingSlash": false,
+    "headers": [
+      {
+        "source": "**/*.@(js|css|html)",
+        "headers": [
+          {"key": "Cache-Control", "value": "no-store"}
+        ]
+      }
+    ]
+  }
+}
