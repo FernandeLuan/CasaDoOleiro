@@ -1,4 +1,4 @@
-/* Round 52 — ação explícita no perfil Admin enquanto o candidato aguarda reunião. */
+/* Round 52/53 — ação explícita no perfil Admin enquanto o candidato aguarda reunião. */
 (function adminMeetingActivityR52(){
   const baseRenderPersonModal=window.renderPersonModal||renderPersonModal;
   const safe=value=>encodeURIComponent(String(value??''));
@@ -10,7 +10,7 @@
   }
 
   function injectMeetingAction(p,tab){
-    if(!meetingCandidate(p)||tab!=='overview')return;
+    if(!meetingCandidate(p)||!['overview','plan'].includes(tab))return;
     const body=modalRoot.querySelector('.modal-body');if(!body||body.querySelector('.admin-meeting-add-activity'))return;
     const tabs=body.querySelector('.person-refactor-tabs,.person-tabs');
     const action=document.createElement('div');action.className='card admin-meeting-add-activity';
