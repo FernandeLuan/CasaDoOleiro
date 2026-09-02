@@ -28,7 +28,9 @@
   document.addEventListener('click',event=>{
     const kind=event.target.closest('[data-kind]');
     if(kind){event.preventDefault();const modal=kind.closest('.modal');modal?.querySelectorAll('[data-kind]').forEach(btn=>btn.classList.toggle('active',btn===kind));const second=modal?.querySelector('#demoParticipant2');if(second)second.hidden=kind.dataset.kind!=='couple';return;}
-    if(event.target.closest('[data-close-overlay]')){event.preventDefault();event.stopImmediatePropagation();closeOverlay();}
+    const closeButton=event.target.closest('button[data-close-overlay],.close-btn[data-close-overlay]');
+    const backdropClick=event.target.matches('.workspace-backdrop[data-close-overlay],.modal-backdrop[data-close-overlay]');
+    if(closeButton||backdropClick){event.preventDefault();event.stopImmediatePropagation();closeOverlay();}
   },true);
   const observer=new MutationObserver(enhance);observer.observe(document.documentElement,{childList:true,subtree:true});enhance();
 })();
