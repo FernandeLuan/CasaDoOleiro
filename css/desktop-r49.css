@@ -1,46 +1,138 @@
-/* Round 49 — desktop layout pass.
-   Mobile remains unchanged; desktop gains wider content and form/modal layouts. */
+/* Round 49/50 — desktop layout pass.
+   Everything in this file starts at 1024px so the mobile experience stays unchanged. */
 @media (min-width:1024px){
-  #app{max-width:1280px}
+  #app{max-width:1360px}
   .app-header{padding:16px 32px 14px}
   .page{padding:28px 32px 40px}
   .section{margin-bottom:26px}
   .hero{padding:26px 28px}
 
-  .modal-backdrop{align-items:center;padding:28px}
-  .modal{max-width:860px;border-radius:24px;padding:24px 26px 26px;max-height:88vh}
-  .modal-head{padding-top:0;margin-top:0}
-  .modal-head h2{font-size:1.08rem}
-  .modal-head p{font-size:.7rem}
-  .modal-body{min-width:0}
-  .modal-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
-  .modal-footer .btn-block{width:auto;min-width:220px}
+  /* The shared modal system is intentionally mobile-first and caps dialogs at 420–460px.
+     Desktop must explicitly override those !important caps. */
+  .modal-backdrop{align-items:center!important;padding:32px 48px!important}
+  .modal{
+    width:min(920px,calc(100vw - 96px))!important;
+    max-width:920px!important;
+    max-height:min(88vh,860px)!important;
+    border-radius:24px!important;
+  }
+  .modal-head{padding:20px 24px 16px!important}
+  .modal-head h2{font-size:1.08rem!important}
+  .modal-head p{font-size:.7rem!important}
+  .modal-body{min-width:0;padding:20px 24px 24px!important}
+  .modal-footer{display:flex;justify-content:flex-end;gap:10px;margin:0!important;padding:14px 24px 18px!important}
+  .modal-footer .btn-block{width:auto!important;min-width:220px}
+  body.modal-open .bottom-nav{visibility:hidden;opacity:0;pointer-events:none}
 
-  /* Cadastro de candidato: no desktop deixa de parecer um formulário de celular. */
-  .new-candidate-modal{max-width:1040px}
-  .new-candidate-form{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
+  /* Candidate workspace: wide desktop dialog instead of a stretched phone modal. */
+  .modal.person-refactor-modal{
+    width:min(1180px,calc(100vw - 96px))!important;
+    max-width:1180px!important;
+    max-height:min(90vh,900px)!important;
+  }
+  .person-refactor-modal .modal-head{padding:22px 28px 17px!important}
+  .person-refactor-modal .modal-body{padding:20px 28px 28px!important}
+  .person-refactor-modal .person-title-line{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .person-refactor-modal .person-refactor-tabs{
+    margin:0 0 18px!important;
+    padding:5px!important;
+    gap:6px!important;
+    border-radius:14px!important;
+  }
+  .person-refactor-modal .person-refactor-tabs button{min-height:44px;font-size:.72rem;padding:9px 14px}
+  .person-refactor-modal .person-plan-summary{min-height:42px;padding:10px 13px;margin-bottom:12px;font-size:.65rem}
+  .person-refactor-modal .admin-plan-page-nav{margin-bottom:14px;padding:9px 12px}
+
+  /* Closed days are dense in two columns; an opened day expands to full width. */
+  .person-refactor-modal .admin-refactor-planning{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:12px!important;
+    align-items:start;
+  }
+  .person-refactor-modal .admin-refactor-planning>details{min-width:0}
+  .person-refactor-modal .admin-refactor-planning>details[open]{grid-column:1/-1}
+  .person-refactor-modal .planning-day-head{min-height:58px;padding:13px 16px!important}
+  .person-refactor-modal .planning-day-content{padding-bottom:14px}
+  .person-refactor-modal .planning-day-sessions{display:grid;gap:8px;padding:8px 14px 0!important}
+  .person-refactor-modal .planning-session-row{padding:11px 12px!important;border-radius:12px}
+  .person-refactor-modal .planning-day-adjust-action{padding:8px 14px 0}
+  .person-refactor-modal .admin-plan-review-footer{gap:10px;margin-top:16px}
+  .person-refactor-modal .admin-plan-review-footer .btn{font-size:.64rem;min-height:42px}
+
+  /* Account data uses the available width without becoming visually noisy. */
+  .person-refactor-modal .admin-account-refactor{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:16px!important;
+    align-items:start;
+  }
+  .person-refactor-modal .account-status-line,
+  .person-refactor-modal .account-access-card,
+  .person-refactor-modal .account-reason,
+  .person-refactor-modal .account-lifecycle-actions,
+  .person-refactor-modal .account-danger-zone{grid-column:1/-1}
+  .person-refactor-modal .account-contact-card,
+  .person-refactor-modal .account-stay-card{height:100%;padding:18px}
+  .person-refactor-modal .account-access-card{padding:18px}
+  .person-refactor-modal .candidate-history-panel{margin-top:0}
+
+  /* New candidate: real desktop form. The mobile DOM stays exactly the same. */
+  .modal.new-candidate-modal{
+    width:min(1120px,calc(100vw - 96px))!important;
+    max-width:1120px!important;
+    max-height:min(90vh,900px)!important;
+  }
+  .new-candidate-modal .modal-head{padding:22px 28px 17px!important}
+  .new-candidate-modal .modal-body{padding:22px 28px 24px!important}
+  .new-candidate-modal .modal-footer{padding:14px 28px 20px!important}
+  .new-candidate-form{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start}
   .new-candidate-form>.candidate-type-field,
   .new-candidate-form>.card:last-child{grid-column:1/-1}
   .new-candidate-form>#ncParticipant1{grid-column:1/-1}
   .new-candidate-form:has(#ncParticipant2:not([hidden]))>#ncParticipant1{grid-column:auto}
   .new-candidate-form:has(#ncParticipant2:not([hidden]))>#ncParticipant2{grid-column:auto}
-  .candidate-participant-card{height:100%;padding:18px}
-  .candidate-participant-card .form-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-  .candidate-participant-card .field-row{grid-column:1/-1}
-  .candidate-participant-card .form-grid>.field:last-child{grid-column:1/-1}
-  .new-candidate-form>.card:last-child>.form-grid{grid-template-columns:minmax(220px,.7fr) minmax(380px,1.3fr);gap:14px 16px;align-items:end}
-  .new-candidate-form>.card:last-child .candidate-date-row{grid-column:auto}
+  .candidate-type-field{padding-bottom:2px}
+  .candidate-type-switch{max-width:460px}
+  .candidate-participant-card{height:100%;padding:20px!important;border-radius:18px!important}
+  .candidate-participant-title{padding-bottom:2px}
+  .candidate-participant-title strong{font-size:.8rem}
+  .candidate-participant-card .form-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:14px 16px!important;
+    margin-top:14px!important;
+  }
+  .candidate-participant-card .field-row{grid-column:1/-1;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:16px!important}
+  .candidate-participant-card .form-grid>.field:last-child{grid-column:1/-1;max-width:360px}
+  .new-candidate-form>.card:last-child{padding:20px!important;border-radius:18px!important}
+  .new-candidate-form>.card:last-child>.form-grid{
+    display:grid;
+    grid-template-columns:minmax(220px,.75fr) minmax(420px,1.4fr);
+    gap:16px 20px!important;
+    align-items:end;
+  }
+  .new-candidate-form>.card:last-child .candidate-date-row{
+    grid-column:auto;
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:16px!important;
+    min-width:0;
+  }
   .new-candidate-form>.card:last-child .field:has(#ncNote){grid-column:1/-1}
-  .new-candidate-modal .textarea{min-height:110px}
+  .new-candidate-modal .input,
+  .new-candidate-modal .select{min-height:46px!important;font-size:.72rem!important}
+  .new-candidate-modal .textarea{min-height:118px!important;max-height:220px!important}
+  .new-candidate-modal .modal-footer .btn{min-width:260px;min-height:46px}
 
-  /* Listas e painéis administrativos usam melhor a área horizontal disponível. */
+  /* Main admin pages also use the extra horizontal room. */
   .filter-panel{padding:16px}
-  .candidate-tools{grid-template-columns:minmax(360px,1fr) 48px 48px}
+  .candidate-tools{grid-template-columns:minmax(420px,1fr) 48px 48px}
   .agenda-days,.list,.menu-list{gap:12px}
 }
 
 @media (min-width:1280px){
-  #app{max-width:1360px}
+  #app{max-width:1440px}
   .page{padding-left:40px;padding-right:40px}
-  .new-candidate-modal{max-width:1120px}
+  .modal.person-refactor-modal{max-width:1240px!important;width:min(1240px,calc(100vw - 112px))!important}
+  .modal.new-candidate-modal{max-width:1180px!important;width:min(1180px,calc(100vw - 112px))!important}
 }
