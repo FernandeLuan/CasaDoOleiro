@@ -17,7 +17,7 @@ test('admin meeting planning reinjects replicate and add actions after selection
   expect(feature).toContain('continueAdminReplicateActivity');
   expect(feature).toContain('openAdminPlanningActivity');
   expect(feature).toContain('admin-meeting-empty-action');
-  expect(feature).not.toContain('injectMeetingAction');
+  expect(feature).not.toContain('adminPlanningDayCard=function');
 
   /* Regressão r55: selection-flow remove admin-session-manage-actions durante meeting.
      A feature precisa injetar as novas ações somente depois do render base terminar. */
