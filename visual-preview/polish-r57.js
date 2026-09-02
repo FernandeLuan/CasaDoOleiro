@@ -8,14 +8,15 @@
     'Sofía Ramírez':{name:'Camila Ramírez',relationship:'Irmã',phone:'+56 9 0000-0194'}
   };
 
-  function emergencyFields(){
+  function emergencyFields(index){
+    const n=String(index||1);
     return `<div class="emergency-fields">
       <div class="emergency-field-head"><strong>Contato de emergência</strong><span>Opcional</span></div>
       <p class="emergency-note">Se informado, nome e telefone devem ser preenchidos.</p>
       <div class="form-grid three emergency-form-grid">
-        <div class="field"><label>Nome</label><input class="input" autocomplete="off" placeholder="Nome do contato"></div>
-        <div class="field"><label>Relação</label><input class="input" autocomplete="off" placeholder="Ex.: mãe, irmão, amigo"></div>
-        <div class="field"><label>WhatsApp / telefone</label><input class="input" type="tel" autocomplete="off" placeholder="+55 47 99999-9999"></div>
+        <div class="field"><label for="demoEmergencyName${n}">Nome</label><input id="demoEmergencyName${n}" class="input" autocomplete="off" placeholder="Nome do contato"></div>
+        <div class="field"><label for="demoEmergencyRelationship${n}">Relação</label><input id="demoEmergencyRelationship${n}" class="input" autocomplete="off" placeholder="Ex.: mãe, irmão, amigo"></div>
+        <div class="field"><label for="demoEmergencyPhone${n}">WhatsApp / telefone</label><input id="demoEmergencyPhone${n}" class="input" type="tel" autocomplete="off" placeholder="+55 47 99999-9999"></div>
       </div>
     </div>`;
   }
@@ -26,7 +27,8 @@
     modal.querySelectorAll('.form-section').forEach(section=>{
       const title=section.querySelector(':scope > h3')?.textContent.trim()||'';
       if(!title.startsWith('Participante')||section.querySelector('.emergency-fields'))return;
-      section.insertAdjacentHTML('beforeend',emergencyFields());
+      const index=title.match(/(\d+)/)?.[1]||'1';
+      section.insertAdjacentHTML('beforeend',emergencyFields(index));
     });
   }
 
