@@ -26,6 +26,9 @@ permissions:
 
 jobs:
   e2e:
+    # During R59 visual homologation, do not spend 20+ minutes on every UI commit.
+    # The full suite remains available through workflow_dispatch and must run before merge.
+    if: github.event_name == 'workflow_dispatch' || github.head_ref != 'test/visual-redesign-r59-realbase'
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
