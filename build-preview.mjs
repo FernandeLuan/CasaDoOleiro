@@ -13,8 +13,11 @@ const requiredDirectories = [
   'homologacao',
 ];
 
+// Do not copy the production root index.html into the preview package.
+// Firebase Hosting gives an existing static file precedence over rewrites; if
+// index.html is present at preview-dist/, the preview URL opens the production
+// login instead of /homologacao/index.html.
 const optionalFiles = [
-  'index.html',
   'manifest.webmanifest',
   'release.json',
 ];
