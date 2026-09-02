@@ -1,0 +1,11 @@
+.emergency-fields{margin-top:16px;padding-top:15px;border-top:1px solid var(--line)}
+.emergency-field-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.emergency-field-head strong{font-size:11px;color:var(--text)}
+.emergency-field-head span{display:inline-flex;align-items:center;padding:4px 7px;border-radius:999px;background:var(--sage-100);color:var(--forest-800);font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+.emergency-form-grid{align-items:end}
+@media(max-width:760px){
+  .emergency-fields{margin-top:13px;padding-top:12px}
+  .emergency-field-head{margin-bottom:6px}
+  .emergency-field-head strong{font-size:10px}
+  .emergency-field-head span{font-size:7.5px;padding:3px 6px}
+}
