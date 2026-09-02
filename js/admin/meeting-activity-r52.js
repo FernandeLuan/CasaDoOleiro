@@ -1,13 +1,17 @@
-/* Round 54 — ações contextuais para planejamento aprovado enquanto aguarda reunião. */
-(function adminMeetingActivityR54(){
+/* Round 55 — ações de reunião são injetadas após a limpeza do fluxo de seleção. */
+(function adminMeetingActivityR55(){
   const baseRenderPersonModal=window.renderPersonModal||renderPersonModal;
-  const baseAdminPlanningDayCard=window.adminPlanningDayCard||adminPlanningDayCard;
   const safe=value=>encodeURIComponent(String(value??''));
 
   function meetingCandidate(p){return !!p&&!p.inactive&&p.status==='meeting'}
   function eligibleDates(p){
     const start=String(p?.stayStart||p?.from||'').slice(0,10),end=String(p?.stayEnd||p?.to||'').slice(0,10);
     return typeof planningEligibleDates==='function'?planningEligibleDates(start,end):[];
+  }
+  function sessionsForDate(p,date){
+    return (state.sessions||[])
+      .filter(row=>String(row.applicationId||p.id)===String(p.id)&&String(row.date||'')===String(date))
+      .sort(typeof activityScheduleCompare==='function'?activityScheduleCompare:(a,b)=>String(a.date||'').localeCompare(String(b.date||'')));
   }
   function findSession(applicationId,sessionId){
     const direct=(state.sessions||[]).find(row=>String(row.id)===String(sessionId)&&String(row.applicationId||applicationId)===String(applicationId));if(direct)return direct;
@@ -24,20 +28,30 @@
     return `<div class="admin-session-manage-actions admin-meeting-creation-actions"><button class="btn btn-outline btn-xs" type="button" onclick="openAdminReplicateActivity('${app}','${sid}','${day}')"><i class="fa-solid fa-copy"></i>Replicar atividade</button><button class="btn btn-soft btn-xs" type="button" onclick="openAdminPlanningActivity('${app}','${day}')"><i class="fa-solid fa-plus"></i>Adicionar atividade</button></div>`;
   }
 
-  adminPlanningDayCard=function(p,day){
-    let html=baseAdminPlanningDayCard(p,day);if(!meetingCandidate(p))return html;
-    const template=document.createElement('template');template.innerHTML=html;
-    const rows=[...template.content.querySelectorAll('.planning-session-row')];
-    rows.forEach((row,index)=>{const actions=inlineActions(p,(day.sessions||[])[index],day.date);if(actions&&!row.querySelector('.admin-meeting-creation-actions'))(row.firstElementChild||row).insertAdjacentHTML('beforeend',actions)});
-    return template.innerHTML;
-  };
-
-  function removeRedundantMeetingActions(p,tab){
-    if(!meetingCandidate(p))return;
+  /* selection-flow-r25 remove as ações administrativas durante meeting. Por isso esta camada
+     roda DEPOIS do render base e recoloca apenas as duas ações permitidas nesta etapa. */
+  function injectMeetingActions(p,tab){
     modalRoot.querySelectorAll('.admin-meeting-add-activity').forEach(node=>node.remove());
-    if(tab!=='plan'&&modalRoot.dataset.personTab!=='plan')return;
-    modalRoot.querySelectorAll('details.planning-day-card').forEach(card=>{
-      if(card.querySelector('.planning-session-row'))card.querySelectorAll('.admin-create-activity-action').forEach(node=>node.remove());
+    if(!meetingCandidate(p)||(tab!=='plan'&&modalRoot.dataset.personTab!=='plan'))return;
+
+    modalRoot.querySelectorAll('details.planning-day-card[data-plan-date]').forEach(card=>{
+      const date=card.dataset.planDate,content=card.querySelector('.planning-day-content');if(!date||!content)return;
+      content.querySelectorAll('.admin-meeting-creation-actions,.admin-meeting-empty-action').forEach(node=>node.remove());
+      const rows=[...card.querySelectorAll('.planning-session-row')];
+
+      if(rows.length){
+        content.querySelectorAll('.admin-create-activity-action').forEach(node=>node.remove());
+        const sessions=sessionsForDate(p,date);
+        rows.forEach((row,index)=>{
+          const actions=inlineActions(p,sessions[index],date);
+          if(actions)(row.firstElementChild||row).insertAdjacentHTML('beforeend',actions);
+        });
+        return;
+      }
+
+      if(eligibleDates(p).includes(date)){
+        content.insertAdjacentHTML('beforeend',`<div class="admin-create-activity-action admin-meeting-empty-action"><button class="btn btn-soft btn-block" type="button" onclick="openAdminPlanningActivity('${safe(p.id)}','${safe(date)}')"><i class="fa-solid fa-plus"></i>Adicionar atividade</button></div>`);
+      }
     });
   }
 
@@ -61,9 +75,10 @@
   };
 
   renderPersonModal=function(p,tab='overview'){
-    const result=baseRenderPersonModal(p,tab);removeRedundantMeetingActions(p,tab);return result;
+    const result=baseRenderPersonModal(p,tab);
+    injectMeetingActions(p,tab);
+    return result;
   };
 
   window.renderPersonModal=renderPersonModal;
-  window.adminPlanningDayCard=adminPlanningDayCard;
 })();
