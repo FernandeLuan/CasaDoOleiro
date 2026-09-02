@@ -34,45 +34,19 @@
     window.openActivityModal=openActivityModal;
   }
 
-  /* Em meeting, uma atividade nova entra no mesmo fluxo de revisão das propostas criadas
-     após a aprovação final: reviewStatus=analysis e sessões proposed. */
-  saveActivity=async function(id){
-    const button=modalRoot?.querySelector?.('button[onclick*="saveActivity"]');
-    if(button?.disabled)return;
-    const original=button?.innerHTML||'';
-    if(button){button.disabled=true;button.setAttribute('aria-busy','true');button.innerHTML=`<i class="fa-solid fa-circle-notch fa-spin"></i> ${escapeHtml(typeof t==='function'?t('action.saving'):'Salvando...')}`}
-
-    const approved=state.volunteerMode==='approved',meeting=meetingMode(),proposalMode=approved||meeting;
-    const existing=id?(state.activities||[]).find(a=>String(a.id)===String(id)):null;
-    const postApprovalProposal=proposalMode&&(!id||proposalEditable(existing));
-    if(proposalMode&&!postApprovalProposal){if(button?.isConnected){button.disabled=false;button.removeAttribute('aria-busy');button.innerHTML=original}return showToast(t('portal.activity.adjustLocked'))}
-    if(!proposalMode&&!['draft','submitted','adjustments'].includes(state.volunteerPlanStatus||'draft')){if(button?.isConnected){button.disabled=false;button.removeAttribute('aria-busy');button.innerHTML=original}return showToast(t('portal.activity.locked'))}
-
-    const dates=[...document.querySelectorAll('input[name="actDate"]:checked')].map(x=>x.value);
-    const data={
-      name:document.getElementById('actName')?.value.trim()||'',
-      description:document.getElementById('actDesc')?.value.trim()||'',
-      duration:+document.getElementById('actDuration')?.value||60,
-      participation:document.getElementById('actParticipation')?.value||'Livre',
-      materials:document.getElementById('actMaterials')?.value.trim()||'Nenhum',
-      notes:document.getElementById('actNotes')?.value.trim()||'',
-      period:document.getElementById('actPeriod')?.value||'Sem preferência'
+  /* O save existente já conhece o fluxo seguro de proposta pós-aprovação. Alteramos o modo
+     apenas durante a entrada síncrona da função, suficiente para ela capturar proposal=true;
+     antes de qualquer resposta assíncrona/render o modo original já foi restaurado. */
+  if(typeof saveActivity==='function'){
+    const baseSaveActivity=saveActivity;
+    saveActivity=function(...args){
+      if(!meetingMode())return baseSaveActivity(...args);
+      const previousMode=state.volunteerMode;
+      state.volunteerMode='approved';
+      try{return baseSaveActivity(...args)}finally{state.volunteerMode=previousMode}
     };
-    if(!data.name){if(button?.isConnected){button.disabled=false;button.removeAttribute('aria-busy');button.innerHTML=original}return showToast(t('portal.activity.nameRequired'))}
-    if(!dates.length){if(button?.isConnected){button.disabled=false;button.removeAttribute('aria-busy');button.innerHTML=original}return showToast(t('portal.activity.dateRequired'))}
-    const application=state.currentApplication,session=state.currentSession;
-    if(!application?.id||!session?.uid){if(button?.isConnected){button.disabled=false;button.removeAttribute('aria-busy');button.innerHTML=original}return showToast(t('portal.plan.invalidSession'))}
-    const ownerName=planningOwnerName(application,session);
-
-    try{
-      const result=await window.OleiroServices.planning.saveActivity({activityId:id,applicationId:application.id,unitId:application.unitId,createdByUid:session.uid,ownerName,data,dates,existingSessions:state.sessions||[],postApprovalProposal});
-      applySavedActivityResult(result,dates);
-      closeModal();render();
-      showToast(proposalMode?(id?t('portal.activity.adjusted'):t('portal.activity.proposed')):(id?t('portal.activity.updated'):t('portal.activity.saved')));
-    }catch(error){console.error(error);showToast(error?.message||t('portal.activity.saveError'))}
-    finally{if(button?.isConnected){button.disabled=false;button.removeAttribute('aria-busy');button.innerHTML=original||escapeHtml(typeof t==='function'?t('action.save'):'Salvar')}}
-  };
-  window.saveActivity=saveActivity;
+    window.saveActivity=saveActivity;
+  }
 
   /* Atalho solicitado no Perfil. */
   if(typeof volunteerProfile==='function'){
