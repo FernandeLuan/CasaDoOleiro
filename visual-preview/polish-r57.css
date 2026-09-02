@@ -1,0 +1,253 @@
+/* R57 — typography, alignment and a mobile-first composition pass for the isolated visual preview. */
+:root{
+  --font-ui:"Segoe UI Variable","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --font-display:"Segoe UI Variable Display","Segoe UI Variable","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+
+html,body,#app,.shell,.main,.content{max-width:100%;min-width:0}
+html,body{overflow-x:clip}
+body,button,input,select,textarea{font-family:var(--font-ui)}
+.brand-mark,.brand strong,.page-head h1,.workspace-head h2,.stat strong,.date-block strong,.agenda-day-head strong,.welcome h1,.modal-head h2{
+  font-family:var(--font-display)!important;
+  letter-spacing:-.025em;
+}
+.brand-mark{font-weight:760}
+.brand strong{font-weight:720}
+.page-head h1{font-weight:730;line-height:1.08}
+.workspace-head h2,.modal-head h2{font-weight:720;line-height:1.12}
+.stat strong,.date-block strong,.agenda-day-head strong{font-weight:720}
+.welcome h1{font-weight:730;line-height:1.08}
+
+/* Desktop polish: align the visual rhythm without changing the concept the user approved. */
+.content{width:100%}
+.page-head{align-items:center}
+.page-head>div{min-width:0}
+.page-head p{font-size:14px}
+.stats-grid,.toolbar,.panel,.agenda-grid,.portal-hero,.portal-grid{width:100%}
+.stat{min-width:0}
+.candidate-row{min-width:0}
+.candidate-row>*{min-width:0}
+.person-cell>div:last-child{min-width:0}
+.status{line-height:1.25}
+.workspace-head>div{min-width:0}
+.workspace-meta{align-items:center}
+.workspace-meta .status{margin-left:4px}
+.day-summary>*{min-width:0}
+.activity-top>div{min-width:0}
+.activity h4,.activity p,.compact-activity strong,.compact-activity small{overflow-wrap:anywhere}
+.modal-head>div{min-width:0}
+.form-section{background:#fff}
+.field{min-width:0}
+.input,.textarea,.search,.select{max-width:100%}
+
+/* Emergency contact mirrors the real product fields: name, relationship and phone. */
+.emergency-demo-card{background:#f8fbf9;border-color:#d5e2da}
+.emergency-demo-card h3{display:flex;align-items:center;gap:8px}
+.emergency-demo-card h3:before{content:"";width:8px;height:8px;border-radius:999px;background:var(--forest-700)}
+.emergency-note{margin:-6px 0 13px;color:var(--muted);font-size:11px;line-height:1.45}
+.account-emergency-demo .kv strong{overflow-wrap:anywhere}
+
+@media(max-width:1100px){
+  .candidate-row>.meta-cell:nth-of-type(3){display:block}
+}
+
+@media(max-width:760px){
+  :root{--radius-lg:18px}
+  html{background:#f7f8f5}
+  body{background:#f7f8f5;font-size:14px}
+  .environment-banner{
+    position:sticky;top:0;min-height:24px;padding:6px 10px;
+    font-size:8px;line-height:1.25;letter-spacing:.045em;white-space:normal
+  }
+  .shell{padding-bottom:76px;background:#f7f8f5;min-height:calc(100dvh - 24px)}
+  .main{width:100%}
+  .topbar{
+    height:56px;top:24px;padding:0 12px;background:rgba(247,248,245,.96);
+    backdrop-filter:blur(10px)
+  }
+  .breadcrumb{font-size:11px;min-width:0;max-width:65vw;overflow:hidden}
+  .breadcrumb strong{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .top-actions{gap:6px}
+  .icon-btn,.avatar-btn{height:36px;border-radius:10px}
+  .icon-btn{width:36px}
+  .avatar-btn{width:36px;padding:0;justify-content:center}
+  .avatar-btn>span:last-child{display:none}
+  .mini-avatar{width:25px;height:25px;border-radius:7px}
+
+  .content{padding:16px 12px 24px}
+  .page-head{display:grid;gap:14px;margin-bottom:17px}
+  .page-head .eyebrow{margin-bottom:5px;font-size:9px;letter-spacing:.1em}
+  .page-head h1{font-size:25px;line-height:1.08}
+  .page-head p{margin-top:7px;font-size:12px;line-height:1.48}
+  .page-head .btn.primary{width:100%;min-height:44px}
+
+  .stats-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:12px}
+  .stat{padding:12px 11px;border-radius:14px;box-shadow:none}
+  .stat small{font-size:9px;line-height:1.25}
+  .stat strong{font-size:21px;margin-top:5px}
+  .stat span{font-size:8.5px;line-height:1.35}
+
+  .toolbar{grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-bottom:12px}
+  .toolbar .search{grid-column:1/-1;width:100%}
+  .search,.select{height:42px;font-size:12px}
+  .toolbar .select{min-width:0;width:100%}
+  .toolbar .btn{height:42px;min-height:42px;padding:8px 11px;font-size:11px}
+
+  .panel{background:transparent;border:0;border-radius:0;box-shadow:none;overflow:visible}
+  .panel-head{padding:4px 1px 9px;border:0}
+  .panel-head strong{font-size:11px}
+  .panel-head small{font-size:9px}
+  .candidate-list{gap:9px}
+  .candidate-row{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    grid-template-areas:"person status" "unit stay";
+    gap:10px 8px!important;
+    width:100%;padding:13px!important;margin:0;
+    border:1px solid var(--line)!important;border-radius:15px!important;
+    background:#fff!important;box-shadow:0 1px 1px rgba(25,50,40,.025)
+  }
+  .candidate-row .person-cell{grid-area:person;gap:10px;align-self:center}
+  .candidate-row .avatar{width:38px;height:38px;border-radius:12px;font-size:10px}
+  .candidate-row .person-cell strong{font-size:12px}
+  .candidate-row .person-cell small{font-size:9.5px;margin-top:3px}
+  .candidate-row>.meta-cell{display:block!important;padding-top:8px;border-top:1px solid var(--line)}
+  .candidate-row>.meta-cell:nth-of-type(2){grid-area:unit}
+  .candidate-row>.meta-cell:nth-of-type(3){grid-area:stay;text-align:right}
+  .candidate-row>.meta-cell strong{font-size:10px}
+  .candidate-row>.meta-cell small{font-size:8px;margin-top:2px}
+  .candidate-row>.status{
+    grid-area:status;display:inline-flex!important;align-self:start;justify-self:end;
+    max-width:118px;padding:5px 7px;font-size:8.5px;white-space:normal;text-align:right
+  }
+
+  .mobile-nav{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    padding:6px 8px calc(6px + env(safe-area-inset-bottom));
+    min-height:64px;background:rgba(255,255,255,.98);backdrop-filter:blur(12px)
+  }
+  .mobile-nav button{min-width:0;padding:5px 2px;font-size:8.5px;border-radius:10px}
+  .mobile-nav button.active{background:var(--sage-50)}
+  .mobile-nav button:last-child{display:none}
+  .mobile-nav span{font-size:14px;margin-bottom:3px}
+
+  /* Candidate workspace becomes a true mobile screen instead of a desktop modal squeezed into 390px. */
+  .workspace-backdrop{inset:24px 0 0;padding:0;background:#f7f8f5;backdrop-filter:none;align-items:stretch}
+  .workspace{
+    width:100%;height:calc(100dvh - 24px);max-height:none;border:0;border-radius:0;box-shadow:none;
+    display:grid;grid-template-rows:auto auto minmax(0,1fr);background:#fff
+  }
+  .workspace-head{padding:15px 12px 12px;border-bottom:0;background:#fff;gap:10px}
+  .workspace-head .eyebrow{font-size:8.5px;margin-bottom:4px}
+  .workspace-head h2{font-size:21px;overflow-wrap:anywhere}
+  .workspace-meta{gap:5px;margin-top:7px}
+  .workspace-meta>span{font-size:9px}
+  .workspace-meta .status{flex-basis:100%;margin:3px 0 0;width:max-content;max-width:190px;font-size:8.5px}
+  .close-btn{width:36px;height:36px;flex:0 0 auto;border-radius:10px}
+  .tabs{
+    position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+    overflow:visible;padding:0 12px 10px;gap:4px;background:#fff;border-bottom:1px solid var(--line)
+  }
+  .tab{width:100%;padding:9px 4px;font-size:10px;white-space:nowrap}
+  .workspace-body{padding:12px;background:#f7f8f5;overscroll-behavior:contain}
+  .planning-grid{display:grid;grid-template-columns:1fr;gap:9px}
+  .day-card{border-radius:14px}
+  .day-summary{grid-template-columns:45px minmax(0,1fr) auto;gap:9px;padding:10px}
+  .date-block{width:45px;height:44px;border-radius:10px}
+  .date-block strong{font-size:15px}
+  .date-block small{font-size:8px}
+  .day-summary h3{font-size:11.5px;line-height:1.25}
+  .day-summary p{font-size:9.5px;line-height:1.35;margin-top:3px}
+  .day-total strong{font-size:10px}
+  .day-total small{font-size:7.5px}
+  .day-content{padding:0 10px 10px}
+  .day-card.open .day-content{gap:8px}
+  .activity{padding:12px;border-radius:12px}
+  .activity-top{display:grid;gap:8px}
+  .activity-top .status{margin:0;justify-self:start;font-size:8.5px}
+  .activity h4{font-size:12px;line-height:1.3}
+  .activity-meta{gap:5px;margin-top:6px}
+  .meta-pill{font-size:8.5px;padding:4px 6px}
+  .activity p{font-size:10.5px;line-height:1.5;margin-top:9px}
+  .activity-actions{display:grid;grid-template-columns:1fr;gap:7px;margin-top:11px;padding-top:10px}
+  .activity-actions .btn{width:100%;min-height:40px;font-size:10px}
+  .empty-day{padding:15px 11px;font-size:10px;line-height:1.45}
+  .empty-day .btn{width:100%;min-height:40px}
+
+  .account-grid{grid-template-columns:1fr;gap:9px}
+  .info-card{padding:14px;border-radius:14px}
+  .info-card h3{font-size:11px;margin-bottom:10px}
+  .info-card.full{grid-column:auto}
+  .kv{grid-template-columns:1fr;gap:3px;padding:8px 0;font-size:10.5px}
+  .kv span{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+  .kv strong{line-height:1.4;overflow-wrap:anywhere}
+  .history{padding:0 13px;border-radius:14px}
+  .history-row{grid-template-columns:1fr;gap:4px;padding:11px 0}
+  .history-row time{font-size:8.5px}
+  .history-row p{font-size:10.5px;line-height:1.45}
+
+  .agenda-grid{grid-template-columns:1fr;gap:9px}
+  .agenda-day{border-radius:15px}
+  .agenda-day-head{padding:12px}
+  .agenda-day-head strong{font-size:15px}
+  .agenda-day-head small{font-size:9px}
+  .agenda-item{padding:11px 12px}
+  .agenda-item strong{font-size:10.5px;line-height:1.35}
+  .agenda-item span{font-size:9px;line-height:1.4}
+
+  .portal-hero,.portal-grid{grid-template-columns:1fr;gap:9px}
+  .portal-hero{margin-bottom:9px}
+  .welcome{min-height:0;padding:20px 17px;border-radius:17px;justify-content:flex-start}
+  .welcome:before{width:150px;height:150px;right:-55px;top:-55px}
+  .welcome .eyebrow{font-size:8.5px}
+  .welcome h1{font-size:25px}
+  .welcome p{font-size:11px;line-height:1.5;margin-top:8px;max-width:88%}
+  .journey-card,.portal-card{padding:15px;border-radius:15px}
+  .journey-card h3,.portal-card h3{font-size:11px}
+  .journey-step{padding:6px 0}
+  .journey-step strong{font-size:10px}
+  .journey-step small{font-size:8.5px}
+  .portal-card p{font-size:10px;line-height:1.45}
+  .compact-activity{padding:10px 0}
+  .compact-activity strong{font-size:10.5px;line-height:1.4}
+  .compact-activity small{font-size:9px;line-height:1.4}
+  .portal-card .btn{width:100%;min-height:42px;font-size:10px}
+
+  /* Mobile forms use a full-screen flow, not a compressed bottom sheet. */
+  .modal-backdrop{inset:24px 0 0;padding:0;align-items:stretch;background:#f7f8f5;backdrop-filter:none}
+  .modal{
+    width:100%;height:calc(100dvh - 24px);max-height:none;border-radius:0;box-shadow:none;overflow:hidden;
+    display:grid;grid-template-rows:auto minmax(0,1fr) auto;background:#fff
+  }
+  .modal-head{padding:14px 12px 11px;gap:10px;background:#fff}
+  .modal-head .eyebrow{font-size:8.5px;margin-bottom:4px}
+  .modal-head h2{font-size:20px}
+  .modal-head p{font-size:9.5px;line-height:1.4;margin-top:4px}
+  .form{overflow:auto;padding:12px;background:#f7f8f5;overscroll-behavior:contain}
+  .segmented{display:grid;grid-template-columns:1fr 1fr;width:100%;margin:0 0 10px}
+  .segment{width:100%;padding:9px 8px;font-size:10px}
+  .form-section{padding:13px;border-radius:14px;margin-bottom:9px;background:#fff}
+  .form-section h3{font-size:10.5px;margin-bottom:11px}
+  .form-grid,.form-grid.three{grid-template-columns:1fr;gap:10px}
+  .field.full{grid-column:auto}
+  .field label{font-size:8.5px}
+  .input,.textarea{font-size:12px;border-radius:10px;padding:10px;min-height:42px}
+  .textarea{min-height:88px}
+  .modal-footer{
+    display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+    border-top:1px solid var(--line);background:#fff
+  }
+  .modal-footer .btn{width:100%;min-width:0;min-height:42px;font-size:10px;padding:8px}
+  .emergency-note{font-size:9.5px;margin-bottom:10px}
+  .toast{right:10px;left:10px;bottom:76px;font-size:10px;line-height:1.4;text-align:center}
+}
+
+@media(max-width:390px){
+  .content{padding-left:10px;padding-right:10px}
+  .stats-grid{gap:6px}
+  .stat{padding:11px 9px}
+  .candidate-row{padding:11px!important}
+  .candidate-row>.status{max-width:104px;font-size:8px}
+  .workspace-body,.form{padding-left:10px;padding-right:10px}
+  .activity-actions{grid-template-columns:1fr}
+}
