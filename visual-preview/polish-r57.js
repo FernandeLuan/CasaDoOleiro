@@ -21,6 +21,12 @@
     </div>`;
   }
 
+  function simplifyMobileNav(){
+    document.querySelectorAll('.mobile-nav button').forEach(button=>{
+      if(button.textContent.trim().endsWith('Mais'))button.remove();
+    });
+  }
+
   function enhanceCandidateModal(){
     const modal=[...document.querySelectorAll('.modal')].find(node=>node.querySelector('.modal-head h2')?.textContent.trim()==='Novo candidato');
     if(!modal)return;
@@ -52,7 +58,7 @@
   }
 
   function escapeText(value){
-    return String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
+    return String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#039;'}[char]));
   }
 
   let queued=false;
@@ -61,6 +67,7 @@
     queued=true;
     requestAnimationFrame(()=>{
       queued=false;
+      simplifyMobileNav();
       enhanceCandidateModal();
       enhanceAccount();
     });
