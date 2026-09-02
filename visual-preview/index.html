@@ -3,18 +3,23 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="color-scheme" content="light">
-  <meta name="theme-color" content="#18392f">
+  <meta name="theme-color" content="#17372e">
   <title>Casa do Oleiro · Homologação visual</title>
-  <link rel="stylesheet" href="./styles.css">
-  <link rel="stylesheet" href="./polish-r57.css">
-  <link rel="stylesheet" href="./emergency-r57.css">
+  <link rel="stylesheet" href="./role-preview-r58.css">
 </head>
-<body>
+<body data-preview-role="chooser">
   <div class="environment-banner">AMBIENTE DE TESTE · DADOS FICTÍCIOS · NENHUMA AÇÃO AFETA A PRODUÇÃO</div>
-  <div id="app"></div>
-  <script src="./demo-data.js"></script>
-  <script src="./app.js"></script>
-  <script src="./polish-r57.js"></script>
+  <main class="role-chooser">
+    <div class="chooser-wrap">
+      <div class="chooser-brand"><div class="brand-mark">O</div><div><strong>Casa do Oleiro</strong><small>Homologação visual R58</small></div></div>
+      <section class="chooser-head"><p class="eyebrow">Escolha uma experiência</p><h1>Três acessos. Três jornadas reais.</h1><p>Use cada ambiente como se estivesse autenticado naquele perfil. Todas as informações são fictícias e nenhuma ação grava no Firebase, envia e-mail ou altera a produção.</p></section>
+      <section class="role-grid">
+        <a class="role-card" href="./admin.html" data-role-link="admin"><span class="role-icon">A</span><h2>Administrador</h2><p>Início, Voluntariado, Agenda, Grupos e Menu, incluindo unidades, rotina, informações do portal e conta.</p><span class="role-open">Abrir ambiente Admin →</span></a>
+        <a class="role-card" href="./candidate.html" data-role-link="candidate"><span class="role-icon">C</span><h2>Candidato</h2><p>Início, Planejamento, Estadia, Informações e Perfil, simulando a jornada antes da aprovação final.</p><span class="role-open">Abrir como candidato →</span></a>
+        <a class="role-card" href="./volunteer.html" data-role-link="volunteer"><span class="role-icon">V</span><h2>Voluntário aprovado</h2><p>Início, Agenda, Estadia, Informações e Perfil, simulando a experiência após a aprovação.</p><span class="role-open">Abrir como voluntário →</span></a>
+      </section>
+      <div class="chooser-note">Esta entrada existe apenas para homologação. Na produção, cada usuário continua entrando pela autenticação e vendo somente o fluxo correspondente ao próprio perfil/status.</div>
+    </div>
+  </main>
 </body>
 </html>
