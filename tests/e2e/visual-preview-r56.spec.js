@@ -12,10 +12,9 @@ test('visual preview renders admin workspace and contextual activity actions', a
 
   await page.getByText('Josias Almeida', { exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Josias Almeida' })).toBeVisible();
-
-  await page.getByRole('button', { name: /Sexta · 11\/09/i }).click();
+  await expect(page.locator('.day-card.open')).toContainText('11/09');
   await expect(page.getByRole('button', { name: /Replicar atividade/i })).toBeVisible();
-  await expect(page.getByRole('button', { name: /Adicionar atividade/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Adicionar atividade/i }).first()).toBeVisible();
 });
 
 test('visual preview preserves a mobile navigation layout', async ({ page }) => {
