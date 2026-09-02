@@ -1,25 +1,10 @@
 {
   "hosting": {
-    "public": ".",
+    "public": "preview-dist",
     "ignore": [
       "firebase.preview.json",
-      "firebase.json",
-      "firestore.rules",
-      "firestore.indexes.json",
       "**/.*",
-      "**/node_modules/**",
-      "functions/**",
-      "tests/**",
-      "test-results/**",
-      "playwright-report/**",
-      "coverage/**",
-      "docs/**",
-      "tools/**",
-      "*.md",
-      "package.json",
-      "package-lock.json",
-      "playwright.config.js",
-      "firebase-debug.log*"
+      "**/node_modules/**"
     ],
     "rewrites": [
       {"source": "/", "destination": "/homologacao/index.html"}
