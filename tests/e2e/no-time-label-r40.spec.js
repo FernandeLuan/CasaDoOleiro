@@ -32,3 +32,20 @@ test('period compatibility derives legacy values and new writes do not force tim
   expect(planning).toContain("timeFields=legacyTime?{time:legacyTime}:{}");
   expect(series).toContain("...(item.time?{time:item.time}:{})");
 });
+
+test('admin review derives period changes from legacy time-only proposals', async () => {
+  const context=vm.createContext({
+    state:{sessions:[],activities:[]},currentLocale:()=> 'pt-BR',Intl,Date,
+    document:{addEventListener(){}},fmtDate:value=>String(value),escapeHtml:value=>String(value),
+  });
+  context.window=context;
+  vm.runInContext(fs.readFileSync('js/shared/utils.js','utf8'),context);
+  vm.runInContext(fs.readFileSync('js/admin/review-signals-r31.js','utf8'),context);
+
+  const diff=context.OleiroR31AdminReview.summarizeDiff(
+    {date:'2026-09-22',time:'09:00',duration:60,activityName:'Atividade legado'},
+    {time:'15:00'},
+  );
+  expect(diff.from).toContain('Período Manhã');
+  expect(diff.to).toContain('Período Tarde');
+});

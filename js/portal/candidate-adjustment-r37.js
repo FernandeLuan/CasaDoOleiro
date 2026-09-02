@@ -70,7 +70,10 @@
     const raw=rawSession(s),root=document.createElement('div');root.innerHTML=html;const card=root.firstElementChild;if(!card)return html;
     const requested=raw.adminAdjustmentStatus==='requested',draft=isCurrentAdjustmentDraft(raw);
 
-    if(!requested&&!draft)return root.innerHTML;
+    if(!requested&&!draft){
+      card.querySelectorAll('.activity-actions').forEach(node=>node.remove());
+      return root.innerHTML;
+    }
 
     if(draft){
       const row=card.querySelector('.activity-row');
