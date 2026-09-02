@@ -12,7 +12,7 @@ test('admin meeting profile exposes explicit add activity action', async () => {
   expect(feature).toContain('Adicionar atividade');
   expect(feature).toContain('openAdminMeetingActivityPicker');
   expect(feature).toContain('openAdminPlanningActivity');
-  expect(feature).toContain("tab!=='overview'");
+  expect(feature).toContain("['overview','plan'].includes(tab)");
   expect(adminFlow).toContain("window.openAdminPlanningActivity=function");
   expect(adminFlow).toContain('Criada pela gestão e confirmada diretamente no planejamento.');
 });
