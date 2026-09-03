@@ -1,29 +1,25 @@
-/* Página de Informações da Casa da homologação: composição compacta e equilibrada. */
+/* Página de Informações da Casa: rotina e unidades primeiro, portal em cards responsivos. */
 (function houseInfoPage(){
   const params=new URLSearchParams(location.search);
   if(params.get('demo')!=='admin'||!/\/admin\//.test(location.pathname))return;
   if(window.__OLEIRO_HOUSE_INFO_PAGE__)return;
   window.__OLEIRO_HOUSE_INFO_PAGE__=true;
 
-  const esc=value=>typeof escapeHtml==='function'?escapeHtml(value):String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[char]));
+  const esc=value=>typeof escapeHtml==='function'?escapeHtml(value):String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  const tx=(key,fallback)=>{try{const value=typeof t==='function'?t(key):'';return value&&value!==key?value:fallback}catch{return fallback}};
 
   function installStyles(){
     if(document.getElementById('houseInfoPageStyles'))return;
     const style=document.createElement('style');
     style.id='houseInfoPageStyles';
     style.textContent=`
-      .house-info-page{width:100%;max-width:1320px;margin:0 auto;display:grid;gap:14px;padding-bottom:32px}
-      .house-info-portal,.house-info-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);min-width:0}
-      .house-info-portal{padding:14px 16px 16px}
-      .house-info-bottom{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(300px,.55fr);gap:14px;align-items:start}
-      .house-info-card{padding:14px 16px}
+      .house-info-page{width:100%;max-width:1320px;margin:0 auto;display:grid;gap:15px;padding-bottom:32px}
+      .house-info-top{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(300px,.55fr);gap:14px;align-items:start}
+      .house-info-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:14px 16px;box-shadow:var(--shadow);min-width:0}
       .house-info-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:10px}
       .house-info-card-copy{min-width:0;display:grid;gap:3px}
       .house-info-card-copy strong{font-size:.76rem;color:var(--text)}
       .house-info-card-copy p{margin:0;color:var(--muted);font-size:.6rem;line-height:1.4}
-      .house-info-portal-content{min-width:0}
-      .house-info-portal-content details{box-shadow:none!important}
-      .house-info-portal-content details+details{margin-top:6px!important}
 
       .house-info-routine-columns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
       .house-info-routine-block{min-width:0;border:1px solid var(--border);border-radius:13px;overflow:hidden;background:var(--surface)}
@@ -42,12 +38,43 @@
       .house-info-unit-status.active{background:var(--primary-soft);color:var(--primary)}
       .house-info-manage{min-height:34px!important;padding:6px 10px!important;font-size:.57rem!important;white-space:nowrap}
 
+      .house-info-portal-section{display:grid;gap:9px;padding-top:2px}
+      .house-info-portal-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding:0 2px}
+      .house-info-portal-head>div{display:grid;gap:3px}
+      .house-info-portal-head strong{font-size:.76rem;color:var(--text)}
+      .house-info-portal-head p{margin:0;color:var(--muted);font-size:.6rem;line-height:1.4}
+      .house-info-portal-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+      .house-info-topic{min-width:0;min-height:94px;border:1px solid var(--border);border-radius:16px;background:var(--surface);box-shadow:0 3px 14px rgba(30,48,38,.035);padding:12px 13px;display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:10px;align-items:start;text-align:left;color:var(--text);cursor:pointer;transition:.16s ease}
+      .house-info-topic:hover{border-color:color-mix(in srgb,var(--primary) 35%,var(--border));transform:translateY(-1px);box-shadow:0 8px 22px rgba(20,43,31,.06)}
+      .house-info-topic-icon{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:var(--primary-soft);color:var(--primary);font-size:.68rem}
+      .house-info-topic-copy{min-width:0;display:grid;gap:4px;padding-top:1px}
+      .house-info-topic-copy strong{font-size:.67rem;color:var(--text)}
+      .house-info-topic-copy span{font-size:.55rem;line-height:1.4;color:var(--muted)}
+      .house-info-topic>i{align-self:center;color:var(--muted);font-size:.58rem}
+
+      .house-info-topic-modal .modal-body{padding:15px 16px 17px!important}
+      .house-info-topic-modal-body{display:grid;gap:10px;color:var(--text);font-size:.66rem;line-height:1.55}
+      .house-info-topic-modal-body p{margin:0}
+      .house-info-topic-modal-body .info-action-link{justify-self:start;margin-top:2px}
+      .house-info-topic-modal-body .info-routine{display:grid;gap:0;border:1px solid var(--border);border-radius:13px;overflow:hidden}
+      .house-info-topic-modal-body .info-routine p{display:grid;grid-template-columns:86px minmax(0,1fr);gap:10px;padding:7px 10px;border-bottom:1px solid var(--border);font-size:.59rem}
+      .house-info-topic-modal-body .info-routine p:last-child{border-bottom:0}
+      .house-info-topic-modal-body .release-info{display:grid;gap:6px}
+      .house-info-topic-modal-body .release-info p{margin:0}
+
+      @media(max-width:1100px){
+        .house-info-portal-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      }
       @media(max-width:1023px){
-        .house-info-bottom{grid-template-columns:1fr}
+        .house-info-top{grid-template-columns:1fr}
       }
       @media(max-width:720px){
         .house-info-routine-columns{grid-template-columns:1fr}
-        .house-info-portal,.house-info-card{padding:12px}
+        .house-info-card{padding:12px}
+      }
+      @media(max-width:620px){
+        .house-info-portal-grid{grid-template-columns:1fr}
+        .house-info-topic{min-height:76px}
       }
     `;
     document.head.appendChild(style);
@@ -55,11 +82,6 @@
 
   function pageTitle(){
     return `<header class="admin-page-title"><span class="eyebrow">Informações</span><h1>Informações da Casa</h1><p>Centralize orientações do portal, rotina e dados gerais das unidades.</p></header>`;
-  }
-
-  function portalHtml(){
-    try{return typeof infoAccordion==='function'?infoAccordion():'<div class="empty">Informações do portal indisponíveis.</div>'}
-    catch(error){console.warn('Informações do portal indisponíveis:',error);return '<div class="empty">Informações do portal indisponíveis.</div>'}
   }
 
   function routineRows(rows){
@@ -82,8 +104,42 @@
     return `<div class="house-info-units">${rows.map(unit=>{const active=unit.active!==false;return `<div class="house-info-unit"><div class="house-info-unit-copy"><strong>${esc(unit.name||unit.id)}</strong><small>${unit.acceptingVolunteers===true?'Aceitando voluntários':active?'Unidade ativa':'Unidade inativa'}</small></div><span class="house-info-unit-status ${active?'active':''}">${active?'Ativa':'Inativa'}</span></div>`}).join('')}</div>`;
   }
 
+  function portalTopics(){
+    return [
+      {id:'arrival',icon:'fa-location-dot',title:tx('portal.info.arrivalTitle','Como chegar'),preview:'Endereço, transporte e orientações para chegada.'},
+      {id:'accommodation',icon:'fa-bed',title:tx('portal.info.accommodationTitle','Acomodação'),preview:'Orientações sobre quartos, itens e hospedagem.'},
+      {id:'meals',icon:'fa-utensils',title:tx('portal.info.mealsTitle','Refeições'),preview:'Informações sobre alimentação durante a estadia.'},
+      {id:'routine',icon:'fa-clock',title:tx('portal.info.routineTitle','Rotina'),preview:'Usa os mesmos horários da Rotina da Casa exibida acima.'},
+      {id:'principles',icon:'fa-hands-praying',title:tx('portal.info.principlesTitle','Princípios e religião'),preview:'Princípios, espiritualidade e orientações da Casa.'},
+      {id:'safety',icon:'fa-shield-heart',title:tx('portal.info.safetyTitle','Convivência e segurança'),preview:'Regras de convivência, cuidado e segurança.'},
+      {id:'software',icon:'fa-code-branch',title:typeof releaseText==='function'?releaseText('release.cardTitle'):'Versão do software',preview:'Versão, build e informações técnicas publicadas.'}
+    ];
+  }
+
+  function topicBody(id){
+    if(id==='arrival')return `<p><strong>${esc(tx('portal.info.address','Endereço:'))}</strong> ${esc(typeof OLEIRO_ADDRESS!=='undefined'?OLEIRO_ADDRESS:'R. São Pedro Novo, 1999, Rodeio - SC')}</p><p>${esc(tx('portal.info.arrivalBody','Consulte as orientações para chegar à Casa.'))}</p>${typeof OLEIRO_MAPS_URL!=='undefined'?`<a class="info-action-link" href="${esc(OLEIRO_MAPS_URL)}" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-map-location-dot"></i>${esc(tx('portal.info.openMaps','Abrir no mapa'))}</a>`:''}`;
+    if(id==='accommodation')return `<p>${esc(tx('portal.info.accommodationBody','Orientações de acomodação indisponíveis.'))}</p>`;
+    if(id==='meals')return `<p>${esc(tx('portal.info.mealsBody','Orientações de refeições indisponíveis.'))}</p>`;
+    if(id==='routine')return typeof routineInformationHtml==='function'?routineInformationHtml():`<p>A rotina do Portal utiliza os mesmos horários apresentados nesta tela.</p>`;
+    if(id==='principles')return `<p>${esc(tx('portal.info.principlesBody','Orientações de princípios e religião indisponíveis.'))}</p>`;
+    if(id==='safety')return `<p>${esc(tx('portal.info.safetyBody','Orientações de convivência e segurança indisponíveis.'))}</p>`;
+    if(id==='software')return typeof releaseInformationHtml==='function'?releaseInformationHtml():'<p>Informação de versão indisponível.</p>';
+    return '<p>Informação indisponível.</p>';
+  }
+
+  window.openHousePortalTopic=function(id){
+    const topic=portalTopics().find(row=>row.id===id);if(!topic)return;
+    openModal(topic.title,'Conteúdo apresentado no Portal do voluntário.',`<div class="modal-body"><div class="house-info-topic-modal-body">${topicBody(id)}</div></div>`);
+    modalRoot?.querySelector?.('.modal')?.classList.add('house-info-topic-modal');
+  };
+
+  function portalHtml(){
+    const topics=portalTopics();
+    return `<section class="house-info-portal-section"><header class="house-info-portal-head"><div><strong>Portal do voluntário</strong><p>Informações consultadas antes e durante a estadia.</p></div></header><div class="house-info-portal-grid">${topics.map(topic=>`<button class="house-info-topic" type="button" onclick="openHousePortalTopic('${esc(topic.id)}')"><span class="house-info-topic-icon"><i class="fa-solid ${esc(topic.icon)}"></i></span><span class="house-info-topic-copy"><strong>${esc(topic.title)}</strong><span>${esc(topic.preview)}</span></span><i class="fa-solid fa-chevron-right"></i></button>`).join('')}</div></section>`;
+  }
+
   function pageHtml(){
-    return `<section class="house-info-page compact-page-top">${pageTitle()}<article class="house-info-portal"><div class="house-info-card-head"><div class="house-info-card-copy"><strong>Portal do voluntário</strong><p>Conteúdo e orientações apresentados aos candidatos e voluntários.</p></div></div><div class="house-info-portal-content">${portalHtml()}</div></article><div class="house-info-bottom"><article class="house-info-card"><div class="house-info-card-head"><div class="house-info-card-copy"><strong>Rotina da Casa</strong><p>Horários de referência usados na comunidade.</p></div></div>${routineHtml()}</article><article class="house-info-card"><div class="house-info-card-head"><div class="house-info-card-copy"><strong>Unidades</strong><p>Visão rápida das unidades cadastradas.</p></div><button class="btn btn-soft house-info-manage" type="button" onclick="openUnits()"><i class="fa-solid fa-gear"></i>Gerenciar</button></div>${unitsHtml()}</article></div></section>`;
+    return `<section class="house-info-page compact-page-top">${pageTitle()}<div class="house-info-top"><article class="house-info-card"><div class="house-info-card-head"><div class="house-info-card-copy"><strong>Rotina da Casa</strong><p>Horários de referência usados na comunidade e no Portal.</p></div></div>${routineHtml()}</article><article class="house-info-card"><div class="house-info-card-head"><div class="house-info-card-copy"><strong>Unidades</strong><p>Visão rápida das unidades cadastradas.</p></div><button class="btn btn-soft house-info-manage" type="button" onclick="openUnits()"><i class="fa-solid fa-gear"></i>Gerenciar</button></div>${unitsHtml()}</article></div>${portalHtml()}</section>`;
   }
 
   installStyles();
