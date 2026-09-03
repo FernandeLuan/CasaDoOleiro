@@ -42,7 +42,8 @@ document.addEventListener('click',event=>{if(event.target.closest?.('input[type=
 })();
 
 /* Homologação R62 Admin: aplica a composição final da Home somente depois que todos
-   os refinamentos históricos já terminaram de carregar. */
+   os refinamentos históricos já terminaram de carregar. Em seguida, a integração R63
+   reconecta Planejamento/Ocupação ao mesmo shell sem alterar produção. */
 (function loadFinalAdminHomeR62(){
   const params=new URLSearchParams(location.search);
   if(params.get('demo')!=='admin'||!/\/admin\//.test(location.pathname))return;
@@ -52,6 +53,13 @@ document.addEventListener('click',event=>{if(event.target.closest?.('input[type=
     const script=document.createElement('script');
     script.dataset.r62AdminHome='true';
     script.src=new URL('../admin/home-r62-final.js?v=20260902-r62-home2',new URL('./',current)).href;
+    script.onload=()=>{
+      if(document.querySelector('script[data-r63-admin-integration]'))return;
+      const integration=document.createElement('script');
+      integration.dataset.r63AdminIntegration='true';
+      integration.src=new URL('../admin/homologation-integration-r63.js?v=20260903-r63',new URL('./',current)).href;
+      document.body.appendChild(integration);
+    };
     document.body.appendChild(script);
   },{once:true});
 })();
