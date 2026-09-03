@@ -36,29 +36,29 @@ document.addEventListener('click',event=>{if(event.target.closest?.('input[type=
   if(!new URLSearchParams(location.search).has('demo'))return;
   const current=document.currentScript?.src;if(!current||typeof document.write!=='function')return;
   const base=new URL('./',current);
-  const files=['../demo/prod-copy-no-login.js','../demo/demo-mass-r62.js','../demo/demo-scenarios-r77.js'];
+  const files=['../demo/homologation-adapter.js','../demo/homologation-data.js','../demo/homologation-scenarios.js'];
   document.write(files.map((file,index)=>`<script src="${new URL(`${file}?v=20260903-clean-${index+1}`,base).href}"><\/script>`).join(''));
 })();
 
-/* Homologação Admin: módulos visuais legados são carregados em ordem explícita, sem cadeia de onload entre patches. */
+/* Homologação Admin: módulos visuais carregados por responsabilidade em ordem explícita. */
 (function loadHomologationAdminUi(){
   const params=new URLSearchParams(location.search);
   if(params.get('demo')!=='admin'||!/\/admin\//.test(location.pathname))return;
   const current=document.currentScript?.src;if(!current)return;
   const base=new URL('./',current);
   const files=[
-    '../admin/home-r62-final.js',
-    '../admin/homologation-integration-r63.js',
-    '../admin/planning-board-r65.js',
-    '../admin/planning-person-agenda-r66.js',
-    '../admin/home-r67-layout.js',
-    '../admin/volunteer-status-inline-r68.js',
-    '../admin/planning-profile-layout-r69.js',
-    '../admin/account-consolidated-r70.js',
-    '../admin/profile-polish-r72.js',
-    '../admin/emergency-contact-sync-r73.js',
-    '../admin/account-consistency-r74.js',
-    '../admin/account-emergency-live-r75.js'
+    '../admin/home-dashboard.js',
+    '../admin/homologation-shell.js',
+    '../admin/planning-board.js',
+    '../admin/planning-person-agenda.js',
+    '../admin/home-layout.js',
+    '../admin/volunteer-status-inline.js',
+    '../admin/planning-profile-layout.js',
+    '../admin/account-consolidated.js',
+    '../admin/profile-polish.js',
+    '../admin/emergency-contact-sync.js',
+    '../admin/account-consistency.js',
+    '../admin/account-emergency-live.js'
   ];
   const load=(file,index)=>new Promise((resolve,reject)=>{
     const script=document.createElement('script');
