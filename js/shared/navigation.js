@@ -31,89 +31,45 @@ document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
 function openDatePicker(inputOrId){const input=typeof inputOrId==='string'?document.getElementById(inputOrId):inputOrId;if(!input||input.disabled)return;try{if(typeof input.showPicker==='function')input.showPicker();else input.focus()}catch{input.focus()}}
 document.addEventListener('click',event=>{if(event.target.closest?.('input[type="date"]'))return;const input=event.target.closest?.('.date-field')?.querySelector?.('input[type="date"]');if(input)openDatePicker(input);});
 
-/* Homologação R62: carrega somente o adapter de Auth/Services quando ?demo=... estiver presente. */
-(function loadProdCopyNoLogin(){
+/* Homologação: somente Auth/IO e dados são substituídos quando ?demo=... está presente. */
+(function loadHomologationData(){
   if(!new URLSearchParams(location.search).has('demo'))return;
   const current=document.currentScript?.src;if(!current||typeof document.write!=='function')return;
   const base=new URL('./',current);
-  const src=new URL('../demo/prod-copy-no-login.js?v=20260902-r62',base).href;
-  const massSrc=new URL('../demo/demo-mass-r62.js?v=20260903-r62-mass2',base).href;
-  const scenarioSrc=new URL('../demo/demo-scenarios-r77.js?v=20260903-r77',base).href;
-  document.write(`<script src="${src}"><\/script><script src="${massSrc}"><\/script><script src="${scenarioSrc}"><\/script>`);
+  const files=['../demo/prod-copy-no-login.js','../demo/demo-mass-r62.js','../demo/demo-scenarios-r77.js'];
+  document.write(files.map((file,index)=>`<script src="${new URL(`${file}?v=20260903-clean-${index+1}`,base).href}"><\/script>`).join(''));
 })();
 
-/* Homologação R62 Admin: composição progressiva da interface de teste. */
-(function loadFinalAdminHomeR62(){
+/* Homologação Admin: módulos visuais legados são carregados em ordem explícita, sem cadeia de onload entre patches. */
+(function loadHomologationAdminUi(){
   const params=new URLSearchParams(location.search);
   if(params.get('demo')!=='admin'||!/\/admin\//.test(location.pathname))return;
   const current=document.currentScript?.src;if(!current)return;
-  window.addEventListener('load',()=>{
-    if(document.querySelector('script[data-r62-admin-home]'))return;
+  const base=new URL('./',current);
+  const files=[
+    '../admin/home-r62-final.js',
+    '../admin/homologation-integration-r63.js',
+    '../admin/planning-board-r65.js',
+    '../admin/planning-person-agenda-r66.js',
+    '../admin/home-r67-layout.js',
+    '../admin/volunteer-status-inline-r68.js',
+    '../admin/planning-profile-layout-r69.js',
+    '../admin/account-consolidated-r70.js',
+    '../admin/profile-polish-r72.js',
+    '../admin/emergency-contact-sync-r73.js',
+    '../admin/account-consistency-r74.js',
+    '../admin/account-emergency-live-r75.js'
+  ];
+  const load=(file,index)=>new Promise((resolve,reject)=>{
     const script=document.createElement('script');
-    script.dataset.r62AdminHome='true';
-    script.src=new URL('../admin/home-r62-final.js?v=20260902-r62-home2',new URL('./',current)).href;
-    script.onload=()=>{
-      if(document.querySelector('script[data-r65-admin-integration]'))return;
-      const integration=document.createElement('script');
-      integration.dataset.r65AdminIntegration='true';
-      integration.src=new URL('../admin/homologation-integration-r63.js?v=20260903-r65',new URL('./',current)).href;
-      integration.onload=()=>{
-        if(document.querySelector('script[data-r65-planning-board]'))return;
-        const board=document.createElement('script');
-        board.dataset.r65PlanningBoard='true';
-        board.src=new URL('../admin/planning-board-r65.js?v=20260903-r65',new URL('./',current)).href;
-        board.onload=()=>{
-          if(document.querySelector('script[data-r66-planning-person-agenda]'))return;
-          const agenda=document.createElement('script');
-          agenda.dataset.r66PlanningPersonAgenda='true';
-          agenda.src=new URL('../admin/planning-person-agenda-r66.js?v=20260903-r66',new URL('./',current)).href;
-          agenda.onload=()=>{
-            if(document.querySelector('script[data-r67-admin-home]'))return;
-            const home=document.createElement('script');
-            home.dataset.r67AdminHome='true';
-            home.src=new URL('../admin/home-r67-layout.js?v=20260903-r67',new URL('./',current)).href;
-            home.onload=()=>{
-              if(document.querySelector('script[data-r68-volunteer-status-inline]'))return;
-              const volunteer=document.createElement('script');
-              volunteer.dataset.r68VolunteerStatusInline='true';
-              volunteer.src=new URL('../admin/volunteer-status-inline-r68.js?v=20260903-r68',new URL('./',current)).href;
-              volunteer.onload=()=>{
-                if(document.querySelector('script[data-r69-planning-profile-layout]'))return;
-                const profile=document.createElement('script');
-                profile.dataset.r69PlanningProfileLayout='true';
-                profile.src=new URL('../admin/planning-profile-layout-r69.js?v=20260903-r69',new URL('./',current)).href;
-                profile.onload=()=>{
-                  if(document.querySelector('script[data-r70-account-consolidated]'))return;
-                  const account=document.createElement('script');
-                  account.dataset.r70AccountConsolidated='true';
-                  account.src=new URL('../admin/account-consolidated-r70.js?v=20260903-r70',new URL('./',current)).href;
-                  account.onload=()=>{
-                    if(document.querySelector('script[data-r72-profile-polish]'))return;
-                    const polish=document.createElement('script');
-                    polish.dataset.r72ProfilePolish='true';
-                    polish.src=new URL('../admin/profile-polish-r72.js?v=20260903-r75',new URL('./',current)).href;
-                    document.body.appendChild(polish);
-                    if(!document.querySelector('script[data-r80-planning-actions-bootstrap]')){
-                      const planningActions=document.createElement('script');
-                      planningActions.dataset.r80PlanningActionsBootstrap='true';
-                      planningActions.src=new URL('../admin/planning-actions-bootstrap-r80.js?v=20260903-r80',new URL('./',current)).href;
-                      document.body.appendChild(planningActions);
-                    }
-                  };
-                  document.body.appendChild(account);
-                };
-                document.body.appendChild(profile);
-              };
-              document.body.appendChild(volunteer);
-            };
-            document.body.appendChild(home);
-          };
-          document.body.appendChild(agenda);
-        };
-        document.body.appendChild(board);
-      };
-      document.body.appendChild(integration);
-    };
+    script.dataset.homologationUi=String(index+1);
+    script.src=new URL(`${file}?v=20260903-clean-${index+1}`,base).href;
+    script.onload=resolve;
+    script.onerror=()=>reject(new Error(`Falha ao carregar módulo de homologação: ${file}`));
     document.body.appendChild(script);
+  });
+  window.addEventListener('load',async()=>{
+    try{for(let index=0;index<files.length;index+=1)await load(files[index],index)}
+    catch(error){console.error(error);if(typeof showToast==='function')showToast('Falha ao carregar a interface de homologação.')}
   },{once:true});
 })();
