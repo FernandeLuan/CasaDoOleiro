@@ -72,22 +72,22 @@
       .manager-home-r62-card{background:var(--surface);border:1px solid var(--border);border-radius:26px;padding:22px;box-shadow:var(--shadow);margin:0}
       .manager-home-r62-head{align-items:flex-start}
       .manager-home-r62-count{display:grid;place-items:center;min-width:58px;height:58px;padding:0 15px;border-radius:18px;background:var(--primary-soft);color:var(--primary);font-family:var(--font-heading);font-size:1.05rem;font-weight:800}
-      .manager-home-r62-today-list{min-height:150px}
-      .manager-home-r62-today-list>.empty{min-height:150px;display:grid;place-items:center}
+      .manager-home-r62-today-list{min-height:130px}
+      .manager-home-r62-today-list>.empty{min-height:130px;display:grid;place-items:center}
       .manager-home-r62-moves .card{box-shadow:none}
       @media(min-width:1024px){
-        .manager-home-r62-top{grid-template-columns:minmax(0,2.32fr) minmax(350px,.9fr);align-items:stretch;gap:16px}
+        .manager-home-r62-top{grid-template-columns:minmax(0,1.78fr) minmax(390px,1fr);align-items:stretch;gap:16px}
         .manager-home-r62-bottom{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);align-items:stretch;gap:16px}
-        .manager-home-r62-hero{min-height:390px;padding:48px 50px;display:flex;flex-direction:column;justify-content:center;border-radius:30px}
-        .manager-home-r62-hero h1{font-size:clamp(2.8rem,3.65vw,4.45rem);line-height:1.02;letter-spacing:-.045em;margin:12px 0 16px;max-width:1100px}
-        .manager-home-r62-hero p{font-size:1rem;max-width:850px}
-        .manager-home-r62-hero .hero-actions{margin-top:32px}
-        .manager-home-r62-hero .btn{min-height:50px;padding:13px 20px;font-size:.8rem}
-        .manager-home-r62-card{padding:28px;min-height:220px}
-        .manager-home-r62-today{min-height:390px;display:flex;flex-direction:column}
-        .manager-home-r62-today .section-head{margin-bottom:20px}
+        .manager-home-r62-hero{min-height:320px;padding:34px 40px;display:flex;flex-direction:column;justify-content:center;border-radius:28px}
+        .manager-home-r62-hero h1{font-size:clamp(2.45rem,3.25vw,3.9rem);line-height:1.03;letter-spacing:-.04em;margin:10px 0 14px;max-width:920px}
+        .manager-home-r62-hero p{font-size:.94rem;max-width:760px}
+        .manager-home-r62-hero .hero-actions{margin-top:24px}
+        .manager-home-r62-hero .btn{min-height:48px;padding:12px 18px;font-size:.78rem}
+        .manager-home-r62-card{padding:26px;min-height:200px}
+        .manager-home-r62-today{min-height:320px;display:flex;flex-direction:column}
+        .manager-home-r62-today .section-head{margin-bottom:16px}
         .manager-home-r62-today-list{flex:1;min-height:0;justify-content:center}
-        .manager-home-r62-today-list>.empty{min-height:165px}
+        .manager-home-r62-today-list>.empty{min-height:130px}
         .manager-home-r62-panel>.section-head{margin-bottom:16px}
         .manager-home-r62-panel>.section-head h2{font-size:1.12rem}
         .manager-home-r62-panel .pending-grid{gap:12px}
@@ -100,9 +100,9 @@
         .manager-home-r62-moves>.card{min-height:124px;border-radius:18px;padding:16px}
       }
       @media(min-width:1600px){
-        .manager-home-r62-top{grid-template-columns:minmax(0,2.45fr) minmax(390px,.88fr)}
-        .manager-home-r62-hero{min-height:420px;padding:52px 56px}
-        .manager-home-r62-today{min-height:420px}
+        .manager-home-r62-top{grid-template-columns:minmax(0,1.85fr) minmax(420px,1fr)}
+        .manager-home-r62-hero{min-height:340px;padding:38px 44px}
+        .manager-home-r62-today{min-height:340px}
       }
       @media(max-width:1023px){
         .manager-home-r62-top,.manager-home-r62-bottom{grid-template-columns:1fr}
