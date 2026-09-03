@@ -89,7 +89,6 @@
       const head=emergency?.querySelector('.account-person-section-head-r70');
       if(!emergency||!head)return;
 
-      /* A camada anterior pode ter preservado o botão de PRD; se existir, apenas garantimos visibilidade. */
       const existing=head.querySelector('button');
       if(existing){
         existing.style.removeProperty('display');
@@ -116,7 +115,6 @@
     ensureEmergencyActions();
   }
 
-  /* R71 pode terminar de instalar logo após esta camada; repetimos por alguns frames sem observar o DOM continuamente. */
   let attempts=0;
   function settle(){
     polish();attempts+=1;
@@ -138,4 +136,14 @@
 
   installStyles();
   requestAnimationFrame(settle);
+})();
+
+/* R73: após o acabamento visual, garante sincronização pós-save do contato de emergência. */
+(function loadEmergencyContactSyncR73(){
+  if(document.querySelector('script[data-r73-emergency-contact-sync]'))return;
+  const current=document.currentScript?.src;if(!current)return;
+  const script=document.createElement('script');
+  script.dataset.r73EmergencyContactSync='true';
+  script.src=new URL('./emergency-contact-sync-r73.js?v=20260903-r73',current).href;
+  document.body.appendChild(script);
 })();
