@@ -7,6 +7,7 @@
 
   const esc=value=>typeof escapeHtml==='function'?escapeHtml(value):String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   const tx=(key,fallback)=>{try{const value=typeof t==='function'?t(key):'';return value&&value!==key?value:fallback}catch{return fallback}};
+  state.houseInfoUnitUpdating=state.houseInfoUnitUpdating||{};
 
   function installStyles(){
     if(document.getElementById('houseInfoPageStyles'))return;
@@ -29,14 +30,18 @@
       .house-info-routine-row time{font-size:.56rem;font-weight:700;color:var(--primary);white-space:nowrap}
       .house-info-routine-row span{font-size:.59rem;color:var(--text);line-height:1.3}
 
-      .house-info-units{display:grid;gap:7px}
-      .house-info-unit{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 11px;border:1px solid var(--border);border-radius:13px;background:var(--surface)}
+      .house-info-units{display:grid;gap:8px}
+      .house-info-unit{display:grid;gap:9px;padding:10px 11px 11px;border:1px solid var(--border);border-radius:13px;background:var(--surface)}
       .house-info-unit-copy{min-width:0;display:grid;gap:2px}
-      .house-info-unit-copy strong{font-size:.65rem;color:var(--text)}
-      .house-info-unit-copy small{font-size:.54rem;color:var(--muted)}
-      .house-info-unit-status{border-radius:999px;padding:5px 7px;font-size:.49rem;font-weight:700;background:var(--surface-2);color:var(--muted);white-space:nowrap}
-      .house-info-unit-status.active{background:var(--primary-soft);color:var(--primary)}
-      .house-info-manage{min-height:34px!important;padding:6px 10px!important;font-size:.57rem!important;white-space:nowrap}
+      .house-info-unit-copy strong{font-size:.66rem;color:var(--text)}
+      .house-info-unit-copy small{font-size:.53rem;color:var(--muted)}
+      .house-info-unit-toggle{display:grid;grid-template-columns:1fr 1fr;gap:3px;width:100%;padding:3px;border:1px solid var(--border);border-radius:11px;background:var(--surface-2)}
+      .house-info-unit-toggle button{min-width:0;min-height:32px;border:0;border-radius:8px;background:transparent;color:var(--muted);font-size:.55rem;font-weight:700;cursor:pointer;transition:.15s ease}
+      .house-info-unit-toggle button:hover:not(:disabled){background:var(--surface);color:var(--text)}
+      .house-info-unit-toggle button.selected-active{background:var(--primary);color:#fff;box-shadow:0 2px 8px rgba(30,95,67,.16)}
+      .house-info-unit-toggle button.selected-inactive{background:var(--surface);color:var(--text);box-shadow:inset 0 0 0 1px var(--border)}
+      .house-info-unit-toggle button:disabled{cursor:wait;opacity:.6}
+      .house-info-unit-updating{display:inline-flex;align-items:center;gap:5px;color:var(--muted);font-size:.49rem}
 
       .house-info-portal-section{display:grid;gap:9px;padding-top:2px}
       .house-info-portal-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding:0 2px}
@@ -94,11 +99,36 @@
     return `<div class="house-info-routine-columns"><div class="house-info-routine-block"><span class="house-info-routine-label">Manhã</span>${routineRows(morning)}</div><div class="house-info-routine-block"><span class="house-info-routine-label">Tarde e noite</span>${routineRows(later)}</div></div>`;
   }
 
+  function unitToggle(unit){
+    const unitId=String(unit.id),active=unit.active!==false,busy=!!state.houseInfoUnitUpdating[unitId],encoded=encodeURIComponent(unitId);
+    return `<div class="house-info-unit-toggle" role="group" aria-label="Status da unidade ${esc(unit.name||unitId)}"><button class="${active?'selected-active':''}" type="button" aria-pressed="${active?'true':'false'}" onclick="setHouseUnitActive('${encoded}',true)" ${busy?'disabled':''}>Ativo</button><button class="${!active?'selected-inactive':''}" type="button" aria-pressed="${!active?'true':'false'}" onclick="setHouseUnitActive('${encoded}',false)" ${busy?'disabled':''}>Inativo</button></div>`;
+  }
+
   function unitsHtml(){
     const rows=Array.isArray(state.units)?state.units:[];
     if(!rows.length)return '<div class="empty">Nenhuma unidade cadastrada.</div>';
-    return `<div class="house-info-units">${rows.map(unit=>{const active=unit.active!==false;return `<div class="house-info-unit"><div class="house-info-unit-copy"><strong>${esc(unit.name||unit.id)}</strong><small>${unit.acceptingVolunteers===true?'Aceitando voluntários':active?'Unidade ativa':'Unidade inativa'}</small></div><span class="house-info-unit-status ${active?'active':''}">${active?'Ativa':'Inativa'}</span></div>`}).join('')}</div>`;
+    return `<div class="house-info-units">${rows.map(unit=>{const busy=!!state.houseInfoUnitUpdating[String(unit.id)];return `<div class="house-info-unit"><div class="house-info-unit-copy"><strong>${esc(unit.name||unit.id)}</strong>${busy?'<small class="house-info-unit-updating"><i class="fa-solid fa-circle-notch fa-spin"></i>Atualizando status...</small>':'<small>Disponibilidade da unidade</small>'}</div>${unitToggle(unit)}</div>`}).join('')}</div>`;
   }
+
+  window.setHouseUnitActive=async function(encodedId,nextValue){
+    const unitId=decodeURIComponent(String(encodedId||'')),next=nextValue===true;
+    const current=(state.units||[]).find(unit=>String(unit.id)===unitId);
+    if(!current||current.active===next||state.houseInfoUnitUpdating[unitId])return;
+    if(!window.OleiroServices?.units?.update){showToast?.('Serviço de unidades indisponível.');return}
+    state.houseInfoUnitUpdating[unitId]=true;
+    window.render?.();
+    try{
+      await window.OleiroServices.units.update(unitId,{active:next});
+      state.units=(state.units||[]).map(unit=>String(unit.id)===unitId?{...unit,active:next}:unit);
+      window.OleiroServices.units.invalidate?.();
+    }catch(error){
+      console.error('Falha ao atualizar status da unidade:',error);
+      showToast?.('Não foi possível atualizar a unidade.');
+    }finally{
+      delete state.houseInfoUnitUpdating[unitId];
+      if(state.managerPage==='houseInfo')window.render?.();
+    }
+  };
 
   function portalTopics(){
     return [
@@ -133,7 +163,7 @@
   }
 
   function pageHtml(){
-    return `<section class="house-info-page compact-page-top">${pageTitle()}<div class="house-info-top"><article class="house-info-card"><div class="house-info-card-head"><div class="house-info-card-copy"><strong>Rotina da Casa</strong><p>Horários de referência usados na comunidade e no Portal.</p></div></div>${routineHtml()}</article><article class="house-info-card"><div class="house-info-card-head"><div class="house-info-card-copy"><strong>Unidades</strong><p>Visão rápida das unidades cadastradas.</p></div><button class="btn btn-soft house-info-manage" type="button" onclick="openUnits()"><i class="fa-solid fa-gear"></i>Gerenciar</button></div>${unitsHtml()}</article></div>${portalHtml()}</section>`;
+    return `<section class="house-info-page compact-page-top">${pageTitle()}<div class="house-info-top"><article class="house-info-card"><div class="house-info-card-head"><div class="house-info-card-copy"><strong>Rotina da Casa</strong><p>Horários de referência usados na comunidade e no Portal.</p></div></div>${routineHtml()}</article><article class="house-info-card"><div class="house-info-card-head"><div class="house-info-card-copy"><strong>Unidades</strong><p>Ative ou inative cada unidade diretamente.</p></div></div>${unitsHtml()}</article></div>${portalHtml()}</section>`;
   }
 
   installStyles();
