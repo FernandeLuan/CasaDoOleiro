@@ -36,7 +36,7 @@ document.addEventListener('click',event=>{if(event.target.closest?.('input[type=
   if(!new URLSearchParams(location.search).has('demo'))return;
   const current=document.currentScript?.src;if(!current||typeof document.write!=='function')return;
   const base=new URL('./',current);
-  const files=['../demo/homologation-adapter.js','../demo/homologation-data.js','../demo/homologation-scenarios.js'];
+  const files=['../demo/homologation-adapter.js','../demo/homologation-data.js','../demo/homologation-scenarios.js','../demo/homologation-contracts.js'];
   document.write(files.map((file,index)=>`<script src="${new URL(`${file}?v=20260903-clean-${index+1}`,base).href}"><\/script>`).join(''));
 })();
 
