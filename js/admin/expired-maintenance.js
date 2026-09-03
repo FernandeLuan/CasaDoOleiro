@@ -5,3 +5,13 @@ processExpiredCandidatesOnStartup=async function(){
   if(total>0&&state.managerPage==='volunteer'&&state.candidateFilter==='pending'&&typeof loadManagerCandidates==='function')await loadManagerCandidates({force:true});
   return total;
 };
+
+/* Carrega a camada experimental da página de Planejamento apenas nesta branch de homologação. */
+(function loadAdminPlanningPageR53(){
+  if(document.querySelector('script[data-admin-planning-r53]'))return;
+  const script=document.createElement('script');
+  script.src='../js/admin/planning-page-r53.js?v=20260902-r53';
+  script.dataset.adminPlanningR53='1';
+  script.defer=true;
+  document.body.appendChild(script);
+})();
