@@ -1,24 +1,8 @@
 /* Navegação compartilhada da homologação visual. */
-function scrollPageTop(){
-  const reset=()=>{window.scrollTo({top:0,left:0,behavior:'auto'});document.documentElement.scrollTop=0;document.body.scrollTop=0;const page=document.querySelector('.page');if(page){page.scrollTop=0;page.scrollLeft=0;typeof page.scrollTo==='function'&&page.scrollTo({top:0,left:0,behavior:'auto'})}};
-  reset();requestAnimationFrame(reset);setTimeout(reset,40);
-}
+function scrollPageTop(){const reset=()=>{window.scrollTo({top:0,left:0,behavior:'auto'});document.documentElement.scrollTop=0;document.body.scrollTop=0;const page=document.querySelector('.page');if(page){page.scrollTop=0;page.scrollLeft=0;typeof page.scrollTo==='function'&&page.scrollTo({top:0,left:0,behavior:'auto'})}};reset();requestAnimationFrame(reset);setTimeout(reset,40)}
 function afterNavigation(){try{document.activeElement?.blur?.()}catch{}scrollPageTop()}
-async function goHome(){
-  if(state.role==='manager')state.managerPage='home';else if(state.role==='volunteer')state.volunteerPage='home';render();afterNavigation();
-  if(state.role==='manager'){
-    if(typeof refreshManagerApplications==='function')refreshManagerApplications().catch(console.error);
-    if(typeof hydrateManagerSchedule==='function')hydrateManagerSchedule(_oleiroToday,_oleiroToday,{force:true}).then(()=>{if(state.managerPage==='home')render()}).catch(console.error);
-  }
-}
-function navigateManager(page){
-  state.managerPage=page;
-  if(page==='agenda'&&(!state.agendaFrom||!state.agendaTo)){state.agendaFrom=_oleiroToday;state.agendaTo=_oleiroToday;state.agendaAnchor=_oleiroToday;state.selectedDate=_oleiroToday}
-  render();afterNavigation();
-  if(page==='volunteer'&&typeof refreshManagerApplications==='function')refreshManagerApplications().catch(error=>console.error('Não foi possível atualizar os voluntários:',error));
-  if(page==='groups'&&typeof ensureManagerGroups==='function'&&!state.groupsLoaded)ensureManagerGroups().then(()=>{if(state.managerPage==='groups')render()}).catch(error=>{console.error(error);showToast('Não foi possível carregar os grupos.')});
-  if(page==='agenda'&&typeof hydrateManagerSchedule==='function')hydrateManagerSchedule(state.agendaFrom,state.agendaTo,{force:true}).then(()=>{if(state.managerPage==='agenda')render()}).catch(error=>{console.error(error);showToast('Não foi possível atualizar a agenda.')});
-}
+async function goHome(){if(state.role==='manager')state.managerPage='home';else if(state.role==='volunteer')state.volunteerPage='home';render();afterNavigation();if(state.role==='manager'){if(typeof refreshManagerApplications==='function')refreshManagerApplications().catch(console.error);if(typeof hydrateManagerSchedule==='function')hydrateManagerSchedule(_oleiroToday,_oleiroToday,{force:true}).then(()=>{if(state.managerPage==='home')render()}).catch(console.error)}}
+function navigateManager(page){state.managerPage=page;if(page==='agenda'&&(!state.agendaFrom||!state.agendaTo)){state.agendaFrom=_oleiroToday;state.agendaTo=_oleiroToday;state.agendaAnchor=_oleiroToday;state.selectedDate=_oleiroToday}render();afterNavigation();if(page==='volunteer'&&typeof refreshManagerApplications==='function')refreshManagerApplications().catch(error=>console.error('Não foi possível atualizar os voluntários:',error));if(page==='groups'&&typeof ensureManagerGroups==='function'&&!state.groupsLoaded)ensureManagerGroups().then(()=>{if(state.managerPage==='groups')render()}).catch(error=>{console.error(error);showToast('Não foi possível carregar os grupos.')});if(page==='agenda'&&typeof hydrateManagerSchedule==='function')hydrateManagerSchedule(state.agendaFrom,state.agendaTo,{force:true}).then(()=>{if(state.managerPage==='agenda')render()}).catch(error=>{console.error(error);showToast('Não foi possível atualizar a agenda.')})}
 function navigateVolunteer(page){state.volunteerPage=page;render();afterNavigation()}
 function currentRoleLabel(){if(state.role==='manager')return 'Gestão do voluntariado';if(state.volunteerMode==='approved')return 'Portal do voluntário';return 'Portal do candidato'}
 function header(){return `<header class="app-header simplified-header r61-header"><div class="brand-row"><div class="brand" role="button" tabindex="0" aria-label="Ir para a tela inicial" onclick="goHome()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goHome()}"><div class="brand-mark"><i class="fa-solid fa-seedling"></i></div><div class="brand-copy"><strong>Casa do Oleiro</strong><span class="r61-brand-context">${escapeHtml(currentRoleLabel())}</span></div></div><div class="header-actions"><button class="icon-btn language-button" onclick="openLanguageModal()" aria-label="Idioma"><span class="current-language-code">${typeof currentLanguageCode==='function'?currentLanguageCode():'PT'}</span></button><button class="icon-btn" onclick="toggleTheme()" aria-label="Tema"><i class="fa-solid ${state.theme==='dark'?'fa-sun':'fa-moon'}"></i></button></div></div></header>`}
@@ -26,14 +10,15 @@ function navShell(items,current,navigate,context){return `<nav class="r61-primar
 function managerNav(){const items=[['home','fa-house','Visão geral'],['volunteer','fa-users','Voluntariado'],['agenda','fa-calendar-days','Agenda'],['groups','fa-people-group','Grupos'],['menu','fa-ellipsis','Mais']];return navShell(items,state.managerPage,'navigateManager','Ambiente de gestão')}
 function volunteerNav(){const approved=state.volunteerMode==='approved';const items=approved?[['home','fa-house','Início'],['agenda','fa-calendar-check','Agenda'],['stay','fa-location-dot','Estadia'],['info','fa-circle-info','Informações'],['profile','fa-user','Perfil']]:[['home','fa-house','Início'],['plan','fa-calendar-plus','Planejamento'],['stay','fa-location-dot','Estadia'],['info','fa-circle-info','Informações'],['profile','fa-user','Perfil']];if(approved&&state.volunteerPage==='plan')state.volunteerPage='agenda';return navShell(items,state.volunteerPage,'navigateVolunteer',approved?'Estadia confirmada':'Processo de candidatura')}
 
-if('scrollRestoration' in history)history.scrollRestoration='manual';
-document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
+if('scrollRestoration' in history)history.scrollRestoration='manual';document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
 function openDatePicker(inputOrId){const input=typeof inputOrId==='string'?document.getElementById(inputOrId):inputOrId;if(!input||input.disabled)return;try{if(typeof input.showPicker==='function')input.showPicker();else input.focus()}catch{input.focus()}}
 document.addEventListener('click',event=>{if(event.target.closest?.('input[type="date"]'))return;const input=event.target.closest?.('.date-field')?.querySelector?.('input[type="date"]');if(input)openDatePicker(input)});
 
-/* Massa fake apenas em homologação. A interface visual agora está nos renderizadores reais da branch. */
-(function loadDemoAdapter(){
-  const current=document.currentScript?.src;if(!current||typeof document.write!=='function')return;
-  const params=new URLSearchParams(location.search),demo=params.has('demo')||/--visual-redesign-|--realbase-/.test(location.hostname);
-  if(demo){const sharedBase=new URL('./',current),adapter=new URL('../demo/realbase-r59.js?v=20260902-r61',sharedBase).href;document.write(`<script src="${adapter}"><\/script>`)}
-})();
+/* Estadia, Informações e Perfil mantêm suas funções reais e recebem apenas o novo shell. */
+function wrapPortalPageR61(name,kicker,title,description){try{const current=window[name];if(typeof current!=='function'||current.__r61Wrapped)return;const wrapped=function(){return `<div class="r61-page"><div class="r61-page-heading"><div><span class="r61-kicker">${escapeHtml(kicker)}</span><h1>${escapeHtml(title)}</h1><p>${escapeHtml(description)}</p></div></div>${current()}</div>`};wrapped.__r61Wrapped=true;window[name]=wrapped;eval(`${name}=window[name]`)}catch(error){console.warn('R61 portal wrapper:',name,error)}}
+if(typeof volunteerStay==='function')wrapPortalPageR61('volunteerStay','Sua passagem pela Casa','Estadia','Datas, unidade, chegada e orientações práticas para sua permanência.');
+if(typeof volunteerInfo==='function')wrapPortalPageR61('volunteerInfo','Antes e durante a estadia','Informações','Tudo o que você precisa saber sobre a Casa, rotina e deslocamento.');
+if(typeof volunteerProfile==='function')wrapPortalPageR61('volunteerProfile','Seus dados','Perfil','Consulte seus dados pessoais e informações de contato.');
+
+/* Massa fake apenas em homologação. */
+(function loadDemoAdapter(){const current=document.currentScript?.src;if(!current||typeof document.write!=='function')return;const params=new URLSearchParams(location.search),demo=params.has('demo')||/--visual-redesign-|--realbase-/.test(location.hostname);if(demo){const sharedBase=new URL('./',current),adapter=new URL('../demo/realbase-r59.js?v=20260902-r61',sharedBase).href;document.write(`<script src="${adapter}"><\/script>`)}})();
