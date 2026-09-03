@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#315f48">
+  <title>Homologação • Casa do Oleiro</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#f6f5f0;color:#1f2b24;display:grid;place-items:center;padding:24px}.box{width:min(760px,100%);background:#fff;border:1px solid #dfe4df;border-radius:24px;padding:28px;box-shadow:0 16px 50px rgba(30,48,38,.08)}h1{margin:0 0 8px;font-size:28px}p{margin:0 0 24px;color:#647068;line-height:1.55}.roles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.role{display:block;padding:18px;border:1px solid #dce3dd;border-radius:16px;text-decoration:none;color:inherit;background:#fff}.role:hover{border-color:#7fa08d;background:#f8fbf9}.role strong{display:block;margin-bottom:6px}.role span{font-size:13px;color:#6b756f}.note{margin-top:20px;padding-top:16px;border-top:1px solid #e5e9e5;font-size:12px;color:#7a837d}@media(max-width:700px){.roles{grid-template-columns:1fr}.box{padding:22px}}
+  </style>
+</head>
+<body>
+  <main class="box">
+    <h1>Cópia fiel da produção</h1>
+    <p>Escolha um acesso. O visual e os fluxos são os mesmos do PRD; somente login e backend estão substituídos por dados de teste em memória.</p>
+    <div class="roles">
+      <a class="role" href="../admin/?demo=admin"><strong>Administrador</strong><span>Acessar a gestão sem login.</span></a>
+      <a class="role" href="../portal/?demo=candidate"><strong>Candidato</strong><span>Acessar o portal antes da aprovação.</span></a>
+      <a class="role" href="../portal/?demo=volunteer"><strong>Voluntário aprovado</strong><span>Acessar o portal pós-aprovação.</span></a>
+    </div>
+    <div class="note">Ambiente de teste: não grava Firestore real, não cria usuários e não envia e-mails. Dentro do sistema use “Teste · trocar acesso” para voltar aqui a qualquer momento.</div>
+  </main>
+</body>
+</html>
