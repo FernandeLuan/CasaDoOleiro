@@ -63,16 +63,14 @@
     rows.forEach((row,index)=>{
       const block=emergencyBlock(row);if(!block)return;
       const body=block.querySelector('.account-person-emergency-body-r70');if(!body)return;
-      const contact=emergencyFor(p,index),has=hasContact(contact);
-      body.innerHTML=emergencyHtml(contact);
-      let head=block.querySelector('.account-person-section-head-r70');
-      if(!head)return;
+      const contact=emergencyFor(p,index),has=hasContact(contact),html=emergencyHtml(contact);
+      if(body.innerHTML!==html)body.innerHTML=html;
+      const head=block.querySelector('.account-person-section-head-r70');if(!head)return;
       let button=head.querySelector('button');
-      if(!button){
-        button=document.createElement('button');button.type='button';button.className='account-emergency-action-r72';head.appendChild(button);
-      }
+      if(!button){button=document.createElement('button');button.type='button';button.className='account-emergency-action-r72';head.appendChild(button)}
       button.style.removeProperty('display');
-      button.innerHTML=`<i class="fa-solid ${has?'fa-pen':'fa-plus'}"></i>${has?'Editar':'Adicionar'}`;
+      const buttonHtml=`<i class="fa-solid ${has?'fa-pen':'fa-plus'}"></i>${has?'Editar':'Adicionar'}`;
+      if(button.innerHTML!==buttonHtml)button.innerHTML=buttonHtml;
       button.onclick=event=>{event.preventDefault();event.stopPropagation();window.openVolunteerEmergencyEditor(safe(p.id),index)};
     });
   }
@@ -119,15 +117,11 @@
       const result=baseRenderManager();
       queueMicrotask(()=>{patchAccount();hydrateVisibleAccount()});
       requestAnimationFrame(patchAccount);
+      setTimeout(patchAccount,80);
       return result;
     };
     window.renderManager=renderManager;render=function(){return renderManager()};window.render=render;
   }
-
-  const observer=new MutationObserver(()=>{
-    if(currentPerson())queueMicrotask(()=>{patchAccount();hydrateVisibleAccount()});
-  });
-  const target=document.getElementById('app');if(target)observer.observe(target,{childList:true,subtree:true});
 
   requestAnimationFrame(()=>{patchAccount();hydrateVisibleAccount({force:true})});
 })();
