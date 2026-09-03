@@ -93,6 +93,12 @@ document.addEventListener('click',event=>{if(event.target.closest?.('input[type=
                     polish.dataset.r72ProfilePolish='true';
                     polish.src=new URL('../admin/profile-polish-r72.js?v=20260903-r75',new URL('./',current)).href;
                     document.body.appendChild(polish);
+                    if(!document.querySelector('script[data-r80-planning-actions-bootstrap]')){
+                      const planningActions=document.createElement('script');
+                      planningActions.dataset.r80PlanningActionsBootstrap='true';
+                      planningActions.src=new URL('../admin/planning-actions-bootstrap-r80.js?v=20260903-r80',new URL('./',current)).href;
+                      document.body.appendChild(planningActions);
+                    }
                   };
                   document.body.appendChild(account);
                 };
