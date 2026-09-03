@@ -1,12 +1,12 @@
 /* Round 53 — Planejamento vira página de primeiro nível e substitui o modal de perfil. */
 (function adminPlanningPageR53(){
   if(typeof renderManager!=='function'||typeof openPerson!=='function'||typeof renderPersonModal!=='function')return;
+  if(!document.querySelector('link[data-round53-planning]')){const link=document.createElement('link');link.rel='stylesheet';link.href='../css/round53.css?v=20260902-r53';link.dataset.round53Planning='1';document.head.appendChild(link)}
 
   const baseRenderManager=renderManager;
   const baseNavigateManager=navigateManager;
   const baseOpenPerson=openPerson;
   const baseRenderPersonModal=renderPersonModal;
-  const baseManagerNav=managerNav;
 
   state.managerPlanningPersonId=state.managerPlanningPersonId||'';
   state.managerPlanningTab=state.managerPlanningTab||'plan';
@@ -14,7 +14,6 @@
   state.managerPlanningOrigin=state.managerPlanningOrigin||'planning';
   state.managerPlanningLoading=false;
 
-  const safe=value=>encodeURIComponent(String(value??''));
   function planningPerson(){return candidateById(state.managerPlanningPersonId)}
   function personDates(p){const from=String(p?.stayStart||p?.from||'').slice(0,10),to=String(p?.stayEnd||p?.to||'').slice(0,10);return from&&to?`${fmtDate(from,true)} → ${fmtDate(to,true)}`:'Período não informado'}
   function personBadge(p){const [label,type]=typeof statusMeta==='function'?statusMeta(p?.status):[p?.status||'Status',''];return `<span class="badge ${escapeHtml(type||'')}">${escapeHtml(label)}</span>`}
@@ -77,7 +76,7 @@
     if(state.managerPage!=='planning')state.managerPlanningOrigin=state.managerPage||'volunteer';
     else if(!state.managerPlanningPersonId)state.managerPlanningOrigin='planning';
     state.managerPage='planning';state.managerPlanningPersonId=String(id);state.managerPlanningTab=tab;state.managerPlanningBody='';state.managerPlanningLoading=true;
-    render();afterNavigation?.();
+    render();if(typeof afterNavigation==='function')afterNavigation();
     try{return await baseOpenPerson(id,tab)}finally{state.managerPlanningLoading=false;if(state.managerPage==='planning'&&String(state.managerPlanningPersonId)===String(id))render()}
   };
 
@@ -85,7 +84,7 @@
     const origin=state.managerPlanningOrigin==='volunteer'?'volunteer':'planning';
     state.managerPlanningPersonId='';state.managerPlanningBody='';state.managerPlanningTab='plan';
     if(origin==='volunteer')return navigateManager('volunteer');
-    state.managerPage='planning';render();afterNavigation?.();
+    state.managerPage='planning';render();if(typeof afterNavigation==='function')afterNavigation();
   };
 
   window.updatePlanningCandidateSearch=function(value){
@@ -110,12 +109,10 @@
   navigateManager=function(page){
     if(page!=='planning')return baseNavigateManager(page);
     state.managerPage='planning';state.managerPlanningPersonId='';state.managerPlanningBody='';state.managerPlanningTab='plan';state.managerPlanningOrigin='planning';
-    state.candidateFilter='all';render();afterNavigation?.();
+    state.candidateFilter='all';render();if(typeof afterNavigation==='function')afterNavigation();
     if(typeof loadManagerCandidates==='function')loadManagerCandidates({force:true}).then(()=>{if(state.managerPage==='planning'&&!state.managerPlanningPersonId)render()}).catch(error=>{console.error(error);showToast('Não foi possível carregar os planejamentos.')});
   };
 
-  /* Botões de paginação e ações antigas continuam usando o mesmo renderPersonModal,
-     mas agora o resultado é incorporado à página em vez de abrir o perfil em modal. */
   window.renderPersonModal=renderPersonModal;
   window.openPerson=openPerson;
   window.managerNav=managerNav;
