@@ -62,7 +62,9 @@
 .planning-activity-action:hover{background:var(--surface-soft)}
 .planning-activity-action.primary{background:var(--primary);color:#fff;border-color:transparent}
 .planning-activity-action.warning{background:var(--primary-soft);color:var(--primary);border-color:transparent}
-.planning-activity-action.danger{background:var(--danger-soft);color:var(--danger);border-color:transparent}
+.planning-activity-action.danger{background:color-mix(in srgb,var(--danger) 15%,var(--surface));color:var(--danger);border-color:color-mix(in srgb,var(--danger) 34%,var(--border));box-shadow:0 2px 8px color-mix(in srgb,var(--danger) 10%,transparent)}
+.planning-activity-action.danger:hover{background:color-mix(in srgb,var(--danger) 23%,var(--surface));border-color:color-mix(in srgb,var(--danger) 48%,var(--border))}
+.planning-activity-action.danger i{color:var(--danger)!important}
 
 /* No seletor de grupos, o título já informa o contexto; as opções ficam só A/B/C/D/Livre. */
 .activity-group-picker>small{display:none!important}
