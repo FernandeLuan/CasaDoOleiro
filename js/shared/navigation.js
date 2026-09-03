@@ -35,8 +35,10 @@ document.addEventListener('click',event=>{if(event.target.closest?.('input[type=
 (function loadProdCopyNoLogin(){
   if(!new URLSearchParams(location.search).has('demo'))return;
   const current=document.currentScript?.src;if(!current||typeof document.write!=='function')return;
-  const src=new URL('../demo/prod-copy-no-login.js?v=20260902-r62',new URL('./',current)).href;
-  document.write(`<script src="${src}"><\/script>`);
+  const base=new URL('./',current);
+  const src=new URL('../demo/prod-copy-no-login.js?v=20260902-r62',base).href;
+  const massSrc=new URL('../demo/demo-mass-r62.js?v=20260902-r62-mass1',base).href;
+  document.write(`<script src="${src}"><\/script><script src="${massSrc}"><\/script>`);
 })();
 
 /* Homologação R62 Admin: aplica a composição final da Home somente depois que todos
