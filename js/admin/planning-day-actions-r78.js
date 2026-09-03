@@ -69,7 +69,9 @@
         if(!['change_requested','change'].includes(String(session.status||'')))return;
         section.classList.add('r78-review-pending');
         const actions=section.querySelector('.planning-day-menu-r76-actions');
-        if(actions)actions.innerHTML=changeActionsHtml(applicationId,session);
+        if(!actions)return;
+        const html=changeActionsHtml(applicationId,session);
+        if(actions.innerHTML!==html)actions.innerHTML=html;
       });
     })().catch(error=>console.error('Falha ao alinhar ações de revisão no menu:',error)).finally(()=>inflight.delete(menu));
     inflight.set(menu,task);return task;
