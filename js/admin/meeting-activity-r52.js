@@ -82,3 +82,12 @@
 
   window.renderPersonModal=renderPersonModal;
 })();
+
+/* Carrega a página dedicada de Planejamento depois de todas as camadas do Admin. */
+(function loadPlanningPageR53(){
+  if(document.querySelector('script[data-planning-page-r53]'))return;
+  const script=document.createElement('script');
+  script.src='../js/admin/planning-page-r53.js?v=20260902-r53';
+  script.dataset.planningPageR53='1';
+  document.body.appendChild(script);
+})();
