@@ -90,7 +90,7 @@ document.addEventListener('click',event=>{if(event.target.closest?.('input[type=
                     if(document.querySelector('script[data-r72-profile-polish]'))return;
                     const polish=document.createElement('script');
                     polish.dataset.r72ProfilePolish='true';
-                    polish.src=new URL('../admin/profile-polish-r72.js?v=20260903-r72',new URL('./',current)).href;
+                    polish.src=new URL('../admin/profile-polish-r72.js?v=20260903-r75',new URL('./',current)).href;
                     document.body.appendChild(polish);
                   };
                   document.body.appendChild(account);
