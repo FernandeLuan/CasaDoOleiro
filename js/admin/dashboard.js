@@ -4,7 +4,7 @@ function managerGreeting(){
   if(hour<18)return lang==='en'?'Good afternoon':lang==='es'?'Buenas tardes':'Boa tarde';
   return lang==='en'?'Good evening':lang==='es'?'Buenas noches':'Boa noite';
 }
-function openTodayAgenda(){state.agendaAnchor=_oleiroToday;state.selectedDate=_oleiroToday;state.agendaFrom=_oleiroToday;state.agendaTo=_oleiroToday;navigateManager('agenda')}
+function openTodayAgenda(){navigateManager('planning')}
 function pendingChangeApplicationIds(){return new Set((state.pendingChangeRequests||[]).map(row=>String(row.applicationId||'')).filter(Boolean))}
 function dashboardCount(status){
   const base=Number(state.dashboardCounts?.[status])||0;
@@ -47,7 +47,7 @@ function managerHome(){
     <div class="manager-home-grid manager-home-top">
       <section class="hero manager-home-hero">
         <div class="eyebrow" style="color:#d9eadf">Casa do Oleiro • Gestão</div><h1>${managerGreeting()}</h1><p class="muted">Veja o que precisa da sua atenção e o que acontece hoje na Casa.</p>
-        <div class="hero-actions"><button class="btn btn-light" onclick="navigateManager('volunteer')"><i class="fa-solid fa-users"></i>Ver voluntariado</button><button class="btn btn-outline" style="border-color:rgba(255,255,255,.28);color:white" onclick="openTodayAgenda()"><i class="fa-regular fa-calendar"></i>Abrir agenda de hoje</button></div>
+        <div class="hero-actions"><button class="btn btn-light" onclick="navigateManager('volunteer')"><i class="fa-solid fa-users"></i>Ver voluntariado</button><button class="btn btn-outline" style="border-color:rgba(255,255,255,.28);color:white" onclick="navigateManager('planning')"><i class="fa-regular fa-calendar-check"></i>Abrir planejamento</button></div>
       </section>
       <section class="manager-home-card manager-home-pending"><div class="section-head"><div><h2>Pendências operacionais</h2><p>Itens que dependem de decisão ou revisão.</p></div></div><div class="grid-2 pending-grid">${metric(dashboardCount('analysis'),'fa-clipboard-check','Em análise',"state.candidateFilter='analysis';navigateManager('volunteer')")}${metric(dashboardCount('adjustments'),'fa-rotate','Ajustes pendentes',"openManagerAdjustments()")}</div></section>
     </div>
