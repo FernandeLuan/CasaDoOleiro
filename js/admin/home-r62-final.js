@@ -1,19 +1,23 @@
-/* R62 homologação: composição final somente da tela Início do Admin.
+/* R62 homologação: composição final da Home e navegação desktop do Admin.
    Carregado após todos os scripts para não ser sobrescrito por refinamentos históricos. */
 (function applyFinalAdminHomeR62(){
   const params=new URLSearchParams(location.search);
   if(params.get('demo')!=='admin')return;
 
-  function adminTopNavR62(){
-    const item=(active,icon,label,action)=>`<button class="admin-top-nav-item-r62 ${active?'active':''}" type="button" onclick="${action}"><i class="fa-solid ${icon}"></i><span>${label}</span></button>`;
-    return `<div class="admin-top-nav-shell-r62"><nav class="admin-top-nav-r62" aria-label="Navegação da gestão">${item(state.managerPage==='home','fa-house','Início',"navigateManager('home')")}${item(state.managerPage==='volunteer','fa-users','Voluntariado',"navigateManager('volunteer')")}${item(state.managerPage==='agenda','fa-calendar-days','Agenda',"navigateManager('agenda')")}${item(false,'fa-bed','Ocupação','openOccupancyCalendar()')}${item(state.managerPage==='menu','fa-bars','Menu',"navigateManager('menu')")}</nav><div class="admin-top-nav-context-r62"><span class="dot success"></span><span>Ambiente de gestão</span></div></div>`;
+  function adminHeaderNavR62(){
+    const item=(active,icon,label,action)=>`<button class="admin-header-nav-item-r62 ${active?'active':''}" type="button" onclick="${action}"><i class="fa-solid ${icon}"></i><span>${label}</span></button>`;
+    return `<nav class="admin-header-nav-r62" aria-label="Navegação da gestão">${item(state.managerPage==='home','fa-house','Início',"navigateManager('home')")}${item(state.managerPage==='volunteer','fa-users','Voluntariado',"navigateManager('volunteer')")}${item(state.managerPage==='agenda','fa-calendar-days','Agenda',"navigateManager('agenda')")}${item(false,'fa-bed','Ocupação','openOccupancyCalendar()')}${item(state.managerPage==='menu','fa-bars','Menu',"navigateManager('menu')")}</nav>`;
   }
+
+  header=function(){
+    return `<header class="app-header simplified-header admin-header-r62"><div class="brand-row admin-header-row-r62"><div class="brand" role="button" tabindex="0" aria-label="Ir para a tela inicial" onclick="goHome()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goHome()}"><div class="brand-mark"><i class="fa-solid fa-seedling"></i></div><div class="brand-copy"><strong>Casa do Oleiro</strong></div></div>${adminHeaderNavR62()}<div class="header-actions"><button class="icon-btn language-button" onclick="openLanguageModal()" aria-label="Idioma"><span class="current-language-code">${typeof currentLanguageCode==='function'?currentLanguageCode():'PT'}</span></button><button class="icon-btn" onclick="toggleTheme()" aria-label="Tema"><i class="fa-solid ${state.theme==='dark'?'fa-sun':'fa-moon'}"></i></button></div></div></header>`;
+  };
 
   managerHome=function(){
     const todaySessions=getSessions(_oleiroToday),arrivals=nextMovements('from'),departures=nextMovements('to');
     return `<style id="managerHomeR62FinalStyles">
-      .manager-home-r62{width:100%;display:grid;gap:20px}
-      .manager-home-r62-top,.manager-home-r62-bottom{display:grid;gap:20px}
+      .manager-home-r62{width:100%;display:grid;gap:18px}
+      .manager-home-r62-top,.manager-home-r62-bottom{display:grid;gap:18px}
       .manager-home-r62-hero{margin:0}
       .manager-home-r62-card{background:var(--surface);border:1px solid var(--border);border-radius:26px;padding:22px;box-shadow:var(--shadow);margin:0}
       .manager-home-r62-head{align-items:flex-start}
@@ -21,36 +25,34 @@
       .manager-home-r62-today-list{min-height:150px}
       .manager-home-r62-today-list>.empty{min-height:150px;display:grid;place-items:center}
       .manager-home-r62-moves .card{box-shadow:none}
-      .admin-top-nav-shell-r62{display:none}
+      .admin-header-nav-r62{display:none}
 
       @media(min-width:1024px){
-        body:has(.manager-home-r62){padding-bottom:20px}
-        body:has(.manager-home-r62) #app{width:100%!important;max-width:none!important;margin:0!important}
-        body:has(.manager-home-r62) .app-header{padding:18px clamp(42px,4vw,72px) 16px!important}
-        body:has(.manager-home-r62) .page{padding:24px clamp(42px,4vw,72px) 52px!important}
-        body:has(.manager-home-r62) #navRoot .bottom-nav{display:none!important}
+        body{padding-bottom:20px!important}
+        #app{width:100%!important;max-width:none!important;margin:0!important}
+        .admin-header-r62{padding:14px clamp(24px,2vw,40px)!important}
+        .admin-header-row-r62{display:grid!important;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:26px;width:100%}
+        .admin-header-nav-r62{display:flex;align-items:center;justify-content:center;gap:6px;min-width:0}
+        .admin-header-nav-item-r62{border:0;background:transparent;color:var(--muted);min-height:42px;padding:0 15px;border-radius:14px;display:inline-flex;align-items:center;gap:8px;font-size:.74rem;font-weight:600;white-space:nowrap}
+        .admin-header-nav-item-r62 i{font-size:.8rem}
+        .admin-header-nav-item-r62:hover{background:var(--surface-2);color:var(--text)}
+        .admin-header-nav-item-r62.active{background:var(--primary);color:#fff}
+        #navRoot .bottom-nav{display:none!important}
+        .page{padding:20px clamp(24px,2vw,40px) 44px!important}
 
-        .admin-top-nav-shell-r62{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:12px clamp(42px,4vw,72px);border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--surface);min-height:70px}
-        .admin-top-nav-r62{display:flex;align-items:center;gap:8px;min-width:0}
-        .admin-top-nav-item-r62{border:0;background:transparent;color:var(--muted);min-height:44px;padding:0 18px;border-radius:22px;display:inline-flex;align-items:center;gap:9px;font-size:.76rem;font-weight:600;white-space:nowrap}
-        .admin-top-nav-item-r62 i{font-size:.82rem}
-        .admin-top-nav-item-r62:hover{background:var(--surface-2);color:var(--text)}
-        .admin-top-nav-item-r62.active{background:var(--primary);color:#fff}
-        .admin-top-nav-context-r62{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:.68rem;white-space:nowrap;padding-right:4px}
-
-        .manager-home-r62{gap:24px}
-        .manager-home-r62-top{grid-template-columns:minmax(0,2.05fr) minmax(390px,1fr);align-items:stretch;gap:22px}
-        .manager-home-r62-bottom{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);align-items:stretch;gap:22px}
-        .manager-home-r62-hero{min-height:360px;padding:44px 44px;display:flex;flex-direction:column;justify-content:center;border-radius:30px}
-        .manager-home-r62-hero h1{font-size:clamp(2.65rem,3.5vw,4.15rem);line-height:1.04;letter-spacing:-.04em;margin:12px 0 16px;max-width:960px}
-        .manager-home-r62-hero p{font-size:.96rem;max-width:790px}
+        .manager-home-r62{gap:18px}
+        .manager-home-r62-top{grid-template-columns:minmax(0,2.18fr) minmax(360px,.98fr);align-items:stretch;gap:18px}
+        .manager-home-r62-bottom{grid-template-columns:minmax(0,1.18fr) minmax(0,1fr);align-items:stretch;gap:18px}
+        .manager-home-r62-hero{min-height:365px;padding:44px 46px;display:flex;flex-direction:column;justify-content:center;border-radius:30px}
+        .manager-home-r62-hero h1{font-size:clamp(2.7rem,3.6vw,4.3rem);line-height:1.03;letter-spacing:-.04em;margin:12px 0 16px;max-width:1040px}
+        .manager-home-r62-hero p{font-size:.98rem;max-width:820px}
         .manager-home-r62-hero .hero-actions{margin-top:30px}
         .manager-home-r62-hero .btn{min-height:50px;padding:13px 20px;font-size:.8rem}
         .manager-home-r62-card{padding:28px;min-height:220px}
-        .manager-home-r62-today{min-height:360px;display:flex;flex-direction:column}
+        .manager-home-r62-today{min-height:365px;display:flex;flex-direction:column}
         .manager-home-r62-today .section-head{margin-bottom:20px}
         .manager-home-r62-today-list{flex:1;min-height:0;justify-content:center}
-        .manager-home-r62-today-list>.empty{min-height:145px}
+        .manager-home-r62-today-list>.empty{min-height:150px}
         .manager-home-r62-panel>.section-head{margin-bottom:16px}
         .manager-home-r62-panel>.section-head h2{font-size:1.12rem}
         .manager-home-r62-panel .pending-grid{gap:12px}
@@ -64,8 +66,10 @@
       }
 
       @media(min-width:1500px){
-        .manager-home-r62-top{grid-template-columns:minmax(0,2.1fr) minmax(430px,1fr)}
-        .manager-home-r62-hero{min-height:390px;padding:48px 50px}
+        .admin-header-r62{padding-left:32px!important;padding-right:32px!important}
+        .page{padding-left:32px!important;padding-right:32px!important}
+        .manager-home-r62-top{grid-template-columns:minmax(0,2.25fr) minmax(420px,.95fr)}
+        .manager-home-r62-hero{min-height:390px;padding:48px 52px}
         .manager-home-r62-today{min-height:390px}
       }
 
@@ -105,12 +109,12 @@
 
   const baseRenderManagerR62=renderManager;
   renderManager=function(){
-    if(state.managerPage!=='home')return baseRenderManagerR62();
-    app.innerHTML=header()+adminTopNavR62()+`<main class="page">${managerHome()}</main>`;
+    const pages={home:managerHome,volunteer:managerVolunteers,agenda:managerAgenda,groups:managerGroups,menu:managerMenu};
+    app.innerHTML=header()+`<main class="page">${pages[state.managerPage]()}</main>`;
     navRoot.innerHTML=managerNav();
     if(typeof applyI18n==='function'){applyI18n(app);applyI18n(navRoot)}
   };
   render=function(){renderManager()};
 
-  if(typeof state!=='undefined'&&state.role==='manager'&&state.managerPage==='home')render();
+  if(typeof state!=='undefined'&&state.role==='manager')render();
 })();
