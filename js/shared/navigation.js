@@ -37,8 +37,9 @@ document.addEventListener('click',event=>{if(event.target.closest?.('input[type=
   const current=document.currentScript?.src;if(!current||typeof document.write!=='function')return;
   const base=new URL('./',current);
   const src=new URL('../demo/prod-copy-no-login.js?v=20260902-r62',base).href;
-  const massSrc=new URL('../demo/demo-mass-r62.js?v=20260902-r62-mass1',base).href;
-  document.write(`<script src="${src}"><\/script><script src="${massSrc}"><\/script>`);
+  const massSrc=new URL('../demo/demo-mass-r62.js?v=20260903-r62-mass2',base).href;
+  const scenarioSrc=new URL('../demo/demo-scenarios-r77.js?v=20260903-r77',base).href;
+  document.write(`<script src="${src}"><\/script><script src="${massSrc}"><\/script><script src="${scenarioSrc}"><\/script>`);
 })();
 
 /* Homologação R62 Admin: composição progressiva da interface de teste. */
