@@ -29,7 +29,8 @@
     const uids=(p.participantUids||[]).map(String).filter(Boolean);
     if(uids.length&&window.OleiroServices?.profiles?.getByIds){
       tasks.push(window.OleiroServices.profiles.getByIds(uids).then(rows=>{
-        p.participantProfiles=rows||[];
+        const byId=new Map((rows||[]).map(row=>[String(row?.id||''),row]));
+        p.participantProfiles=uids.map((uid,index)=>byId.get(uid)||rows?.[index]||{id:uid});
         p.emergencyProfilesLoaded=true;
         p.emergencyProfilesLoading=false;
       }));
@@ -114,4 +115,14 @@
   });
 
   window.refreshDedicatedAccountR74=rebuildDedicatedAccount;
+})();
+
+/* R75: contato de emergência é hidratado e renderizado diretamente na página dedicada. */
+(function loadAccountEmergencyLiveR75(){
+  if(document.querySelector('script[data-r75-account-emergency-live]'))return;
+  const current=document.currentScript?.src;if(!current)return;
+  const script=document.createElement('script');
+  script.dataset.r75AccountEmergencyLive='true';
+  script.src=new URL('./account-emergency-live-r75.js?v=20260903-r75',current).href;
+  document.body.appendChild(script);
 })();
