@@ -1,4 +1,4 @@
-/* Página de Informações da Casa: rotina e unidades primeiro, portal em cards responsivos. */
+/* Página de Informações da Casa: rotina e unidades primeiro, portal em cards compactos. */
 (function houseInfoPage(){
   const params=new URLSearchParams(location.search);
   if(params.get('demo')!=='admin'||!/\/admin\//.test(location.pathname))return;
@@ -43,14 +43,14 @@
       .house-info-portal-head>div{display:grid;gap:3px}
       .house-info-portal-head strong{font-size:.76rem;color:var(--text)}
       .house-info-portal-head p{margin:0;color:var(--muted);font-size:.6rem;line-height:1.4}
-      .house-info-portal-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-      .house-info-topic{min-width:0;min-height:94px;border:1px solid var(--border);border-radius:16px;background:var(--surface);box-shadow:0 3px 14px rgba(30,48,38,.035);padding:12px 13px;display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:10px;align-items:start;text-align:left;color:var(--text);cursor:pointer;transition:.16s ease}
+      .house-info-portal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,280px));gap:10px;justify-content:start;align-items:stretch}
+      .house-info-topic{width:100%;min-width:0;min-height:78px;border:1px solid var(--border);border-radius:15px;background:var(--surface);box-shadow:0 3px 14px rgba(30,48,38,.035);padding:10px 11px;display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:9px;align-items:start;text-align:left;color:var(--text);cursor:pointer;transition:.16s ease}
       .house-info-topic:hover{border-color:color-mix(in srgb,var(--primary) 35%,var(--border));transform:translateY(-1px);box-shadow:0 8px 22px rgba(20,43,31,.06)}
-      .house-info-topic-icon{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:var(--primary-soft);color:var(--primary);font-size:.68rem}
-      .house-info-topic-copy{min-width:0;display:grid;gap:4px;padding-top:1px}
-      .house-info-topic-copy strong{font-size:.67rem;color:var(--text)}
-      .house-info-topic-copy span{font-size:.55rem;line-height:1.4;color:var(--muted)}
-      .house-info-topic>i{align-self:center;color:var(--muted);font-size:.58rem}
+      .house-info-topic-icon{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:var(--primary-soft);color:var(--primary);font-size:.64rem}
+      .house-info-topic-copy{min-width:0;display:grid;gap:3px;padding-top:1px}
+      .house-info-topic-copy strong{font-size:.64rem;color:var(--text)}
+      .house-info-topic-copy span{font-size:.52rem;line-height:1.35;color:var(--muted)}
+      .house-info-topic>i{align-self:center;color:var(--muted);font-size:.56rem}
 
       .house-info-topic-modal .modal-body{padding:15px 16px 17px!important}
       .house-info-topic-modal-body{display:grid;gap:10px;color:var(--text);font-size:.66rem;line-height:1.55}
@@ -59,14 +59,10 @@
       .house-info-topic-modal-body .info-routine{display:grid;gap:0;border:1px solid var(--border);border-radius:13px;overflow:hidden}
       .house-info-topic-modal-body .info-routine p{display:grid;grid-template-columns:86px minmax(0,1fr);gap:10px;padding:7px 10px;border-bottom:1px solid var(--border);font-size:.59rem}
       .house-info-topic-modal-body .info-routine p:last-child{border-bottom:0}
-      .house-info-topic-modal-body .release-info{display:grid;gap:6px}
-      .house-info-topic-modal-body .release-info p{margin:0}
 
-      @media(max-width:1100px){
-        .house-info-portal-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-      }
       @media(max-width:1023px){
         .house-info-top{grid-template-columns:1fr}
+        .house-info-portal-grid{grid-template-columns:repeat(2,minmax(220px,280px))}
       }
       @media(max-width:720px){
         .house-info-routine-columns{grid-template-columns:1fr}
@@ -74,7 +70,7 @@
       }
       @media(max-width:620px){
         .house-info-portal-grid{grid-template-columns:1fr}
-        .house-info-topic{min-height:76px}
+        .house-info-topic{min-height:72px}
       }
     `;
     document.head.appendChild(style);
@@ -111,8 +107,7 @@
       {id:'meals',icon:'fa-utensils',title:tx('portal.info.mealsTitle','Refeições'),preview:'Informações sobre alimentação durante a estadia.'},
       {id:'routine',icon:'fa-clock',title:tx('portal.info.routineTitle','Rotina'),preview:'Usa os mesmos horários da Rotina da Casa exibida acima.'},
       {id:'principles',icon:'fa-hands-praying',title:tx('portal.info.principlesTitle','Princípios e religião'),preview:'Princípios, espiritualidade e orientações da Casa.'},
-      {id:'safety',icon:'fa-shield-heart',title:tx('portal.info.safetyTitle','Convivência e segurança'),preview:'Regras de convivência, cuidado e segurança.'},
-      {id:'software',icon:'fa-code-branch',title:typeof releaseText==='function'?releaseText('release.cardTitle'):'Versão do software',preview:'Versão, build e informações técnicas publicadas.'}
+      {id:'safety',icon:'fa-shield-heart',title:tx('portal.info.safetyTitle','Convivência e segurança'),preview:'Regras de convivência, cuidado e segurança.'}
     ];
   }
 
@@ -123,7 +118,6 @@
     if(id==='routine')return typeof routineInformationHtml==='function'?routineInformationHtml():`<p>A rotina do Portal utiliza os mesmos horários apresentados nesta tela.</p>`;
     if(id==='principles')return `<p>${esc(tx('portal.info.principlesBody','Orientações de princípios e religião indisponíveis.'))}</p>`;
     if(id==='safety')return `<p>${esc(tx('portal.info.safetyBody','Orientações de convivência e segurança indisponíveis.'))}</p>`;
-    if(id==='software')return typeof releaseInformationHtml==='function'?releaseInformationHtml():'<p>Informação de versão indisponível.</p>';
     return '<p>Informação indisponível.</p>';
   }
 
