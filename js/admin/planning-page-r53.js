@@ -1,7 +1,7 @@
-/* Round 53 — Planejamento vira página de primeiro nível e substitui o modal de perfil. */
-(function adminPlanningPageR53(){
+/* Round 53/64 — Planejamento vira página de primeiro nível e substitui o modal de perfil. */
+(function adminPlanningPageR64(){
   if(typeof renderManager!=='function'||typeof openPerson!=='function'||typeof renderPersonModal!=='function')return;
-  if(!document.querySelector('link[data-round53-planning]')){const link=document.createElement('link');link.rel='stylesheet';link.href='../css/round53.css?v=20260903-r53';link.dataset.round53Planning='1';document.head.appendChild(link)}
+  if(!document.querySelector('link[data-round53-planning]')){const link=document.createElement('link');link.rel='stylesheet';link.href='../css/round53.css?v=20260903-r64';link.dataset.round53Planning='1';document.head.appendChild(link)}
 
   const baseRenderManager=renderManager;
   const baseNavigateManager=navigateManager;
@@ -41,11 +41,10 @@
     return `<section class="section planning-detail-page compact-page-top" data-person-id="${escapeHtml(String(p.id))}">
       <header class="planning-profile-head">
         <div class="planning-profile-heading">
-          <button class="planning-back-button" type="button" onclick="closePlanningDetail()" aria-label="Voltar"><i class="fa-solid fa-arrow-left"></i></button>
           <div class="planning-profile-copy">
             <span class="eyebrow">Perfil do candidato</span>
-            <div class="planning-profile-title-line"><h1>${escapeHtml(p.name||'Voluntário')}</h1>${personBadge(p)}</div>
-            <p>${escapeHtml(p.country||'—')} <b>•</b> ${escapeHtml(p.unit||p.unitName||'—')} <b>•</b> ${escapeHtml(personDates(p))}</p>
+            <div class="planning-profile-title-line"><h1>${escapeHtml(p.name||'Voluntário')}</h1></div>
+            <div class="planning-profile-meta"><span>${escapeHtml(p.country||'—')}</span><b>•</b><span>${escapeHtml(p.unit||p.unitName||'—')}</span><b>•</b><span>${escapeHtml(personDates(p))}</span>${personBadge(p)}</div>
           </div>
         </div>
         <button class="planning-close-button" type="button" onclick="closePlanningDetail()" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button>
@@ -56,14 +55,20 @@
 
   function managerPlanning(){return state.managerPlanningPersonId?planningDetail():planningList()}
 
-  function capturePersonBody(p,tab='plan'){
-    baseRenderPersonModal(p,tab);
+  function captureVisibleModalBody(p,tab='plan'){
     const body=modalRoot.querySelector('.modal-body');
-    state.managerPlanningBody=body?.innerHTML||'';
+    if(!body)return false;
+    state.managerPlanningBody=body.innerHTML||'';
     state.managerPlanningTab=tab;
     state.managerPlanningPersonId=String(p.id);
     closeModal();
     if(state.managerPage==='planning')render();
+    return true;
+  }
+
+  function capturePersonBody(p,tab='plan'){
+    baseRenderPersonModal(p,tab);
+    captureVisibleModalBody(p,tab);
   }
 
   renderPersonModal=function(p,tab='plan'){
@@ -78,7 +83,16 @@
     else if(!state.managerPlanningPersonId)state.managerPlanningOrigin='planning';
     state.managerPage='planning';state.managerPlanningPersonId=String(id);state.managerPlanningTab=tab;state.managerPlanningBody='';state.managerPlanningLoading=true;
     render();if(typeof afterNavigation==='function')afterNavigation();
-    try{return await baseOpenPerson(id,tab)}finally{state.managerPlanningLoading=false;if(state.managerPage==='planning'&&String(state.managerPlanningPersonId)===String(id))render()}
+    try{
+      const result=await baseOpenPerson(id,tab);
+      /* Histórico usa openModal diretamente em uma camada antiga. Capturamos qualquer modal
+         remanescente para manter Planejamento, Conta e Histórico dentro da mesma página. */
+      if(state.managerPage==='planning'&&String(state.managerPlanningPersonId)===String(id))captureVisibleModalBody(candidateById(id)||p,tab);
+      return result;
+    }finally{
+      state.managerPlanningLoading=false;
+      if(state.managerPage==='planning'&&String(state.managerPlanningPersonId)===String(id))render();
+    }
   };
 
   window.closePlanningDetail=function(){
