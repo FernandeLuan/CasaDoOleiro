@@ -48,6 +48,7 @@ document.addEventListener('click',event=>{if(event.target.closest?.('input[type=
   const base=new URL('./',current);
   const files=[
     '../admin/homologation-shell.js',
+    '../admin/occupancy-layout.js',
     '../admin/planning-board.js',
     '../admin/planning-person-agenda.js',
     '../admin/planning-group-editor.js',
