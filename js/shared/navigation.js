@@ -30,3 +30,11 @@ if('scrollRestoration' in history)history.scrollRestoration='manual';
 document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
 function openDatePicker(inputOrId){const input=typeof inputOrId==='string'?document.getElementById(inputOrId):inputOrId;if(!input||input.disabled)return;try{if(typeof input.showPicker==='function')input.showPicker();else input.focus()}catch{input.focus()}}
 document.addEventListener('click',event=>{if(event.target.closest?.('input[type="date"]'))return;const input=event.target.closest?.('.date-field')?.querySelector?.('input[type="date"]');if(input)openDatePicker(input);});
+
+/* Homologação R62: carrega somente o adapter de Auth/Services quando ?demo=... estiver presente. */
+(function loadProdCopyNoLogin(){
+  if(!new URLSearchParams(location.search).has('demo'))return;
+  const current=document.currentScript?.src;if(!current||typeof document.write!=='function')return;
+  const src=new URL('../demo/prod-copy-no-login.js?v=20260902-r62',new URL('./',current)).href;
+  document.write(`<script src="${src}"><\/script>`);
+})();
