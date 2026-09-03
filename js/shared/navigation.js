@@ -43,7 +43,7 @@ document.addEventListener('click',event=>{if(event.target.closest?.('input[type=
 
 /* Homologação R62 Admin: aplica a composição final da Home somente depois que todos
    os refinamentos históricos já terminaram de carregar. Em seguida, a integração R65
-   reconecta Planejamento/Ocupação ao mesmo shell sem alterar produção. */
+   reconecta Planejamento/Ocupação ao mesmo shell e o board R65 redesenha Planejamento. */
 (function loadFinalAdminHomeR62(){
   const params=new URLSearchParams(location.search);
   if(params.get('demo')!=='admin'||!/\/admin\//.test(location.pathname))return;
@@ -58,6 +58,13 @@ document.addEventListener('click',event=>{if(event.target.closest?.('input[type=
       const integration=document.createElement('script');
       integration.dataset.r65AdminIntegration='true';
       integration.src=new URL('../admin/homologation-integration-r63.js?v=20260903-r65',new URL('./',current)).href;
+      integration.onload=()=>{
+        if(document.querySelector('script[data-r65-planning-board]'))return;
+        const board=document.createElement('script');
+        board.dataset.r65PlanningBoard='true';
+        board.src=new URL('../admin/planning-board-r65.js?v=20260903-r65',new URL('./',current)).href;
+        document.body.appendChild(board);
+      };
       document.body.appendChild(integration);
     };
     document.body.appendChild(script);
