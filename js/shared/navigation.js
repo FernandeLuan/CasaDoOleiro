@@ -44,7 +44,8 @@ document.addEventListener('click',event=>{if(event.target.closest?.('input[type=
 /* Homologação R62 Admin: aplica a composição final da Home somente depois que todos
    os refinamentos históricos já terminaram de carregar. Em seguida, a integração R65
    reconecta Planejamento/Ocupação, o board R65 redesenha o índice, a R66 transforma
-   o planejamento individual em agenda semanal e a R67 compacta a Home e libera scroll. */
+   o planejamento individual em agenda semanal, a R67 compacta a Home/libera scroll
+   e a R68 alinha os status ao nome na listagem de Voluntariado. */
 (function loadFinalAdminHomeR62(){
   const params=new URLSearchParams(location.search);
   if(params.get('demo')!=='admin'||!/\/admin\//.test(location.pathname))return;
@@ -74,6 +75,13 @@ document.addEventListener('click',event=>{if(event.target.closest?.('input[type=
             const home=document.createElement('script');
             home.dataset.r67AdminHome='true';
             home.src=new URL('../admin/home-r67-layout.js?v=20260903-r67',new URL('./',current)).href;
+            home.onload=()=>{
+              if(document.querySelector('script[data-r68-volunteer-status-inline]'))return;
+              const volunteer=document.createElement('script');
+              volunteer.dataset.r68VolunteerStatusInline='true';
+              volunteer.src=new URL('../admin/volunteer-status-inline-r68.js?v=20260903-r68',new URL('./',current)).href;
+              document.body.appendChild(volunteer);
+            };
             document.body.appendChild(home);
           };
           document.body.appendChild(agenda);
