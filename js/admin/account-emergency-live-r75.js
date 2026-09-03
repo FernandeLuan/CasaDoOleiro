@@ -125,3 +125,13 @@
 
   requestAnimationFrame(()=>{patchAccount();hydrateVisibleAccount({force:true})});
 })();
+
+/* R76: ações operacionais da Agenda passam para o menu + do Planejamento. */
+(function loadPlanningDayActionsR76(){
+  if(document.querySelector('script[data-r76-planning-day-actions]'))return;
+  const current=document.currentScript?.src;if(!current)return;
+  const script=document.createElement('script');
+  script.dataset.r76PlanningDayActions='true';
+  script.src=new URL('./planning-day-actions-r76.js?v=20260903-r76',current).href;
+  document.body.appendChild(script);
+})();
