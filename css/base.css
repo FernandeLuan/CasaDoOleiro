@@ -21,6 +21,11 @@ h1,h2,h3,h4,h5,h6,strong{font-family:var(--font-heading)}
 /* Controles continuam sempre em DM Sans, mesmo quando contêm texto enfatizado. */
 button strong,.btn strong,label strong{font-family:var(--font-body)}
 
+/* Homologação R62: alinha a primeira linha da Home do Admin com os cards inferiores. */
+@media(min-width:1024px){
+  .manager-home-r62-top{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)!important}
+}
+
 @media(max-width:759px){
   .input,.select,.textarea,input,select,textarea{font-size:16px!important}
   .routine-row{grid-template-columns:82px 1fr}
