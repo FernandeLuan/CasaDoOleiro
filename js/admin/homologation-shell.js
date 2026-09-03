@@ -81,7 +81,6 @@
     function renderShell(content){releaseStaleScrollLock();app.innerHTML=`<div class="admin-shell-r62">${sidebarHtml()}<div class="admin-content-r62">${header()}<main class="page">${content}</main></div></div>`;navRoot.innerHTML=managerNav();if(typeof applyI18n==='function'){applyI18n(app);applyI18n(navRoot)}releaseStaleScrollLock()}
     function renderPlanningShell(){renderShell(planningPageHtml());enhancePlanningDetail()}
     function renderOccupancyShell(){renderShell(occupancyPageHtml())}
-    function syncRenderedShell(){const old=app.querySelector('.admin-sidebar-r62');if(old)old.outerHTML=sidebarHtml();releaseStaleScrollLock()}
 
     managerNav=function(){const item=(icon,label,action,active=false)=>`<button class="nav-btn ${active?'active':''}" onclick="${action}"><i class="fa-solid ${icon}"></i><span>${label}</span></button>`;return `<nav class="bottom-nav">${item('fa-house','Início',"navigateManager('home')",state.managerPage==='home')}${item('fa-users','Voluntariado',"navigateManager('volunteer')",state.managerPage==='volunteer')}${item('fa-calendar-check','Planejamento',"navigateManager('planning')",state.managerPage==='planning')}${item('fa-calendar-days','Agenda',"navigateManager('agenda')",state.managerPage==='agenda')}${item('fa-bed','Ocupação','openManagerOccupancy()',state.managerPage==='occupancy')}${item('fa-bars','Menu',"navigateManager('menu')",['menu','groups'].includes(state.managerPage))}</nav>`};window.managerNav=managerNav;
 
@@ -90,7 +89,25 @@
     window.openManagerOccupancy=async function(){state.managerPage='occupancy';state.occupancyScreenMonth=occupancyMonth();state.occupancyScreenError='';state.occupancyScreenLoading=true;render();if(typeof afterNavigation==='function')afterNavigation();try{if(!window.OleiroServices?.applications?.listOccupancyMonth)throw new Error('Serviço de ocupação indisponível.');state.occupancyCandidates=await window.OleiroServices.applications.listOccupancyMonth(state.occupancyScreenMonth,{unitId:'all'})||[]}catch(error){console.error('Falha ao abrir ocupação:',error);state.occupancyCandidates=[];state.occupancyScreenError=error?.message||'Não foi possível carregar a ocupação.'}finally{state.occupancyScreenLoading=false;if(state.managerPage==='occupancy')render()}};
     window.shiftOccupancyMonth=function(delta){const {year,monthIndex}=occupancyMonthParts(),date=new Date(year,monthIndex+Number(delta||0),1,12);state.occupancyScreenMonth=`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}`;state.occupancyCandidates=[];return window.openManagerOccupancy()};
 
-    renderManager=function(){if(state.managerPage==='planning')return renderPlanningShell();if(state.managerPage==='occupancy')return renderOccupancyShell();const result=baseRenderManager();syncRenderedShell();navRoot.innerHTML=managerNav();if(typeof applyI18n==='function')applyI18n(navRoot);return result};window.renderManager=renderManager;render=function(){return renderManager()};window.render=render;
+    function standardPageHtml(){
+      const pages={
+        home:()=>typeof window.managerHomeDashboard==='function'?window.managerHomeDashboard():managerHome(),
+        volunteer:()=>managerVolunteers(),
+        agenda:()=>managerAgenda(),
+        groups:()=>managerGroups(),
+        menu:()=>managerMenu()
+      };
+      const page=pages[state.managerPage]||pages.home;
+      return page();
+    }
+
+    renderManager=function(){
+      if(state.managerPage==='planning')return renderPlanningShell();
+      if(state.managerPage==='occupancy')return renderOccupancyShell();
+      return renderShell(standardPageHtml());
+    };
+    window.renderManager=renderManager;
+    render=function(){return renderManager()};window.render=render;
     if(state.role==='manager')render();
   }
 
