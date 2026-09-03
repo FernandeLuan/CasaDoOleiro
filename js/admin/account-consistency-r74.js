@@ -123,6 +123,6 @@
   const current=document.currentScript?.src;if(!current)return;
   const script=document.createElement('script');
   script.dataset.r75AccountEmergencyLive='true';
-  script.src=new URL('./account-emergency-live-r75.js?v=20260903-r75',current).href;
+  script.src=new URL('./account-emergency-live-r75.js?v=20260903-r76',current).href;
   document.body.appendChild(script);
 })();
