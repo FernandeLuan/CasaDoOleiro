@@ -38,3 +38,18 @@ document.addEventListener('click',event=>{if(event.target.closest?.('input[type=
   const src=new URL('../demo/prod-copy-no-login.js?v=20260902-r62',new URL('./',current)).href;
   document.write(`<script src="${src}"><\/script>`);
 })();
+
+/* Homologação R62 Admin: aplica a composição final da Home somente depois que todos
+   os refinamentos históricos já terminaram de carregar. */
+(function loadFinalAdminHomeR62(){
+  const params=new URLSearchParams(location.search);
+  if(params.get('demo')!=='admin'||!/\/admin\//.test(location.pathname))return;
+  const current=document.currentScript?.src;if(!current)return;
+  window.addEventListener('load',()=>{
+    if(document.querySelector('script[data-r62-admin-home]'))return;
+    const script=document.createElement('script');
+    script.dataset.r62AdminHome='true';
+    script.src=new URL('../admin/home-r62-final.js?v=20260902-r62-home2',new URL('./',current)).href;
+    document.body.appendChild(script);
+  },{once:true});
+})();
