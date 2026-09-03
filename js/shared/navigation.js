@@ -48,7 +48,6 @@ document.addEventListener('click',event=>{if(event.target.closest?.('input[type=
   const base=new URL('./',current);
   const files=[
     '../admin/homologation-shell.js',
-    '../admin/occupancy-layout.js',
     '../admin/planning-board.js',
     '../admin/planning-person-agenda.js',
     '../admin/planning-group-editor.js',
@@ -59,7 +58,8 @@ document.addEventListener('click',event=>{if(event.target.closest?.('input[type=
     '../admin/profile-polish.js',
     '../admin/emergency-contact-sync.js',
     '../admin/account-consistency.js',
-    '../admin/account-emergency-live.js'
+    '../admin/account-emergency-live.js',
+    '../admin/occupancy-page.js'
   ];
   const load=(file,index)=>new Promise((resolve,reject)=>{const script=document.createElement('script');script.dataset.homologationUi=String(index+1);script.src=new URL(`${file}?v=20260903-clean-${index+1}`,base).href;script.onload=resolve;script.onerror=()=>reject(new Error(`Falha ao carregar módulo de homologação: ${file}`));document.body.appendChild(script)});
   window.addEventListener('load',async()=>{try{for(let index=0;index<files.length;index+=1)await load(files[index],index)}catch(error){console.error(error);if(typeof showToast==='function')showToast('Falha ao carregar a interface de homologação.')}},{once:true});
