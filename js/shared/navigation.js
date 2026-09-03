@@ -50,6 +50,7 @@ document.addEventListener('click',event=>{if(event.target.closest?.('input[type=
     '../admin/homologation-shell.js',
     '../admin/planning-board.js',
     '../admin/planning-person-agenda.js',
+    '../admin/planning-group-editor.js',
     '../admin/volunteer-status-inline.js',
     '../admin/planning-profile-layout.js',
     '../admin/account-consolidated.js',
