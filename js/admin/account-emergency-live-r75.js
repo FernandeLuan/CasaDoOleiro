@@ -51,9 +51,7 @@
   }
 
   function emergencyBlock(row){
-    return row.querySelector('.account-person-emergency-inline-r71')||
-      row.querySelector('.account-person-emergency-r70')||
-      row.querySelector('.account-person-sections-r70 .account-person-emergency-r70');
+    return row.querySelector('.account-person-emergency-inline-r71')||row.querySelector('.account-person-emergency-r70')||row.querySelector('.account-person-sections-r70 .account-person-emergency-r70');
   }
 
   function patchAccount(){
@@ -124,21 +122,4 @@
   }
 
   requestAnimationFrame(()=>{patchAccount();hydrateVisibleAccount({force:true})});
-})();
-
-/* R76 → R78: menu operacional e revisão coerente das alterações. */
-(function loadPlanningDayActionsR76(){
-  if(document.querySelector('script[data-r76-planning-day-actions]'))return;
-  const current=document.currentScript?.src;if(!current)return;
-  const script=document.createElement('script');
-  script.dataset.r76PlanningDayActions='true';
-  script.src=new URL('./planning-day-actions-r76.js?v=20260903-r76b',current).href;
-  script.onload=()=>{
-    if(document.querySelector('script[data-r78-planning-day-actions]'))return;
-    const review=document.createElement('script');
-    review.dataset.r78PlanningDayActions='true';
-    review.src=new URL('./planning-day-actions-r78.js?v=20260903-r78',current).href;
-    document.body.appendChild(review);
-  };
-  document.body.appendChild(script);
 })();
