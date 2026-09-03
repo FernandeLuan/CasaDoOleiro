@@ -31,11 +31,10 @@ document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
 function openDatePicker(inputOrId){const input=typeof inputOrId==='string'?document.getElementById(inputOrId):inputOrId;if(!input||input.disabled)return;try{if(typeof input.showPicker==='function')input.showPicker();else input.focus()}catch{input.focus()}}
 document.addEventListener('click',event=>{if(event.target.closest?.('input[type="date"]'))return;const input=event.target.closest?.('.date-field')?.querySelector?.('input[type="date"]');if(input)openDatePicker(input);});
 
-/* R60 visual + adapter seguro de homologação. O adapter fake só entra por ?demo=... ou no hostname dedicado. */
-(function loadR60Layers(){
+/* Homologação: o adapter fake precisa entrar antes do app.js. A camada visual R60 é carregada somente no final da página, depois de todos os módulos reais. */
+(function loadDemoAdapter(){
   const current=document.currentScript?.src;if(!current||typeof document.write!=='function')return;
-  const sharedBase=new URL('./',current),redesign=new URL('redesign-r60.js?v=20260902-r60',sharedBase).href;
-  document.write(`<script src="${redesign}"><\/script>`);
+  const sharedBase=new URL('./',current);
   const params=new URLSearchParams(location.search),demo=params.has('demo')||/--visual-redesign-|--realbase-/.test(location.hostname);
   if(demo){const adapter=new URL('../demo/realbase-r59.js?v=20260902-r59',sharedBase).href;document.write(`<script src="${adapter}"><\/script>`)}
 })();
