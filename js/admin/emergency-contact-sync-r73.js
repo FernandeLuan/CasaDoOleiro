@@ -11,7 +11,8 @@
     if(!uids.length){p.participantProfiles=[];p.emergencyProfilesLoaded=true;p.emergencyProfilesLoading=false;return}
     if(!window.OleiroServices?.profiles?.getByIds)return;
     const rows=await window.OleiroServices.profiles.getByIds(uids);
-    p.participantProfiles=rows||[];
+    const byId=new Map((rows||[]).map(row=>[String(row?.id||''),row]));
+    p.participantProfiles=uids.map((uid,index)=>byId.get(uid)||rows?.[index]||{id:uid});
     p.emergencyProfilesLoaded=true;
     p.emergencyProfilesLoading=false;
   }
@@ -58,4 +59,14 @@
     };
     clearVolunteerEmergencyContact=window.clearVolunteerEmergencyContact;
   }
+})();
+
+/* R74: centraliza a atualização da Conta para as demais mutações administrativas. */
+(function loadAccountConsistencyR74(){
+  if(document.querySelector('script[data-r74-account-consistency]'))return;
+  const current=document.currentScript?.src;if(!current)return;
+  const script=document.createElement('script');
+  script.dataset.r74AccountConsistency='true';
+  script.src=new URL('./account-consistency-r74.js?v=20260903-r74b',current).href;
+  document.body.appendChild(script);
 })();
