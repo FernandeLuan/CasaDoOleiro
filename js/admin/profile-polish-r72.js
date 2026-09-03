@@ -138,19 +138,12 @@
   requestAnimationFrame(settle);
 })();
 
-/* R73/R74: primeiro sincroniza emergência; depois centraliza consistência das demais mutações da Conta. */
+/* R73 → R74 → R75: cadeia determinística de consistência da Conta. */
 (function loadAccountConsistencyChain(){
   if(document.querySelector('script[data-r73-emergency-contact-sync]'))return;
   const current=document.currentScript?.src;if(!current)return;
   const emergency=document.createElement('script');
   emergency.dataset.r73EmergencyContactSync='true';
-  emergency.src=new URL('./emergency-contact-sync-r73.js?v=20260903-r73',current).href;
-  emergency.onload=()=>{
-    if(document.querySelector('script[data-r74-account-consistency]'))return;
-    const consistency=document.createElement('script');
-    consistency.dataset.r74AccountConsistency='true';
-    consistency.src=new URL('./account-consistency-r74.js?v=20260903-r74',current).href;
-    document.body.appendChild(consistency);
-  };
+  emergency.src=new URL('./emergency-contact-sync-r73.js?v=20260903-r73c',current).href;
   document.body.appendChild(emergency);
 })();
