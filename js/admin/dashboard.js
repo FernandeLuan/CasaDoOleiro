@@ -23,7 +23,6 @@ function managerHome(){
     .manager-home-hero{margin-bottom:16px}
     .manager-home-today,.manager-home-panel{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:18px;box-shadow:var(--shadow)}
     .manager-home-card-head{align-items:flex-start}
-    .manager-home-count{display:grid;place-items:center;min-width:54px;height:54px;padding:0 14px;border-radius:18px;background:var(--primary-soft);color:var(--primary);font-family:var(--font-heading);font-size:1.05rem;font-weight:800}
     .manager-home-today-list{min-height:150px}.manager-home-today-list>.empty{min-height:150px;display:grid;place-items:center}
     .manager-home-movements .card{box-shadow:none}
     @media(min-width:1024px){
@@ -59,7 +58,7 @@ function managerHome(){
   <div class="manager-home-layout">
     <div class="manager-home-top">
       <section class="hero manager-home-hero"><div class="eyebrow" style="color:#d9eadf">Casa do Oleiro • Gestão</div><h1>${managerGreeting()}</h1><p class="muted">Veja o que precisa da sua atenção e o que acontece hoje na Casa.</p><div class="hero-actions"><button class="btn btn-light" onclick="navigateManager('volunteer')"><i class="fa-solid fa-users"></i>Ver voluntariado</button><button class="btn btn-outline" style="border-color:rgba(255,255,255,.28);color:white" onclick="openTodayAgenda()"><i class="fa-regular fa-calendar"></i>Abrir agenda de hoje</button></div></section>
-      <section class="section manager-home-today"><div class="section-head manager-home-card-head"><div><div class="eyebrow">Hoje na Casa</div><p>${longDate(_oleiroToday)}</p></div><span class="manager-home-count">${todaySessions.length}</span></div><div class="list manager-home-today-list">${todaySessions.length?todaySessions.map(s=>agendaItem(s.activity.name,s.activity.owner,s.group,s.status,activityPeriodValue(s.raw||{},s.activity),s.activity.duration)).join(''):'<div class="empty">Nenhuma atividade prevista para hoje.</div>'}</div></section>
+      <section class="section manager-home-today"><div class="section-head manager-home-card-head"><div><div class="eyebrow">Hoje na Casa</div><p>${longDate(_oleiroToday)}</p></div></div><div class="list manager-home-today-list">${todaySessions.length?todaySessions.map(s=>agendaItem(s.activity.name,s.activity.owner,s.group,s.status,activityPeriodValue(s.raw||{},s.activity),s.activity.duration)).join(''):'<div class="empty">Nenhuma atividade prevista para hoje.</div>'}</div></section>
     </div>
     <div class="manager-home-bottom">
       <section class="section manager-home-panel"><div class="section-head"><div><h2>Pendências operacionais</h2><p>Itens que dependem de decisão ou revisão.</p></div></div><div class="grid-2 pending-grid">${metric(dashboardCount('analysis'),'fa-clipboard-check','Em análise',"state.candidateFilter='analysis';navigateManager('volunteer')")}${metric(dashboardCount('adjustments'),'fa-rotate','Ajustes pendentes',"openManagerAdjustments()")}</div></section>
