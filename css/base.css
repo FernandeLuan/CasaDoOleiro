@@ -1,4 +1,11 @@
-*{box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',sans-serif;-webkit-tap-highlight-color:transparent}
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap');
+
+:root{
+  --font-body:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-heading:'Manrope','DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;font-family:var(--font-body);-webkit-tap-highlight-color:transparent}
 html,body{width:100%;min-height:100%;background:var(--bg);color:var(--text)}
 body{padding-bottom:calc(78px + env(safe-area-inset-bottom));}
 button,input,textarea,select{font:inherit}
@@ -7,6 +14,18 @@ a{color:inherit}
 #app{max-width:1080px;margin:0 auto;min-height:100vh}
 html{touch-action:manipulation;-webkit-text-size-adjust:100%}
 body,button,a,input,textarea,select,label,summary{touch-action:manipulation}
+
+/* Tipografia de destaque: títulos, headings e conteúdos enfatizados. */
+h1,h2,h3,h4,h5,h6,strong{font-family:var(--font-heading)}
+
+/* Controles continuam sempre em DM Sans, mesmo quando contêm texto enfatizado. */
+button strong,.btn strong,label strong{font-family:var(--font-body)}
+
+/* Homologação R62: alinha a primeira linha da Home do Admin com os cards inferiores. */
+@media(min-width:1024px){
+  .manager-home-r62-top{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)!important}
+}
+
 @media(max-width:759px){
   .input,.select,.textarea,input,select,textarea{font-size:16px!important}
   .routine-row{grid-template-columns:82px 1fr}
