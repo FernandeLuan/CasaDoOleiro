@@ -41,12 +41,7 @@ document.addEventListener('click',event=>{if(event.target.closest?.('input[type=
   document.write(`<script src="${src}"><\/script><script src="${massSrc}"><\/script>`);
 })();
 
-/* Homologação R62 Admin: aplica a composição final da Home somente depois que todos
-   os refinamentos históricos já terminaram de carregar. Em seguida, a integração R65
-   reconecta Planejamento/Ocupação, o board R65 redesenha o índice, a R66 transforma
-   o planejamento individual em agenda semanal, a R67 compacta a Home/libera scroll,
-   a R68 alinha os status ao nome, a R69 unifica Conta/Histórico com o Planejamento
-   e a R70 consolida dados pessoais, emergência e acesso na Conta. */
+/* Homologação R62 Admin: composição progressiva da interface de teste. */
 (function loadFinalAdminHomeR62(){
   const params=new URLSearchParams(location.search);
   if(params.get('demo')!=='admin'||!/\/admin\//.test(location.pathname))return;
@@ -91,6 +86,13 @@ document.addEventListener('click',event=>{if(event.target.closest?.('input[type=
                   const account=document.createElement('script');
                   account.dataset.r70AccountConsolidated='true';
                   account.src=new URL('../admin/account-consolidated-r70.js?v=20260903-r70',new URL('./',current)).href;
+                  account.onload=()=>{
+                    if(document.querySelector('script[data-r72-profile-polish]'))return;
+                    const polish=document.createElement('script');
+                    polish.dataset.r72ProfilePolish='true';
+                    polish.src=new URL('../admin/profile-polish-r72.js?v=20260903-r72',new URL('./',current)).href;
+                    document.body.appendChild(polish);
+                  };
                   document.body.appendChild(account);
                 };
                 document.body.appendChild(profile);
