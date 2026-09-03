@@ -1,0 +1,29 @@
+name: R61 Smoke
+
+on:
+  push:
+    branches:
+      - test/visual-redesign-r59-realbase
+  workflow_dispatch:
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check R61 JavaScript syntax
+        run: |
+          node --check js/shared/navigation.js
+          node --check js/admin/dashboard.js
+          node --check js/admin/voluntariado.js
+          node --check js/admin/agenda.js
+          node --check js/admin/grupos.js
+          node --check js/admin/menu.js
+          node --check js/admin/meeting-activity-r52.js
+          node --check js/portal/home.js
+          node --check js/portal/agenda.js
+          node --check js/portal/meeting-activity-r51.js
