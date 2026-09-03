@@ -62,7 +62,8 @@ document.addEventListener('click',event=>{if(event.target.closest?.('input[type=
     '../admin/occupancy-page.js',
     '../admin/admin-navigation.js',
     '../admin/groups-page.js',
-    '../admin/house-info-page.js'
+    '../admin/house-info-page.js',
+    '../admin/account-settings.js'
   ];
   const load=(file,index)=>new Promise((resolve,reject)=>{const script=document.createElement('script');script.dataset.homologationUi=String(index+1);script.src=new URL(`${file}?v=20260903-clean-${index+1}`,base).href;script.onload=resolve;script.onerror=()=>reject(new Error(`Falha ao carregar módulo de homologação: ${file}`));document.body.appendChild(script)});
   window.addEventListener('load',async()=>{try{for(let index=0;index<files.length;index+=1)await load(files[index],index)}catch(error){console.error(error);if(typeof showToast==='function')showToast('Falha ao carregar a interface de homologação.')}},{once:true});
