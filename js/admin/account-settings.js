@@ -1,4 +1,4 @@
-/* Preferências da conta administrativa: modal compacto e isolado do layout de perfis. */
+/* Preferências da conta administrativa: identidade e aparência em um modal compacto. */
 (function accountSettings(){
   const params=new URLSearchParams(location.search);
   if(params.get('demo')!=='admin'||!/\/admin\//.test(location.pathname))return;
@@ -13,41 +13,39 @@
     style.id='adminAccountSettingsStyles';
     style.textContent=`
       .modal.admin-account-settings-modal{
-        width:min(520px,calc(100vw - 28px))!important;
-        max-width:520px!important;
-        max-height:min(82vh,620px)!important;
+        width:min(430px,calc(100vw - 28px))!important;
+        max-width:430px!important;
+        max-height:min(78vh,520px)!important;
       }
-      .admin-account-settings-modal .modal-head{padding:16px 18px 13px!important}
-      .admin-account-settings-modal .modal-body{padding:16px 18px 18px!important}
-      .admin-account-settings-modal .modal-footer{padding:11px 18px 14px!important}
+      .admin-account-settings-modal .modal-head{padding:15px 16px 12px!important}
+      .admin-account-settings-modal .modal-body{padding:18px 18px 16px!important}
+      .admin-account-settings-modal .modal-footer{padding:10px 18px 14px!important}
 
-      .admin-account-settings{display:grid;gap:16px}
-      .admin-account-identity{display:grid;grid-template-columns:minmax(0,1fr) minmax(150px,.55fr);border:1px solid var(--border);border-radius:16px;background:var(--surface);overflow:hidden}
-      .admin-account-identity-item{min-width:0;display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;align-items:center;padding:12px 13px}
-      .admin-account-identity-item+ .admin-account-identity-item{border-left:1px solid var(--border)}
-      .admin-account-identity-icon{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:var(--primary-soft);color:var(--primary);font-size:.7rem}
-      .admin-account-identity-copy{min-width:0;display:grid;gap:2px}
-      .admin-account-identity-copy small{font-size:.52rem;color:var(--muted)}
-      .admin-account-identity-copy strong{font-size:.68rem;line-height:1.3;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .admin-account-settings{display:grid;gap:18px}
+      .admin-account-profile{display:flex;flex-direction:column;align-items:center;text-align:center;padding:2px 0 3px}
+      .admin-account-avatar{width:52px;height:52px;border-radius:17px;display:grid;place-items:center;background:var(--primary-soft);color:var(--primary);font-size:1rem;margin-bottom:9px}
+      .admin-account-profile strong{font-size:.82rem;line-height:1.25;color:var(--text)}
+      .admin-account-profile span{margin-top:3px;max-width:100%;font-size:.6rem;line-height:1.35;color:var(--muted);overflow-wrap:anywhere}
 
-      .admin-account-settings-section{display:grid;gap:9px}
-      .admin-account-settings-heading{display:grid;gap:2px}
-      .admin-account-settings-heading span{font-size:.52rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
-      .admin-account-settings-heading strong{font-size:.7rem;color:var(--text)}
-      .admin-account-settings-heading p{margin:0;color:var(--muted);font-size:.56rem;line-height:1.4}
+      .admin-account-preference{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;padding-top:15px;border-top:1px solid var(--border)}
+      .admin-account-preference-copy{min-width:0;display:grid;gap:2px}
+      .admin-account-preference-copy small{font-size:.51rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+      .admin-account-preference-copy strong{font-size:.68rem;color:var(--text)}
+      .admin-account-preference-copy span{font-size:.54rem;line-height:1.35;color:var(--muted)}
 
-      .admin-account-theme-switch{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border:1px solid var(--border);border-radius:13px;background:var(--surface)}
-      .admin-account-theme-switch button{min-height:38px;border:0;border-radius:9px;background:transparent;color:var(--muted);font-size:.62rem;font-weight:700;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer}
+      .admin-account-theme-switch{display:grid;grid-template-columns:1fr 1fr;gap:3px;width:184px;padding:3px;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
+      .admin-account-theme-switch button{min-height:34px;border:0;border-radius:9px;background:transparent;color:var(--muted);font-size:.58rem;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer}
       .admin-account-theme-switch button:hover{background:var(--surface-2);color:var(--text)}
       .admin-account-theme-switch button.active{background:var(--primary);color:#fff}
 
-      .admin-account-footer{display:flex;align-items:center;justify-content:flex-end}
-      .admin-account-signout-button{min-height:36px!important;padding:7px 11px!important;font-size:.6rem!important}
+      .admin-account-footer{display:flex;align-items:center;justify-content:center}
+      .admin-account-signout-button{min-height:34px!important;padding:6px 10px!important;border:0!important;background:transparent!important;box-shadow:none!important;font-size:.58rem!important;color:var(--danger,#b94040)!important}
+      .admin-account-signout-button:hover{background:var(--danger-soft,#fff0ee)!important}
 
-      @media(max-width:560px){
-        .modal.admin-account-settings-modal{width:100%!important;max-width:100%!important}
-        .admin-account-identity{grid-template-columns:1fr}
-        .admin-account-identity-item+ .admin-account-identity-item{border-left:0;border-top:1px solid var(--border)}
+      @media(max-width:480px){
+        .modal.admin-account-settings-modal{width:calc(100vw - 20px)!important;max-width:calc(100vw - 20px)!important}
+        .admin-account-preference{grid-template-columns:1fr;gap:9px}
+        .admin-account-theme-switch{width:100%}
       }
     `;
     document.head.appendChild(style);
@@ -62,20 +60,21 @@
 
   window.openMyAccount=function(){
     const session=state.currentSession||{},dark=String(state.theme||'light')==='dark';
-    const body=`<div class="admin-account-settings">
-      <div class="admin-account-identity">
-        <div class="admin-account-identity-item"><span class="admin-account-identity-icon"><i class="fa-regular fa-envelope"></i></span><div class="admin-account-identity-copy"><small>Email</small><strong title="${esc(session.email||'—')}">${esc(session.email||'—')}</strong></div></div>
-        <div class="admin-account-identity-item"><span class="admin-account-identity-icon"><i class="fa-solid fa-user-shield"></i></span><div class="admin-account-identity-copy"><small>Perfil</small><strong>Administrador</strong></div></div>
+    const body=`<div class="modal-body admin-account-settings-body"><div class="admin-account-settings">
+      <div class="admin-account-profile">
+        <span class="admin-account-avatar"><i class="fa-solid fa-user-shield"></i></span>
+        <strong>Administrador</strong>
+        <span>${esc(session.email||'—')}</span>
       </div>
-      <section class="admin-account-settings-section">
-        <div class="admin-account-settings-heading"><span>Aparência</span><strong>Tema do painel</strong><p>Escolha como a interface administrativa será exibida neste dispositivo.</p></div>
+      <section class="admin-account-preference">
+        <div class="admin-account-preference-copy"><small>Aparência</small><strong>Tema do painel</strong><span>Preferência salva neste dispositivo.</span></div>
         <div class="admin-account-theme-switch" role="group" aria-label="Tema do painel">
           <button class="${!dark?'active':''}" type="button" aria-pressed="${!dark?'true':'false'}" onclick="setAdminTheme('light')"><i class="fa-solid fa-sun"></i>Claro</button>
           <button class="${dark?'active':''}" type="button" aria-pressed="${dark?'true':'false'}" onclick="setAdminTheme('dark')"><i class="fa-solid fa-moon"></i>Escuro</button>
         </div>
       </section>
-    </div>`;
-    const footer=`<div class="admin-account-footer"><button class="btn btn-danger-soft admin-account-signout-button" type="button" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i>Sair da conta</button></div>`;
+    </div></div>`;
+    const footer=`<div class="modal-footer admin-account-footer"><button class="btn admin-account-signout-button" type="button" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i>Sair da conta</button></div>`;
     openModal('Minha conta','',body,footer);
     modalRoot?.querySelector?.('.modal')?.classList.add('admin-account-settings-modal');
   };
