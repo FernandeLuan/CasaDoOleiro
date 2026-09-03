@@ -116,3 +116,12 @@
   installStyles();
   requestAnimationFrame(patchVisibleMenus);
 })();
+
+/* R79: o + do dia cria; o + da atividade concentra ações específicas. */
+(function loadPlanningActivityActionsR79(){
+  if(document.querySelector('script[data-r79-planning-activity-actions]'))return;
+  const current=document.currentScript?.src;if(!current)return;
+  const script=document.createElement('script');script.dataset.r79PlanningActivityActions='true';
+  script.src=new URL('./planning-activity-actions-r79.js?v=20260903-r79',current).href;
+  document.body.appendChild(script);
+})();
