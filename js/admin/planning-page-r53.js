@@ -7,6 +7,7 @@
   const baseNavigateManager=navigateManager;
   const baseOpenPerson=openPerson;
   const baseRenderPersonModal=renderPersonModal;
+  const baseLoadMoreCandidates=typeof loadMoreCandidates==='function'?loadMoreCandidates:null;
 
   state.managerPlanningPersonId=state.managerPlanningPersonId||'';
   state.managerPlanningTab=state.managerPlanningTab||'plan';
@@ -92,6 +93,11 @@
     clearTimeout(state._planningSearchTimer);
     state._planningSearchTimer=setTimeout(()=>{if(typeof loadManagerCandidates==='function')loadManagerCandidates({force:true}).then(()=>{if(state.managerPage==='planning'&&!state.managerPlanningPersonId)render()}).catch(error=>{console.error(error);showToast('Não foi possível buscar os voluntários.')})},300);
   };
+
+  if(baseLoadMoreCandidates){
+    loadMoreCandidates=async function(){const result=await baseLoadMoreCandidates();if(state.managerPage==='planning'&&!state.managerPlanningPersonId)render();return result};
+    window.loadMoreCandidates=loadMoreCandidates;
+  }
 
   managerNav=function(){
     const item=(id,icon,label)=>`<button class="nav-btn ${state.managerPage===id?'active':''}" onclick="navigateManager('${id}')"><i class="fa-solid ${icon}"></i><span>${label}</span></button>`;
