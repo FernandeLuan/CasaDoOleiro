@@ -27,7 +27,6 @@
     db.sessions.push(row);
   };
 
-  /* Camila: principal caso de teste. Mesmos dias com atividades em estados diferentes. */
   ensureSession('camila-pilates-confirmado','camila','2026-09-03','Pilates e mobilidade',{
     duration:60,period:'Manhã',groupId:'A',status:'confirmed',managerCreated:true,
     description:'Sessão já confirmada antes de qualquer nova sugestão do voluntário.'
@@ -56,7 +55,6 @@
     description:'Nova atividade pós-aprovação já devolvida para reajuste.'
   });
 
-  /* Gabriel: confirma que a regra funciona fora do caso principal. */
   ensureSession('gabriel-informatica-confirmada','gabriel','2026-09-07','Informática básica',{
     duration:90,period:'Manhã',groupId:'A',status:'confirmed',managerCreated:true
   });
@@ -69,7 +67,6 @@
     description:'Estado intermediário já aprovado no planejamento; não deve exibir Confirmar novamente.'
   });
 
-  /* Valentina: atividade normal + alteração solicitada no mesmo dia. */
   ensureSession('valentina-artes-confirmada','valentina','2026-09-08','Artes manuais',{
     duration:90,period:'Manhã',groupId:'A',status:'confirmed',managerCreated:true
   });
@@ -78,20 +75,18 @@
     changeNote:'Prefiro realizar pela manhã.',changeProposal:{date:'2026-09-08',period:'Manhã',duration:60,activityName:'Horta e jardinagem',participation:'Grupo C'}
   });
 
-  /* Casal: valida nova sugestão sem interferir nas atividades já confirmadas do casal. */
   ensureSession('lr-idiomas-nova','lucas-rafael','2026-09-21','Idiomas e conversação',{
     duration:60,period:'Tarde',groupId:'Livre',status:'proposed',postApprovalProposal:true,reviewStatus:'analysis',
     description:'Nova atividade sugerida pelo casal após as atividades principais já estarem confirmadas.'
   });
 
-  /* Atualiza contadores exibidos nos cards para refletir a massa real desta sessão. */
   db.applications.forEach(app=>{
     const rows=db.sessions.filter(row=>String(row.applicationId)===String(app.id)&&row.status!=='rejected'&&row.reviewStatus!=='rejected');
     const activities=new Set(rows.map(row=>String(row.activityId||'')).filter(Boolean));
     app.sessionCount=rows.length;app.activityCount=activities.size;app.sessions=rows.length;app.activities=activities.size;
   });
 
-  db.histories= db.histories||{};
+  db.histories=db.histories||{};
   db.histories.camila=db.histories.camila||[];
   if(!db.histories.camila.some(row=>row.id==='h-r77-camila-proposal')){
     db.histories.camila.unshift(
@@ -101,4 +96,47 @@
   }
 
   window.OleiroDemoDB=db;
+})();
+
+/* R82 — bootstrap determinístico: a própria massa R77 carrega as ações do Planejamento. */
+(function loadPlanningActionsDirectR82(){
+  const params=new URLSearchParams(location.search);
+  if(params.get('demo')!=='admin'||!/\/admin\//.test(location.pathname))return;
+  if(window.__OLEIRO_PLANNING_ACTIONS_DIRECT_R82__)return;
+  window.__OLEIRO_PLANNING_ACTIONS_DIRECT_R82__=true;
+  window.__OLEIRO_PREVIEW_BUILD__='R82';
+
+  const current=document.currentScript?.src;
+  if(!current)return;
+  const base=new URL('../admin/',current);
+
+  function stamp(attempt=0){
+    const label=document.querySelector('[data-r62-test-access] span');
+    if(label){label.textContent='Teste · R82 · trocar acesso';return}
+    if(attempt<40)setTimeout(()=>stamp(attempt+1),100);
+  }
+
+  function load(src,dataKey,onload){
+    const selector=`script[data-${dataKey}]`;
+    if(document.querySelector(selector)){onload?.();return}
+    const script=document.createElement('script');
+    script.dataset[dataKey.replace(/-([a-z])/g,(_,c)=>c.toUpperCase())]='true';
+    script.async=false;
+    script.src=new URL(src,base).href;
+    if(onload)script.onload=onload;
+    document.head.appendChild(script);
+  }
+
+  stamp();
+  load('planning-day-actions-r76.js?v=20260903-r82','r82-r76',()=>{
+    load('planning-day-actions-r78.js?v=20260903-r82','r82-r78',()=>{
+      load('planning-activity-actions-r79.js?v=20260903-r82','r82-r79',()=>{
+        stamp();
+        requestAnimationFrame(()=>{
+          const root=document.querySelector('.planning-person-agenda');
+          if(root){const marker=document.createElement('span');marker.hidden=true;root.appendChild(marker);queueMicrotask(()=>marker.remove())}
+        });
+      });
+    });
+  });
 })();
