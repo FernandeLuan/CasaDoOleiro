@@ -74,5 +74,5 @@
     </div>`;
   };
 
-  if(window.state?.role==='manager'&&window.state?.managerPage==='home'&&typeof render==='function')render();
+  if(typeof state!=='undefined'&&state.role==='manager'&&state.managerPage==='home'&&typeof render==='function')render();
 })();
