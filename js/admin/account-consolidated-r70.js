@@ -125,3 +125,13 @@
   installStyles();
   requestAnimationFrame(consolidateAccount);
 })();
+
+/* R71 é carregada somente depois da consolidação da Conta, preservando a ordem das camadas. */
+(function loadAccountHistoryScrollR71(){
+  if(document.querySelector('script[data-r71-account-history-scroll]'))return;
+  const current=document.currentScript?.src;if(!current)return;
+  const script=document.createElement('script');
+  script.dataset.r71AccountHistoryScroll='true';
+  script.src=new URL('./account-history-scroll-r71.js?v=20260903-r71',current).href;
+  document.body.appendChild(script);
+})();
