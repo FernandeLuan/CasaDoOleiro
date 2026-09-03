@@ -9,11 +9,21 @@
   if(!current)return;
   let attempts=0;
 
+  function ensureR81(){
+    if(window.__OLEIRO_PLANNING_CARD_SESSION_RECOVERY_R81__||document.querySelector('script[data-r81-planning-card-recovery]'))return;
+    const script=document.createElement('script');
+    script.dataset.r81PlanningCardRecovery='true';
+    script.src=new URL('./planning-card-session-recovery-r81.js?v=20260903-r81',current).href;
+    document.body.appendChild(script);
+  }
+
   function ensureR79(){
-    if(window.__OLEIRO_PLANNING_ACTIVITY_ACTIONS_R79__||document.querySelector('script[data-r79-planning-activity-actions-r80]'))return;
+    if(window.__OLEIRO_PLANNING_ACTIVITY_ACTIONS_R79__){ensureR81();return}
+    if(document.querySelector('script[data-r79-planning-activity-actions-r80]'))return;
     const script=document.createElement('script');
     script.dataset.r79PlanningActivityActionsR80='true';
-    script.src=new URL('./planning-activity-actions-r79.js?v=20260903-r80',current).href;
+    script.src=new URL('./planning-activity-actions-r79.js?v=20260903-r81',current).href;
+    script.onload=ensureR81;
     document.body.appendChild(script);
   }
 
@@ -22,7 +32,7 @@
     if(document.querySelector('script[data-r78-planning-day-actions-r80]'))return;
     const script=document.createElement('script');
     script.dataset.r78PlanningDayActionsR80='true';
-    script.src=new URL('./planning-day-actions-r78.js?v=20260903-r80',current).href;
+    script.src=new URL('./planning-day-actions-r78.js?v=20260903-r81',current).href;
     script.onload=ensureR79;
     document.body.appendChild(script);
   }
