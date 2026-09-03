@@ -76,6 +76,7 @@
       .admin-theme-switch{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border:1px solid var(--border);border-radius:13px;background:var(--surface)}
       .admin-theme-switch button{min-height:38px;border:0;border-radius:9px;background:transparent;color:var(--muted);font-size:.64rem;font-weight:700;display:flex;align-items:center;justify-content:center;gap:7px}
       .admin-theme-switch button.active{background:var(--primary);color:#fff}
+      .admin-account-signout{margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
 
       @media(max-width:1023px){
         #navRoot .bottom-nav{grid-template-columns:repeat(6,minmax(74px,1fr))!important;overflow-x:auto;justify-content:start}
@@ -108,6 +109,12 @@
     if(account){
       account.innerHTML=sidebarButton(false,'fa-user','Minha conta','openMyAccount()')+sidebarButton(false,'fa-right-from-bracket','Sair','logout()');
     }
+  }
+
+  function enhanceAdminHeader(){
+    const actions=document.querySelector('.admin-content-r62>.app-header .header-actions');
+    if(!actions)return;
+    actions.innerHTML='<button class="icon-btn" type="button" onclick="openMyAccount()" aria-label="Minha conta"><i class="fa-solid fa-user"></i></button>';
   }
 
   function bottomNav(){
@@ -171,12 +178,11 @@
 
   window.openMyAccount=function(){
     const session=state.currentSession||{},dark=state.theme==='dark';
-    openModal('Minha conta','',`<div class="admin-account-card admin-account-card-refined"><div class="admin-account-row"><span class="admin-account-icon"><i class="fa-regular fa-envelope"></i></span><div><small>Email</small><strong>${esc(session.email||'—')}</strong></div></div><div class="admin-account-row"><span class="admin-account-icon"><i class="fa-solid fa-user-shield"></i></span><div><small>Perfil</small><strong>Administrador</strong></div></div><div class="admin-account-appearance"><div class="admin-account-appearance-head"><small>Aparência</small><strong>Tema do painel</strong></div><div class="admin-theme-switch" role="group" aria-label="Tema do painel"><button class="${!dark?'active':''}" type="button" aria-pressed="${!dark?'true':'false'}" onclick="setAdminTheme('light')"><i class="fa-solid fa-sun"></i>Claro</button><button class="${dark?'active':''}" type="button" aria-pressed="${dark?'true':'false'}" onclick="setAdminTheme('dark')"><i class="fa-solid fa-moon"></i>Escuro</button></div></div></div>`);
+    openModal('Minha conta','',`<div class="admin-account-card admin-account-card-refined"><div class="admin-account-row"><span class="admin-account-icon"><i class="fa-regular fa-envelope"></i></span><div><small>Email</small><strong>${esc(session.email||'—')}</strong></div></div><div class="admin-account-row"><span class="admin-account-icon"><i class="fa-solid fa-user-shield"></i></span><div><small>Perfil</small><strong>Administrador</strong></div></div><div class="admin-account-appearance"><div class="admin-account-appearance-head"><small>Aparência</small><strong>Tema do painel</strong></div><div class="admin-theme-switch" role="group" aria-label="Tema do painel"><button class="${!dark?'active':''}" type="button" aria-pressed="${!dark?'true':'false'}" onclick="setAdminTheme('light')"><i class="fa-solid fa-sun"></i>Claro</button><button class="${dark?'active':''}" type="button" aria-pressed="${dark?'true':'false'}" onclick="setAdminTheme('dark')"><i class="fa-solid fa-moon"></i>Escuro</button></div></div><div class="admin-account-signout"><button class="btn btn-outline btn-block" type="button" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i>Sair</button></div></div>`);
   };
 
   installStyles();
 
-  const previousManagerNav=window.managerNav;
   window.managerNav=managerNav=function(){return bottomNav()};
 
   const baseRenderManager=window.renderManager;
@@ -191,6 +197,7 @@
       if(main)main.innerHTML=houseInfoHtml();
     }
     enhanceSidebar();
+    enhanceAdminHeader();
     enhancePageTitles();
     enhanceGroupsPage();
     if(typeof navRoot!=='undefined'&&navRoot)navRoot.innerHTML=bottomNav();
