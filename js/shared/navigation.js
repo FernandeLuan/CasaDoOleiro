@@ -43,8 +43,8 @@ document.addEventListener('click',event=>{if(event.target.closest?.('input[type=
 
 /* Homologação R62 Admin: aplica a composição final da Home somente depois que todos
    os refinamentos históricos já terminaram de carregar. Em seguida, a integração R65
-   reconecta Planejamento/Ocupação, o board R65 redesenha o índice e a R66 transforma
-   o planejamento individual em agenda semanal de segunda a sexta. */
+   reconecta Planejamento/Ocupação, o board R65 redesenha o índice, a R66 transforma
+   o planejamento individual em agenda semanal e a R67 compacta a Home e libera scroll. */
 (function loadFinalAdminHomeR62(){
   const params=new URLSearchParams(location.search);
   if(params.get('demo')!=='admin'||!/\/admin\//.test(location.pathname))return;
@@ -69,6 +69,13 @@ document.addEventListener('click',event=>{if(event.target.closest?.('input[type=
           const agenda=document.createElement('script');
           agenda.dataset.r66PlanningPersonAgenda='true';
           agenda.src=new URL('../admin/planning-person-agenda-r66.js?v=20260903-r66',new URL('./',current)).href;
+          agenda.onload=()=>{
+            if(document.querySelector('script[data-r67-admin-home]'))return;
+            const home=document.createElement('script');
+            home.dataset.r67AdminHome='true';
+            home.src=new URL('../admin/home-r67-layout.js?v=20260903-r67',new URL('./',current)).href;
+            document.body.appendChild(home);
+          };
           document.body.appendChild(agenda);
         };
         document.body.appendChild(board);
