@@ -8,23 +8,26 @@
     const style=document.createElement('style');
     style.id='planningGroupEditorStyles';
     style.textContent=`
-      .planning-group-grid{
+      .planning-group-grid,
+      .activity-group-grid{
         display:grid!important;
         grid-template-columns:repeat(5,minmax(0,1fr))!important;
         gap:6px!important;
         align-items:stretch;
       }
-      .planning-group-option{
+      .planning-group-option,
+      .activity-group-grid .check-card{
         min-width:0;
         min-height:40px;
         padding:7px 8px!important;
         display:flex!important;
         align-items:center!important;
-        justify-content:flex-start;
+        justify-content:flex-start!important;
         gap:7px!important;
         box-sizing:border-box;
       }
-      .planning-group-option input[type="checkbox"]{
+      .planning-group-option input[type="checkbox"],
+      .activity-group-grid .check-card input[type="checkbox"]{
         width:16px;
         height:16px;
         margin:0!important;
@@ -40,6 +43,13 @@
         font-weight:600;
         white-space:nowrap;
       }
+      .activity-group-grid .check-card span{min-width:0;font-size:0!important;line-height:1;white-space:nowrap}
+      .activity-group-grid .check-card input[value="A"]+span::after{content:"A"}
+      .activity-group-grid .check-card input[value="B"]+span::after{content:"B"}
+      .activity-group-grid .check-card input[value="C"]+span::after{content:"C"}
+      .activity-group-grid .check-card input[value="D"]+span::after{content:"D"}
+      .activity-group-grid .check-card input[value="Livre"]+span::after{content:"Livre"}
+      .activity-group-grid .check-card input+span::after{font-size:.66rem!important;font-weight:600;color:var(--text)}
 
       /* Dias sem atividade usam o mesmo padrão de card das atividades, com mensagem centralizada. */
       .planning-person-day.is-empty .planning-person-day-summary{display:none!important}
@@ -61,10 +71,11 @@
       .planning-person-day.is-empty .planning-person-empty i{display:none!important}
 
       @media(max-width:640px){
-        .planning-group-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:5px!important}
-        .planning-group-option{min-height:38px;padding:6px!important;gap:6px!important}
-        .planning-group-option input[type="checkbox"]{width:15px;height:15px;flex-basis:15px}
+        .planning-group-grid,.activity-group-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:5px!important}
+        .planning-group-option,.activity-group-grid .check-card{min-height:38px;padding:6px!important;gap:6px!important}
+        .planning-group-option input[type="checkbox"],.activity-group-grid .check-card input[type="checkbox"]{width:15px;height:15px;flex-basis:15px}
         .planning-group-option span{font-size:.62rem}
+        .activity-group-grid .check-card input+span::after{font-size:.62rem!important}
         .planning-person-day.is-empty .planning-person-empty{min-height:82px!important}
       }
     `;
