@@ -3,6 +3,32 @@ function uiDateText(value){if(!value)return 'Selecionar data';const parts=value.
 function openNativeDatePicker(id){const input=document.getElementById(id);if(!input||input.disabled||input.readOnly)return;try{if(typeof input.showPicker==='function'){input.showPicker();return}}catch{}try{input.focus({preventScroll:true})}catch{input.focus()}}
 function datePickerField(id,label,value='',required=false,handler='syncVisualDateField'){const text=uiDateText(value),placeholder=value?'':' is-placeholder';return `<div class="field date-field"><label for="${id}">${label}</label><div class="date-picker-shell" onclick="openNativeDatePicker('${id}')"><span id="${id}Text" class="date-picker-value${placeholder}">${text}</span><i class="fa-regular fa-calendar"></i><input id="${id}" class="date-native-overlay" type="date" value="${value||''}" ${required?'required':''} aria-label="${escapeHtml(label)}" onchange="${handler}('${id}')" oninput="${handler}('${id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openNativeDatePicker('${id}')}" ></div></div>`;}
 function syncVisualDateField(id){const input=document.getElementById(id),text=document.getElementById(`${id}Text`);if(!input||!text)return;text.textContent=uiDateText(input.value);text.classList.toggle('is-placeholder',!input.value);}
+
+/* Todo campo administrativo de data reaproveita o componente validado em "Chegada proposta". */
+function enhanceSharedAdminDateFields(root=document){
+  const found=[];
+  if(root?.matches?.('input[type="date"]:not(.date-native-overlay)'))found.push(root);
+  if(root?.querySelectorAll)found.push(...root.querySelectorAll('input[type="date"]:not(.date-native-overlay)'));
+  [...new Set(found)].forEach(input=>{
+    if(!input?.id||input.closest('.date-picker-shell'))return;
+    const field=input.closest('.field');if(!field)return;
+    field.classList.add('date-field');
+    const shell=document.createElement('div');shell.className='date-picker-shell';
+    const value=document.createElement('span');value.id=`${input.id}Text`;value.className='date-picker-value';
+    const icon=document.createElement('i');icon.className='fa-regular fa-calendar';icon.setAttribute('aria-hidden','true');
+    input.parentNode.insertBefore(shell,input);input.classList.add('date-native-overlay');shell.append(value,icon,input);
+    const sync=()=>syncVisualDateField(input.id);input.addEventListener('input',sync);input.addEventListener('change',sync);sync();
+  });
+}
+function installSharedAdminDateFields(){
+  enhanceSharedAdminDateFields(document);
+  if(typeof MutationObserver!=='function')return;
+  const observer=new MutationObserver(records=>records.forEach(record=>record.addedNodes.forEach(node=>{if(node?.nodeType===1)enhanceSharedAdminDateFields(node)})));
+  const roots=[document.getElementById('app'),typeof modalRoot!=='undefined'?modalRoot:null].filter(Boolean);
+  [...new Set(roots)].forEach(root=>observer.observe(root,{childList:true,subtree:true}));
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installSharedAdminDateFields,{once:true});else installSharedAdminDateFields();
+
 function candidateUnitOptions(){const available=(state.units||[]).filter(unit=>unit.active===true&&unit.acceptingVolunteers!==false);const rows=available.length?available:[{id:'rodeio',name:'Rodeio'}];return rows.map(unit=>`<option value="${escapeHtml(unit.id)}">${escapeHtml(unit.name||unit.id)}</option>`).join('');}
 function candidateParticipantFields(index,{optional=false}={}){const n=Number(index);return `<div class="card candidate-participant-card" id="ncParticipant${n}" ${optional?'hidden':''}><div class="candidate-participant-title"><strong>Participante ${n}</strong></div><div class="form-grid" style="margin-top:10px"><div class="field"><label for="ncName${n}">Nome completo</label><input id="ncName${n}" class="input" autocomplete="name" placeholder="Nome completo" oninput="syncNewCandidateSubmit()"></div><div class="field"><label for="ncEmail${n}">E-mail</label><input id="ncEmail${n}" class="input" type="email" autocomplete="email" placeholder="email@exemplo.com" oninput="syncNewCandidateSubmit()"></div><div class="field-row"><div class="field"><label for="ncPhone${n}">WhatsApp</label><input id="ncPhone${n}" class="input" type="tel" autocomplete="tel" placeholder="+55 ..."></div><div class="field"><label for="ncCountry${n}">País</label><input id="ncCountry${n}" class="input" placeholder="País"></div></div><div class="field"><label for="ncLanguage${n}">Idioma do e-mail</label><select id="ncLanguage${n}" class="select"><option value="en">English</option><option value="pt">Português</option><option value="es">Español</option></select></div></div></div>`;}
 function candidateTypeSelector(){return `<div class="field candidate-type-field"><label>Tipo da candidatura</label><input id="ncType" type="hidden" value="individual"><div class="candidate-type-switch" role="group" aria-label="Tipo da candidatura"><button id="ncTypeIndividual" class="candidate-type-option active" type="button" onclick="setCandidateType('individual')"><span>1</span><strong>Individual</strong></button><button id="ncTypeCouple" class="candidate-type-option" type="button" onclick="setCandidateType('couple')"><span>2</span><strong>Dupla</strong></button></div></div>`}

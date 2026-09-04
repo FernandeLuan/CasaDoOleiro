@@ -1,7 +1,8 @@
 /* Round 20/24 — alinhamento fino de status, Conta, Agenda, Home e gestão do planejamento. */
 .candidate-status-row{display:flex!important;align-items:center!important;gap:6px!important;flex-wrap:wrap!important}
-.candidate-deadline-inline{display:inline-flex;align-items:center;gap:4px;font-size:.58rem;color:var(--warning);font-weight:600;line-height:1.2}
-.candidate-deadline-inline i{font-size:.55rem}
+.candidate-status-row .badge{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-height:24px!important;line-height:1!important}
+.candidate-deadline-inline{display:inline-flex;align-items:center;justify-content:center;gap:4px;min-height:24px;font-size:.58rem;color:var(--warning);font-weight:600;line-height:1!important}
+.candidate-deadline-inline i{font-size:.55rem;line-height:1}
 
 .account-person-gender{margin-top:0!important;min-height:0!important;line-height:1.2!important}
 .account-person-gender>span{font-size:.62rem!important;line-height:1.2!important}

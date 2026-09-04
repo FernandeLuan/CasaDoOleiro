@@ -1,0 +1,60 @@
+name: Production Clean UI
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build production-shaped artifact
+        run: |
+          rm -rf _site
+          mkdir -p _site
+          rsync -a \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='_site' \
+            ./ _site/
+          node scripts/prepare-prod-clean-ui.mjs _site
+
+      - name: Validate production surface
+        run: |
+          test ! -e _site/homologacao
+          test ! -e _site/js/demo
+          test ! -e _site/functions
+          test ! -e _site/firestore.rules
+          test ! -e _site/firebase.preview.json
+          test ! -e _site/firebase.release-preview.json
+          grep -q 'data-prod-clean-admin' _site/admin/index.html
+          grep -q 'data-prod-clean-portal' _site/portal/index.html
+          grep -q 'desktop-shell.js' _site/portal/index.html
+          if grep -q 'homologation-adapter' _site/js/shared/navigation.js; then
+            echo 'Homologation data loader leaked into production artifact.'
+            exit 1
+          fi
+          if grep -q 'loadHomologationAdminUi' _site/js/shared/navigation.js; then
+            echo 'Homologation admin loader leaked into production artifact.'
+            exit 1
+          fi
+
+      - name: Validate final preview deploy helper
+        run: |
+          bash -n scripts/deploy-prod-clean-preview.sh
+          node -e "JSON.parse(require('fs').readFileSync('firebase.release-preview.json','utf8'))"
+          grep -q 'release-dist' firebase.release-preview.json
+          grep -q 'apps:sdkconfig WEB' scripts/deploy-prod-clean-preview.sh
+          grep -q 'hosting:channel:deploy' scripts/deploy-prod-clean-preview.sh
+
+      - name: Check JavaScript syntax
+        run: |
+          find _site/js -type f -name '*.js' -print0 | xargs -0 -n1 node --check

@@ -90,6 +90,9 @@ jobs:
               print('SENTRY_DSN not configured; monitoring remains disabled for this deploy.')
           PY
 
+      - name: Enable production clean UI
+        run: node scripts/prepare-prod-clean-ui.mjs _site
+
       - name: Stamp release and asset cache keys
         env:
           RELEASE_SHA: ${{ github.sha }}
