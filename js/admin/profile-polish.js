@@ -10,51 +10,60 @@
     const style=document.createElement('style');
     style.id='profilePolishStyles';
     style.textContent=`
-      .planning-detail-page{--ui-text-xs:var(--ui-text-sm)}
+      .planning-detail-page{--ui-text-sm:.68rem;--ui-text-xs:.68rem}
       .planning-detail-page .planning-profile-copy>.eyebrow{display:none!important}
       .planning-detail-page .planning-profile-head>.planning-profile-tabs{margin-top:3px!important;padding-top:2px!important}
       .planning-person-weeks>.planning-person-week:only-child{grid-column:1/-1!important;width:100%!important;max-width:none!important;margin-inline:0!important}
       .planning-detail-page .planning-profile-head>.planning-profile-tabs{grid-column:1/-1}
       .planning-detail-page .planning-page-content>.planning-profile-tabs,.planning-detail-page .planning-page-content>.person-history-tabs{display:none!important}
-      .planning-person-day-title .planning-person-day-summary{display:inline-flex!important;align-items:center!important;gap:7px!important;margin:0!important;font-size:var(--ui-text-sm)!important;line-height:1.35!important;color:var(--muted)!important}
+      .planning-person-day-title .planning-person-day-summary{display:inline-flex!important;align-items:center!important;gap:7px!important;margin:0!important;font-size:.68rem!important;line-height:1.35!important;color:var(--muted)!important}
 
-      /* Planejamento individual: aproxima data/resumo do conteúdo e elimina alturas herdadas. */
+      /* Planejamento individual: data/resumo próximos do conteúdo, sem alturas artificiais. */
       .planning-detail-page .planning-person-day-head{
-        min-height:52px!important;
-        padding:9px 13px!important;
+        min-height:48px!important;
+        padding:8px 13px!important;
         align-items:center!important;
       }
       .planning-detail-page .planning-person-day-copy{display:block!important;min-width:0!important}
-      .planning-detail-page .planning-person-day-title{min-height:29px;align-items:center!important;gap:8px!important}
+      .planning-detail-page .planning-person-day-title{min-height:28px;align-items:center!important;gap:8px!important}
       .planning-detail-page .planning-person-add{align-self:center!important}
-      .planning-detail-page .planning-person-agenda .planning-day-sessions{padding-top:8px!important}
+      .planning-detail-page .planning-person-agenda .planning-day-sessions{padding-top:6px!important}
       .planning-detail-page .planning-person-day.is-empty .planning-person-day-head{
-        border-bottom:1px solid var(--border)!important;
-        border-radius:16px 16px 0 0!important;
+        border-bottom:0!important;
+        border-radius:16px!important;
       }
-      .planning-detail-page .planning-person-day.is-empty .planning-person-day-body{
-        display:block!important;
-        min-height:0!important;
-        height:auto!important;
-        padding:6px 12px 8px!important;
-      }
-      .planning-detail-page .planning-person-empty{
-        min-height:38px!important;
-        height:auto!important;
-        margin:0!important;
-        padding:7px 8px!important;
-        justify-content:center!important;
-        border:0!important;
-        border-radius:0!important;
-        background:transparent!important;
-        box-shadow:none!important;
-      }
-      .planning-detail-page .planning-person-empty i{display:none!important}
+      .planning-detail-page .planning-person-day.is-empty .planning-person-day-body{display:none!important}
+      .planning-detail-page .planning-person-empty{display:none!important}
       @media(max-width:640px){
-        .planning-detail-page .planning-person-day-head{min-height:48px!important;padding:8px 12px!important}
-        .planning-detail-page .planning-person-day.is-empty .planning-person-day-body{padding:5px 10px 7px!important}
-        .planning-detail-page .planning-person-empty{min-height:34px!important;padding:5px 8px!important}
-        .planning-detail-page .planning-person-agenda .planning-day-sessions{padding:7px 9px 9px!important}
+        .planning-detail-page .planning-person-day-head{min-height:44px!important;padding:7px 12px!important}
+        .planning-detail-page .planning-person-agenda .planning-day-sessions{padding:6px 9px 9px!important}
+      }
+
+      /* No mobile não sobra coluna do avatar removido: conteúdo começa no mesmo eixo de Período. */
+      @media(max-width:900px){
+        .planning-detail-page .account-contact-card-r70>.account-person-row.account-person-inline-r71{
+          grid-template-columns:minmax(0,1fr)!important;
+          gap:0!important;
+          padding:14px!important;
+          align-items:start!important;
+        }
+        .planning-detail-page .account-person-inline-r71>.account-person-main-r71{
+          grid-column:1!important;
+          grid-row:auto!important;
+          width:100%!important;
+          gap:2px!important;
+          justify-items:start!important;
+          text-align:left!important;
+        }
+        .planning-detail-page .account-person-inline-r71>.account-person-emergency-inline-r71{
+          grid-column:1!important;
+          grid-row:auto!important;
+          width:100%!important;
+          margin-top:10px!important;
+          padding:10px 0 0!important;
+          border-left:0!important;
+          border-top:1px solid var(--border)!important;
+        }
       }
 
       /* Detalhe do voluntário: nenhum texto funcional abaixo de .68rem. */
@@ -89,14 +98,19 @@
       .planning-detail-page .planning-history-r71-head time,
       .planning-detail-page .planning-history-r71-body p,
       .planning-detail-page .planning-history-r71-body span,
+      .planning-detail-page .planning-person-day-summary,
       .planning-detail-page .planning-person-day-signals .badge,
       .planning-detail-page .planning-activity-tools .admin-portal-status .badge,
+      .planning-detail-page .planning-person-agenda .admin-portal-activity-title p,
+      .planning-detail-page .planning-person-agenda .admin-portal-description,
+      .planning-detail-page .planning-person-agenda .admin-portal-detail,
+      .planning-detail-page .planning-person-agenda .day-adjustment-note,
       .planning-detail-page .account-emergency-action-r72{
-        font-size:var(--ui-text-sm)!important;
+        font-size:.68rem!important;
       }
 
-      .account-emergency-action-r72{border:0;background:transparent;color:var(--primary);padding:2px 0;min-height:auto;display:inline-flex;align-items:center;gap:5px;font-size:var(--ui-text-sm);font-weight:700;white-space:nowrap}
-      .account-emergency-action-r72:hover{text-decoration:underline}.account-emergency-action-r72 i{font-size:var(--ui-text-sm)}
+      .account-emergency-action-r72{border:0;background:transparent;color:var(--primary);padding:2px 0;min-height:auto;display:inline-flex;align-items:center;gap:5px;font-size:.68rem;font-weight:700;white-space:nowrap}
+      .account-emergency-action-r72:hover{text-decoration:underline}.account-emergency-action-r72 i{font-size:.68rem}
       .planning-detail-page .account-person-emergency-inline-r71 .account-person-section-head-r70{align-items:center!important}
     `;
     document.head.appendChild(style);
@@ -122,11 +136,11 @@
       const raw=String(day.dataset.planDate||''),parts=raw.split('-'),date=parts.length===3?`${parts[2]}/${parts[1]}`:raw;
       const title=day.querySelector('.planning-person-day-title'),strong=title?.querySelector(':scope > strong');if(!title||!strong)return;
       strong.textContent=date||strong.textContent;
-      const weekday=title.querySelector(':scope > span');if(weekday)weekday.remove();
-      const summary=day.querySelector('.planning-person-day-copy > .planning-person-day-summary');
-      if(summary&&!title.contains(summary)){
+      const weekday=title.querySelector(':scope > span:not(.planning-person-day-summary)');if(weekday)weekday.remove();
+      const summary=title.querySelector('.planning-person-day-summary')||day.querySelector('.planning-person-day-summary');
+      if(summary){
         if(day.classList.contains('is-empty'))summary.textContent='0 atividades · 0min';
-        title.appendChild(summary);
+        if(!title.contains(summary))title.appendChild(summary);
       }
     });
   }
