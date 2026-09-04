@@ -2,6 +2,29 @@
 (function candidateRefactorR18(){
   const baseVolunteerPlan=volunteerPlan;
 
+  function installCandidateStatusStyles(){
+    if(document.getElementById('candidateStatusThemeStyles'))return;
+    const style=document.createElement('style');
+    style.id='candidateStatusThemeStyles';
+    style.textContent=`
+      .candidate-plan-compact-head{
+        background:var(--surface-2)!important;
+        border-color:var(--border)!important;
+      }
+      .candidate-plan-compact-head.warning{
+        background:var(--warning-soft)!important;
+        border-color:color-mix(in srgb,var(--warning) 30%,transparent)!important;
+      }
+      .candidate-plan-compact-head.warning span{color:var(--warning)!important}
+      .candidate-plan-compact-head.info{
+        background:var(--info-soft)!important;
+        border-color:color-mix(in srgb,var(--info) 28%,transparent)!important;
+      }
+      .candidate-plan-compact-head.info span{color:var(--info)!important}
+    `;
+    document.head.appendChild(style);
+  }
+
   function remainingLabel(days){return days===1?t('portal.profile.remainingOne'):t('portal.profile.remainingMany',{days})}
   function statusMetaCandidate(){
     const status=state.volunteerPlanStatus||'draft',application=state.currentApplication||{};
@@ -13,8 +36,8 @@
       return {label,tone:'warning'};
     }
     const deadline=application.planningDeadlineAt||application.pendingUntil;
-    if(deadline){try{const date=typeof deadline?.toDate==='function'?deadline.toDate():new Date(deadline),days=Math.max(0,Math.ceil((date.getTime()-Date.now())/86400000));return {label:remainingLabel(days),tone:''}}catch{}}
-    return {label:t('portal.profile.preparing'),tone:''};
+    if(deadline){try{const date=typeof deadline?.toDate==='function'?deadline.toDate():new Date(deadline),days=Math.max(0,Math.ceil((date.getTime()-Date.now())/86400000));return {label:remainingLabel(days),tone:'warning'}}catch{}}
+    return {label:t('portal.profile.preparing'),tone:'warning'};
   }
   function compactHeader(){
     const app=state.currentApplication||{},start=portalIsoDate(app.stayStart),end=portalIsoDate(app.stayEnd),meta=statusMetaCandidate(),period=start&&end?`${fmtDate(start,true)}–${fmtDate(end,true)}`:t('portal.home.periodConfirm');
@@ -33,6 +56,7 @@
     return `<section class="section candidate-plan-refactor compact-page-top">${compactHeader()}<div class="candidate-plan-content">${volunteerAgendaContent(editable)}</div>${submitControl()}</section>`;
   };
 
+  installCandidateStatusStyles();
   window.volunteerPlan=volunteerPlan;
   if(state.role==='volunteer'&&state.volunteerMode!=='approved'&&state.volunteerPage==='plan'&&typeof render==='function')render();
 })();
