@@ -3,6 +3,7 @@ const CANDIDATE_STATUS_OPTIONS=[
 ];
 const CANDIDATE_PAGE_SIZE=10;
 let _candidateSearchTimer=null;
+let _candidateSearchRequest=0;
 function normalizeCandidateFilter(value){return CANDIDATE_STATUS_OPTIONS.some(([id])=>id===value)?value:'all';}
 function managerVolunteers(){
   state.candidateFilter=normalizeCandidateFilter(state.candidateFilter);const search=state.candidateSearch||'';const activeFilters=state.candidateFilter!=='all'||(state.candidateUnit||'all')!=='all';
@@ -19,7 +20,23 @@ function candidateListHtml(list){
 }
 async function loadMoreCandidates(){if(typeof loadMoreManagerCandidates==='function')await loadMoreManagerCandidates()}
 function refreshCandidateList(){const list=document.getElementById('candidateList');if(list){list.innerHTML=candidateListHtml(state.candidates||[]);if(typeof applyI18n==='function')applyI18n(list)}}
-function updateCandidateSearch(value){state.candidateSearch=value;clearTimeout(_candidateSearchTimer);_candidateSearchTimer=setTimeout(()=>{if(typeof loadManagerCandidates==='function')loadManagerCandidates({force:true}).catch(error=>{console.error(error);showToast('Não foi possível buscar os voluntários.')})},300)}
+async function searchCandidatesWithoutPageRender(){
+  const request=++_candidateSearchRequest,service=window.OleiroServices?.applications?.list;
+  if(!service)return typeof loadManagerCandidates==='function'?loadManagerCandidates({force:true}):undefined;
+  state.candidateLoading=true;
+  try{
+    const result=await service({status:state.candidateFilter||'all',unit:state.candidateUnit||'all',search:state.candidateSearch||'',cursor:null,limit:CANDIDATE_PAGE_SIZE});
+    if(request!==_candidateSearchRequest)return;
+    state.candidates=result?.items||[];
+    state.candidateCursor=result?.nextCursor||null;
+    state.candidateHasMore=!!result?.hasMore;
+  }catch(error){
+    if(request===_candidateSearchRequest){console.error(error);showToast('Não foi possível buscar os voluntários.')}
+  }finally{
+    if(request===_candidateSearchRequest){state.candidateLoading=false;refreshCandidateList()}
+  }
+}
+function updateCandidateSearch(value){state.candidateSearch=String(value||'');clearTimeout(_candidateSearchTimer);_candidateSearchTimer=setTimeout(searchCandidatesWithoutPageRender,300)}
 function openCandidateFilters(){const filter=normalizeCandidateFilter(state.candidateFilter);const unit=state.candidateUnit||'all';openModal('Filtros','Refine os perfis exibidos.',`<div class="filter-modal-content"><div class="field"><label>Status</label><select id="candidateStatusFilter" class="select">${CANDIDATE_STATUS_OPTIONS.map(([id,l])=>`<option value="${id}" ${filter===id?'selected':''}>${l}</option>`).join('')}</select></div><div class="field"><label>Unidade</label><select id="candidateUnitFilter" class="select">${[['all','Todas as unidades'],['Rodeio','Rodeio'],['Indaial','Indaial']].map(([id,l])=>`<option value="${id}" ${unit===id?'selected':''}>${l}</option>`).join('')}</select></div><div class="filter-modal-actions"><button class="btn btn-outline" type="button" onclick="clearCandidateFilters()">Limpar filtros</button><button class="btn btn-primary" type="button" onclick="applyCandidateFilters()">Aplicar</button></div></div>`);modalRoot.querySelector('.modal')?.classList.add('filter-modal');}
 function applyCandidateFilters(){state.candidateFilter=normalizeCandidateFilter(document.getElementById('candidateStatusFilter')?.value);state.candidateUnit=document.getElementById('candidateUnitFilter')?.value||'all';closeModal();render();if(typeof loadManagerCandidates==='function')loadManagerCandidates({force:true}).catch(error=>{console.error(error);showToast('Não foi possível aplicar os filtros.')})}
 function clearCandidateFilters(){state.candidateFilter='all';state.candidateUnit='all';closeModal();render();if(typeof loadManagerCandidates==='function')loadManagerCandidates({force:true}).catch(console.error)}
