@@ -234,9 +234,8 @@
       strong.textContent=date||strong.textContent;
       const weekday=title.querySelector(':scope > span:not(.planning-person-day-summary)');if(weekday)weekday.remove();
       let summary=title.querySelector('.planning-person-day-summary')||day.querySelector('.planning-person-day-summary');
-      if(!summary){summary=document.createElement('span');summary.className='planning-person-day-summary'}
-      const hasActivity=!!day.querySelector('.planning-person-activity-card,.admin-portal-activity-card,.planning-day-sessions .activity-card');
-      if(!hasActivity)summary.textContent='Sem atividade';
+      if(!summary){summary=document.createElement('span');summary.className='planning-person-day-summary';title.appendChild(summary)}
+      if(day.classList.contains('is-empty'))summary.textContent='Sem atividade';
       if(!title.contains(summary))title.appendChild(summary);
     });
   }
@@ -255,13 +254,8 @@
   }
 
   function polish(){moveHistoryTabsToHeader();simplifyPlanningDayHeaders();ensureEmergencyActions()}
-  let polishQueued=false;
-  function queuePolish(){if(polishQueued)return;polishQueued=true;queueMicrotask(()=>{polishQueued=false;polish()})}
   let attempts=0;function settle(){polish();attempts+=1;if(attempts<12)setTimeout(settle,90)}
   const baseRenderManager=typeof window.renderManager==='function'?window.renderManager:null;
-  if(baseRenderManager){renderManager=function(){const result=baseRenderManager();queuePolish();requestAnimationFrame(polish);setTimeout(polish,60);return result};window.renderManager=renderManager;render=function(){return renderManager()};window.render=render}
-  installStyles();
-  const appRoot=document.getElementById('app');
-  if(appRoot)new MutationObserver(()=>queuePolish()).observe(appRoot,{childList:true,subtree:true});
-  requestAnimationFrame(settle);
+  if(baseRenderManager){renderManager=function(){const result=baseRenderManager();queueMicrotask(polish);requestAnimationFrame(polish);setTimeout(polish,60);return result};window.renderManager=renderManager;render=function(){return renderManager()};window.render=render}
+  installStyles();requestAnimationFrame(settle);
 })();
