@@ -1,8 +1,7 @@
 /* Round 4 — feedback temporário de login e estado de entrada imediato. */
 (function round4Login(){
   let messageTimer=null;
-  const loginButton=document.getElementById('loginButton');
-  const originalButtonHtml=loginButton?.innerHTML||'Entrar';
+  const tr=value=>typeof translateText==='function'?translateText(value):value;
 
   function fieldFor(id){return document.getElementById(id)?.closest('.field')||null}
   function hideLoginMessage(){
@@ -18,7 +17,9 @@
   function setLoginBusy(busy){
     const button=document.getElementById('loginButton');if(!button)return;
     button.disabled=!!busy;button.classList.toggle('is-loading',!!busy);
-    button.innerHTML=busy?'<i class="fa-solid fa-circle-notch"></i>Entrando...':originalButtonHtml;
+    button.innerHTML=busy
+      ?`<i class="fa-solid fa-circle-notch"></i><span>${tr('Entrando...')}</span>`
+      :`<span>${tr('Entrar')}</span><i class="fa-solid fa-arrow-right"></i>`;
   }
 
   ['email','password'].forEach(id=>{
@@ -28,7 +29,7 @@
   showLoginMessage=function(text,options={}){
     const el=document.getElementById('loginMessage');if(!el)return;
     clearTimeout(messageTimer);
-    el.textContent=typeof translateText==='function'?translateText(text):text;
+    el.textContent=tr(text);
     el.hidden=false;el.classList.toggle('login-error',options.error===true);
     if(options.error===true)messageTimer=setTimeout(hideLoginMessage,3000);
   };
