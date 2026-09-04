@@ -64,6 +64,21 @@
 .planning-page-content .admin-account-refactor,.planning-page-content .candidate-history-panel{max-width:860px;margin-inline:auto}
 .planning-page-loading{min-height:180px}
 
+/* Ações finais do planejamento: espaçamento aprovado na homologação. */
+.admin-review-actions-r24{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:12px!important;
+  width:100%!important;
+  max-width:none!important;
+  margin:18px 0 0!important;
+  padding:16px 10px 16px!important;
+  box-sizing:border-box!important;
+  border-top:1px solid var(--border)!important;
+  align-items:stretch!important;
+  justify-items:stretch!important;
+}
+
 /* Corrige o desktop quando uma classe de modal antiga fica presa após navegação. */
 @media(min-width:1024px){
   body:not(.modal-open){overflow-y:auto!important;height:auto!important;max-height:none!important}
