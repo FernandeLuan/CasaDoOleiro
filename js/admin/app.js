@@ -145,8 +145,18 @@ async function bootManager(){
   const session=await window.OleiroAuthGuard?.requireRole('manager');if(!session)return;
   state.role='manager';state.currentSession=session;state.managerPage='home';state.groupsLoaded=false;state.groupsLoading=false;state.groupsUnitId=null;state.groupUnitId=state.groupUnitId||'';state.sessions=[];state.pendingChangeRequests=[];state.scheduleFrom=null;state.scheduleTo=null;state.dashboardCounts={analysis:0,adjustments:0};state.dashboardArrivals=[];state.dashboardDepartures=[];state.candidateHasMore=false;state.candidateCursor=null;state.candidateLoading=false;render();
   try{
-    await hydrateManagerBaseData();if(state.managerPage==='home')render();scheduleManagerBackgroundWarmup();
-  }catch(error){console.error('Falha ao carregar a lista principal da gestão:',error);showToast('Não foi possível carregar a lista de voluntários. Tente novamente.')}
+    await hydrateManagerBaseData();
+  }catch(error){
+    console.error('Falha ao carregar a lista principal da gestão:',error);showToast('Não foi possível carregar a lista de voluntários. Tente novamente.');
+  }
+  if(state.managerPage==='home')render();
+  try{
+    await hydrateManagerSchedule(_oleiroToday,_oleiroToday,{force:false});
+  }catch(error){
+    console.warn('Agenda de hoje indisponível no carregamento inicial:',error);
+  }
+  if(state.managerPage==='home')render();
+  scheduleManagerBackgroundWarmup();
 }
 
 document.addEventListener('visibilitychange',()=>{
