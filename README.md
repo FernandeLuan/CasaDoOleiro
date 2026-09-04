@@ -1,14 +1,11 @@
 # Casa do Oleiro
 
-Protótipo mobile-first do portal de gestão e planejamento do voluntariado.
+Plataforma Web para gestão de voluntariado, planejamento e rotina da Casa do Oleiro.
 
-## Estrutura
-- `index.html`: login e seleção temporária de perfil
-- `admin/`: área do gestor
-- `portal/`: área candidato/voluntário
-- `css/`: tema, base, componentes e estilos por área
-- `js/shared/`: estado, utilidades e componentes compartilhados
-- `js/admin/`: módulos de gestão
-- `js/portal/`: módulos do candidato/voluntário
+## Ambientes
 
-Os dados ainda são simulados. O backend será conectado após a validação de UX e regras.
+- `main`: produção.
+- `release/prod-clean-ui`: preparação do clean UI para produção.
+- `test/homologacao-clean-ui`: homologação visual isolada.
+
+A publicação de produção ocorre pelo workflow `Deploy Casa do Oleiro` após alterações na `main`.
