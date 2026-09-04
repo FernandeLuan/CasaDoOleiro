@@ -67,6 +67,7 @@ document.addEventListener('click',event=>{if(event.target.closest?.('input[type=
     '../admin/account-consistency.js',
     '../admin/account-emergency-live.js',
     '../admin/occupancy-page.js',
+    '../admin/occupancy-mobile.js',
     '../admin/admin-navigation.js',
     '../admin/groups-page.js',
     '../admin/house-info-page.js',
