@@ -11,16 +11,13 @@
         background:var(--surface-2)!important;
         border-color:var(--border)!important;
       }
-      .candidate-plan-compact-head.warning{
-        background:var(--warning-soft)!important;
-        border-color:color-mix(in srgb,var(--warning) 30%,transparent)!important;
+      .candidate-plan-compact-head .candidate-plan-status{
+        flex:0 0 auto!important;
+        font-size:.61rem!important;
+        line-height:1!important;
+        white-space:nowrap!important;
+        text-align:center!important;
       }
-      .candidate-plan-compact-head.warning span{color:var(--warning)!important}
-      .candidate-plan-compact-head.info{
-        background:var(--info-soft)!important;
-        border-color:color-mix(in srgb,var(--info) 28%,transparent)!important;
-      }
-      .candidate-plan-compact-head.info span{color:var(--info)!important}
     `;
     document.head.appendChild(style);
   }
@@ -41,7 +38,7 @@
   }
   function compactHeader(){
     const app=state.currentApplication||{},start=portalIsoDate(app.stayStart),end=portalIsoDate(app.stayEnd),meta=statusMetaCandidate(),period=start&&end?`${fmtDate(start,true)}–${fmtDate(end,true)}`:t('portal.home.periodConfirm');
-    return `<div class="candidate-plan-compact-head ${meta.tone}"><strong>${escapeHtml(period)}</strong><span>${escapeHtml(meta.label)}</span></div>`;
+    return `<div class="candidate-plan-compact-head"><strong>${escapeHtml(period)}</strong><span class="badge ${escapeHtml(meta.tone)} candidate-plan-status">${escapeHtml(meta.label)}</span></div>`;
   }
   function submitControl(){
     const status=state.volunteerPlanStatus||'draft';
