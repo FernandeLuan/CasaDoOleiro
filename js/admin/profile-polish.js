@@ -18,6 +18,45 @@
       .planning-detail-page .planning-page-content>.planning-profile-tabs,.planning-detail-page .planning-page-content>.person-history-tabs{display:none!important}
       .planning-person-day-title .planning-person-day-summary{display:inline-flex!important;align-items:center!important;gap:7px!important;margin:0!important;font-size:var(--ui-text-sm)!important;line-height:1.35!important;color:var(--muted)!important}
 
+      /* Planejamento individual: aproxima data/resumo do conteúdo e elimina alturas herdadas. */
+      .planning-detail-page .planning-person-day-head{
+        min-height:52px!important;
+        padding:9px 13px!important;
+        align-items:center!important;
+      }
+      .planning-detail-page .planning-person-day-copy{display:block!important;min-width:0!important}
+      .planning-detail-page .planning-person-day-title{min-height:29px;align-items:center!important;gap:8px!important}
+      .planning-detail-page .planning-person-add{align-self:center!important}
+      .planning-detail-page .planning-person-agenda .planning-day-sessions{padding-top:8px!important}
+      .planning-detail-page .planning-person-day.is-empty .planning-person-day-head{
+        border-bottom:1px solid var(--border)!important;
+        border-radius:16px 16px 0 0!important;
+      }
+      .planning-detail-page .planning-person-day.is-empty .planning-person-day-body{
+        display:block!important;
+        min-height:0!important;
+        height:auto!important;
+        padding:6px 12px 8px!important;
+      }
+      .planning-detail-page .planning-person-empty{
+        min-height:38px!important;
+        height:auto!important;
+        margin:0!important;
+        padding:7px 8px!important;
+        justify-content:center!important;
+        border:0!important;
+        border-radius:0!important;
+        background:transparent!important;
+        box-shadow:none!important;
+      }
+      .planning-detail-page .planning-person-empty i{display:none!important}
+      @media(max-width:640px){
+        .planning-detail-page .planning-person-day-head{min-height:48px!important;padding:8px 12px!important}
+        .planning-detail-page .planning-person-day.is-empty .planning-person-day-body{padding:5px 10px 7px!important}
+        .planning-detail-page .planning-person-empty{min-height:34px!important;padding:5px 8px!important}
+        .planning-detail-page .planning-person-agenda .planning-day-sessions{padding:7px 9px 9px!important}
+      }
+
       /* Detalhe do voluntário: nenhum texto funcional abaixo de .68rem. */
       .planning-detail-page .person-refactor-tabs button,
       .planning-detail-page .planning-profile-tabs button,
