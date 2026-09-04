@@ -14,15 +14,15 @@
       .planning-detail-page .account-overview-r70{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(340px,.88fr);gap:18px;align-items:start}
       .planning-detail-page .account-side-r70{display:grid;gap:14px;align-content:start}
       .planning-detail-page .account-contact-card-r70{display:grid;gap:0!important;padding:0!important;overflow:hidden}
-      .planning-detail-page .account-contact-card-r70>.account-person-row{padding:14px!important;margin:0!important;border:0!important;gap:0!important;align-items:flex-start!important}
+      .planning-detail-page .account-contact-card-r70>.account-person-row{display:block!important;width:100%!important;padding:14px!important;margin:0!important;border:0!important;text-align:left!important}
       .planning-detail-page .account-contact-card-r70>.account-person-row+.account-person-row{border-top:1px solid var(--border)!important}
       .planning-detail-page .account-contact-card-r70>.account-person-row>.avatar,
       .planning-detail-page .account-emergency-card .avatar,
       .planning-detail-page .emergency-person-row>.avatar{display:none!important}
-      .planning-detail-page .account-contact-card-r70>.account-person-row>div:last-child{width:100%;min-width:0;gap:3px;margin:0!important;padding:0!important}
-      .planning-detail-page .account-person-sections-r70{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,.72fr);gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
-      .planning-detail-page .account-person-section-r70{min-width:0;display:grid;gap:4px;align-content:start}
-      .planning-detail-page .account-person-section-head-r70{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:26px}
+      .planning-detail-page .account-contact-card-r70>.account-person-row>div:last-child{display:grid!important;width:100%!important;min-width:0;gap:3px;margin:0!important;padding:0!important;justify-items:start!important;text-align:left!important}
+      .planning-detail-page .account-person-sections-r70{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,.72fr);gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);width:100%;text-align:left}
+      .planning-detail-page .account-person-section-r70{min-width:0;display:grid;gap:4px;align-content:start;justify-items:start;text-align:left}
+      .planning-detail-page .account-person-section-head-r70{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:26px;width:100%;text-align:left}
       .planning-detail-page .account-person-section-head-r70>span{font-size:.57rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--primary)}
       .planning-detail-page .account-person-section-head-r70 .account-inline-edit{flex:0 0 auto;margin:0}
       .planning-detail-page .account-person-emergency-r70 strong{font-size:.68rem!important;line-height:1.35}
