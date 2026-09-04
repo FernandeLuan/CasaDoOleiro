@@ -14,8 +14,17 @@
       .portal-sidebar-desktop{display:none}
 
       @media(min-width:1024px){
-        body{padding-bottom:0!important}
-        #app.portal-desktop-root{width:100%!important;max-width:none!important;margin:0!important;min-height:100vh!important}
+        html{height:100%!important;overflow:hidden!important}
+        body{height:100%!important;min-height:100%!important;max-height:100%!important;overflow:hidden!important;padding-bottom:0!important}
+        #app.portal-desktop-root{
+          width:100%!important;
+          max-width:none!important;
+          height:100dvh!important;
+          min-height:100dvh!important;
+          max-height:100dvh!important;
+          margin:0!important;
+          overflow:hidden!important;
+        }
         #app.portal-desktop-root>.app-header{display:none!important}
         #navRoot .bottom-nav{display:none!important}
 
@@ -89,8 +98,15 @@
         #app.portal-desktop-root>main.page{
           margin-left:216px;
           width:calc(100% - 216px);
-          min-height:100vh;
+          height:100dvh!important;
+          min-height:0!important;
+          max-height:100dvh!important;
           max-width:none!important;
+          overflow-x:hidden!important;
+          overflow-y:auto!important;
+          overscroll-behavior-y:contain;
+          -webkit-overflow-scrolling:touch;
+          scrollbar-gutter:stable;
           padding:18px clamp(18px,1.35vw,28px) 44px!important;
         }
         #app.portal-desktop-root>main.page>.section{
@@ -100,19 +116,32 @@
           margin-right:auto;
         }
         #app.portal-desktop-root .compact-page-top{margin-top:0!important}
-
-        body:not(.modal-open){overflow-y:auto!important;height:auto!important;max-height:none!important}
-        body:not(.modal-open) #app.portal-desktop-root,
-        body:not(.modal-open) #app.portal-desktop-root>main.page{
-          overflow:visible!important;
-          height:auto!important;
-          max-height:none!important;
-        }
+        body.modal-open #app.portal-desktop-root>main.page{overflow-y:hidden!important}
       }
 
       @media(max-width:1023px){
+        html,body{
+          height:auto!important;
+          min-height:100%!important;
+          max-height:none!important;
+          overflow-y:auto!important;
+        }
+        body.modal-open{overflow-y:hidden!important}
         .portal-sidebar-desktop{display:none!important}
-        #app.portal-desktop-root>main.page{margin-left:0;width:100%}
+        #app.portal-desktop-root{
+          height:auto!important;
+          min-height:100vh!important;
+          max-height:none!important;
+          overflow:visible!important;
+        }
+        #app.portal-desktop-root>main.page{
+          margin-left:0;
+          width:100%;
+          height:auto!important;
+          min-height:100vh!important;
+          max-height:none!important;
+          overflow:visible!important;
+        }
       }
     `;
     document.head.appendChild(style);
@@ -153,8 +182,13 @@
     </aside>`;
   }
 
+  function syncModalLock(){
+    if(!document.querySelector('#modalRoot .modal-backdrop'))document.body.classList.remove('modal-open');
+  }
+
   function enhance(){
     if(typeof state==='undefined'||state.role!=='volunteer'||!app)return;
+    syncModalLock();
     app.classList.add('portal-desktop-root');
     app.querySelector(':scope > .portal-sidebar-desktop')?.remove();
     app.insertAdjacentHTML('afterbegin',sidebarHtml());
