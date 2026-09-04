@@ -105,6 +105,34 @@
         }
       }
 
+      /* Desktop: o avatar foi removido; não reservar a antiga coluna de 44px. */
+      @media(min-width:901px){
+        .planning-detail-page .account-contact-card-r70>.account-person-row.account-person-inline-r71{
+          grid-template-columns:minmax(0,1fr) minmax(210px,.72fr)!important;
+          gap:14px 18px!important;
+          padding:14px!important;
+          align-items:start!important;
+        }
+        .planning-detail-page .account-person-inline-r71>.avatar{display:none!important}
+        .planning-detail-page .account-person-inline-r71>.account-person-main-r71{
+          grid-column:1!important;
+          grid-row:1!important;
+          width:100%!important;
+          margin:0!important;
+          padding:0!important;
+          justify-items:start!important;
+          text-align:left!important;
+        }
+        .planning-detail-page .account-person-inline-r71>.account-person-emergency-inline-r71{
+          grid-column:2!important;
+          grid-row:1!important;
+          width:100%!important;
+          margin:0!important;
+          padding-left:18px!important;
+          border-left:1px solid var(--border)!important;
+        }
+      }
+
       /* No mobile não sobra coluna do avatar removido: conteúdo começa no mesmo eixo de Período. */
       @media(max-width:900px){
         .planning-detail-page .account-contact-card-r70>.account-person-row.account-person-inline-r71{
