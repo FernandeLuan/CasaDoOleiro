@@ -99,3 +99,33 @@
   .planning-activity-tools{gap:5px}
   .planning-activity-menu{right:-2px;max-width:215px}
 }
+
+/* Estado vazio e alinhamento: preserva o componente nativo mesmo diante dos acabamentos posteriores. */
+#app .planning-detail-page .planning-person-day.is-empty .planning-person-day-summary{display:none!important}
+#app .planning-detail-page .planning-person-day.is-empty .planning-person-day-body{display:block!important}
+#app .planning-detail-page .planning-person-day.is-empty .planning-person-empty{
+  min-height:54px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:8px!important;
+  margin:0 12px 12px!important;
+  padding:12px!important;
+  border:1px dashed var(--border)!important;
+  border-radius:12px!important;
+  background:var(--surface-soft)!important;
+  color:var(--muted)!important;
+  font-size:.68rem!important;
+}
+#app .planning-detail-page .planning-person-day.is-empty .planning-person-empty i{color:var(--primary)!important;opacity:.8!important}
+#app .planning-detail-page .planning-person-day-head{
+  padding-right:25px!important;
+}
+#app .planning-detail-page .planning-person-add{
+  align-self:start!important;
+  position:static!important;
+  right:auto!important;
+}
+@media(max-width:640px){
+  #app .planning-detail-page .planning-person-day-head{padding-right:21px!important}
+}
