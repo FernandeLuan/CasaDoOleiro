@@ -15,8 +15,9 @@
       .planning-person-weeks>.planning-person-week:only-child{grid-column:1/-1!important;width:100%!important;max-width:none!important;margin-inline:0!important}
       .planning-detail-page .planning-profile-head>.planning-profile-tabs{grid-column:1/-1}
       .planning-detail-page .planning-page-content>.planning-profile-tabs,.planning-detail-page .planning-page-content>.person-history-tabs{display:none!important}
-      .account-emergency-action-r72{border:0;background:transparent;color:var(--primary);padding:2px 0;min-height:auto;display:inline-flex;align-items:center;gap:5px;font-size:.58rem;font-weight:700;white-space:nowrap}
-      .account-emergency-action-r72:hover{text-decoration:underline}.account-emergency-action-r72 i{font-size:.57rem}
+      .planning-person-day-title .planning-person-day-summary{display:inline-flex!important;align-items:center!important;gap:7px!important;margin:0!important;font-size:var(--ui-text-sm)!important;line-height:1.35!important;color:var(--muted)!important}
+      .account-emergency-action-r72{border:0;background:transparent;color:var(--primary);padding:2px 0;min-height:auto;display:inline-flex;align-items:center;gap:5px;font-size:var(--ui-text-xs);font-weight:700;white-space:nowrap}
+      .account-emergency-action-r72:hover{text-decoration:underline}.account-emergency-action-r72 i{font-size:var(--ui-text-xs)}
       .planning-detail-page .account-person-emergency-inline-r71 .account-person-section-head-r70{align-items:center!important}
     `;
     document.head.appendChild(style);
@@ -35,6 +36,22 @@
     [...tabs.querySelectorAll('button')].forEach(button=>{const label=String(button.textContent||'').trim().toLowerCase();button.classList.toggle('active',label==='histórico')});
   }
 
+  function simplifyPlanningDayHeaders(){
+    if(typeof state==='undefined'||state.managerPage!=='planning'||String(state.managerPlanningTab||'plan')!=='plan')return;
+    const root=document.querySelector('.planning-detail-page');if(!root)return;
+    root.querySelectorAll('.planning-person-day[data-plan-date]').forEach(day=>{
+      const raw=String(day.dataset.planDate||''),parts=raw.split('-'),date=parts.length===3?`${parts[2]}/${parts[1]}`:raw;
+      const title=day.querySelector('.planning-person-day-title'),strong=title?.querySelector(':scope > strong');if(!title||!strong)return;
+      strong.textContent=date||strong.textContent;
+      const weekday=title.querySelector(':scope > span');if(weekday)weekday.remove();
+      const summary=day.querySelector('.planning-person-day-copy > .planning-person-day-summary');
+      if(summary&&!title.contains(summary)){
+        if(day.classList.contains('is-empty'))summary.textContent='0 atividades · 0min';
+        title.appendChild(summary);
+      }
+    });
+  }
+
   function ensureEmergencyActions(){
     if(typeof state==='undefined'||state.managerPage!=='planning'||state.managerPlanningTab!=='account')return;
     const p=currentPerson();if(!p||typeof window.openVolunteerEmergencyEditor!=='function')return;
@@ -48,7 +65,7 @@
     });
   }
 
-  function polish(){moveHistoryTabsToHeader();ensureEmergencyActions()}
+  function polish(){moveHistoryTabsToHeader();simplifyPlanningDayHeaders();ensureEmergencyActions()}
   let attempts=0;function settle(){polish();attempts+=1;if(attempts<12)setTimeout(settle,90)}
   const baseRenderManager=typeof window.renderManager==='function'?window.renderManager:null;
   if(baseRenderManager){renderManager=function(){const result=baseRenderManager();queueMicrotask(polish);requestAnimationFrame(polish);setTimeout(polish,60);return result};window.renderManager=renderManager;render=function(){return renderManager()};window.render=render}
