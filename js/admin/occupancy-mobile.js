@@ -54,18 +54,26 @@
         display:flex!important;
         align-items:center!important;
         justify-content:center!important;
-        gap:8px!important;
         text-align:center!important;
       }
       .occupancy-v2-metric-icon{display:none!important}
+      .occupancy-v2-metric>div:last-child{
+        min-width:0!important;
+        display:flex!important;
+        align-items:baseline!important;
+        justify-content:center!important;
+        gap:8px!important;
+      }
       .occupancy-v2-metric strong{
         display:inline!important;
+        flex:0 0 auto!important;
         font-size:.86rem!important;
         line-height:1!important;
         white-space:nowrap!important;
       }
       .occupancy-v2-metric p{
         display:inline!important;
+        flex:0 0 auto!important;
         margin:0!important;
         font-size:.58rem!important;
         line-height:1.1!important;
@@ -187,7 +195,8 @@
 
     @media(max-width:390px){
       .occupancy-v2-toolbar{gap:6px!important}
-      .occupancy-v2-metric{min-height:44px!important;padding:7px 4px!important;gap:6px!important}
+      .occupancy-v2-metric{min-height:44px!important;padding:7px 4px!important}
+      .occupancy-v2-metric>div:last-child{gap:6px!important}
       .occupancy-v2-metric strong{font-size:.8rem!important}
       .occupancy-v2-metric:nth-of-type(1) p::after,
       .occupancy-v2-metric:nth-of-type(2) p::after,
