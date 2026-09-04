@@ -5,7 +5,7 @@
   if(window.__OLEIRO_ADMIN_ACCOUNT_SETTINGS__)return;
   window.__OLEIRO_ADMIN_ACCOUNT_SETTINGS__=true;
 
-  const esc=value=>typeof escapeHtml==='function'?escapeHtml(value):String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  const esc=value=>typeof escapeHtml==='function'?escapeHtml(value):String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[char]));
 
   function installStyles(){
     if(document.getElementById('adminAccountSettingsStyles'))return;
@@ -27,8 +27,11 @@
       .admin-account-profile{display:grid;grid-template-columns:42px minmax(0,1fr);gap:10px;align-items:center}
       .admin-account-avatar{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:var(--primary-soft);color:var(--primary);font-size:.8rem}
       .admin-account-profile-copy{min-width:0;display:grid;gap:3px}
+      .admin-account-profile-line{min-width:0;display:flex;align-items:center;justify-content:space-between;gap:8px}
       .admin-account-profile-copy strong{font-size:.72rem;line-height:1.2;color:var(--text)}
       .admin-account-profile-copy span{font-size:.55rem;line-height:1.35;color:var(--muted);overflow-wrap:anywhere}
+      .admin-account-inline-signout{flex:0 0 auto;border:0;background:transparent;color:var(--danger);padding:2px 0;font:inherit;font-size:.61rem;font-weight:700;display:inline-flex;align-items:center;gap:5px;cursor:pointer}
+      .admin-account-inline-signout:hover{text-decoration:underline}
 
       .admin-account-preference{display:grid;gap:8px}
       .admin-account-preference-copy{min-width:0;display:grid;gap:2px}
@@ -76,7 +79,7 @@
       <div class="admin-account-top">
         <section class="admin-account-panel admin-account-profile">
           <span class="admin-account-avatar"><i class="fa-solid fa-user-shield"></i></span>
-          <div class="admin-account-profile-copy"><strong>Administrador</strong><span>${esc(session.email||'—')}</span></div>
+          <div class="admin-account-profile-copy"><div class="admin-account-profile-line"><strong>Administrador</strong><button class="admin-account-inline-signout" type="button" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i>Sair</button></div><span>${esc(session.email||'—')}</span></div>
         </section>
         <section class="admin-account-panel admin-account-preference">
           <div class="admin-account-preference-copy"><small>Aparência</small><strong>Tema do painel</strong><span>Preferência salva neste dispositivo.</span></div>
