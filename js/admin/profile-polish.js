@@ -11,6 +11,7 @@
     style.id='profilePolishStyles';
     style.textContent=`
       .planning-detail-page .planning-profile-copy>.eyebrow{display:none!important}
+      .planning-detail-page .planning-profile-head>.planning-profile-tabs{margin-top:3px!important;padding-top:2px!important}
       .planning-person-weeks>.planning-person-week:only-child{grid-column:1/-1!important;width:100%!important;max-width:none!important;margin-inline:0!important}
       .planning-detail-page .planning-profile-head>.planning-profile-tabs{grid-column:1/-1}
       .planning-detail-page .planning-page-content>.planning-profile-tabs,.planning-detail-page .planning-page-content>.person-history-tabs{display:none!important}
