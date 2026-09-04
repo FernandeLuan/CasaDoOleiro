@@ -63,6 +63,12 @@ await rewrite('js/portal/desktop-shell.js',source=>{
   return next;
 });
 
+await rewrite('js/shared/navigation.js',source=>{
+  const marker='/* Homologação: somente Auth/IO e dados são substituídos quando ?demo=... está presente. */';
+  const index=source.indexOf(marker);
+  return index>=0?`${source.slice(0,index).trimEnd()}\n`:source;
+});
+
 await rewrite('admin/index.html',source=>{
   if(source.includes('data-prod-clean-admin'))return source;
   const tags=adminCleanModules.map((name,index)=>`<script data-prod-clean-admin="${index+1}" src="../js/admin/${name}?v=prod-clean-ui"></script>`).join('');
@@ -86,6 +92,7 @@ const removePaths=[
   'scripts',
   'build-preview.mjs',
   'firebase.preview.json',
+  'firebase.release-preview.json',
   'firebase.json',
   'firestore.rules',
   'firestore.indexes.json',
@@ -100,3 +107,4 @@ for(const relative of removePaths)await rm(path.join(root,relative),{recursive:t
 console.log(`Production clean UI prepared at ${root}`);
 console.log(`Admin modules enabled: ${adminCleanModules.length}`);
 console.log('Portal desktop shell enabled for authenticated candidate/volunteer flows.');
+console.log('Homologation/demo loaders removed from shared navigation.');
