@@ -54,7 +54,6 @@ document.addEventListener('click',event=>{if(event.target.closest?.('input[type=
   const files=[
     '../admin/planning-page.js',
     '../admin/homologation-shell.js',
-    '../admin/planning-pagination.js',
     '../admin/planning-board.js',
     '../admin/planning-person-agenda.js',
     '../admin/planning-group-editor.js',
