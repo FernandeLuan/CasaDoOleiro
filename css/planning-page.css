@@ -11,12 +11,13 @@
 .planning-detail-page{max-width:1040px;padding-bottom:36px}
 .planning-profile-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px 20px;padding:26px 28px 18px;margin-bottom:22px;background:var(--surface);border:1px solid var(--border);border-radius:24px;box-shadow:0 4px 20px rgba(30,48,38,.045)}
 .planning-profile-heading{display:flex;align-items:flex-start;gap:14px;min-width:0}
-.planning-profile-copy{min-width:0}
-.planning-profile-title-line{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.planning-profile-title-line h1{font-size:clamp(1.75rem,2.4vw,2.45rem);letter-spacing:-.025em;margin-top:6px}
-.planning-profile-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;color:var(--muted);font-size:.82rem}
+.planning-profile-copy{min-width:0;width:100%}
+.planning-profile-title-line{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-width:0}
+.planning-profile-title-line h1{font-size:clamp(1.55rem,2.1vw,2.1rem);letter-spacing:-.025em;margin:0;min-width:0}
+.planning-profile-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;color:var(--muted);font-size:.82rem}
 .planning-profile-meta b{font-weight:500;color:var(--border-strong)}
-.planning-profile-meta .badge{margin-left:4px}
+.planning-profile-meta .badge{margin:0}
+.planning-profile-period-status{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;min-width:0}
 .planning-back-button,.planning-close-button{width:48px;height:48px;flex:0 0 48px;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:16px;display:grid;place-items:center;cursor:pointer;transition:.18s ease}
 .planning-back-button:hover,.planning-close-button:hover{background:var(--surface-soft);border-color:var(--border-strong)}
 .planning-close-button{grid-column:2;grid-row:1;margin-left:auto;font-size:1rem}
@@ -88,13 +89,13 @@
 
 @media(max-width:899px){
   .planning-index-page,.planning-detail-page{padding-inline:0}
-  .planning-profile-head{border-radius:0;border-left:0;border-right:0;margin:-18px -16px 18px;padding:20px 22px 16px;box-shadow:none}
-  .planning-profile-heading{gap:10px}
+  .planning-profile-head{border-radius:0;border-left:0;border-right:0;margin:-18px -16px 18px;padding:18px 22px 16px;box-shadow:none}
+  .planning-profile-heading{gap:10px;min-width:0}
   .planning-back-button{display:none}
-  .planning-close-button{width:48px;height:48px;flex-basis:48px}
-  .planning-profile-title-line{gap:8px}
-  .planning-profile-title-line h1{font-size:1.7rem}
-  .planning-profile-meta{font-size:.82rem;line-height:1.6;margin-top:10px}
+  .planning-close-button{width:44px;height:44px;flex-basis:44px}
+  .planning-profile-title-line{gap:8px;min-width:0}
+  .planning-profile-title-line h1{font-size:1.45rem}
+  .planning-profile-meta{font-size:.78rem;line-height:1.5;margin-top:8px}
   .planning-profile-head .planning-profile-tabs{margin-top:10px!important}
   .planning-profile-head .planning-profile-tabs button{font-size:.8rem!important;padding:10px 16px!important}
   .planning-page-content .admin-plan-review-footer{bottom:76px;margin-inline:0;display:grid;grid-template-columns:1fr}
@@ -102,10 +103,12 @@
 }
 
 @media(max-width:640px){
-  .planning-profile-head{gap:8px 10px;padding-left:22px;padding-right:22px}
-  .planning-profile-copy .eyebrow{font-size:.75rem;letter-spacing:.12em}
-  .planning-profile-title-line h1{font-size:1.55rem}
-  .planning-profile-meta .badge{font-size:.7rem}
+  .planning-profile-head{gap:8px 10px;padding-left:18px;padding-right:18px}
+  .planning-profile-copy{overflow:hidden}
+  .planning-profile-title-line h1{font-size:1.28rem;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .planning-profile-meta{font-size:.72rem;gap:6px;line-height:1.4}
+  .planning-profile-period-status{gap:6px;max-width:100%}
+  .planning-profile-period-status>.badge{font-size:.62rem;padding:4px 7px}
   .planning-index-head h1{font-size:1.5rem}
   .bottom-nav .nav-btn span{font-size:.67rem}
   .planning-page-content .planning-by-day{gap:12px!important}
@@ -121,6 +124,10 @@
 }
 
 @media(max-width:390px){
+  .planning-profile-head{padding-left:16px;padding-right:16px}
+  .planning-profile-title-line h1{font-size:1.18rem}
+  .planning-profile-meta{font-size:.68rem;gap:5px}
+  .planning-profile-period-status{gap:5px}
   .planning-page-content .planning-day-head.planning-day-reference-head{grid-template-columns:64px minmax(0,1fr) auto!important;gap:10px!important;padding:12px!important}
   .planning-day-datebox{width:64px;height:64px;border-radius:16px}
   .planning-day-summarycopy strong{font-size:.86rem}
