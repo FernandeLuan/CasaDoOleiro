@@ -11,13 +11,13 @@
 }
 
 *{box-sizing:border-box;margin:0;padding:0;font-family:var(--font-body);-webkit-tap-highlight-color:transparent}
-html,body{width:100%;min-height:100%;background:var(--bg);color:var(--text)}
-body{padding-bottom:calc(78px + env(safe-area-inset-bottom));}
+html,body{width:100%;max-width:100%;min-height:100%;background:var(--bg);color:var(--text);overflow-x:clip}
+body{padding-bottom:calc(78px + env(safe-area-inset-bottom));overscroll-behavior-x:none}
 button,input,textarea,select{font:inherit}
 button{cursor:pointer}
 a{color:inherit}
-#app{max-width:1080px;margin:0 auto;min-height:100vh}
-html{touch-action:manipulation;-webkit-text-size-adjust:100%}
+#app{width:100%;max-width:1080px;margin:0 auto;min-height:100vh;overflow-x:clip}
+html{touch-action:manipulation;-webkit-text-size-adjust:100%;overscroll-behavior-x:none}
 body,button,a,input,textarea,select,label,summary{touch-action:manipulation}
 
 /* Tipografia de destaque: títulos, headings e conteúdos enfatizados. */
@@ -27,7 +27,7 @@ h1,h2,h3,h4,h5,h6,strong{font-family:var(--font-heading)}
 button strong,.btn strong,label strong{font-family:var(--font-body)}
 
 /* Formulários compartilham a mesma tipografia; placeholders sempre herdam o campo. */
-.input,.select,.textarea,input,select,textarea{font-family:var(--font-body);font-size:var(--ui-form-size)}
+.input,.select,.textarea,input,select,textarea{font-family:var(--font-body);font-size:var(--ui-form-size);min-width:0;max-width:100%}
 .input::placeholder,.textarea::placeholder,input::placeholder,textarea::placeholder{font-family:var(--font-body);font-size:inherit;font-weight:400;color:var(--muted);opacity:.78}
 
 /* Homologação R62: alinha a primeira linha da Home do Admin com os cards inferiores. */
@@ -39,4 +39,33 @@ button strong,.btn strong,label strong{font-family:var(--font-body)}
   :root{--ui-form-size:16px}
   .input,.select,.textarea,input,select,textarea{font-size:var(--ui-form-size)!important}
   .routine-row{grid-template-columns:82px 1fr}
+
+  /* Datas no mobile: valor centralizado, sem ultrapassar o campo/grid. */
+  input[type="date"]{
+    display:block!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    height:46px;
+    padding:0 40px!important;
+    box-sizing:border-box!important;
+    text-align:center!important;
+    text-align-last:center!important;
+    font-variant-numeric:tabular-nums;
+    overflow:hidden;
+    position:relative;
+  }
+  input[type="date"]::-webkit-date-and-time-value{
+    width:100%;
+    min-width:0;
+    margin:0;
+    padding:0;
+    text-align:center;
+  }
+  input[type="date"]::-webkit-calendar-picker-indicator{
+    position:absolute;
+    right:12px;
+    margin:0;
+    padding:4px;
+  }
 }
