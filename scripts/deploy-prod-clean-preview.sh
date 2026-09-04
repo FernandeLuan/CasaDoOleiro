@@ -6,9 +6,11 @@ APP_ID="1:391973666005:web:5ab4e4a406b591cccc765c"
 CHANNEL_ID="prod-clean-ui-final"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT_DIR="$ROOT_DIR/release-dist"
-TMP_CONFIG="$(mktemp)"
+TMP_DIR="$(mktemp -d)"
+TMP_CONFIG="$TMP_DIR/firebase-web-config.json"
+MAX_DEPLOY_ATTEMPTS=4
 
-cleanup(){ rm -f "$TMP_CONFIG"; }
+cleanup(){ rm -rf "$TMP_DIR"; }
 trap cleanup EXIT
 
 cd "$ROOT_DIR"
@@ -60,6 +62,22 @@ NODE
 
 find "$OUT_DIR/js" -type f -name '*.js' -print0 | xargs -0 -n1 node --check
 
-firebase hosting:channel:deploy "$CHANNEL_ID" \
-  --config firebase.release-preview.json \
-  --project "$PROJECT_ID"
+attempt=1
+while (( attempt <= MAX_DEPLOY_ATTEMPTS )); do
+  echo "Firebase Hosting deploy attempt $attempt/$MAX_DEPLOY_ATTEMPTS"
+  if firebase hosting:channel:deploy "$CHANNEL_ID" \
+    --config firebase.release-preview.json \
+    --project "$PROJECT_ID"; then
+    exit 0
+  fi
+
+  if (( attempt == MAX_DEPLOY_ATTEMPTS )); then
+    echo "Firebase Hosting deploy failed after $MAX_DEPLOY_ATTEMPTS attempts."
+    exit 1
+  fi
+
+  wait_seconds=$((attempt * 10))
+  echo "Transient deploy failure. Retrying in ${wait_seconds}s..."
+  sleep "$wait_seconds"
+  attempt=$((attempt + 1))
+done
