@@ -26,8 +26,6 @@ permissions:
 
 jobs:
   e2e:
-    # Homologação visual R62: execução completa somente manual antes do merge.
-    if: github.event_name == 'workflow_dispatch' || github.head_ref != 'test/prod-copy-no-login-r62'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
