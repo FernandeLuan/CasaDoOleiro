@@ -205,11 +205,10 @@
       const title=day.querySelector('.planning-person-day-title'),strong=title?.querySelector(':scope > strong');if(!title||!strong)return;
       strong.textContent=date||strong.textContent;
       const weekday=title.querySelector(':scope > span:not(.planning-person-day-summary)');if(weekday)weekday.remove();
-      const summary=title.querySelector('.planning-person-day-summary')||day.querySelector('.planning-person-day-summary');
-      if(summary){
-        if(day.classList.contains('is-empty'))summary.textContent='Sem atividade';
-        if(!title.contains(summary))title.appendChild(summary);
-      }
+      let summary=title.querySelector('.planning-person-day-summary')||day.querySelector('.planning-person-day-summary');
+      if(!summary){summary=document.createElement('span');summary.className='planning-person-day-summary';title.appendChild(summary)}
+      if(day.classList.contains('is-empty'))summary.textContent='Sem atividade';
+      if(!title.contains(summary))title.appendChild(summary);
     });
   }
 
