@@ -36,6 +36,7 @@
       .planning-detail-page .planning-profile-head>.planning-profile-tabs{grid-column:1/-1}
       .planning-detail-page .planning-page-content>.planning-profile-tabs,.planning-detail-page .planning-page-content>.person-history-tabs{display:none!important}
       .planning-person-day-title .planning-person-day-summary{display:inline-flex!important;align-items:center!important;gap:7px!important;margin:0!important;font-size:.68rem!important;line-height:1.35!important;color:var(--muted)!important}
+      .planning-person-day-title .planning-person-day-summary::before{content:'·';display:inline-block;color:var(--muted);font-weight:700}
 
       /* Planejamento individual: data/resumo próximos do conteúdo, sem alturas artificiais. */
       .planning-detail-page .planning-person-day-head{
@@ -70,8 +71,9 @@
       }
 
       @media(max-width:1023px){
-        html,body{overscroll-behavior:none!important}
-        .admin-content-r62>.page{padding-bottom:calc(76px + env(safe-area-inset-bottom))!important}
+        html,body,#app,.admin-shell-r62,.admin-content-r62{overscroll-behavior:none!important}
+        html,body,#app{max-width:100%!important;overflow-x:hidden!important}
+        .admin-content-r62>.page{padding-bottom:calc(68px + env(safe-area-inset-bottom))!important}
       }
       @media(max-width:640px){
         .planning-detail-page .planning-person-day-head{min-height:44px!important;padding:7px 12px!important}
