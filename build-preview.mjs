@@ -22,7 +22,11 @@ async function rewrite(relativePath,transform){
 
 const bustHtml=source=>source.replace(/\?v=[^"']+/g,`?v=${buildStamp}`);
 await rewrite('admin/index.html',bustHtml);
-await rewrite('portal/index.html',bustHtml);
+await rewrite('portal/index.html',source=>{
+  let next=bustHtml(source);
+  if(!next.includes('../js/portal/desktop-shell.js'))next=next.replace('</body>',`<script src="../js/portal/desktop-shell.js?v=${buildStamp}"></script></body>`);
+  return next;
+});
 await rewrite('js/shared/navigation.js',source=>source.replaceAll('20260903-clean-',`${buildStamp}-`));
 await rewrite('js/admin/planning-person-agenda.js',source=>source.replaceAll('20260903-consolidated',buildStamp));
 
