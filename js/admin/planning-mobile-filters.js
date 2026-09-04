@@ -47,7 +47,10 @@
     style.textContent=`
       .planning-board-mobile-filter-button{display:none}
       @media(max-width:700px){
-        .planning-board-title>.eyebrow{display:none!important}
+        .planning-board-title>.eyebrow,
+        .planning-board-title>p,
+        .planning-board-filter-caption{display:none!important}
+        .planning-board-title h1{margin:0!important}
         .planning-board-top{margin-bottom:10px!important}
         .planning-board-view-switch{display:none!important}
         .planning-board-filters{
@@ -55,6 +58,7 @@
           grid-template-columns:minmax(0,1fr) 46px!important;
           gap:8px!important;
           align-items:center!important;
+          margin-bottom:12px!important;
         }
         .planning-board-filters>.planning-board-search{grid-column:auto!important;min-width:0}
         .planning-board-filters>select,
@@ -88,7 +92,6 @@
           background:var(--primary);
           box-shadow:0 0 0 2px var(--surface);
         }
-        .planning-board-filter-caption{margin-top:0!important}
       }
       .planning-mobile-filter-modal{display:grid;gap:12px}
       .planning-mobile-filter-modal .field{margin:0}
