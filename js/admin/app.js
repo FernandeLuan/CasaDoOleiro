@@ -35,7 +35,7 @@ async function hydrateManagerPendingChanges({force=false}={}){
 }
 function invalidateManagerPendingChanges(){_managerPendingChangesAt=0}
 
-function managerCandidateQueryKey(){return JSON.stringify({status:state.candidateFilter||'approved',unit:state.candidateUnit||'all',search:String(state.candidateSearch||'').trim().toLocaleLowerCase('pt-BR')})}
+function managerCandidateQueryKey(){return JSON.stringify({status:state.candidateFilter||'all',unit:state.candidateUnit||'all',search:String(state.candidateSearch||'').trim().toLocaleLowerCase('pt-BR')})}
 async function loadManagerCandidates({append=false,force=false}={}){
   if(!window.OleiroServices?.applications?.list)return state.candidates||[];
   const key=managerCandidateQueryKey();
@@ -45,7 +45,7 @@ async function loadManagerCandidates({append=false,force=false}={}){
   if(!append){state.candidateCursor=null;state.candidateHasMore=false;state.candidateQueryKey=key;if(state.managerPage==='volunteer')render()}
   try{
     const result=await window.OleiroServices.applications.list({
-      status:state.candidateFilter||'approved',unit:state.candidateUnit||'all',search:state.candidateSearch||'',
+      status:state.candidateFilter||'all',unit:state.candidateUnit||'all',search:state.candidateSearch||'',
       cursor:append?state.candidateCursor:null,limit:10
     });
     if(_managerCandidateRequestKey!==requestKey)return state.candidates||[];
@@ -80,7 +80,7 @@ async function hydrateManagerDashboardData({force=true}={}){
 }
 
 async function hydrateManagerBaseData(){
-  state.candidateFilter=state.candidateFilter||'approved';state.candidateUnit=state.candidateUnit||'all';state.candidateSearch=state.candidateSearch||'';
+  state.candidateFilter=state.candidateFilter||'all';state.candidateUnit=state.candidateUnit||'all';state.candidateSearch=state.candidateSearch||'';
   const unitsPromise=window.OleiroServices?.units?.list?window.OleiroServices.units.list({includeInactive:true}):Promise.resolve([]);
   const candidatesPromise=loadManagerCandidates({force:true});
   const [unitsResult]=await Promise.all([unitsPromise,candidatesPromise]);
