@@ -5,9 +5,10 @@
   if(window.__OLEIRO_PLANNING_PAGINATION__)return;
   window.__OLEIRO_PLANNING_PAGINATION__=true;
 
-  const DAYS=7,CACHE_MS=120000,services=window.OleiroServices||{},planning=services.planning||{};
+  const DAYS=7,CACHE_MS=120000,services=window.OleiroServices||{},planning=services.planning||{},applications=services.applications||{};
   const baseList=typeof planning.listSessions==='function'?planning.listSessions.bind(planning):null;
-  const cache=new Map();
+  const baseApplications=typeof applications.list==='function'?applications.list.bind(applications):null;
+  const cache=new Map(),applicationCache=new Map();
   window.__OLEIRO_PLANNING_PAGE_DAYS__=DAYS;
 
   function addDays(value,days){const d=new Date(`${String(value||'')}T12:00:00`);if(Number.isNaN(d.getTime()))return String(value||'');d.setDate(d.getDate()+days);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
@@ -26,6 +27,9 @@
   async function readSlice(applicationId,start,end){const key=`${applicationId}|${start}|${end}`,hit=cache.get(key);if(hit&&Date.now()-hit.at<CACHE_MS)return hit.rows;let rows;if(Array.isArray(window.OleiroDemoDB?.sessions)){rows=window.OleiroDemoDB.sessions.filter(row=>String(row.applicationId)===String(applicationId)&&String(row.date||'')>=start&&String(row.date||'')<=end)}else rows=baseList?await baseList({applicationId,from:start,to:end}):[];rows=unique(rows);cache.set(key,{at:Date.now(),rows});return rows}
 
   if(baseList){planning.listSessions=async function({applicationId,from:start,to:end}={}){if(!applicationId)return [];start=String(start||from());end=String(end||target());const visibleTo=minDate(end,pageTo());if(visibleTo<start)return [];const chunks=[];for(const [a,b] of slices(start,visibleTo))chunks.push(await readSlice(applicationId,a,b));return unique(chunks.flat())};services.planning=planning}
+
+  function cursorId(cursor){if(!cursor)return '';if(typeof cursor==='string'||typeof cursor==='number')return String(cursor);return String(cursor.id||cursor.ref?.path||'cursor')}
+  if(baseApplications){applications.list=async function(args={}){const boardContext=state.managerPage==='planning'&&!state.managerPlanningPersonId;if(!boardContext)return baseApplications(args);const key=JSON.stringify({status:args.status||'all',unit:args.unit||'all',search:args.search||'',limit:Number(args.limit)||10,cursor:cursorId(args.cursor)}),hit=applicationCache.get(key);if(hit&&Date.now()-hit.at<CACHE_MS)return hit.result;const result=await baseApplications(args);applicationCache.set(key,{at:Date.now(),result});return result};services.applications=applications}
 
   function styles(){if(document.getElementById('planningPaginationStyles'))return;const el=document.createElement('style');el.id='planningPaginationStyles';el.textContent='.planning-board-pagination{display:flex;justify-content:center;margin-top:12px}.planning-board-pagination button{width:min(100%,420px);min-height:44px;border:1px solid var(--border);border-radius:13px;background:var(--surface);color:var(--primary);font-size:.68rem;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px}.planning-board-pagination small{color:var(--muted);font-size:.57rem;font-weight:500}@media(max-width:700px){.planning-board-pagination button{width:100%;min-height:46px}}';document.head.appendChild(el)}
 
