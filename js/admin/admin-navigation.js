@@ -80,7 +80,7 @@
       .admin-account-signout{margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
 
       @media(max-width:1023px){
-        #navRoot .bottom-nav{grid-template-columns:repeat(6,minmax(74px,1fr))!important;overflow-x:auto;justify-content:start}
+        #navRoot .bottom-nav{grid-template-columns:repeat(5,minmax(74px,1fr))!important;overflow-x:auto;justify-content:start}
         #navRoot .bottom-nav .nav-btn{min-width:74px}
         .admin-house-info-grid{grid-template-columns:1fr}
         .admin-house-info-card.wide{grid-row:auto}
@@ -120,7 +120,7 @@
 
   function bottomNav(){
     const item=(icon,label,action,active)=>`<button class="nav-btn ${active?'active':''}" onclick="${action}"><i class="fa-solid ${icon}"></i><span>${label}</span></button>`;
-    return `<nav class="bottom-nav">${item('fa-house','Início',"navigateManager('home')",state.managerPage==='home')}${item('fa-users','Voluntariado',"navigateManager('volunteer')",state.managerPage==='volunteer')}${item('fa-calendar-check','Planejamento',"navigateManager('planning')",state.managerPage==='planning')}${item('fa-bed','Ocupação','openManagerOccupancy()',state.managerPage==='occupancy')}${item('fa-people-group','Grupos',"navigateManager('groups')",state.managerPage==='groups')}${item('fa-circle-info','Informações','openHouseInfo()',state.managerPage==='houseInfo')}</nav>`;
+    return `<nav class="bottom-nav">${item('fa-house','Início',"navigateManager('home')",state.managerPage==='home')}${item('fa-users','Voluntariado',"navigateManager('volunteer')",state.managerPage==='volunteer')}${item('fa-calendar-check','Planejamento',"navigateManager('planning')",state.managerPage==='planning')}${item('fa-bed','Ocupação','openManagerOccupancy()',state.managerPage==='occupancy')}${item('fa-people-group','Grupos',"navigateManager('groups')",state.managerPage==='groups')}</nav>`;
   }
 
   function pageTitle(eyebrow,title,description){
