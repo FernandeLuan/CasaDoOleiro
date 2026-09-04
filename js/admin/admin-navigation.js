@@ -44,6 +44,7 @@
 
       .admin-sidebar-item-info{margin-top:8px}
       .admin-sidebar-account-r62{border-top:1px solid var(--border);padding-top:10px!important}
+      .admin-content-r62>.app-header .header-actions{display:flex;align-items:center;gap:8px}
 
       .admin-groups-page,.admin-house-info{width:100%;max-width:1320px;margin:0 auto;display:grid;gap:14px}
       .admin-groups-page>.section{margin:0}
@@ -114,7 +115,7 @@
   function enhanceAdminHeader(){
     const actions=document.querySelector('.admin-content-r62>.app-header .header-actions');
     if(!actions)return;
-    actions.innerHTML='<button class="icon-btn" type="button" onclick="openMyAccount()" aria-label="Minha conta"><i class="fa-solid fa-user"></i></button>';
+    actions.innerHTML='<button class="icon-btn" type="button" onclick="openMyAccount()" aria-label="Minha conta" title="Minha conta"><i class="fa-solid fa-user"></i></button><button class="icon-btn" type="button" onclick="openHouseInfo()" aria-label="Informações da Casa" title="Informações da Casa"><i class="fa-solid fa-circle-info"></i></button>';
   }
 
   function bottomNav(){
@@ -153,9 +154,13 @@
   function enhanceGroupsPage(){
     if(state.managerPage!=='groups')return;
     const main=document.querySelector('.admin-content-r62 main.page');
-    if(!main||main.querySelector('.admin-groups-page'))return;
-    const current=main.innerHTML;
-    main.innerHTML=`<div class="admin-groups-page compact-page-top">${pageTitle('Grupos','Gestão de grupos','Organize os grupos utilizados nos planejamentos de cada unidade.')}${current}</div>`;
+    if(!main)return;
+    if(!main.querySelector('.admin-groups-page')){
+      const current=main.innerHTML;
+      main.innerHTML=`<div class="admin-groups-page compact-page-top">${current}</div>`;
+    }
+    main.querySelectorAll('.admin-groups-page .admin-page-title,.groups-page>.admin-page-title').forEach(node=>node.remove());
+    main.querySelectorAll('.groups-unit-summary>span').forEach(node=>{node.textContent=String(node.textContent||'').replace(/\s*·\s*capacidade\s+\d+/i,'')});
   }
 
   function enhancePageTitles(){
