@@ -38,6 +38,14 @@ jobs:
           grep -q 'data-prod-clean-portal' _site/portal/index.html
           grep -q 'desktop-shell.js' _site/portal/index.html
 
+      - name: Validate final preview deploy helper
+        run: |
+          bash -n scripts/deploy-prod-clean-preview.sh
+          node -e "JSON.parse(require('fs').readFileSync('firebase.release-preview.json','utf8'))"
+          grep -q 'release-dist' firebase.release-preview.json
+          grep -q 'apps:sdkconfig WEB' scripts/deploy-prod-clean-preview.sh
+          grep -q 'hosting:channel:deploy' scripts/deploy-prod-clean-preview.sh
+
       - name: Check JavaScript syntax
         run: |
           find _site/js -type f -name '*.js' -print0 | xargs -0 -n1 node --check
