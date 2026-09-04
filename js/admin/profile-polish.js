@@ -34,6 +34,12 @@
       }
       .planning-detail-page .planning-person-day.is-empty .planning-person-day-body{display:none!important}
       .planning-detail-page .planning-person-empty{display:none!important}
+      .planning-detail-page.planning-person-agenda-page .admin-plan-review-footer{
+        position:static!important;
+        bottom:auto!important;
+        z-index:auto!important;
+        margin:9px 0 0!important;
+      }
       @media(max-width:640px){
         .planning-detail-page .planning-person-day-head{min-height:44px!important;padding:7px 12px!important}
         .planning-detail-page .planning-person-agenda .planning-day-sessions{padding:6px 9px 9px!important}
