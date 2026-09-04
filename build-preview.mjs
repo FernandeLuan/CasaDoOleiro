@@ -11,6 +11,7 @@ await rm(out,{recursive:true,force:true});
 await mkdir(out,{recursive:true});
 for(const dir of dirs){const src=path.join(root,dir);await access(src);await cp(src,path.join(out,dir),{recursive:true});}
 for(const file of optional){try{await access(path.join(root,file));await copyFile(path.join(root,file),path.join(out,file));}catch{}}
+await copyFile(path.join(root,'index.html'),path.join(out,'login.html'));
 await copyFile(path.join(root,'homologacao','index.html'),path.join(out,'index.html'));
 
 async function rewrite(relativePath,transform){
@@ -21,6 +22,7 @@ async function rewrite(relativePath,transform){
 }
 
 const bustHtml=source=>source.replace(/\?v=[^"']+/g,`?v=${buildStamp}`);
+await rewrite('login.html',bustHtml);
 await rewrite('admin/index.html',bustHtml);
 await rewrite('portal/index.html',source=>{
   let next=bustHtml(source);
@@ -32,3 +34,4 @@ await rewrite('js/admin/planning-person-agenda.js',source=>source.replaceAll('20
 
 console.log(`R62 preview package ready at preview-dist/ (${buildStamp})`);
 console.log('Root index: homologacao/index.html');
+console.log('Login preview: /login.html');
