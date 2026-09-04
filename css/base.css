@@ -8,6 +8,7 @@
   --ui-text-sm:.68rem;
   --ui-text-xs:.61rem;
   --ui-form-size:.72rem;
+  --ui-form-line:1.25;
 }
 
 *{box-sizing:border-box;margin:0;padding:0;font-family:var(--font-body);-webkit-tap-highlight-color:transparent}
@@ -26,9 +27,48 @@ h1,h2,h3,h4,h5,h6,strong{font-family:var(--font-heading)}
 /* Controles continuam sempre em DM Sans, mesmo quando contêm texto enfatizado. */
 button strong,.btn strong,label strong{font-family:var(--font-body)}
 
-/* Formulários compartilham a mesma tipografia; placeholders sempre herdam o campo. */
-.input,.select,.textarea,input,select,textarea{font-family:var(--font-body);font-size:var(--ui-form-size);min-width:0;max-width:100%}
-.input::placeholder,.textarea::placeholder,input::placeholder,textarea::placeholder{font-family:var(--font-body);font-size:inherit;font-weight:400;color:var(--muted);opacity:.78}
+/* Contrato tipográfico do Admin: quatro níveis recorrentes, sem tamanhos arbitrários por tela. */
+.item-main h3,.person-info h3,.group-summary-copy strong,.planning-board-person-copy strong{font-size:var(--ui-text-lg)!important}
+.item-main p,.person-info p,.group-summary-copy span,.planning-board-person-copy span{font-size:var(--ui-text-sm)!important}
+.field label,.check-card,.member-row{font-size:var(--ui-text-sm)!important}
+.field small,.compact-hint,.filter-caption{font-size:var(--ui-text-xs)!important}
+.badge{font-size:var(--ui-text-xs)}
+
+/* Formulários compartilham exatamente a mesma tipografia; placeholders sempre herdam o campo. */
+.input,.select,.textarea,input,select,textarea{
+  font-family:var(--font-body);
+  font-size:var(--ui-form-size);
+  line-height:var(--ui-form-line);
+  font-weight:400;
+  letter-spacing:normal;
+  min-width:0;
+  max-width:100%;
+}
+.input::placeholder,.textarea::placeholder,input::placeholder,textarea::placeholder{
+  font-family:var(--font-body);
+  font-size:inherit;
+  line-height:inherit;
+  font-weight:400;
+  letter-spacing:normal;
+  color:var(--muted);
+  opacity:.78;
+}
+
+/* Busca do Voluntariado e do Planejamento usa literalmente o mesmo contrato visual. */
+.candidate-search .input,.planning-board-search .input{
+  height:46px!important;
+  padding:0 12px 0 36px!important;
+  font-family:var(--font-body)!important;
+  font-size:var(--ui-form-size)!important;
+  line-height:var(--ui-form-line)!important;
+  font-weight:400!important;
+  letter-spacing:normal!important;
+}
+.candidate-search .input::placeholder,.planning-board-search .input::placeholder{
+  font:inherit!important;
+  color:var(--muted)!important;
+  opacity:.78!important;
+}
 
 /* Homologação R62: alinha a primeira linha da Home do Admin com os cards inferiores. */
 @media(min-width:1024px){
@@ -38,6 +78,7 @@ button strong,.btn strong,label strong{font-family:var(--font-body)}
 @media(max-width:759px){
   :root{--ui-form-size:16px}
   .input,.select,.textarea,input,select,textarea{font-size:var(--ui-form-size)!important}
+  .candidate-search .input,.planning-board-search .input{font-size:var(--ui-form-size)!important}
   .routine-row{grid-template-columns:82px 1fr}
 
   /* Datas no mobile: valor centralizado, sem ultrapassar o campo/grid. */
