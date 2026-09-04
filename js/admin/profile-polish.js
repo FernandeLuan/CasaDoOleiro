@@ -11,6 +11,25 @@
     style.id='profilePolishStyles';
     style.textContent=`
       .planning-detail-page{--ui-text-sm:.68rem;--ui-text-xs:.68rem}
+
+      /* Busca do Voluntariado e Planejamento: exatamente a mesma caixa tipográfica. */
+      .candidate-search .input,.planning-board-search .input{
+        font-family:var(--font-body)!important;
+        font-size:16px!important;
+        line-height:1.25!important;
+        font-weight:400!important;
+        letter-spacing:normal!important;
+      }
+      .candidate-search .input::placeholder,.planning-board-search .input::placeholder{
+        font-family:var(--font-body)!important;
+        font-size:16px!important;
+        line-height:1.25!important;
+        font-weight:400!important;
+        letter-spacing:normal!important;
+        color:var(--muted)!important;
+        opacity:.78!important;
+      }
+
       .planning-detail-page .planning-profile-copy>.eyebrow{display:none!important}
       .planning-detail-page .planning-profile-head>.planning-profile-tabs{margin-top:3px!important;padding-top:2px!important}
       .planning-person-weeks>.planning-person-week:only-child{grid-column:1/-1!important;width:100%!important;max-width:none!important;margin-inline:0!important}
@@ -43,6 +62,30 @@
       @media(max-width:640px){
         .planning-detail-page .planning-person-day-head{min-height:44px!important;padding:7px 12px!important}
         .planning-detail-page .planning-person-agenda .planning-day-sessions{padding:6px 9px 9px!important}
+        .planning-detail-page .planning-profile-head{
+          grid-template-columns:minmax(0,1fr) 36px!important;
+          column-gap:6px!important;
+        }
+        .planning-detail-page .planning-close-button{
+          width:36px!important;
+          height:36px!important;
+          flex:0 0 36px!important;
+          border-radius:11px!important;
+          font-size:.86rem!important;
+        }
+        .planning-detail-page .planning-profile-period-status{
+          display:inline-flex!important;
+          align-items:center!important;
+          flex-wrap:nowrap!important;
+          gap:6px!important;
+          white-space:nowrap!important;
+          min-width:0!important;
+        }
+        .planning-detail-page .planning-profile-period-status>.badge{
+          flex:0 0 auto!important;
+          white-space:nowrap!important;
+          padding:4px 7px!important;
+        }
       }
 
       /* No mobile não sobra coluna do avatar removido: conteúdo começa no mesmo eixo de Período. */
