@@ -15,50 +15,84 @@
         max-width:100%!important;
         gap:10px!important;
       }
-      .occupancy-v2-head{margin-bottom:2px!important}
-      .occupancy-v2-copy h1{font-size:1.22rem!important;margin:2px 0 3px!important}
-      .occupancy-v2-copy>p{font-size:.66rem!important;line-height:1.4!important}
 
-      /* 3 indicadores compactos na primeira linha; controles abaixo. */
+      /* No mobile a tela começa direto pelos controles. */
+      .occupancy-v2-head{display:none!important}
+
+      /* Ordem mobile: mês > indicadores > unidade. */
       .occupancy-v2-toolbar{
         display:grid!important;
         grid-template-columns:repeat(3,minmax(0,1fr))!important;
         gap:8px!important;
         align-items:stretch!important;
       }
-      .occupancy-v2-metric{
-        min-width:0!important;
-        min-height:64px!important;
-        padding:8px!important;
-        border-radius:15px!important;
-        grid-template-columns:30px minmax(0,1fr)!important;
-        gap:7px!important;
-      }
-      .occupancy-v2-metric-icon{
-        width:30px!important;
-        height:30px!important;
-        border-radius:9px!important;
-      }
-      .occupancy-v2-metric-icon i{font-size:.68rem!important}
-      .occupancy-v2-metric strong{font-size:.9rem!important;line-height:1!important}
-      .occupancy-v2-metric p{
-        margin:3px 0 0!important;
-        font-size:.52rem!important;
-        line-height:1.2!important;
-        overflow-wrap:anywhere;
-      }
-      .occupancy-v2-unit-options,
       .occupancy-v2-month{
+        order:1!important;
         grid-column:1/-1!important;
         width:100%!important;
         min-height:48px!important;
+        padding:4px 6px!important;
+        gap:4px!important;
         border-radius:15px!important;
       }
-      .occupancy-v2-unit-options{padding:4px!important}
-      .occupancy-v2-unit{min-height:40px!important;padding:7px 10px!important;font-size:.65rem!important;border-radius:11px!important}
-      .occupancy-v2-month{padding:4px 6px!important;gap:4px!important}
-      .occupancy-v2-month strong{font-size:.68rem!important}
-      .occupancy-v2-month .icon-btn{width:40px!important;height:40px!important;flex-basis:40px!important;border-radius:11px!important;box-shadow:none!important}
+      .occupancy-v2-month strong{font-size:.7rem!important}
+      .occupancy-v2-month .icon-btn{
+        width:40px!important;
+        height:40px!important;
+        flex-basis:40px!important;
+        border-radius:11px!important;
+        box-shadow:none!important;
+      }
+
+      /* Indicadores compactos: 3 Na casa | 6 Chegadas | 6 Saídas. */
+      .occupancy-v2-metric{
+        order:2!important;
+        min-width:0!important;
+        min-height:46px!important;
+        padding:8px 6px!important;
+        border-radius:14px!important;
+        display:flex!important;
+        align-items:center!important;
+        justify-content:center!important;
+        gap:5px!important;
+        text-align:center!important;
+      }
+      .occupancy-v2-metric-icon{display:none!important}
+      .occupancy-v2-metric strong{
+        display:inline!important;
+        font-size:.86rem!important;
+        line-height:1!important;
+        white-space:nowrap!important;
+      }
+      .occupancy-v2-metric p{
+        display:inline!important;
+        margin:0!important;
+        font-size:.58rem!important;
+        line-height:1.1!important;
+        white-space:nowrap!important;
+        color:var(--muted)!important;
+      }
+      .occupancy-v2-metric:nth-of-type(1) p,
+      .occupancy-v2-metric:nth-of-type(2) p,
+      .occupancy-v2-metric:nth-of-type(3) p{font-size:0!important}
+      .occupancy-v2-metric:nth-of-type(1) p::after{content:'Na casa';font-size:.58rem}
+      .occupancy-v2-metric:nth-of-type(2) p::after{content:'Chegadas';font-size:.58rem}
+      .occupancy-v2-metric:nth-of-type(3) p::after{content:'Saídas';font-size:.58rem}
+
+      .occupancy-v2-unit-options{
+        order:3!important;
+        grid-column:1/-1!important;
+        width:100%!important;
+        min-height:48px!important;
+        padding:4px!important;
+        border-radius:15px!important;
+      }
+      .occupancy-v2-unit{
+        min-height:40px!important;
+        padding:7px 10px!important;
+        font-size:.65rem!important;
+        border-radius:11px!important;
+      }
 
       /* Calendário ocupa a largura do aparelho, sem herdar os 860px do desktop. */
       .occupancy-v2-calendar-card{
@@ -123,7 +157,6 @@
       .occupancy-v2-dot.couple::before,
       .occupancy-v2-dot.couple::after{width:6px!important;height:6px!important}
       .occupancy-v2-dot.couple::after{left:6px!important}
-      /* Chegadas/saídas permanecem disponíveis ao tocar no dia; não espremem a célula. */
       .occupancy-v2-flows{display:none!important}
       button.occupancy-v2-day:hover{transform:none!important;box-shadow:none!important}
       .occupancy-v2-loading{min-height:220px!important}
@@ -154,10 +187,11 @@
 
     @media(max-width:390px){
       .occupancy-v2-toolbar{gap:6px!important}
-      .occupancy-v2-metric{grid-template-columns:26px minmax(0,1fr)!important;gap:5px!important;padding:7px 6px!important;min-height:60px!important}
-      .occupancy-v2-metric-icon{width:26px!important;height:26px!important;border-radius:8px!important}
-      .occupancy-v2-metric strong{font-size:.82rem!important}
-      .occupancy-v2-metric p{font-size:.48rem!important}
+      .occupancy-v2-metric{min-height:44px!important;padding:7px 4px!important;gap:4px!important}
+      .occupancy-v2-metric strong{font-size:.8rem!important}
+      .occupancy-v2-metric:nth-of-type(1) p::after,
+      .occupancy-v2-metric:nth-of-type(2) p::after,
+      .occupancy-v2-metric:nth-of-type(3) p::after{font-size:.52rem!important}
       .occupancy-v2-calendar-card{padding:6px!important}
       .occupancy-v2-weekdays,.occupancy-v2-calendar{gap:2px!important}
       .occupancy-v2-day,.occupancy-v2-blank{min-height:52px!important}
