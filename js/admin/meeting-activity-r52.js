@@ -82,13 +82,3 @@
 
   window.renderPersonModal=renderPersonModal;
 })();
-
-/* Homologação r62: carrega a nova página dedicada de Planejamento por último,
-   preservando todas as camadas já existentes neste ambiente de teste. */
-(function loadPlanningPageR53(){
-  if(document.querySelector('script[data-planning-page-r53]'))return;
-  const script=document.createElement('script');
-  script.src='../js/admin/planning-page-r53.js?v=20260903-r53';
-  script.dataset.planningPageR53='1';
-  document.body.appendChild(script);
-})();
