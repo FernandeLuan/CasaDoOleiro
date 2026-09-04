@@ -11,24 +11,24 @@
       .planning-group-grid{
         display:grid!important;
         grid-template-columns:repeat(5,minmax(0,1fr))!important;
-        gap:10px!important;
+        gap:6px!important;
         align-items:stretch;
       }
       .planning-group-option{
         min-width:0;
-        min-height:48px;
-        padding:10px 12px!important;
+        min-height:40px;
+        padding:7px 8px!important;
         display:flex!important;
         align-items:center!important;
         justify-content:flex-start;
-        gap:11px!important;
+        gap:7px!important;
         box-sizing:border-box;
       }
       .planning-group-option input[type="checkbox"]{
-        width:18px;
-        height:18px;
+        width:16px;
+        height:16px;
         margin:0!important;
-        flex:0 0 18px;
+        flex:0 0 16px;
         align-self:center;
         accent-color:var(--primary);
       }
@@ -36,8 +36,9 @@
         display:block;
         min-width:0;
         line-height:1;
-        font-size:.7rem;
+        font-size:.66rem;
         font-weight:600;
+        white-space:nowrap;
       }
 
       /* Dias sem atividade usam o mesmo padrão de card das atividades, com mensagem centralizada. */
@@ -60,9 +61,10 @@
       .planning-person-day.is-empty .planning-person-empty i{display:none!important}
 
       @media(max-width:640px){
-        .planning-group-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
-        .planning-group-option{min-height:46px}
-        .planning-group-option:last-child{grid-column:1/-1}
+        .planning-group-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:5px!important}
+        .planning-group-option{min-height:38px;padding:6px!important;gap:6px!important}
+        .planning-group-option input[type="checkbox"]{width:15px;height:15px;flex-basis:15px}
+        .planning-group-option span{font-size:.62rem}
         .planning-person-day.is-empty .planning-person-empty{min-height:82px!important}
       }
     `;
