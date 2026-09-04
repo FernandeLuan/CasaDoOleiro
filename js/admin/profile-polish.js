@@ -10,14 +10,54 @@
     const style=document.createElement('style');
     style.id='profilePolishStyles';
     style.textContent=`
+      .planning-detail-page{--ui-text-xs:var(--ui-text-sm)}
       .planning-detail-page .planning-profile-copy>.eyebrow{display:none!important}
       .planning-detail-page .planning-profile-head>.planning-profile-tabs{margin-top:3px!important;padding-top:2px!important}
       .planning-person-weeks>.planning-person-week:only-child{grid-column:1/-1!important;width:100%!important;max-width:none!important;margin-inline:0!important}
       .planning-detail-page .planning-profile-head>.planning-profile-tabs{grid-column:1/-1}
       .planning-detail-page .planning-page-content>.planning-profile-tabs,.planning-detail-page .planning-page-content>.person-history-tabs{display:none!important}
       .planning-person-day-title .planning-person-day-summary{display:inline-flex!important;align-items:center!important;gap:7px!important;margin:0!important;font-size:var(--ui-text-sm)!important;line-height:1.35!important;color:var(--muted)!important}
-      .account-emergency-action-r72{border:0;background:transparent;color:var(--primary);padding:2px 0;min-height:auto;display:inline-flex;align-items:center;gap:5px;font-size:var(--ui-text-xs);font-weight:700;white-space:nowrap}
-      .account-emergency-action-r72:hover{text-decoration:underline}.account-emergency-action-r72 i{font-size:var(--ui-text-xs)}
+
+      /* Detalhe do voluntário: nenhum texto funcional abaixo de .68rem. */
+      .planning-detail-page .person-refactor-tabs button,
+      .planning-detail-page .planning-profile-tabs button,
+      .planning-detail-page .badge,
+      .planning-detail-page .eyebrow,
+      .planning-detail-page small,
+      .planning-detail-page time,
+      .planning-detail-page .compact-hint,
+      .planning-detail-page .person-plan-summary,
+      .planning-detail-page .admin-plan-page-nav strong,
+      .planning-detail-page .admin-plan-page-nav span,
+      .planning-detail-page .admin-plan-review-footer .btn,
+      .planning-detail-page .account-person-row span,
+      .planning-detail-page .account-access-row span,
+      .planning-detail-page .account-access-row small,
+      .planning-detail-page .account-danger-zone small,
+      .planning-detail-page .candidate-plan-compact-head strong,
+      .planning-detail-page .candidate-plan-compact-head span,
+      .planning-detail-page .account-person-section-head-r70>span,
+      .planning-detail-page .account-person-emergency-r70 span,
+      .planning-detail-page .account-person-emergency-inline-r71 .account-person-section-head-r70>span,
+      .planning-detail-page .account-person-emergency-inline-r71 strong,
+      .planning-detail-page .account-person-emergency-inline-r71 span,
+      .planning-detail-page .account-access-status-r70,
+      .planning-detail-page .account-access-plain-r71,
+      .planning-detail-page .account-empty-value-r70,
+      .planning-detail-page .planning-history-r69-head time,
+      .planning-detail-page .planning-history-r69-body p,
+      .planning-detail-page .planning-history-r69-body span,
+      .planning-detail-page .planning-history-r71-head time,
+      .planning-detail-page .planning-history-r71-body p,
+      .planning-detail-page .planning-history-r71-body span,
+      .planning-detail-page .planning-person-day-signals .badge,
+      .planning-detail-page .planning-activity-tools .admin-portal-status .badge,
+      .planning-detail-page .account-emergency-action-r72{
+        font-size:var(--ui-text-sm)!important;
+      }
+
+      .account-emergency-action-r72{border:0;background:transparent;color:var(--primary);padding:2px 0;min-height:auto;display:inline-flex;align-items:center;gap:5px;font-size:var(--ui-text-sm);font-weight:700;white-space:nowrap}
+      .account-emergency-action-r72:hover{text-decoration:underline}.account-emergency-action-r72 i{font-size:var(--ui-text-sm)}
       .planning-detail-page .account-person-emergency-inline-r71 .account-person-section-head-r70{align-items:center!important}
     `;
     document.head.appendChild(style);
