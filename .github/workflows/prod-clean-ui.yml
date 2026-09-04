@@ -34,9 +34,18 @@ jobs:
           test ! -e _site/functions
           test ! -e _site/firestore.rules
           test ! -e _site/firebase.preview.json
+          test ! -e _site/firebase.release-preview.json
           grep -q 'data-prod-clean-admin' _site/admin/index.html
           grep -q 'data-prod-clean-portal' _site/portal/index.html
           grep -q 'desktop-shell.js' _site/portal/index.html
+          if grep -q 'homologation-adapter' _site/js/shared/navigation.js; then
+            echo 'Homologation data loader leaked into production artifact.'
+            exit 1
+          fi
+          if grep -q 'loadHomologationAdminUi' _site/js/shared/navigation.js; then
+            echo 'Homologation admin loader leaked into production artifact.'
+            exit 1
+          fi
 
       - name: Validate final preview deploy helper
         run: |
