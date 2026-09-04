@@ -30,3 +30,115 @@ if('scrollRestoration' in history)history.scrollRestoration='manual';
 document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
 function openDatePicker(inputOrId){const input=typeof inputOrId==='string'?document.getElementById(inputOrId):inputOrId;if(!input||input.disabled)return;try{if(typeof input.showPicker==='function')input.showPicker();else input.focus()}catch{input.focus()}}
 document.addEventListener('click',event=>{if(event.target.closest?.('input[type="date"]'))return;const input=event.target.closest?.('.date-field')?.querySelector?.('input[type="date"]');if(input)openDatePicker(input);});
+
+/* Homologação: somente Auth/IO e dados são substituídos quando ?demo=... está presente. */
+(function loadHomologationData(){
+  if(!new URLSearchParams(location.search).has('demo'))return;
+  const current=document.currentScript?.src;if(!current||typeof document.write!=='function')return;
+  const base=new URL('./',current);
+  const files=['../demo/homologation-adapter.js','../demo/homologation-data.js','../demo/homologation-scenarios.js','../demo/homologation-contracts.js'];
+  document.write(files.map((file,index)=>`<script src="${new URL(`${file}?v=20260903-clean-${index+1}`,base).href}"><\/script>`).join(''));
+})();
+
+/*
+  Homologação Admin: o produto-base ainda contém renderers legados necessários para
+  compatibilidade. Eles não podem aparecer durante o bootstrap da interface limpa.
+  O bloqueio abaixo entra antes de app.js renderizar e só é removido depois do último
+  módulo visual da homologação estar instalado e de um render final ter sido concluído.
+*/
+(function loadHomologationAdminUi(){
+  const params=new URLSearchParams(location.search);
+  if(params.get('demo')!=='admin'||!/\/admin\//.test(location.pathname))return;
+  const current=document.currentScript?.src;if(!current)return;
+  const base=new URL('./',current);
+  const files=[
+    '../admin/planning-page.js',
+    '../admin/homologation-shell.js',
+    '../admin/planning-board.js',
+    '../admin/planning-person-agenda.js',
+    '../admin/planning-group-editor.js',
+    '../admin/planning-mobile-filters.js',
+    '../admin/volunteer-status-inline.js',
+    '../admin/planning-profile-layout.js',
+    '../admin/account-consolidated.js',
+    '../admin/account-history.js',
+    '../admin/profile-polish.js',
+    '../admin/emergency-contact-sync.js',
+    '../admin/account-consistency.js',
+    '../admin/account-emergency-live.js',
+    '../admin/occupancy-page.js',
+    '../admin/occupancy-mobile.js',
+    '../admin/admin-navigation.js',
+    '../admin/groups-page.js',
+    '../admin/house-info-page.js',
+    '../admin/account-settings.js'
+  ];
+
+  const root=document.documentElement;
+  root.classList.add('oleiro-homologation-booting');
+  window.__OLEIRO_HOMOLOGATION_UI_READY__=false;
+
+  if(!document.getElementById('homologationBootStyles')){
+    const style=document.createElement('style');
+    style.id='homologationBootStyles';
+    style.textContent=`
+      html.oleiro-homologation-booting #app,
+      html.oleiro-homologation-booting #navRoot,
+      html.oleiro-homologation-booting #modalRoot,
+      html.oleiro-homologation-booting #toast,
+      html.oleiro-homologation-failed #app,
+      html.oleiro-homologation-failed #navRoot,
+      html.oleiro-homologation-failed #modalRoot,
+      html.oleiro-homologation-failed #toast{visibility:hidden!important;pointer-events:none!important}
+      #homologationBoot{position:fixed;z-index:100000;inset:0;display:grid;place-items:center;background:var(--bg,#f6f5ef);padding:24px;color:var(--text,#17251d)}
+      #homologationBoot .homologation-boot-card{display:flex;align-items:center;gap:11px;padding:12px 15px;border:1px solid var(--border,#dfe5df);border-radius:16px;background:var(--surface,#fff);box-shadow:0 12px 34px rgba(24,43,32,.08);font-size:.68rem;font-weight:600}
+      #homologationBoot .homologation-boot-mark{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:var(--primary-soft,#e4eee8);color:var(--primary,#2f684e)}
+      #homologationBoot .homologation-boot-error{max-width:460px;display:grid;gap:7px;text-align:center;padding:18px;border:1px solid var(--border,#dfe5df);border-radius:18px;background:var(--surface,#fff)}
+      #homologationBoot .homologation-boot-error strong{font-size:.82rem}.homologation-boot-error span{font-size:.64rem;color:var(--muted,#6d786f);line-height:1.5}
+    `;
+    document.head.appendChild(style);
+  }
+
+  let boot=document.getElementById('homologationBoot');
+  if(!boot){
+    boot=document.createElement('div');boot.id='homologationBoot';boot.setAttribute('role','status');boot.setAttribute('aria-live','polite');
+    boot.innerHTML='<div class="homologation-boot-card"><span class="homologation-boot-mark"><i class="fa-solid fa-seedling"></i></span><span>Preparando homologação…</span></div>';
+    document.body.appendChild(boot);
+  }
+
+  const load=(file,index)=>new Promise((resolve,reject)=>{
+    const script=document.createElement('script');
+    script.dataset.homologationUi=String(index+1);
+    script.src=new URL(`${file}?v=20260903-clean-${index+1}`,base).href;
+    script.onload=resolve;
+    script.onerror=()=>reject(new Error(`Falha ao carregar módulo de homologação: ${file}`));
+    document.body.appendChild(script);
+  });
+
+  const reveal=()=>{
+    window.__OLEIRO_HOMOLOGATION_UI_READY__=true;
+    root.classList.remove('oleiro-homologation-booting','oleiro-homologation-failed');
+    root.classList.add('oleiro-homologation-ready');
+    boot?.remove();
+  };
+
+  const fail=error=>{
+    console.error(error);
+    root.classList.remove('oleiro-homologation-booting');
+    root.classList.add('oleiro-homologation-failed');
+    if(boot)boot.innerHTML='<div class="homologation-boot-error"><strong>Não foi possível carregar a homologação.</strong><span>Recarregue a página. A interface antiga foi mantida oculta para não confundir esta validação.</span></div>';
+  };
+
+  const start=async()=>{
+    if(window.__OLEIRO_HOMOLOGATION_UI_LOADING__)return;
+    window.__OLEIRO_HOMOLOGATION_UI_LOADING__=true;
+    try{
+      for(let index=0;index<files.length;index+=1)await load(files[index],index);
+      if(state?.role==='manager'&&typeof window.render==='function')window.render();
+      requestAnimationFrame(()=>requestAnimationFrame(reveal));
+    }catch(error){fail(error)}
+  };
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});
+  else start();
+})();

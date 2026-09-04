@@ -16,10 +16,16 @@
 .activity-group-picker{display:grid;gap:7px}
 .activity-group-picker>small{font-size:.57rem;line-height:1.4;color:var(--muted)}
 .activity-group-source{display:none!important}
-.activity-group-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
-.activity-group-grid .check-card{min-width:0;padding:9px 8px;gap:10px}
-.activity-group-grid .check-card input{flex:0 0 auto;margin:0}
-.activity-group-grid .check-card span{min-width:0;overflow-wrap:anywhere}
+.activity-group-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
+.activity-group-grid .check-card{min-width:0;min-height:38px;padding:6px!important;gap:6px!important;align-items:center;justify-content:flex-start}
+.activity-group-grid .check-card input{width:15px;height:15px;flex:0 0 15px;margin:0!important;accent-color:var(--primary)}
+.activity-group-grid .check-card span{min-width:0;font-size:0;line-height:1;white-space:nowrap}
+.activity-group-grid .check-card input[value="A"]+span::after{content:"A"}
+.activity-group-grid .check-card input[value="B"]+span::after{content:"B"}
+.activity-group-grid .check-card input[value="C"]+span::after{content:"C"}
+.activity-group-grid .check-card input[value="D"]+span::after{content:"D"}
+.activity-group-grid .check-card input[value="Livre"]+span::after{content:"Livre"}
+.activity-group-grid .check-card input+span::after{font-size:.62rem;font-weight:600;color:var(--text)}
 
 .activity-inline-details{display:grid;gap:5px;margin-top:8px;padding-top:7px;border-top:1px solid var(--border)}
 .activity-inline-detail{margin:0!important;font-size:.6rem!important;line-height:1.45!important;color:var(--muted)!important;overflow-wrap:anywhere}
@@ -72,7 +78,10 @@
 @media(max-width:520px){
   .activity-repeat-head{display:grid}
   .activity-repeat-add{width:100%}
-  .activity-group-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .activity-group-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
+  .activity-group-grid .check-card{min-height:36px;padding:5px!important;gap:5px!important}
+  .activity-group-grid .check-card input{width:14px;height:14px;flex-basis:14px}
+  .activity-group-grid .check-card input+span::after{font-size:.59rem}
   .admin-portal-activity-main{padding:12px}
   .admin-portal-activity-head{gap:7px}
 }
