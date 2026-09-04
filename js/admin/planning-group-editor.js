@@ -39,10 +39,31 @@
         font-size:.7rem;
         font-weight:600;
       }
+
+      /* Dias sem atividade usam o mesmo padrão de card das atividades, com mensagem centralizada. */
+      .planning-person-day.is-empty .planning-person-day-summary{display:none!important}
+      .planning-person-day.is-empty .planning-person-day-body{padding:10px 12px 12px!important}
+      .planning-person-day.is-empty .planning-person-empty{
+        min-height:92px!important;
+        margin:0!important;
+        padding:14px!important;
+        border:1px solid var(--border)!important;
+        border-radius:12px!important;
+        background:var(--surface)!important;
+        display:grid!important;
+        place-items:center!important;
+        text-align:center!important;
+        box-sizing:border-box!important;
+        color:var(--muted)!important;
+        font-size:.7rem!important;
+      }
+      .planning-person-day.is-empty .planning-person-empty i{display:none!important}
+
       @media(max-width:640px){
         .planning-group-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
         .planning-group-option{min-height:46px}
         .planning-group-option:last-child{grid-column:1/-1}
+        .planning-person-day.is-empty .planning-person-empty{min-height:82px!important}
       }
     `;
     document.head.appendChild(style);
