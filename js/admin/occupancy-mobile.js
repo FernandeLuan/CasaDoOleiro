@@ -54,7 +54,7 @@
         display:flex!important;
         align-items:center!important;
         justify-content:center!important;
-        gap:5px!important;
+        gap:8px!important;
         text-align:center!important;
       }
       .occupancy-v2-metric-icon{display:none!important}
@@ -187,7 +187,7 @@
 
     @media(max-width:390px){
       .occupancy-v2-toolbar{gap:6px!important}
-      .occupancy-v2-metric{min-height:44px!important;padding:7px 4px!important;gap:4px!important}
+      .occupancy-v2-metric{min-height:44px!important;padding:7px 4px!important;gap:6px!important}
       .occupancy-v2-metric strong{font-size:.8rem!important}
       .occupancy-v2-metric:nth-of-type(1) p::after,
       .occupancy-v2-metric:nth-of-type(2) p::after,
