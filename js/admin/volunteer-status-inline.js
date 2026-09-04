@@ -10,6 +10,10 @@
     const style=document.createElement('style');
     style.id='volunteerStatusInlineStyles';
     style.textContent=`
+      /* Ritmo vertical final do Voluntariado: filtro e cards sempre em 12px. */
+      .volunteer-list-page .candidate-tools.candidate-tools-compact{margin-bottom:12px!important}
+      .volunteer-list-page #candidateList.list{gap:12px!important}
+
       .volunteer-name-status{display:flex;align-items:center;gap:8px;min-width:0;margin-bottom:2px}
       .volunteer-name-status>h3{margin:0;min-width:0}
       .volunteer-status-badges{display:flex;align-items:center;gap:7px;flex:0 0 auto;white-space:nowrap}
