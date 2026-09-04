@@ -5,7 +5,7 @@
   if(window.__OLEIRO_ADMIN_ACCOUNT_SETTINGS__)return;
   window.__OLEIRO_ADMIN_ACCOUNT_SETTINGS__=true;
 
-  const esc=value=>typeof escapeHtml==='function'?escapeHtml(value):String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[char]));
+  const esc=value=>typeof escapeHtml==='function'?escapeHtml(value):String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 
   function installStyles(){
     if(document.getElementById('adminAccountSettingsStyles'))return;
