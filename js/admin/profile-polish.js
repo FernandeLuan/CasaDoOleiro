@@ -15,14 +15,14 @@
       /* Busca do Voluntariado e Planejamento: exatamente a mesma caixa tipográfica. */
       .candidate-search .input,.planning-board-search .input{
         font-family:var(--font-body)!important;
-        font-size:16px!important;
+        font-size:14px!important;
         line-height:1.25!important;
         font-weight:400!important;
         letter-spacing:normal!important;
       }
       .candidate-search .input::placeholder,.planning-board-search .input::placeholder{
         font-family:var(--font-body)!important;
-        font-size:16px!important;
+        font-size:14px!important;
         line-height:1.25!important;
         font-weight:400!important;
         letter-spacing:normal!important;
@@ -59,9 +59,24 @@
         z-index:auto!important;
         margin:9px 0 0!important;
       }
+
+      /* O texto real de descrição/detalhe está nos spans internos dos cards antigos. */
+      .planning-detail-page .planning-person-agenda .admin-portal-description,
+      .planning-detail-page .planning-person-agenda .admin-portal-description span,
+      .planning-detail-page .planning-person-agenda .admin-portal-detail,
+      .planning-detail-page .planning-person-agenda .admin-portal-detail span{
+        font-size:.68rem!important;
+        line-height:1.45!important;
+      }
+
+      @media(max-width:1023px){
+        html,body{overscroll-behavior:none!important}
+        .admin-content-r62>.page{padding-bottom:calc(76px + env(safe-area-inset-bottom))!important}
+      }
       @media(max-width:640px){
         .planning-detail-page .planning-person-day-head{min-height:44px!important;padding:7px 12px!important}
         .planning-detail-page .planning-person-agenda .planning-day-sessions{padding:6px 9px 9px!important}
+        .planning-detail-page .planning-person-add{position:relative!important;right:8px!important}
         .planning-detail-page .planning-profile-head{
           grid-template-columns:minmax(0,1fr) 36px!important;
           column-gap:6px!important;
@@ -152,7 +167,9 @@
       .planning-detail-page .planning-activity-tools .admin-portal-status .badge,
       .planning-detail-page .planning-person-agenda .admin-portal-activity-title p,
       .planning-detail-page .planning-person-agenda .admin-portal-description,
+      .planning-detail-page .planning-person-agenda .admin-portal-description span,
       .planning-detail-page .planning-person-agenda .admin-portal-detail,
+      .planning-detail-page .planning-person-agenda .admin-portal-detail span,
       .planning-detail-page .planning-person-agenda .day-adjustment-note,
       .planning-detail-page .account-emergency-action-r72{
         font-size:.68rem!important;
@@ -188,7 +205,7 @@
       const weekday=title.querySelector(':scope > span:not(.planning-person-day-summary)');if(weekday)weekday.remove();
       const summary=title.querySelector('.planning-person-day-summary')||day.querySelector('.planning-person-day-summary');
       if(summary){
-        if(day.classList.contains('is-empty'))summary.textContent='0 atividades · 0min';
+        if(day.classList.contains('is-empty'))summary.textContent='Sem atividade';
         if(!title.contains(summary))title.appendChild(summary);
       }
     });
