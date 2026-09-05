@@ -1,0 +1,47 @@
+name: Deploy homologacao
+
+on:
+  push:
+    branches:
+      - test/homologacao-clean-ui
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: firebase-homologacao-clean-ui
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build homologation preview
+        run: node build-preview.mjs
+
+      - name: Configure Firebase credential
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_CASADOOLEIRO_35C4E }}
+        run: |
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
+            echo "::error::Missing FIREBASE_SERVICE_ACCOUNT_CASADOOLEIRO_35C4E repository secret."
+            exit 1
+          fi
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-service-account.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/firebase-service-account.json" >> "$GITHUB_ENV"
+
+      - name: Deploy Firebase Hosting channel
+        run: |
+          npx --yes firebase-tools@latest hosting:channel:deploy homologacao-clean-ui \
+            --config firebase.preview.json \
+            --project casadooleiro-35c4e \
+            --non-interactive
