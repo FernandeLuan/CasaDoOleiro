@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 concurrency:
   group: firebase-homologacao-clean-ui
@@ -23,21 +24,18 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Build homologation preview
         run: node build-preview.mjs
 
-      - name: Configure Firebase credential
-        env:
-          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_CASADOOLEIRO_35C4E }}
-        run: |
-          if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
-            echo "::error::Missing FIREBASE_SERVICE_ACCOUNT_CASADOOLEIRO_35C4E repository secret."
-            exit 1
-          fi
-          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-service-account.json"
-          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/firebase-service-account.json" >> "$GITHUB_ENV"
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: github-homologacao@casadooleiro-35c4e.iam.gserviceaccount.com
+          create_credentials_file: true
+          export_environment_variables: true
 
       - name: Deploy Firebase Hosting channel
         run: |
