@@ -1,5 +1,5 @@
 :root {
-  --bg: #f5f4ef;
+  --bg: #edf5f0;
   --app-bg: #edf5f0;
   --surface: #ffffff;
   --surface-2: #edf2ec;
@@ -23,7 +23,7 @@
   --header: rgba(237,245,240,.94);
 }
 :root.dark {
-  --bg: #111713;
+  --bg: #121c17;
   --app-bg: #121c17;
   --surface: #18211b;
   --surface-2: #202c24;
