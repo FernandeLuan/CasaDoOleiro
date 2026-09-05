@@ -1,0 +1,50 @@
+name: Deploy homologacao
+
+on:
+  push:
+    branches:
+      - test/homologacao-clean-ui
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: firebase-homologacao-clean-ui
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Build homologation preview
+        run: node build-preview.mjs
+
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: casadooleiro-35c4e
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: github-homologacao@casadooleiro-35c4e.iam.gserviceaccount.com
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/cloud-platform
+          create_credentials_file: false
+          export_environment_variables: false
+
+      - name: Deploy Firebase Hosting channel
+        env:
+          GCP_ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
+          FIREBASE_SITE_ID: casadooleiro-35c4e
+          FIREBASE_CHANNEL_ID: homologacao-clean-ui
+          HOSTING_DIR: preview-dist
+        run: node scripts/deploy-hosting-rest.mjs

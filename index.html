@@ -1,9 +1,128 @@
-<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
-<meta name="theme-color" content="#315f48"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="Casa do Oleiro">
-<link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=20260826-real4"><link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png?v=20260826-real4"><link rel="manifest" href="manifest.webmanifest?v=20260826-real4">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"><title>Casa do Oleiro</title>
-<link rel="stylesheet" href="css/theme.css?v=20260826-real4"><link rel="stylesheet" href="css/base.css?v=20260826-real4"><link rel="stylesheet" href="css/components.css?v=20260826-real4"><link rel="stylesheet" href="css/i18n.css?v=20260826-real4"><link rel="stylesheet" href="css/login.css?v=20260826-real4"><link rel="stylesheet" href="css/round3.css?v=20260826-r3"><link rel="stylesheet" href="css/round4.css?v=20260826-r4"><link rel="stylesheet" href="css/round5.css?v=20260826-r5"><link rel="stylesheet" href="css/round18.css?v=20260827-r18"></head><body data-root="index.html">
-<main class="login-shell"><section class="login-card"><button class="login-language-trigger" type="button" onclick="openLanguageModal()" aria-label="Idioma"><i class="fa-solid fa-language"></i><span class="current-language-code">PT</span></button><div class="login-brand"><img class="login-cover" src="icons/icon-180.png?v=20260826-real4" alt="Casa do Oleiro"><h1>Casa do Oleiro</h1><p>Portal de gestão e planejamento do programa de voluntariado.</p></div><div class="form-grid"><div class="field"><label for="email">Email</label><input id="email" class="input" type="email" placeholder="example@gmail.com" autocomplete="email"></div><div class="field"><label for="password">Senha</label><input id="password" class="input" type="password" placeholder="••••••••" autocomplete="current-password"></div><button id="loginButton" class="btn btn-primary btn-block" type="button" onclick="handleLogin()">Entrar</button><button id="forgotPasswordButton" class="login-forgot" type="button" onclick="handleForgotPassword()">Esqueci minha senha</button><div id="loginMessage" class="notice" hidden></div></div></section></main>
-<div id="loginLoading" class="login-loading" hidden><div class="login-loading-inner"><div class="loading-pulse"><span class="loading-ring ring-a"></span><span class="loading-ring ring-b"></span><img src="icons/icon-180.png?v=20260826-real4" alt="" aria-hidden="true"></div><strong>Entrando...</strong><span>Carregando informações</span></div></div>
-<script src="js/shared/monitoring-config.js?v=20260901-r43"></script><script src="js/shared/monitoring.js?v=20260901-r43"></script><script src="js/shared/i18n.js?v=20260826-real4"></script><script src="js/shared/i18n-r27.js?v=20260827-r27"></script><script src="js/shared/i18n-extensions.js?v=20260826-real4"></script><script src="js/shared/i18n-onboarding.js?v=20260826-real4"></script><script src="js/firebase/firebase-config.js?v=20260826-real4"></script><script src="js/firebase/firebase-client.js?v=20260827-r27e2e"></script><script src="js/services/auth-service.js?v=20260827-r14"></script><script src="js/login.js?v=20260826-real4"></script><script src="js/login-round3.js?v=20260826-r3"></script><script src="js/login-round4.js?v=20260826-r4"></script></body></html>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+  <meta name="theme-color" content="#315f48">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Casa do Oleiro">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png?v=20260904-login-clay2">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png?v=20260904-login-clay2">
+  <link rel="manifest" href="manifest.webmanifest?v=20260904-login-clay2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <title>Casa do Oleiro</title>
+  <link rel="stylesheet" href="css/theme.css?v=20260904-login-clay2">
+  <link rel="stylesheet" href="css/base.css?v=20260904-login-clay2">
+  <link rel="stylesheet" href="css/components.css?v=20260904-login-clay2">
+  <link rel="stylesheet" href="css/i18n.css?v=20260904-login-clay2">
+  <link rel="stylesheet" href="css/round3.css?v=20260826-r3">
+  <link rel="stylesheet" href="css/round4.css?v=20260826-r4">
+  <link rel="stylesheet" href="css/round5.css?v=20260826-r5">
+  <link rel="stylesheet" href="css/round18.css?v=20260827-r18">
+  <link rel="stylesheet" href="css/login.css?v=20260904-login-clay2">
+  <link rel="stylesheet" href="css/login-mobile.css?v=20260904-login-mobile1">
+</head>
+<body data-root="index.html">
+  <main class="login-shell">
+    <section class="login-experience" aria-label="Acesso à Casa do Oleiro">
+      <aside class="login-story">
+        <div class="login-story-brand">
+          <span class="login-story-mark"><i class="fa-solid fa-seedling"></i></span>
+          <span><strong>Casa do Oleiro</strong><small>Voluntariado</small></span>
+        </div>
+
+        <div class="login-story-copy">
+          <span class="login-eyebrow">SEU ESPAÇO NA CASA</span>
+          <h1>Servir começa com cuidado.</h1>
+          <p>Planejamento, estadia e rotina em um único lugar.</p>
+        </div>
+
+        <div class="clay-stage" aria-hidden="true">
+          <div id="loginMascot" class="clay-pot">
+            <div class="pot-sprout"><span class="pot-stem"></span><span class="pot-leaf pot-leaf-left"></span><span class="pot-leaf pot-leaf-right"></span></div>
+            <span class="pot-rim"></span>
+            <div class="pot-shell">
+              <span class="pot-highlight"></span>
+              <div class="pot-face">
+                <span class="pot-eye pot-eye-left"><span class="pot-pupil"></span></span>
+                <span class="pot-eye pot-eye-right"><span class="pot-pupil"></span></span>
+                <span class="pot-cheek pot-cheek-left"></span>
+                <span class="pot-cheek pot-cheek-right"></span>
+                <span class="pot-mouth"></span>
+              </div>
+            </div>
+            <span class="pot-arm pot-arm-left"><span class="pot-hand"></span></span>
+            <span class="pot-arm pot-arm-right"><span class="pot-hand"></span></span>
+          </div>
+          <p id="loginMascotCaption" class="clay-caption">Pode entrar. Estou de olho por aqui.</p>
+        </div>
+      </aside>
+
+      <section class="login-card">
+        <button class="login-language-trigger" type="button" onclick="openLanguageModal()" aria-label="Idioma">
+          <i class="fa-solid fa-language"></i><span class="current-language-code">PT</span>
+        </button>
+
+        <div class="login-card-brand">
+          <span class="login-card-mark"><i class="fa-solid fa-seedling"></i></span>
+          <div><small>CASA DO OLEIRO</small><h2>Bem-vindo</h2></div>
+        </div>
+
+        <div class="form-grid login-form">
+          <div class="field">
+            <label for="email">Email</label>
+            <div class="login-input-shell">
+              <i class="fa-regular fa-envelope"></i>
+              <input id="email" class="input" type="email" placeholder="seuemail@exemplo.com" autocomplete="email" inputmode="email">
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="login-label-row"><label for="password">Senha</label></div>
+            <div class="login-input-shell">
+              <i class="fa-solid fa-lock"></i>
+              <input id="password" class="input" type="password" placeholder="••••••••" autocomplete="current-password">
+            </div>
+          </div>
+
+          <button id="loginButton" class="btn btn-primary btn-block login-submit" type="button" onclick="handleLogin()">
+            <span>Entrar</span><i class="fa-solid fa-arrow-right"></i>
+          </button>
+          <button id="forgotPasswordButton" class="login-forgot" type="button" onclick="handleForgotPassword()">Esqueci minha senha</button>
+          <div id="loginMessage" class="notice" hidden></div>
+        </div>
+
+        <div class="login-trust">
+          <span><i class="fa-solid fa-shield-halved"></i>Acesso protegido</span>
+          <span>Casa do Oleiro</span>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <div id="loginLoading" class="login-loading" hidden>
+    <div class="login-loading-inner">
+      <div class="loading-pulse"><span class="loading-ring ring-a"></span><span class="loading-ring ring-b"></span><img src="icons/icon-180.png?v=20260904-login-clay2" alt="" aria-hidden="true"></div>
+      <strong>Entrando...</strong><span>Carregando informações</span>
+    </div>
+  </div>
+
+  <script src="js/shared/monitoring-config.js?v=20260901-r43"></script>
+  <script src="js/shared/monitoring.js?v=20260901-r43"></script>
+  <script src="js/shared/i18n.js?v=20260904-login-clay2"></script>
+  <script src="js/shared/i18n-r27.js?v=20260827-r27"></script>
+  <script src="js/shared/i18n-extensions.js?v=20260904-login-clay2"></script>
+  <script src="js/shared/i18n-onboarding.js?v=20260904-login-clay2"></script>
+  <script src="js/firebase/firebase-config.js?v=20260904-login-clay2"></script>
+  <script src="js/firebase/firebase-client.js?v=20260827-r27e2e"></script>
+  <script src="js/services/auth-service.js?v=20260827-r14"></script>
+  <script src="js/login.js?v=20260904-login-clay2"></script>
+  <script src="js/login-round3.js?v=20260904-login-clay2"></script>
+  <script src="js/login-round4.js?v=20260904-login-clay2"></script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 /* Round 3 — login: mostrar senha, feedback visual e transição mais curta. */
 (function round3Login(){
+  const tr=value=>typeof translateText==='function'?translateText(value):value;
   function fieldFor(id){return document.getElementById(id)?.closest('.field')||null}
   function clearInvalid(){['email','password'].forEach(id=>fieldFor(id)?.classList.remove('is-invalid'));const message=document.getElementById('loginMessage');message?.classList.remove('login-error')}
   function markInvalid(ids){ids.forEach(id=>fieldFor(id)?.classList.add('is-invalid'))}
@@ -7,8 +8,8 @@
   const password=document.getElementById('password');
   if(password&&!password.parentElement?.classList.contains('password-input-wrap')){
     const wrap=document.createElement('div');wrap.className='password-input-wrap';password.parentNode.insertBefore(wrap,password);wrap.appendChild(password);
-    const toggle=document.createElement('button');toggle.type='button';toggle.className='password-visibility';toggle.setAttribute('aria-label','Mostrar senha');toggle.innerHTML='<i class="fa-regular fa-eye"></i>';
-    toggle.addEventListener('click',()=>{const visible=password.type==='text';password.type=visible?'password':'text';toggle.setAttribute('aria-label',visible?'Mostrar senha':'Ocultar senha');toggle.innerHTML=`<i class="fa-regular ${visible?'fa-eye':'fa-eye-slash'}"></i>`;password.focus()});wrap.appendChild(toggle);
+    const toggle=document.createElement('button');toggle.type='button';toggle.className='password-visibility';toggle.setAttribute('aria-label',tr('Mostrar senha'));toggle.innerHTML='<i class="fa-regular fa-eye"></i>';
+    toggle.addEventListener('click',()=>{const visible=password.type==='text';password.type=visible?'password':'text';toggle.setAttribute('aria-label',tr(visible?'Mostrar senha':'Ocultar senha'));toggle.innerHTML=`<i class="fa-regular ${visible?'fa-eye':'fa-eye-slash'}"></i>`;password.focus()});wrap.appendChild(toggle);
   }
   document.getElementById('email')?.addEventListener('input',clearInvalid);
   document.getElementById('password')?.addEventListener('input',clearInvalid);
@@ -16,7 +17,7 @@
   destinationFor=function(role){if(role==='manager')return 'admin/';if(role==='volunteer')return 'portal/';return 'index.html'};
   startLoginTransition=function(role){if(loginTransitionTimer)return;const overlay=document.getElementById('loginLoading'),button=document.getElementById('loginButton');if(button)button.disabled=true;if(overlay)overlay.hidden=false;loginTransitionTimer=setTimeout(()=>{location.href=destinationFor(role)},120)};
 
-  showLoginMessage=function(text,options={}){const el=document.getElementById('loginMessage');if(!el)return;el.textContent=typeof translateText==='function'?translateText(text):text;el.hidden=false;el.classList.toggle('login-error',options.error===true)};
+  showLoginMessage=function(text,options={}){const el=document.getElementById('loginMessage');if(!el)return;el.textContent=tr(text);el.hidden=false;el.classList.toggle('login-error',options.error===true)};
 
   handleLogin=async function(){
     clearInvalid();const email=document.getElementById('email')?.value.trim()||'',passwordValue=document.getElementById('password')?.value||'';

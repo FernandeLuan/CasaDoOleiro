@@ -1,0 +1,162 @@
+/* Layout mobile do login: fundo verde integral, card compacto e mascote atrás da borda do card. */
+@media(max-width:760px){
+  html{min-height:100%;background:#245b43;-webkit-text-size-adjust:100%}
+  body[data-root="index.html"]{min-height:100%;background:#245b43!important}
+
+  .login-shell{
+    width:100%!important;
+    min-height:100svh!important;
+    height:auto!important;
+    padding:0!important;
+    overflow:visible!important;
+    background:
+      radial-gradient(circle at 84% 10%,rgba(255,255,255,.10),transparent 24%),
+      radial-gradient(circle at 14% 86%,rgba(255,255,255,.06),transparent 28%),
+      linear-gradient(155deg,color-mix(in srgb,var(--primary) 94%,#10261a),color-mix(in srgb,var(--primary) 68%,#173725))!important;
+  }
+
+  .login-experience{
+    position:relative!important;
+    width:100%!important;
+    min-height:100svh!important;
+    height:auto!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:0!important;
+    padding:max(18px,env(safe-area-inset-top)) 16px max(18px,env(safe-area-inset-bottom))!important;
+    border:0!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    overflow:hidden!important;
+    background:
+      radial-gradient(circle at 82% 16%,rgba(255,255,255,.10),transparent 22%),
+      radial-gradient(circle at 10% 72%,rgba(255,255,255,.045),transparent 25%),
+      linear-gradient(150deg,color-mix(in srgb,var(--primary) 96%,#10261a),color-mix(in srgb,var(--primary) 67%,#173725))!important;
+    isolation:isolate;
+  }
+
+  .login-story{display:contents!important}
+  .login-story-brand,.login-story-copy{display:none!important}
+
+  /* A base do mascote fica atrás da borda branca do login. */
+  .clay-stage{
+    position:relative!important;
+    z-index:2!important;
+    left:auto!important;
+    top:auto!important;
+    bottom:auto!important;
+    width:220px!important;
+    height:188px!important;
+    min-height:188px!important;
+    margin:0 0 -20px!important;
+    padding:0!important;
+    display:flex!important;
+    align-items:flex-end!important;
+    justify-content:center!important;
+    overflow:visible!important;
+    pointer-events:none!important;
+    transform:translateY(-12px)!important;
+    flex:0 0 188px!important;
+  }
+
+  .clay-pot{
+    --pot-scale:.92!important;
+    animation:none!important;
+    transform:scale(var(--pot-scale))!important;
+    transform-origin:50% 100%!important;
+    margin:0!important;
+    flex:0 0 auto!important;
+  }
+
+  .clay-caption{display:none!important}
+
+  .login-card{
+    position:relative!important;
+    z-index:3!important;
+    width:min(360px,100%)!important;
+    min-height:0!important;
+    margin:0!important;
+    padding:24px 18px 18px!important;
+    justify-content:center!important;
+    overflow:visible!important;
+    border:1px solid color-mix(in srgb,var(--border) 78%,transparent)!important;
+    border-radius:24px!important;
+    background:var(--surface)!important;
+    box-shadow:0 24px 55px rgba(13,31,21,.28),0 4px 12px rgba(13,31,21,.12)!important;
+    transform:none!important;
+    flex:0 0 auto!important;
+  }
+
+  .login-language-trigger{top:15px!important;right:16px!important;height:36px!important;min-width:46px!important}
+  .login-card-brand{padding-right:64px!important;margin-bottom:17px!important}
+  .login-card-mark{width:40px;height:40px;border-radius:13px}
+  .login-card-brand h2{font-size:1.18rem!important}
+  .login-card-brand small{font-size:.51rem!important}
+  .login-form{gap:11px!important}
+  .login-card .field{gap:6px!important}
+  .login-card .field>label,.login-label-row label{font-size:.65rem!important}
+  .login-label-row span{font-size:.52rem!important}
+  .login-card .input,.login-card .input::placeholder{font-size:16px!important}
+  .login-card .input{min-height:46px!important}
+  .login-submit{min-height:46px!important}
+  .login-forgot{padding-top:0!important;padding-bottom:1px!important}
+  .login-trust{margin-top:16px!important;padding-top:12px!important}
+}
+
+@media(max-width:390px){
+  .login-experience{
+    padding:max(14px,env(safe-area-inset-top)) 12px max(14px,env(safe-area-inset-bottom))!important;
+  }
+  .clay-stage{
+    width:204px!important;
+    height:172px!important;
+    min-height:172px!important;
+    flex-basis:172px!important;
+    margin-bottom:-18px!important;
+    transform:translateY(-10px)!important;
+  }
+  .clay-pot{--pot-scale:.84!important}
+  .login-card{
+    width:100%!important;
+    padding:22px 16px 16px!important;
+    border-radius:22px!important;
+  }
+  .login-card-brand{gap:9px!important;padding-right:58px!important;margin-bottom:15px!important}
+  .login-card-mark{width:36px;height:36px;border-radius:12px}
+  .login-card-brand h2{font-size:1.05rem!important}
+  .login-trust{font-size:.51rem!important}
+  .login-trust>span:last-child{display:none!important}
+}
+
+/* Safari/iPhone com barras abertas: mantém o mascote atrás do topo do card. */
+@media(max-width:760px) and (max-height:700px){
+  .login-experience{
+    min-height:100svh!important;
+    padding:max(8px,env(safe-area-inset-top)) 14px max(8px,env(safe-area-inset-bottom))!important;
+    overflow-y:auto!important;
+  }
+  .clay-stage{
+    width:196px!important;
+    height:154px!important;
+    min-height:154px!important;
+    flex-basis:154px!important;
+    margin-bottom:-16px!important;
+    transform:translateY(-10px)!important;
+  }
+  .clay-pot{--pot-scale:.78!important}
+  .login-card{padding:20px 18px 15px!important}
+  .login-trust{margin-top:12px!important;padding-top:10px!important}
+}
+
+@media(max-width:760px) and (max-height:540px){
+  .clay-stage{display:none!important}
+  .login-card{padding-top:18px!important}
+}
+
+@supports(height:100dvh){
+  @media(max-width:760px){
+    .login-shell{min-height:100svh!important}
+  }
+}
