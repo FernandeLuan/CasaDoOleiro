@@ -71,9 +71,14 @@
       }
 
       @media(max-width:1023px){
+        html{-webkit-text-size-adjust:100%!important}
         html,body,#app,.admin-shell-r62,.admin-content-r62{overscroll-behavior:none!important}
         html,body,#app{max-width:100%!important;overflow-x:hidden!important}
         .admin-content-r62>.page{padding-bottom:calc(68px + env(safe-area-inset-bottom))!important}
+        .candidate-search .input,.planning-board-search .input,
+        .candidate-search .input::placeholder,.planning-board-search .input::placeholder{
+          font-size:16px!important;
+        }
       }
       @media(max-width:640px){
         .planning-detail-page .planning-person-day-head{min-height:44px!important;padding:7px 12px!important}
