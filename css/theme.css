@@ -1,5 +1,6 @@
 :root {
   --bg: #f5f4ef;
+  --app-bg: #edf5f0;
   --surface: #ffffff;
   --surface-2: #edf2ec;
   --text: #1f2b24;
@@ -19,10 +20,11 @@
   --border: rgba(36, 63, 49, .12);
   --shadow: 0 8px 28px rgba(35, 52, 43, .08);
   --radius: 18px;
-  --header: rgba(245,244,239,.94);
+  --header: rgba(237,245,240,.94);
 }
 :root.dark {
   --bg: #111713;
+  --app-bg: #121c17;
   --surface: #18211b;
   --surface-2: #202c24;
   --text: #f3f6f3;
@@ -41,5 +43,5 @@
   --info-soft: #1b3040;
   --border: rgba(255,255,255,.14);
   --shadow: 0 8px 28px rgba(0,0,0,.34);
-  --header: rgba(17,23,19,.96);
+  --header: rgba(18,28,23,.96);
 }
