@@ -90,11 +90,10 @@
   }
 
   .login-language-trigger{top:15px!important;right:16px!important;height:36px!important;min-width:46px!important}
-  .login-card-brand{padding-right:64px!important;margin-bottom:7px!important}
+  .login-card-brand{padding-right:64px!important;margin-bottom:17px!important}
   .login-card-mark{width:40px;height:40px;border-radius:13px}
   .login-card-brand h2{font-size:1.18rem!important}
   .login-card-brand small{font-size:.51rem!important}
-  .login-card-intro{margin:0 0 16px!important;font-size:.65rem!important;line-height:1.45!important}
   .login-form{gap:11px!important}
   .login-card .field{gap:6px!important}
   .login-card .field>label,.login-label-row label{font-size:.65rem!important}
@@ -123,10 +122,9 @@
     padding:22px 16px 16px!important;
     border-radius:22px!important;
   }
-  .login-card-brand{gap:9px!important;padding-right:58px!important}
+  .login-card-brand{gap:9px!important;padding-right:58px!important;margin-bottom:15px!important}
   .login-card-mark{width:36px;height:36px;border-radius:12px}
   .login-card-brand h2{font-size:1.05rem!important}
-  .login-card-intro{font-size:.62rem!important;margin-bottom:14px!important}
   .login-trust{font-size:.51rem!important}
   .login-trust>span:last-child{display:none!important}
 }
