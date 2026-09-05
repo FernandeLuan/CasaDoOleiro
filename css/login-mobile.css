@@ -1,6 +1,6 @@
 /* Layout mobile do login: fundo verde integral, card compacto e mascote atrás da borda do card. */
 @media(max-width:760px){
-  html{min-height:100%;background:#245b43}
+  html{min-height:100%;background:#245b43;-webkit-text-size-adjust:100%}
   body[data-root="index.html"]{min-height:100%;background:#245b43!important}
 
   .login-shell{
@@ -98,6 +98,7 @@
   .login-card .field{gap:6px!important}
   .login-card .field>label,.login-label-row label{font-size:.65rem!important}
   .login-label-row span{font-size:.52rem!important}
+  .login-card .input,.login-card .input::placeholder{font-size:16px!important}
   .login-card .input{min-height:46px!important}
   .login-submit{min-height:46px!important}
   .login-forgot{padding-top:0!important;padding-bottom:1px!important}
