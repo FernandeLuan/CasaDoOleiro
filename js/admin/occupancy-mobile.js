@@ -42,8 +42,20 @@
   style.textContent=`
     .occupancy-v2-unit-mobile-select{display:none!important}
     @media(max-width:760px){
-      body:has(.occupancy-page-screen){padding-bottom:calc(64px + env(safe-area-inset-bottom))!important}
-      body:has(.occupancy-page-screen) .page{padding-bottom:8px!important}
+      html:has(body .occupancy-page-screen),
+      body:has(.occupancy-page-screen){
+        min-height:0!important;
+        overscroll-behavior-y:none!important;
+      }
+      body:has(.occupancy-page-screen){padding-bottom:0!important}
+      body:has(.occupancy-page-screen) #app{
+        min-height:0!important;
+        height:auto!important;
+      }
+      body:has(.occupancy-page-screen) .page{
+        min-height:0!important;
+        padding-bottom:calc(68px + env(safe-area-inset-bottom))!important;
+      }
 
       .occupancy-v2{
         width:100%!important;
@@ -147,6 +159,7 @@
         width:100%!important;
         min-width:0!important;
         padding:7px!important;
+        margin-bottom:0!important;
         border-radius:18px!important;
         overflow:hidden!important;
       }
