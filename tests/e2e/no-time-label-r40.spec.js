@@ -40,7 +40,7 @@ test('admin review derives period changes from legacy time-only proposals', asyn
   });
   context.window=context;
   vm.runInContext(fs.readFileSync('js/shared/utils.js','utf8'),context);
-  vm.runInContext(fs.readFileSync('js/admin/review-signals-r31.js','utf8'),context);
+  vm.runInContext(fs.readFileSync('js/admin/review-signals.js','utf8'),context);
 
   const diff=context.OleiroR31AdminReview.summarizeDiff(
     {date:'2026-09-22',time:'09:00',duration:60,activityName:'Atividade legado'},
