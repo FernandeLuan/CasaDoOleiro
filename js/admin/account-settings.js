@@ -27,11 +27,11 @@
       .admin-account-profile{display:grid;grid-template-columns:42px minmax(0,1fr);gap:10px;align-items:center}
       .admin-account-avatar{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:var(--primary-soft);color:var(--primary);font-size:.8rem}
       .admin-account-profile-copy{min-width:0;display:grid;gap:3px}
-      .admin-account-profile-line{min-width:0;display:flex;align-items:center;justify-content:space-between;gap:8px}
+      .admin-account-profile-line{min-width:0;display:flex;align-items:center;gap:8px}
       .admin-account-profile-copy strong{font-size:.72rem;line-height:1.2;color:var(--text)}
       .admin-account-profile-copy span{font-size:.55rem;line-height:1.35;color:var(--muted);overflow-wrap:anywhere}
-      .admin-account-inline-signout{flex:0 0 auto;border:0;background:transparent;color:var(--danger);padding:2px 0;font:inherit;font-size:.61rem;font-weight:700;display:inline-flex;align-items:center;gap:5px;cursor:pointer}
-      .admin-account-inline-signout:hover{text-decoration:underline}
+      .admin-account-inline-signout{justify-self:start;margin-top:7px;border:1px solid color-mix(in srgb,var(--danger) 24%,var(--border));border-radius:9px;background:transparent;color:var(--danger);padding:6px 9px;font:inherit;font-size:.57rem;font-weight:700;display:inline-flex;align-items:center;gap:5px;cursor:pointer}
+      .admin-account-inline-signout:hover{background:color-mix(in srgb,var(--danger) 7%,transparent)}
 
       .admin-account-preference{display:grid;gap:8px}
       .admin-account-preference-copy{min-width:0;display:grid;gap:2px}
@@ -52,10 +52,15 @@
       .admin-account-release .release-info strong{color:var(--text);font-weight:600}
       .admin-account-release .release-info code,.admin-account-release .release-info span{overflow-wrap:anywhere}
 
+      @media(min-width:1024px){
+        .admin-account-inline-signout{display:none!important}
+      }
       @media(max-width:520px){
         .modal.admin-account-settings-modal{width:calc(100vw - 20px)!important;max-width:calc(100vw - 20px)!important}
         .admin-account-top{grid-template-columns:1fr}
         .admin-account-release .release-info{grid-template-columns:1fr}
+        .admin-account-profile{align-items:start}
+        .admin-account-inline-signout{margin-top:8px}
       }
     `;
     document.head.appendChild(style);
@@ -79,7 +84,7 @@
       <div class="admin-account-top">
         <section class="admin-account-panel admin-account-profile">
           <span class="admin-account-avatar"><i class="fa-solid fa-user-shield"></i></span>
-          <div class="admin-account-profile-copy"><div class="admin-account-profile-line"><strong>Administrador</strong><button class="admin-account-inline-signout" type="button" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i>Sair</button></div><span>${esc(session.email||'—')}</span></div>
+          <div class="admin-account-profile-copy"><div class="admin-account-profile-line"><strong>Administrador</strong></div><span>${esc(session.email||'—')}</span><button class="admin-account-inline-signout" type="button" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i>Sair</button></div>
         </section>
         <section class="admin-account-panel admin-account-preference">
           <div class="admin-account-preference-copy"><small>Aparência</small><strong>Tema do painel</strong><span>Preferência salva neste dispositivo.</span></div>
