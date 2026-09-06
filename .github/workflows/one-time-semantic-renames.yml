@@ -1,0 +1,60 @@
+name: One-time semantic legacy asset renames
+
+on:
+  push:
+    branches:
+      - test/homologacao-clean-ui
+    paths:
+      - scripts/semantic-legacy-renames.mjs
+
+permissions:
+  contents: write
+
+concurrency:
+  group: semantic-legacy-renames
+  cancel-in-progress: false
+
+jobs:
+  rename:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: test/homologacao-clean-ui
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Apply semantic renames
+        run: node scripts/semantic-legacy-renames.mjs
+
+      - name: Validate JavaScript syntax
+        shell: bash
+        run: find js -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+
+      - name: Validate architecture
+        run: node scripts/check-homologation-architecture.mjs
+
+      - name: Validate build
+        env:
+          APP_ENV: homologation
+        run: node scripts/build-site.mjs site-dist
+
+      - name: Remove temporary migration files
+        run: |
+          rm -f scripts/semantic-legacy-renames.mjs
+          rm -f .github/workflows/one-time-semantic-renames.yml
+
+      - name: Commit cleanup
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'refactor: replace historical version labels with semantic module names'
+          git push origin HEAD:test/homologacao-clean-ui
