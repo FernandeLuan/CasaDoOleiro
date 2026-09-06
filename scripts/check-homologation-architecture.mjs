@@ -34,10 +34,7 @@ function checkLocalAssets(htmlPath){
     if(!existsSync(absolute))violations.push(`${htmlPath} referencia arquivo local ausente: ${ref}`);
   }
 }
-checkLocalAssets('admin/index.html');
-checkLocalAssets('portal/index.html');
-checkLocalAssets('index.html');
-checkLocalAssets('login.html');
+for(const htmlPath of ['admin/index.html','portal/index.html','index.html','login.html'])if(existsSync(htmlPath))checkLocalAssets(htmlPath);
 
 const adminModules=["planning-page.js","admin-shell.js","planning-board.js","planning-person-agenda.js","planning-group-editor.js","planning-mobile-filters.js","volunteer-status-inline.js","planning-profile-layout.js","account-consolidated.js","account-history.js","profile-polish.js","emergency-contact-sync.js","account-consistency.js","account-emergency-live.js","occupancy-page.js","occupancy-mobile.js","admin-navigation.js","groups-page.js","house-info-page.js","account-settings.js"];
 const adminHtml=readFileSync('admin/index.html','utf8');
