@@ -1,7 +1,6 @@
 /* Status e prazo do voluntário na mesma linha da listagem administrativa. */
 (function volunteerStatusInline(){
-  const params=new URLSearchParams(location.search);
-  if(params.get('demo')!=='admin'||!/\/admin\//.test(location.pathname))return;
+  if(!/\/admin\//.test(location.pathname))return;
   if(window.__OLEIRO_VOLUNTEER_STATUS_INLINE__)return;
   window.__OLEIRO_VOLUNTEER_STATUS_INLINE__=true;
 

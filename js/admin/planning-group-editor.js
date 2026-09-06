@@ -1,7 +1,6 @@
 /* Editor contextual de grupos do Planejamento. A UI mostra A/B/C/D/Livre; o card mantém rótulos completos. */
 (function planningGroupEditor(){
-  const params=new URLSearchParams(location.search);
-  if(params.get('demo')!=='admin'||!/\/admin\//.test(location.pathname))return;
+  if(!/\/admin\//.test(location.pathname))return;
 
   function installStyles(){
     if(document.getElementById('planningGroupEditorStyles'))return;

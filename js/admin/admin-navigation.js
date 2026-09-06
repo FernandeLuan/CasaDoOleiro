@@ -1,7 +1,6 @@
-/* Navegação e hierarquia visual definitivas do Admin na homologação. */
+/* Navegação e hierarquia visual do Admin. */
 (function adminNavigation(){
-  const params=new URLSearchParams(location.search);
-  if(params.get('demo')!=='admin'||!/\/admin\//.test(location.pathname))return;
+  if(!/\/admin\//.test(location.pathname))return;
   if(window.__OLEIRO_ADMIN_NAVIGATION__)return;
   window.__OLEIRO_ADMIN_NAVIGATION__=true;
 

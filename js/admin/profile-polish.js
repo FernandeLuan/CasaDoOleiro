@@ -1,7 +1,6 @@
 /* Acabamento do perfil: semana única em largura total, Histórico no cabeçalho e emergência editável. */
 (function profilePolish(){
-  const params=new URLSearchParams(location.search);
-  if(params.get('demo')!=='admin'||!/\/admin\//.test(location.pathname))return;
+  if(!/\/admin\//.test(location.pathname))return;
   if(window.__OLEIRO_PROFILE_POLISH__)return;
   window.__OLEIRO_PROFILE_POLISH__=true;
 

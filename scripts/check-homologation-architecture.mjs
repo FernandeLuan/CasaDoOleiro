@@ -5,48 +5,40 @@ function git(...args){return execFileSync('git',args,{encoding:'utf8'}).trim()}
 const base=process.env.HOMOLOGATION_BASE||'origin/main';
 const diff=git('diff','--name-status',`${base}...HEAD`).split(/\r?\n/).filter(Boolean);
 const versioned=/(?:^|[._-])(?:r\d+[a-z]?|round\d+)(?:[._-]|$)/i;
-const temporaryLegacyAssets=new Set([
-  'css/planning-board-r65.css',
-  'css/planning-person-agenda-r66.css'
-]);
 const violations=[];
 
 for(const line of diff){
   const [status,...paths]=line.split(/\t/);const path=paths.at(-1)||'';
   if(!/^[AMR]/.test(status)||!versioned.test(path))continue;
   let existedInMain=true;try{git('cat-file','-e',`${base}:${path}`)}catch{existedInMain=false}
-  if(!existedInMain&&!temporaryLegacyAssets.has(path))violations.push(`novo arquivo versionado: ${path}`);
+  if(!existedInMain)violations.push(`novo arquivo versionado: ${path}`);
 }
 
-for(const forbiddenPath of [
-  'homologacao',
-  'js/demo',
-  'build-preview.mjs',
-  'firebase.preview.json'
-]){
-  if(existsSync(forbiddenPath))violations.push(`artefato fake/preview obsoleto ainda versionado: ${forbiddenPath}`);
+for(const forbiddenPath of ['homologacao','js/demo','build-preview.mjs','firebase.preview.json','js/admin/homologation-shell.js','css/planning-board-r65.css','css/planning-person-agenda-r66.css']){
+  if(existsSync(forbiddenPath))violations.push(`artefato legado ainda versionado: ${forbiddenPath}`);
 }
-if(!existsSync('scripts/build-site.mjs'))violations.push('build canônico ausente: scripts/build-site.mjs');
+for(const required of ['scripts/build-site.mjs','js/admin/admin-shell.js','css/planning-board.css','css/planning-person-agenda.css']){
+  if(!existsSync(required))violations.push(`arquivo canônico ausente: ${required}`);
+}
+
+const adminModules=["planning-page.js","admin-shell.js","planning-board.js","planning-person-agenda.js","planning-group-editor.js","planning-mobile-filters.js","volunteer-status-inline.js","planning-profile-layout.js","account-consolidated.js","account-history.js","profile-polish.js","emergency-contact-sync.js","account-consistency.js","account-emergency-live.js","occupancy-page.js","occupancy-mobile.js","admin-navigation.js","groups-page.js","house-info-page.js","account-settings.js"];
+const adminHtml=readFileSync('admin/index.html','utf8');
+for(const name of adminModules){if(!adminHtml.includes(`../js/admin/${name}`))violations.push(`Admin não carrega diretamente: ${name}`)}
+for(const style of ['planning-page.css','planning-board.css','planning-person-agenda.css']){if(!adminHtml.includes(`../css/${style}`))violations.push(`Admin não carrega diretamente: ${style}`)}
+const portalHtml=readFileSync('portal/index.html','utf8');
+if(!portalHtml.includes('../js/portal/desktop-shell.js'))violations.push('Portal não carrega desktop-shell.js diretamente.');
+
+for(const name of adminModules){
+  const source=readFileSync(`js/admin/${name}`,'utf8');
+  if(/get\(['"]demo['"]\)|\?demo=/.test(source))violations.push(`módulo Admin ainda depende de demo: ${name}`);
+}
+const portalShell=readFileSync('js/portal/desktop-shell.js','utf8');
+if(/get\(['"]demo['"]\)|\?demo=|\bdemo\b/.test(portalShell))violations.push('desktop-shell do Portal ainda depende de demo.');
 
 const navigation=readFileSync('js/shared/navigation.js','utf8');
-for(const forbidden of [
-  'planning-actions-bootstrap',
-  'home-r62-final.js',
-  'homologation-integration-r63.js',
-  'account-history-scroll-r71.js',
-  'loadHomologationData',
-  'loadHomologationAdminUi',
-  '../demo/',
-  '?demo='
-]){
-  if(navigation.includes(forbidden))violations.push(`navegação ainda contém runtime legado/fake: ${forbidden}`);
-}
-
-const runtimeMatch=navigation.match(/const files=\[([\s\S]*?)\];/g)||[];
-for(const block of runtimeMatch){
-  const paths=[...block.matchAll(/['"](\.\.\/[^'"]+)['"]/g)].map(match=>match[1]);
-  for(const path of paths){if(versioned.test(path))violations.push(`runtime usa módulo versionado: ${path}`)}
-}
+for(const forbidden of ['loadHomologationData','loadHomologationAdminUi','../demo/','?demo='])if(navigation.includes(forbidden))violations.push(`navegação ainda contém runtime fake: ${forbidden}`);
+const build=readFileSync('scripts/build-site.mjs','utf8');
+for(const forbidden of ['enableAdminModule','homologation-shell.js','params.get(\'demo\')','data-clean-ui-admin="${index+1}"'])if(build.includes(forbidden))violations.push(`build ainda transforma runtime: ${forbidden}`);
 
 if(violations.length){console.error('Arquitetura da homologação reprovada:\n- '+violations.join('\n- '));process.exit(1)}
-console.log('Arquitetura da homologação: OK — sem massa fake no runtime e com build canônico.');
+console.log('Arquitetura da homologação: OK — fonte canônica, sem massa fake e sem transformação HML→PRD.');

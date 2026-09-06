@@ -1,7 +1,6 @@
 /* Sincroniza Contato de emergência com a página dedicada após salvar/limpar. */
 (function emergencyContactSync(){
-  const params=new URLSearchParams(location.search);
-  if(params.get('demo')!=='admin'||!/\/admin\//.test(location.pathname))return;
+  if(!/\/admin\//.test(location.pathname))return;
   if(window.__OLEIRO_EMERGENCY_CONTACT_SYNC__)return;
   window.__OLEIRO_EMERGENCY_CONTACT_SYNC__=true;
 

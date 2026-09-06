@@ -1,7 +1,6 @@
 /* Conta consolidada: cada participante reúne contato, emergência e status de acesso. */
 (function accountConsolidated(){
-  const params=new URLSearchParams(location.search);
-  if(params.get('demo')!=='admin'||!/\/admin\//.test(location.pathname))return;
+  if(!/\/admin\//.test(location.pathname))return;
   if(window.__OLEIRO_ACCOUNT_CONSOLIDATED__)return;
   window.__OLEIRO_ACCOUNT_CONSOLIDATED__=true;
 

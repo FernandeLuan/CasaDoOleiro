@@ -1,7 +1,6 @@
 /* Ocupação mobile: calendário compacto e controles em uma única linha útil. */
 (function occupancyMobile(){
-  const params=new URLSearchParams(location.search);
-  if(params.get('demo')!=='admin'||!/\/admin\//.test(location.pathname))return;
+  if(!/\/admin\//.test(location.pathname))return;
   if(window.__OLEIRO_OCCUPANCY_MOBILE__)return;
   window.__OLEIRO_OCCUPANCY_MOBILE__=true;
 

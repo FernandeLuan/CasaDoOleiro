@@ -1,14 +1,13 @@
 /* Planejamento individual consolidado: agenda semanal + ações contextuais por atividade. */
 (function planningPersonAgenda(){
-  const params=new URLSearchParams(location.search);
-  if(params.get('demo')!=='admin'||!/\/admin\//.test(location.pathname))return;
-  if(window.__OLEIRO_PLANNING_PERSON_AGENDA_R66__)return;
-  window.__OLEIRO_PLANNING_PERSON_AGENDA_R66__=true;
+  if(!/\/admin\//.test(location.pathname))return;
+  if(window.__OLEIRO_PLANNING_PERSON_AGENDA__)return;
+  window.__OLEIRO_PLANNING_PERSON_AGENDA__=true;
 
-  if(!document.querySelector('link[data-planning-person-agenda-r66]')){
+  if(!document.querySelector('link[data-planning-person-agenda]')){
     const link=document.createElement('link');
     link.rel='stylesheet';
-    link.href='../css/planning-person-agenda-r66.css?v=20260903-consolidated';
+    link.href='../css/planning-person-agenda.css?v=20260903-consolidated';
     link.dataset.planningPersonAgendaR66='1';
     document.head.appendChild(link);
   }

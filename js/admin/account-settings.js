@@ -1,7 +1,6 @@
 /* Preferências da conta administrativa: perfil, aparência e versão em composição compacta. */
 (function accountSettings(){
-  const params=new URLSearchParams(location.search);
-  if(params.get('demo')!=='admin'||!/\/admin\//.test(location.pathname))return;
+  if(!/\/admin\//.test(location.pathname))return;
   if(window.__OLEIRO_ADMIN_ACCOUNT_SETTINGS__)return;
   window.__OLEIRO_ADMIN_ACCOUNT_SETTINGS__=true;
 

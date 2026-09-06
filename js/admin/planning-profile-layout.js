@@ -1,7 +1,6 @@
 /* R69 — Conta/Histórico usam a mesma largura do Planejamento e Histórico abre na página dedicada. */
 (function planningProfileLayoutR69(){
-  const params=new URLSearchParams(location.search);
-  if(params.get('demo')!=='admin'||!/\/admin\//.test(location.pathname))return;
+  if(!/\/admin\//.test(location.pathname))return;
   if(window.__OLEIRO_PLANNING_PROFILE_LAYOUT_R69__)return;
   window.__OLEIRO_PLANNING_PROFILE_LAYOUT_R69__=true;
 

@@ -1,7 +1,6 @@
 /* Planejamento mobile: busca + um único painel de filtros, seguindo o padrão do Voluntariado. */
 (function planningMobileFilters(){
-  const params=new URLSearchParams(location.search);
-  if(params.get('demo')!=='admin'||!/\/admin\//.test(location.pathname))return;
+  if(!/\/admin\//.test(location.pathname))return;
   if(window.__OLEIRO_PLANNING_MOBILE_FILTERS__)return;
   window.__OLEIRO_PLANNING_MOBILE_FILTERS__=true;
 

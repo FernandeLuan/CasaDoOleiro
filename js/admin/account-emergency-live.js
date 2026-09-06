@@ -1,7 +1,6 @@
 /* Contato de emergência da Conta vem diretamente dos perfis, sem recarregar a tela a cada entrada. */
 (function accountEmergencyLive(){
-  const params=new URLSearchParams(location.search);
-  if(params.get('demo')!=='admin'||!/\/admin\//.test(location.pathname))return;
+  if(!/\/admin\//.test(location.pathname))return;
   if(window.__OLEIRO_ACCOUNT_EMERGENCY_LIVE__)return;
   window.__OLEIRO_ACCOUNT_EMERGENCY_LIVE__=true;
 
