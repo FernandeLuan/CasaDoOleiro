@@ -26,8 +26,43 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Build homologation preview
-        run: node build-preview.mjs
+      - name: Build clean application
+        env:
+          APP_ENV: homologation
+        run: node scripts/build-site.mjs site-dist
+
+      - name: Inject Firebase web config
+        env:
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          api_key = os.environ.get('FIREBASE_API_KEY', '').strip()
+          if not api_key:
+              raise SystemExit('FIREBASE_API_KEY repository secret is missing.')
+
+          config = {
+              'apiKey': api_key,
+              'authDomain': 'casadooleiro-35c4e.firebaseapp.com',
+              'projectId': 'casadooleiro-35c4e',
+              'storageBucket': 'casadooleiro-35c4e.firebasestorage.app',
+              'messagingSenderId': '391973666005',
+              'appId': '1:391973666005:web:5ab4e4a406b591cccc765c',
+          }
+
+          target = Path('site-dist/js/firebase/firebase-config.js')
+          target.write_text(
+              'window.OLEIRO_FIREBASE_CONFIG = ' + json.dumps(config, separators=(',', ':')) + ';\n',
+              encoding='utf-8',
+          )
+          PY
+
+      - name: Validate JavaScript syntax
+        shell: bash
+        run: find site-dist/js -type f -name '*.js' -print0 | xargs -0 -n1 node --check
 
       - id: auth
         name: Authenticate to Google Cloud
@@ -46,5 +81,5 @@ jobs:
           GCP_ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
           FIREBASE_SITE_ID: casadooleiro-35c4e
           FIREBASE_CHANNEL_ID: homologacao-clean-ui
-          HOSTING_DIR: preview-dist
+          HOSTING_DIR: site-dist
         run: node scripts/deploy-hosting-rest.mjs
