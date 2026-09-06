@@ -130,8 +130,9 @@
   .login-trust>span:last-child{display:none!important}
 }
 
-/* Safari/iPhone com barras abertas: mantém o mascote atrás do topo do card. */
-@media(max-width:760px) and (max-height:700px){
+/* Só compacta em alturas realmente extremas. Em iPhone/Safari normal o layout-base
+   permanece estável antes e depois do primeiro toque, evitando o salto de viewport. */
+@media(max-width:760px) and (max-height:560px){
   .login-experience{
     min-height:100svh!important;
     padding:max(8px,env(safe-area-inset-top)) 14px max(8px,env(safe-area-inset-bottom))!important;
@@ -150,7 +151,7 @@
   .login-trust{margin-top:12px!important;padding-top:10px!important}
 }
 
-@media(max-width:760px) and (max-height:540px){
+@media(max-width:760px) and (max-height:460px){
   .clay-stage{display:none!important}
   .login-card{padding-top:18px!important}
 }
