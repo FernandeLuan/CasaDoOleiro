@@ -79,12 +79,35 @@
     if(currentPerson()?.id===p.id)patchAccount();
   }
 
+  function prepareEmergencyEditor(p,index){
+    const modal=modalRoot?.querySelector?.('.modal'),backdrop=modalRoot?.querySelector?.('.modal-backdrop'),name=document.getElementById('editEmergencyName'),phone=document.getElementById('editEmergencyPhone'),save=document.getElementById('saveEmergencyContactButton');
+    if(!modal||!name||!phone||!save)return;
+    const mustComplete=!hasContact(emergencyFor(p,index));
+    modal.classList.add('emergency-contact-editor-live');
+    name.setAttribute('aria-required','true');phone.setAttribute('aria-required','true');
+    if(!modal.querySelector('.emergency-required-hint')){
+      const hint=document.createElement('p');hint.className='compact-hint emergency-required-hint';hint.textContent='Nome e telefone são obrigatórios.';
+      modal.querySelector('.modal-body')?.prepend(hint);
+    }
+    const sync=()=>{save.disabled=!String(name.value||'').trim()||!String(phone.value||'').trim()};
+    name.addEventListener('input',sync);phone.addEventListener('input',sync);sync();
+    if(mustComplete){
+      modal.classList.add('emergency-contact-required-live');
+      const close=modal.querySelector('.modal-close'),cancel=modal.querySelector('.emergency-contact-actions .btn-outline');
+      if(close){close.disabled=true;close.hidden=true;close.setAttribute('aria-hidden','true')}
+      if(cancel){cancel.disabled=true;cancel.hidden=true;cancel.setAttribute('aria-hidden','true')}
+      if(backdrop)backdrop.onclick=event=>{if(event.target===backdrop)event.preventDefault()};
+    }
+  }
+
   const baseOpenEditor=window.openVolunteerEmergencyEditor;
   if(typeof baseOpenEditor==='function'){
     window.openVolunteerEmergencyEditor=async function(encodedId,index){
       const id=decodeURIComponent(encodedId),p=typeof candidateById==='function'?candidateById(id):null;
       if(p)try{await ensureProfiles(p)}catch(error){console.error(error)}
-      return baseOpenEditor(encodedId,index);
+      const result=baseOpenEditor(encodedId,index);
+      if(p)prepareEmergencyEditor(p,Number(index));
+      return result;
     };
     openVolunteerEmergencyEditor=window.openVolunteerEmergencyEditor;
   }
