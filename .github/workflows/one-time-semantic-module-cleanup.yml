@@ -53,7 +53,7 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A admin portal js .github/workflows/real-data-ci.yml scripts/check-homologation-architecture.mjs
+          git add -A admin portal js scripts/check-homologation-architecture.mjs
           git diff --cached --quiet && exit 0
           git commit -m 'refactor: replace versioned modules with semantic names'
           git push origin HEAD:test/homologacao-clean-ui
