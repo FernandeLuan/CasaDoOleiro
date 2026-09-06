@@ -28,6 +28,8 @@ for(const file of ['index.html','manifest.webmanifest','.nojekyll']){
   const source=path.join(root,file);
   if(await exists(source))await copyFile(source,path.join(out,file));
 }
+// Mantém o endereço histórico /login.html apontando para o mesmo login real da raiz.
+await copyFile(path.join(root,'index.html'),path.join(out,'login.html'));
 
 // Arquivos de demonstração nunca fazem parte de um artefato executável.
 await rm(path.join(out,'js','demo'),{recursive:true,force:true});
@@ -103,7 +105,7 @@ await rewrite('portal/index.html',source=>{
 });
 
 const htmlAssetPattern=/((?:src|href)="(?:\.\.\/)?(?:js|css)\/[^"?]+)(?:\?[^\"]*)?(\")/g;
-for(const relative of ['index.html','admin/index.html','portal/index.html']){
+for(const relative of ['index.html','login.html','admin/index.html','portal/index.html']){
   await rewrite(relative,source=>source.replace(htmlAssetPattern,`$1?v=${assetKey}$2`));
 }
 
