@@ -1,5 +1,6 @@
 import {readFileSync,writeFileSync,unlinkSync,existsSync} from 'node:fs';
 
+// One-time canonical login migration. Touching this file triggers the helper workflow.
 const base='js/login.js';
 const legacy=['js/login-round3.js','js/login-round4.js'];
 for(const path of [base,...legacy])if(!existsSync(path))throw new Error(`Missing login source: ${path}`);
