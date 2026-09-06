@@ -30,7 +30,8 @@
       .admin-account-profile-line{min-width:0;display:flex;align-items:center;gap:8px}
       .admin-account-profile-copy strong{font-size:.72rem;line-height:1.2;color:var(--text)}
       .admin-account-profile-copy span{font-size:.55rem;line-height:1.35;color:var(--muted);overflow-wrap:anywhere}
-      .admin-account-inline-signout{justify-self:start;margin-top:7px;border:1px solid color-mix(in srgb,var(--danger) 24%,var(--border));border-radius:9px;background:transparent;color:var(--danger);padding:6px 9px;font:inherit;font-size:.57rem;font-weight:700;display:inline-flex;align-items:center;gap:5px;cursor:pointer}
+      .admin-account-profile-divider{display:none;width:1px;height:42px;background:var(--border);border-radius:999px}
+      .admin-account-inline-signout{border:1px solid color-mix(in srgb,var(--danger) 26%,var(--border));border-radius:11px;background:transparent;color:var(--danger);padding:0 13px;min-width:78px;min-height:42px;font:inherit;font-size:.6rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer}
       .admin-account-inline-signout:hover{background:color-mix(in srgb,var(--danger) 7%,transparent)}
 
       .admin-account-preference{display:grid;gap:8px}
@@ -53,14 +54,24 @@
       .admin-account-release .release-info code,.admin-account-release .release-info span{overflow-wrap:anywhere}
 
       @media(min-width:1024px){
-        .admin-account-inline-signout{display:none!important}
+        .admin-account-inline-signout,.admin-account-profile-divider{display:none!important}
       }
       @media(max-width:520px){
         .modal.admin-account-settings-modal{width:calc(100vw - 20px)!important;max-width:calc(100vw - 20px)!important}
         .admin-account-top{grid-template-columns:1fr}
         .admin-account-release .release-info{grid-template-columns:1fr}
-        .admin-account-profile{align-items:start}
-        .admin-account-inline-signout{margin-top:8px}
+        .admin-account-profile{
+          grid-template-columns:42px minmax(0,1fr) 1px auto;
+          gap:10px;
+          align-items:center;
+        }
+        .admin-account-profile-divider{display:block}
+        .admin-account-inline-signout{justify-self:end}
+      }
+      @media(max-width:380px){
+        .admin-account-profile{grid-template-columns:38px minmax(0,1fr) 1px auto;gap:8px;padding:11px}
+        .admin-account-avatar{width:38px;height:38px;border-radius:12px}
+        .admin-account-inline-signout{min-width:70px;padding-inline:10px}
       }
     `;
     document.head.appendChild(style);
@@ -84,7 +95,9 @@
       <div class="admin-account-top">
         <section class="admin-account-panel admin-account-profile">
           <span class="admin-account-avatar"><i class="fa-solid fa-user-shield"></i></span>
-          <div class="admin-account-profile-copy"><div class="admin-account-profile-line"><strong>Administrador</strong></div><span>${esc(session.email||'—')}</span><button class="admin-account-inline-signout" type="button" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i>Sair</button></div>
+          <div class="admin-account-profile-copy"><div class="admin-account-profile-line"><strong>Administrador</strong></div><span>${esc(session.email||'—')}</span></div>
+          <span class="admin-account-profile-divider" aria-hidden="true"></span>
+          <button class="admin-account-inline-signout" type="button" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i>Sair</button>
         </section>
         <section class="admin-account-panel admin-account-preference">
           <div class="admin-account-preference-copy"><small>Aparência</small><strong>Tema do painel</strong><span>Preferência salva neste dispositivo.</span></div>
