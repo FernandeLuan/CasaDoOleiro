@@ -1,11 +1,12 @@
-/* R75 — contato de emergência da Conta vem diretamente dos perfis, sem depender do modal capturado. */
-(function accountEmergencyLiveR75(){
+/* Contato de emergência da Conta vem diretamente dos perfis, sem recarregar a tela a cada entrada. */
+(function accountEmergencyLive(){
   const params=new URLSearchParams(location.search);
   if(params.get('demo')!=='admin'||!/\/admin\//.test(location.pathname))return;
-  if(window.__OLEIRO_ACCOUNT_EMERGENCY_LIVE_R75__)return;
-  window.__OLEIRO_ACCOUNT_EMERGENCY_LIVE_R75__=true;
+  if(window.__OLEIRO_ACCOUNT_EMERGENCY_LIVE__)return;
+  window.__OLEIRO_ACCOUNT_EMERGENCY_LIVE__=true;
 
   const inflight=new Map();
+  const profileCache=new Map();
   const safe=value=>encodeURIComponent(String(value??''));
   const normalized=value=>window.OleiroServices?.profiles?.normalizeEmergencyContact?.(value)||{
     name:String(value?.name||'').trim(),relationship:String(value?.relationship||'').trim(),phone:String(value?.phone||'').trim()
@@ -23,19 +24,41 @@
     return uids.map((uid,index)=>byId.get(uid)||rows?.[index]||{id:uid});
   }
 
+  function cacheProfiles(rows){
+    (rows||[]).forEach(row=>{const id=String(row?.id||'');if(id)profileCache.set(id,row)});
+  }
+
+  function cachedProfilesFor(p){
+    const uids=(p?.participantUids||[]).map(String).filter(Boolean);
+    if(!uids.length)return [];
+    const rows=uids.map(uid=>profileCache.get(uid)).filter(Boolean);
+    return rows.length===uids.length?orderedProfiles(p,rows):null;
+  }
+
   async function ensureProfiles(p,{force=false}={}){
     if(!p?.id)return [];
     const uids=(p.participantUids||[]).map(String).filter(Boolean);
     if(!uids.length){p.participantProfiles=[];p.emergencyProfilesLoaded=true;return []}
-    if(!force&&p.emergencyProfilesLoaded&&Array.isArray(p.participantProfiles)&&p.participantProfiles.length>=uids.length)return p.participantProfiles;
+    if(!force&&p.emergencyProfilesLoaded&&Array.isArray(p.participantProfiles)&&p.participantProfiles.length>=uids.length){
+      cacheProfiles(p.participantProfiles);return p.participantProfiles;
+    }
+    if(!force){
+      const cached=cachedProfilesFor(p);
+      if(cached){p.participantProfiles=cached;p.emergencyProfilesLoaded=true;return cached}
+    }
     const key=String(p.id);
     if(inflight.has(key))return inflight.get(key);
     if(!window.OleiroServices?.profiles?.getByIds)return p.participantProfiles||[];
+    p.emergencyProfilesLoading=true;
     const task=window.OleiroServices.profiles.getByIds(uids).then(rows=>{
       p.participantProfiles=orderedProfiles(p,rows||[]);
+      cacheProfiles(p.participantProfiles);
       p.emergencyProfilesLoaded=true;
       p.emergencyProfilesLoading=false;
       return p.participantProfiles;
+    }).catch(error=>{
+      p.emergencyProfilesLoading=false;
+      throw error;
     }).finally(()=>inflight.delete(key));
     inflight.set(key,task);return task;
   }
@@ -73,31 +96,23 @@
     });
   }
 
-  async function hydrateVisibleAccount({force=false}={}){
+  async function hydrateVisibleAccount(){
     const p=currentPerson();if(!p)return;
-    try{await ensureProfiles(p,{force})}catch(error){console.error('Falha ao carregar contato de emergência na Conta:',error)}
+    try{await ensureProfiles(p)}catch(error){console.error('Falha ao carregar contato de emergência na Conta:',error)}
     if(currentPerson()?.id===p.id)patchAccount();
   }
 
   function prepareEmergencyEditor(p,index){
-    const modal=modalRoot?.querySelector?.('.modal'),backdrop=modalRoot?.querySelector?.('.modal-backdrop'),name=document.getElementById('editEmergencyName'),phone=document.getElementById('editEmergencyPhone'),save=document.getElementById('saveEmergencyContactButton');
+    const modal=modalRoot?.querySelector?.('.modal'),name=document.getElementById('editEmergencyName'),phone=document.getElementById('editEmergencyPhone'),save=document.getElementById('saveEmergencyContactButton');
     if(!modal||!name||!phone||!save)return;
-    const mustComplete=!hasContact(emergencyFor(p,index));
     modal.classList.add('emergency-contact-editor-live');
     name.setAttribute('aria-required','true');phone.setAttribute('aria-required','true');
     if(!modal.querySelector('.emergency-required-hint')){
-      const hint=document.createElement('p');hint.className='compact-hint emergency-required-hint';hint.textContent='Nome e telefone são obrigatórios.';
+      const hint=document.createElement('p');hint.className='compact-hint emergency-required-hint';hint.textContent='Nome e telefone são obrigatórios para salvar.';
       modal.querySelector('.modal-body')?.prepend(hint);
     }
     const sync=()=>{save.disabled=!String(name.value||'').trim()||!String(phone.value||'').trim()};
     name.addEventListener('input',sync);phone.addEventListener('input',sync);sync();
-    if(mustComplete){
-      modal.classList.add('emergency-contact-required-live');
-      const close=modal.querySelector('.modal-close'),cancel=modal.querySelector('.emergency-contact-actions .btn-outline');
-      if(close){close.disabled=true;close.hidden=true;close.setAttribute('aria-hidden','true')}
-      if(cancel){cancel.disabled=true;cancel.hidden=true;cancel.setAttribute('aria-hidden','true')}
-      if(backdrop)backdrop.onclick=event=>{if(event.target===backdrop)event.preventDefault()};
-    }
   }
 
   const baseOpenEditor=window.openVolunteerEmergencyEditor;
@@ -116,7 +131,7 @@
   if(typeof baseSave==='function'){
     window.saveVolunteerEmergencyContact=async function(encodedId,index){
       const result=await baseSave(encodedId,index),id=decodeURIComponent(encodedId),p=typeof candidateById==='function'?candidateById(id):null;
-      if(p)try{await ensureProfiles(p,{force:true})}catch(error){console.error(error)}
+      if(p&&Array.isArray(p.participantProfiles))cacheProfiles(p.participantProfiles);
       patchAccount();return result;
     };
     saveVolunteerEmergencyContact=window.saveVolunteerEmergencyContact;
@@ -126,7 +141,7 @@
   if(typeof baseClear==='function'){
     window.clearVolunteerEmergencyContact=async function(encodedId,index){
       const result=await baseClear(encodedId,index),id=decodeURIComponent(encodedId),p=typeof candidateById==='function'?candidateById(id):null;
-      if(p)try{await ensureProfiles(p,{force:true})}catch(error){console.error(error)}
+      if(p&&Array.isArray(p.participantProfiles))cacheProfiles(p.participantProfiles);
       patchAccount();return result;
     };
     clearVolunteerEmergencyContact=window.clearVolunteerEmergencyContact;
@@ -137,12 +152,10 @@
     renderManager=function(){
       const result=baseRenderManager();
       queueMicrotask(()=>{patchAccount();hydrateVisibleAccount()});
-      requestAnimationFrame(patchAccount);
-      setTimeout(patchAccount,80);
       return result;
     };
     window.renderManager=renderManager;render=function(){return renderManager()};window.render=render;
   }
 
-  requestAnimationFrame(()=>{patchAccount();hydrateVisibleAccount({force:true})});
+  requestAnimationFrame(()=>{patchAccount();hydrateVisibleAccount()});
 })();
