@@ -1,5 +1,5 @@
 const CANDIDATE_STATUS_OPTIONS=[
-  ['all','Todos os status'],['pending','Em preparação'],['analysis','Em análise'],['adjustments','Ajustes'],['meeting','Planejamento aprovado'],['approved','Aprovado'],['rejected','Recusado']
+  ['all','Todos os status'],['pending','Em preparação'],['analysis','Em análise'],['adjustments','Ajustes'],['meeting','Etapa de reunião'],['approved','Aprovado'],['rejected','Recusado']
 ];
 const CANDIDATE_PAGE_SIZE=10;
 let _candidateSearchTimer=null;
