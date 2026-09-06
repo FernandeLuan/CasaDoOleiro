@@ -4,12 +4,14 @@ on:
   pull_request:
     branches: [main]
     paths:
+      - 'index.html'
+      - 'admin/**'
+      - 'portal/**'
       - 'js/**'
       - 'css/**'
-      - 'homologacao/**'
-      - 'build-preview.mjs'
-      - 'firebase.preview.json'
+      - 'scripts/build-site.mjs'
       - 'scripts/check-homologation-architecture.mjs'
+      - '.github/workflows/deploy-homologacao.yml'
       - '.github/workflows/homologation-architecture.yml'
 
 jobs:
@@ -20,7 +22,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Validate homologation architecture
+      - name: Validate canonical homologation architecture
         run: node scripts/check-homologation-architecture.mjs
       - name: Validate changed JavaScript syntax
         shell: bash
