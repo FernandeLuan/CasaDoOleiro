@@ -1,5 +1,6 @@
 import {readFileSync,writeFileSync,unlinkSync,existsSync} from 'node:fs';
 
+// One-time canonical CSS migration. Touching this file triggers the helper workflow.
 const bundles=[
   {target:'css/ui-foundation.css',sources:['css/round3.css','css/round4.css','css/round5.css','css/round6.css','css/round7.css']},
   {target:'css/workflow-foundation.css',sources:['css/round12.css','css/round15.css','css/round16.css','css/round18.css']},
