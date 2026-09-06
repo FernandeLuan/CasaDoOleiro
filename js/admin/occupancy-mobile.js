@@ -5,6 +5,37 @@
   if(window.__OLEIRO_OCCUPANCY_MOBILE__)return;
   window.__OLEIRO_OCCUPANCY_MOBILE__=true;
 
+  const fallbackUnits=[{id:'rodeio',name:'Rodeio',active:true},{id:'indaial',name:'Indaial',active:true}];
+
+  function ensureUnitState(){
+    if(typeof state==='undefined')return fallbackUnits;
+    if(!Array.isArray(state.occupancyUnits)||!state.occupancyUnits.length)state.occupancyUnits=fallbackUnits.map(unit=>({...unit}));
+    return state.occupancyUnits;
+  }
+
+  function ensureUnitButtons(){
+    const root=document.querySelector('.occupancy-v2-unit-options');
+    if(!root)return;
+    const units=ensureUnitState();
+    const current=String(state?.occupancyUnitId||'rodeio');
+    const existing=[...root.querySelectorAll('.occupancy-v2-unit')];
+    if(existing.length){
+      existing.forEach(button=>{
+        const action=String(button.getAttribute('onclick')||''),match=action.match(/selectOccupancyUnit\('([^']+)'\)/),id=match?.[1]||'';
+        const active=id===current;
+        button.classList.toggle('active',active);
+        button.setAttribute('aria-pressed',active?'true':'false');
+      });
+      return;
+    }
+    root.innerHTML=units.filter(unit=>unit&&unit.active!==false).map(unit=>{
+      const id=String(unit.id||'').replaceAll("'","\\'");
+      const label=String(unit.name||unit.id||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+      const active=String(unit.id)===current;
+      return `<button class="occupancy-v2-unit ${active?'active':''}" type="button" aria-pressed="${active?'true':'false'}" onclick="selectOccupancyUnit('${id}')">${label}</button>`;
+    }).join('');
+  }
+
   if(document.getElementById('occupancyMobileStyles'))return;
   const style=document.createElement('style');
   style.id='occupancyMobileStyles';
@@ -214,4 +245,27 @@
     }
   `;
   document.head.appendChild(style);
+
+  const baseSelectOccupancyUnit=window.selectOccupancyUnit;
+  if(typeof baseSelectOccupancyUnit==='function'){
+    window.selectOccupancyUnit=function(next){ensureUnitState();return baseSelectOccupancyUnit(next)};
+    selectOccupancyUnit=window.selectOccupancyUnit;
+  }
+
+  const baseRenderManager=typeof window.renderManager==='function'?window.renderManager:null;
+  if(baseRenderManager){
+    window.renderManager=function(){
+      ensureUnitState();
+      const result=baseRenderManager();
+      queueMicrotask(ensureUnitButtons);
+      requestAnimationFrame(ensureUnitButtons);
+      return result;
+    };
+    renderManager=window.renderManager;
+    window.render=function(){return window.renderManager()};
+    render=window.render;
+  }
+
+  ensureUnitState();
+  requestAnimationFrame(ensureUnitButtons);
 })();
