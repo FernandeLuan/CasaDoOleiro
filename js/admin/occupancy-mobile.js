@@ -9,6 +9,7 @@
   const style=document.createElement('style');
   style.id='occupancyMobileStyles';
   style.textContent=`
+    .occupancy-v2-unit-mobile-select{display:none}
     @media(max-width:760px){
       .occupancy-v2{
         width:100%!important;
@@ -19,11 +20,11 @@
       /* No mobile a tela começa direto pelos controles. */
       .occupancy-v2-head{display:none!important}
 
-      /* Ordem mobile: mês > indicadores > unidade. */
+      /* Ordem mobile: mês > Na casa | Chegadas | Saídas | Unidade. */
       .occupancy-v2-toolbar{
         display:grid!important;
-        grid-template-columns:repeat(3,minmax(0,1fr))!important;
-        gap:8px!important;
+        grid-template-columns:repeat(4,minmax(0,1fr))!important;
+        gap:7px!important;
         align-items:stretch!important;
       }
       .occupancy-v2-month{
@@ -44,12 +45,11 @@
         box-shadow:none!important;
       }
 
-      /* Indicadores compactos: 3 Na casa | 6 Chegadas | 6 Saídas. */
       .occupancy-v2-metric{
         order:2!important;
         min-width:0!important;
         min-height:46px!important;
-        padding:8px 6px!important;
+        padding:7px 4px!important;
         border-radius:14px!important;
         display:flex!important;
         align-items:center!important;
@@ -59,47 +59,60 @@
       .occupancy-v2-metric-icon{display:none!important}
       .occupancy-v2-metric>div:last-child{
         min-width:0!important;
-        display:flex!important;
-        align-items:baseline!important;
-        justify-content:center!important;
-        gap:8px!important;
+        display:grid!important;
+        justify-items:center!important;
+        align-content:center!important;
+        gap:3px!important;
       }
       .occupancy-v2-metric strong{
-        display:inline!important;
-        flex:0 0 auto!important;
-        font-size:.86rem!important;
+        display:block!important;
+        font-size:.82rem!important;
         line-height:1!important;
         white-space:nowrap!important;
       }
       .occupancy-v2-metric p{
-        display:inline!important;
-        flex:0 0 auto!important;
+        display:block!important;
         margin:0!important;
-        font-size:.58rem!important;
-        line-height:1.1!important;
+        font-size:.52rem!important;
+        line-height:1.05!important;
         white-space:nowrap!important;
         color:var(--muted)!important;
       }
       .occupancy-v2-metric:nth-of-type(1) p,
       .occupancy-v2-metric:nth-of-type(2) p,
       .occupancy-v2-metric:nth-of-type(3) p{font-size:0!important}
-      .occupancy-v2-metric:nth-of-type(1) p::after{content:'Na casa';font-size:.58rem}
-      .occupancy-v2-metric:nth-of-type(2) p::after{content:'Chegadas';font-size:.58rem}
-      .occupancy-v2-metric:nth-of-type(3) p::after{content:'Saídas';font-size:.58rem}
+      .occupancy-v2-metric:nth-of-type(1) p::after{content:'Na casa';font-size:.52rem}
+      .occupancy-v2-metric:nth-of-type(2) p::after{content:'Chegadas';font-size:.52rem}
+      .occupancy-v2-metric:nth-of-type(3) p::after{content:'Saídas';font-size:.52rem}
 
       .occupancy-v2-unit-options{
-        order:3!important;
-        grid-column:1/-1!important;
+        order:2!important;
+        grid-column:auto!important;
         width:100%!important;
-        min-height:48px!important;
-        padding:4px!important;
-        border-radius:15px!important;
+        min-width:0!important;
+        min-height:46px!important;
+        padding:0!important;
+        border-radius:14px!important;
+        position:relative!important;
+        overflow:hidden!important;
       }
-      .occupancy-v2-unit{
-        min-height:40px!important;
-        padding:7px 10px!important;
-        font-size:.65rem!important;
-        border-radius:11px!important;
+      .occupancy-v2-unit-options>.occupancy-v2-unit{display:none!important}
+      .occupancy-v2-unit-mobile-select{
+        display:block!important;
+        width:100%!important;
+        min-width:0!important;
+        height:44px!important;
+        border:0!important;
+        outline:0!important;
+        background:var(--surface)!important;
+        color:var(--text)!important;
+        padding:0 20px 0 8px!important;
+        font:inherit!important;
+        font-size:.51rem!important;
+        font-weight:700!important;
+        text-align:center!important;
+        text-align-last:center!important;
+        appearance:auto!important;
       }
 
       /* Calendário ocupa a largura do aparelho, sem herdar os 860px do desktop. */
@@ -195,12 +208,13 @@
 
     @media(max-width:390px){
       .occupancy-v2-toolbar{gap:6px!important}
-      .occupancy-v2-metric{min-height:44px!important;padding:7px 4px!important}
-      .occupancy-v2-metric>div:last-child{gap:6px!important}
-      .occupancy-v2-metric strong{font-size:.8rem!important}
+      .occupancy-v2-metric{min-height:44px!important;padding:6px 3px!important}
+      .occupancy-v2-metric strong{font-size:.78rem!important}
       .occupancy-v2-metric:nth-of-type(1) p::after,
       .occupancy-v2-metric:nth-of-type(2) p::after,
-      .occupancy-v2-metric:nth-of-type(3) p::after{font-size:.52rem!important}
+      .occupancy-v2-metric:nth-of-type(3) p::after{font-size:.49rem!important}
+      .occupancy-v2-unit-options{min-height:44px!important}
+      .occupancy-v2-unit-mobile-select{height:42px!important;font-size:.49rem!important;padding-inline:5px!important}
       .occupancy-v2-calendar-card{padding:6px!important}
       .occupancy-v2-weekdays,.occupancy-v2-calendar{gap:2px!important}
       .occupancy-v2-day,.occupancy-v2-blank{min-height:52px!important}
@@ -213,4 +227,31 @@
     }
   `;
   document.head.appendChild(style);
+
+  function ensureMobileUnitSelect(){
+    const root=document.querySelector('.occupancy-v2-unit-options');if(!root)return;
+    const buttons=[...root.querySelectorAll('.occupancy-v2-unit')];if(!buttons.length)return;
+    let select=root.querySelector('.occupancy-v2-unit-mobile-select');
+    if(!select){
+      select=document.createElement('select');select.className='occupancy-v2-unit-mobile-select';select.setAttribute('aria-label','Selecionar unidade');
+      select.addEventListener('change',()=>{if(typeof window.selectOccupancyUnit==='function')window.selectOccupancyUnit(select.value)});
+      root.appendChild(select);
+    }
+    const options=buttons.map(button=>{
+      const action=String(button.getAttribute('onclick')||''),match=action.match(/selectOccupancyUnit\('([^']+)'\)/),value=match?.[1]||String(button.textContent||'').trim(),label=String(button.textContent||'').trim();
+      return {value,label,selected:button.classList.contains('active')};
+    });
+    const signature=options.map(option=>`${option.value}:${option.label}:${option.selected?'1':'0'}`).join('|');
+    if(select.dataset.signature!==signature){
+      select.innerHTML=options.map(option=>`<option value="${String(option.value).replaceAll('"','&quot;')}" ${option.selected?'selected':''}>${String(option.label).replaceAll('<','&lt;').replaceAll('>','&gt;')}</option>`).join('');
+      select.dataset.signature=signature;
+    }
+  }
+
+  const baseRenderManager=typeof window.renderManager==='function'?window.renderManager:null;
+  if(baseRenderManager){
+    renderManager=function(){const result=baseRenderManager();queueMicrotask(ensureMobileUnitSelect);requestAnimationFrame(ensureMobileUnitSelect);return result};
+    window.renderManager=renderManager;render=function(){return renderManager()};window.render=render;
+  }
+  requestAnimationFrame(ensureMobileUnitSelect);
 })();
