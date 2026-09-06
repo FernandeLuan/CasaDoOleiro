@@ -39,10 +39,19 @@
   const esc=value=>typeof escapeHtml==='function'?escapeHtml(value):String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   const statusBadge=(label,type)=>typeof badge==='function'?badge(label,type):`<span class="badge ${esc(type||'')}">${esc(label||'Status')}</span>`;
   const actionArg=id=>typeof candidateActionArg==='function'?candidateActionArg(id):encodeURIComponent(String(id??''));
+  function candidateStatus(p){
+    if(p?.status==='meeting'){
+      const meeting=String(p?.meetingStatus||'pending');
+      if(meeting==='scheduled')return ['Reunião agendada','info'];
+      if(meeting==='completed')return ['Reunião realizada','success'];
+      return ['Aguardando reunião','info'];
+    }
+    return typeof statusMeta==='function'?statusMeta(p?.status):[p?.status||'Status',''];
+  }
 
   personCompact=function(p){
     const meta=typeof candidateDeadlineMeta==='function'&&p?.status==='pending'?candidateDeadlineMeta(p):null;
-    const status=typeof statusMeta==='function'?statusMeta(p?.status):[p?.status||'Status',''];
+    const status=candidateStatus(p);
     const inactive=p?.inactive&&p?.status!=='rejected'?statusBadge('Inativo','danger'):'';
     const deadline=meta?`<span class="candidate-deadline-mini"><i class="fa-regular fa-clock"></i>${esc(meta.label)}</span>`:'';
     const period=p?.from&&p?.to&&typeof fmtDate==='function'?`${fmtDate(p.from,true)}–${fmtDate(p.to,true)}`:'Período não informado';
