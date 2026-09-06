@@ -20,6 +20,7 @@
       .volunteer-status-badges .badge{margin:0;flex:0 0 auto}
       .volunteer-status-badges .candidate-deadline-mini{display:inline-flex!important;align-items:center;gap:4px;margin:0!important;color:var(--warning-text,#a56700);font-size:.62rem;line-height:1.2;font-weight:600;white-space:nowrap}
       .volunteer-status-badges .candidate-deadline-mini i{font-size:.58rem}
+      .planning-profile-status-sep{color:var(--muted);font-weight:700}
       @media(min-width:641px){
         .volunteer-list-page .volunteer-name-status,
         .planning-candidate-list .volunteer-name-status{flex-wrap:nowrap}
@@ -31,6 +32,8 @@
         .volunteer-status-badges{gap:6px;flex-wrap:wrap}
         .volunteer-status-badges .badge{font-size:.62rem}
         .volunteer-status-badges .candidate-deadline-mini{font-size:.58rem}
+        .planning-detail-page .planning-profile-meta{display:flex!important;align-items:center!important;flex-wrap:wrap!important;gap:5px!important}
+        .planning-detail-page .planning-profile-meta .badge{margin:0!important;padding:4px 7px!important;font-size:.61rem!important;white-space:nowrap!important}
       }
     `;
     document.head.appendChild(style);
@@ -48,6 +51,20 @@
     }
     return typeof statusMeta==='function'?statusMeta(p?.status):[p?.status||'Status',''];
   }
+  window.adminCandidateStatus=candidateStatus;
+
+  function syncPlanningHeaderStatus(){
+    if(typeof state==='undefined'||state.managerPage!=='planning'||!state.managerPlanningPersonId||typeof candidateById!=='function')return;
+    const p=candidateById(state.managerPlanningPersonId),meta=document.querySelector('.planning-detail-page .planning-profile-meta'),badgeNode=meta?.querySelector('.badge');
+    if(!p||!meta||!badgeNode)return;
+    const status=candidateStatus(p),label=status?.[0]||'Status',type=status?.[1]||'';
+    badgeNode.textContent=label;
+    badgeNode.className=`badge ${type}`.trim();
+    let separator=badgeNode.previousElementSibling;
+    if(!separator||!separator.classList.contains('planning-profile-status-sep')){
+      separator=document.createElement('b');separator.className='planning-profile-status-sep';separator.textContent='•';badgeNode.before(separator);
+    }
+  }
 
   personCompact=function(p){
     const meta=typeof candidateDeadlineMeta==='function'&&p?.status==='pending'?candidateDeadlineMeta(p):null;
@@ -60,6 +77,17 @@
     return `<div class="list-item clickable" onclick="openPerson(decodeURIComponent('${id}'))"><div class="avatar">${esc(initials)}</div><div class="item-main"><div class="volunteer-name-status"><h3>${esc(p?.name||'Voluntário')}</h3><div class="volunteer-status-badges">${statusBadge(status?.[0]||'Status',status?.[1]||'')}${deadline}${inactive}</div></div><p>${esc(p?.country||'—')} • ${esc(p?.unit||p?.unitName||'—')} • ${esc(period)}</p></div><i class="fa-solid fa-chevron-right" style="color:var(--muted);margin-top:11px"></i></div>`;
   };
   window.personCompact=personCompact;
+
+  const baseRenderManager=typeof window.renderManager==='function'?window.renderManager:null;
+  if(baseRenderManager){
+    renderManager=function(){
+      const result=baseRenderManager();
+      queueMicrotask(syncPlanningHeaderStatus);
+      requestAnimationFrame(syncPlanningHeaderStatus);
+      return result;
+    };
+    window.renderManager=renderManager;render=function(){return renderManager()};window.render=render;
+  }
 
   installStyles();
   if(typeof state!=='undefined'&&state.role==='manager'&&['volunteer','planning'].includes(state.managerPage)&&typeof render==='function')render();
