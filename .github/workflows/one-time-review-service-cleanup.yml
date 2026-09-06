@@ -1,0 +1,52 @@
+name: One-time review service cleanup
+
+on:
+  push:
+    branches:
+      - test/homologacao-clean-ui
+    paths:
+      - scripts/review-service-cleanup.mjs
+
+permissions:
+  contents: write
+
+concurrency:
+  group: review-service-cleanup
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: test/homologacao-clean-ui
+          fetch-depth: 0
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Apply cleanup
+        run: node scripts/review-service-cleanup.mjs
+      - name: Validate JavaScript syntax
+        shell: bash
+        run: find js -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+      - name: Validate architecture
+        run: node scripts/check-homologation-architecture.mjs
+      - name: Validate canonical build
+        env:
+          APP_ENV: homologation
+        run: node scripts/build-site.mjs site-dist
+      - name: Remove generated build
+        run: rm -rf site-dist
+      - name: Commit cleanup
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add admin portal js scripts
+          git diff --cached --quiet && exit 0
+          git commit -m 'refactor: consolidate review service and translations'
+          git push origin HEAD:test/homologacao-clean-ui
