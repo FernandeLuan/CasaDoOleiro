@@ -88,6 +88,19 @@ async function handleForgotPassword(){
 }
 function showLoginMessage(text){const el=document.getElementById('loginMessage');if(!el)return;el.textContent=typeof translateText==='function'?translateText(text):text;el.hidden=false}
 
+/* Se o Firebase já possui uma sessão válida, a raiz funciona como entrada do app
+   e não obriga o usuário a atravessar a tela de login novamente. */
+(async function resumeAuthenticatedSession(){
+  if(!window.OleiroAuth||typeof window.OleiroAuth.currentSession!=='function')return;
+  try{
+    const session=await window.OleiroAuth.currentSession();
+    if(!session?.role)return;
+    location.replace(destinationFor(session.role));
+  }catch(error){
+    if(error?.code==='oleiro/offline')showLoginMessage(error.message);
+  }
+})();
+
 /* Vaso de barro: olhos seguem o ponteiro no desktop e os campos no touch. */
 (function interactiveClayLogin(){
   const mascot=document.getElementById('loginMascot');
