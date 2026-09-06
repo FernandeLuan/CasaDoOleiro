@@ -1,5 +1,5 @@
 /* Round 37 — session-scoped candidate adjustments may include new draft activities before resubmission. */
-(function candidateAdjustmentR37(){
+(function candidateAdjustment(){
   const baseSessionCard=window.sessionCardVolunteer||sessionCardVolunteer;
   const baseOpenActivityModal=window.openActivityModal||openActivityModal;
   const baseRequestDelete=window.requestDeletePlanningSession||requestDeletePlanningSession;

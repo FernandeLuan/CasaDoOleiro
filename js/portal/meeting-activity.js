@@ -1,5 +1,5 @@
 /* Round 54 — planejamento aprovado, aguardando reunião: novas propostas sem reabrir o aprovado. */
-(function meetingActivityR54(){
+(function meetingActivity(){
   function meetingMode(){return state.volunteerMode!=='approved'&&state.currentApplication?.status==='meeting'}
   function proposalEditable(activity){return activity?.postApprovalProposal===true&&activity?.reviewStatus==='adjustments'}
   function localeLabel(pt,en,es){const locale=typeof currentLocale==='function'?currentLocale():'pt-BR';return locale.startsWith('en')?en:locale.startsWith('es')?es:pt}

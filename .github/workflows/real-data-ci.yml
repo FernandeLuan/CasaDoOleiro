@@ -79,17 +79,17 @@ jobs:
           grep -q 'managerUpdateSession' js/admin/refinements-r20.js
           grep -q 'manager_confirmed' js/services/planning-service.js
           grep -q 'requestAdminDeletePlanningSession' js/admin/refinements-r20.js
-          grep -q "where('status','==','confirmed')" js/services/selection-flow-r25-service.js
-          grep -q 'activity_sessions/operational-schedule' js/services/selection-flow-r25-service.js
-          grep -q 'selection/planning-docs' js/services/selection-flow-r25-service.js
-          grep -q 'A consulta ampla foi bloqueada para proteger a cota do Firestore' js/services/selection-flow-r25-service.js
-          grep -q 'hydrateCandidatePlanning(p.id,{force:true})' js/admin/selection-flow-r25.js
+          grep -q "where('status','==','confirmed')" js/services/selection-flow-service.js
+          grep -q 'activity_sessions/operational-schedule' js/services/selection-flow-service.js
+          grep -q 'selection/planning-docs' js/services/selection-flow-service.js
+          grep -q 'A consulta ampla foi bloqueada para proteger a cota do Firestore' js/services/selection-flow-service.js
+          grep -q 'hydrateCandidatePlanning(p.id,{force:true})' js/admin/selection-flow.js
           grep -q "where('active','==',true)" js/services/auth-service.js
           grep -q "firestore.limit(1)" js/services/auth-service.js
-          grep -q 'sessionsForActivity' js/services/consistency-r15-services.js
-          grep -q "where('activityId','==',actId)" js/services/consistency-r15-services.js
-          grep -q '../js/services/selection-flow-r25-service.js' admin/index.html
-          grep -q '../js/services/selection-flow-r25-service.js' portal/index.html
+          grep -q 'sessionsForActivity' js/services/consistency-services.js
+          grep -q "where('activityId','==',actId)" js/services/consistency-services.js
+          grep -q '../js/services/selection-flow-service.js' admin/index.html
+          grep -q '../js/services/selection-flow-service.js' portal/index.html
           test ! -e js/services/planning-r23-service.js
           test ! -e js/services/planning-manager-status-r25-service.js
           if grep -RInE 'planning-r23-service|planning-manager-status-r25-service|getSessionById' admin portal js; then
@@ -172,9 +172,9 @@ jobs:
         run: |
           test -e js/shared/i18n-r27.js
           test -e js/services/history-service.js
-          test -e js/services/history-hooks-r27.js
-          test -e js/admin/history-r27.js
-          test -e js/admin/selection-ui-r27.js
+          test -e js/services/history-hooks.js
+          test -e js/admin/history.js
+          test -e js/admin/selection-ui.js
           test ! -e js/admin/i18n-after-injections-r25.js
           grep -q 'window.t=t' js/shared/i18n-r27.js
           grep -q 'window.tValue=tValue' js/shared/i18n-r27.js
@@ -184,13 +184,13 @@ jobs:
           grep -q "portal.activity.descriptionPlaceholder" js/portal/app.js
           grep -q "portal.move.reasonPlaceholder" js/portal/ux-r16.js
           grep -q "collection(context.db,'applications',String(applicationId),'history')" js/services/history-service.js
-          grep -q 'PAGE_SIZE=20' js/admin/history-r27.js
-          grep -q "tab==='history'" js/admin/history-r27.js
+          grep -q 'PAGE_SIZE=20' js/admin/history.js
+          grep -q "tab==='history'" js/admin/history.js
           grep -q 'managerHasUnit' firestore.rules
           grep -q 'match /history/{eventId}' firestore.rules
           grep -q '../js/services/history-service.js' admin/index.html
-          grep -q '../js/services/history-hooks-r27.js' admin/index.html
-          grep -q '../js/admin/history-r27.js' admin/index.html
+          grep -q '../js/services/history-hooks.js' admin/index.html
+          grep -q '../js/admin/history.js' admin/index.html
           grep -q '../js/shared/i18n-r27.js' portal/index.html
           if grep -RIn 'MutationObserver' js; then
             echo 'MutationObserver-based i18n patch was reintroduced.'
@@ -232,23 +232,23 @@ jobs:
       - name: Check selection lifecycle
         shell: bash
         run: |
-          grep -q "status:'meeting'" js/services/selection-flow-r25-service.js
-          grep -q "status:'plan_approved'" js/services/selection-flow-r25-service.js
-          grep -q 'scheduleSelectionMeeting' js/services/selection-flow-r25-service.js
-          grep -q 'completeSelectionMeeting' js/services/selection-flow-r25-service.js
-          grep -q 'finalizeSelection' js/services/selection-flow-r25-service.js
-          grep -q "status:'rejected'" js/services/selection-flow-r25-service.js
-          grep -q 'Aprovar candidato' js/admin/selection-flow-r25.js
-          grep -q 'Não aprovar' js/admin/selection-flow-r25.js
-          grep -q 'Motivo interno da não aprovação' js/admin/selection-flow-r25.js
-          grep -q 'selection-flow-card' js/admin/selection-flow-r25.js
-          grep -q "portal.meeting.next" js/portal/selection-flow-r25.js
-          grep -q "action.enterMeeting" js/portal/selection-flow-r25.js
+          grep -q "status:'meeting'" js/services/selection-flow-service.js
+          grep -q "status:'plan_approved'" js/services/selection-flow-service.js
+          grep -q 'scheduleSelectionMeeting' js/services/selection-flow-service.js
+          grep -q 'completeSelectionMeeting' js/services/selection-flow-service.js
+          grep -q 'finalizeSelection' js/services/selection-flow-service.js
+          grep -q "status:'rejected'" js/services/selection-flow-service.js
+          grep -q 'Aprovar candidato' js/admin/selection-flow.js
+          grep -q 'Não aprovar' js/admin/selection-flow.js
+          grep -q 'Motivo interno da não aprovação' js/admin/selection-flow.js
+          grep -q 'selection-flow-card' js/admin/selection-flow.js
+          grep -q "portal.meeting.next" js/portal/selection-flow.js
+          grep -q "action.enterMeeting" js/portal/selection-flow.js
           grep -q 'candidateEditable' firestore.rules
           grep -q 'managerCreated' firestore.rules
           grep -q '"status"' firestore.indexes.json
-          grep -q '../js/admin/selection-flow-r25.js' admin/index.html
-          grep -q '../js/portal/selection-flow-r25.js' portal/index.html
+          grep -q '../js/admin/selection-flow.js' admin/index.html
+          grep -q '../js/portal/selection-flow.js' portal/index.html
 
       - name: Check post-approval proposal workflow
         shell: bash
@@ -286,8 +286,8 @@ jobs:
           grep -q 'aria-busy' js/portal/refinements-r23.js
           grep -q "action.resendReview" js/portal/refinements-r23.js
           grep -q "action.sending" js/portal/refinements-r23.js
-          grep -q 'deleteSession(session.id' js/portal/selection-flow-r25.js
-          grep -q 'applications.update(application.id' js/portal/selection-flow-r25.js
+          grep -q 'deleteSession(session.id' js/portal/selection-flow.js
+          grep -q 'applications.update(application.id' js/portal/selection-flow.js
           grep -q 'Digite para buscar o país' js/admin/candidate-form.js
           grep -q 'overscroll-behavior-y:none' css/round6.css
           grep -q 'participantGenders' js/services/onboarding-service.js
