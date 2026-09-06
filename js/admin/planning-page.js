@@ -17,7 +17,18 @@
 
   function planningPerson(){return candidateById(state.managerPlanningPersonId)}
   function personDates(p){const from=String(p?.stayStart||p?.from||'').slice(0,10),to=String(p?.stayEnd||p?.to||'').slice(0,10);return from&&to?`${fmtDate(from,true)} → ${fmtDate(to,true)}`:'Período não informado'}
-  function personBadge(p){const [label,type]=typeof statusMeta==='function'?statusMeta(p?.status):[p?.status||'Status',''];return `<span class="badge ${escapeHtml(type||'')}">${escapeHtml(label)}</span>`}
+  function personBadge(p){
+    let label='',type='';
+    if(p?.status==='meeting'){
+      const meeting=String(p.meetingStatus||'pending');
+      if(meeting==='scheduled'){label='Reunião agendada';type='info'}
+      else if(meeting==='completed'){label='Reunião realizada';type='success'}
+      else {label='Aguardando reunião';type='info'}
+    }else{
+      [label,type]=typeof statusMeta==='function'?statusMeta(p?.status):[p?.status||'Status',''];
+    }
+    return `<span class="badge ${escapeHtml(type||'')}">${escapeHtml(label)}</span>`;
+  }
 
   function planningList(){
     const rows=(state.candidates||[]).filter(p=>p.status!=='rejected');
@@ -34,7 +45,7 @@
     const p=planningPerson();if(!p)return planningList();
     const loading=state.managerPlanningLoading&&!state.managerPlanningBody;
     return `<section class="section planning-detail-page compact-page-top" data-person-id="${escapeHtml(String(p.id))}">
-      <header class="planning-profile-head"><div class="planning-profile-heading"><div class="planning-profile-copy"><div class="planning-profile-title-line"><h1>${escapeHtml(p.name||'Voluntário')}</h1></div><div class="planning-profile-meta"><span>${escapeHtml(p.country||'—')}</span><b>•</b><span>${escapeHtml(p.unit||p.unitName||'—')}</span><b>•</b><span class="planning-profile-period-status"><span>${escapeHtml(personDates(p))}</span>${personBadge(p)}</span></div></div></div><button class="planning-close-button" type="button" onclick="closePlanningDetail()" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button></header>
+      <header class="planning-profile-head"><div class="planning-profile-heading"><div class="planning-profile-copy"><div class="planning-profile-title-line"><h1>${escapeHtml(p.name||'Voluntário')}</h1></div><div class="planning-profile-meta"><span>${escapeHtml(p.country||'—')}</span><b>•</b><span>${escapeHtml(p.unit||p.unitName||'—')}</span><b>•</b><span class="planning-profile-period-status"><span>${escapeHtml(personDates(p))}</span><b>•</b>${personBadge(p)}</span></div></div></div><button class="planning-close-button" type="button" onclick="closePlanningDetail()" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button></header>
       <div class="planning-page-content">${loading?'<div class="empty compact-loading planning-page-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando planejamento...</div>':state.managerPlanningBody||'<div class="empty compact-loading planning-page-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando dados...</div>'}</div>
     </section>`;
   }
