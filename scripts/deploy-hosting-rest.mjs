@@ -92,6 +92,12 @@ const version = await request(`${apiBase}/sites/${encodeURIComponent(siteId)}/ve
         { glob: '**/*.js', headers: { 'Cache-Control': 'no-cache' } },
         { glob: '**/*.css', headers: { 'Cache-Control': 'no-cache' } },
       ],
+      rewrites: [
+        { glob: '/admin', path: '/admin/index.html' },
+        { glob: '/admin/**', path: '/admin/index.html' },
+        { glob: '/portal', path: '/portal/index.html' },
+        { glob: '/portal/**', path: '/portal/index.html' },
+      ],
     },
     labels: { source: 'github-actions', environment: 'homologacao' },
   }),
