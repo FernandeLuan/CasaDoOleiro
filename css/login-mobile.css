@@ -6,9 +6,9 @@
   .login-shell{
     width:100%!important;
     min-height:100svh!important;
-    height:auto!important;
+    height:100svh!important;
     padding:0!important;
-    overflow:visible!important;
+    overflow:hidden!important;
     background:
       radial-gradient(circle at 84% 10%,rgba(255,255,255,.10),transparent 24%),
       radial-gradient(circle at 14% 86%,rgba(255,255,255,.06),transparent 28%),
@@ -19,22 +19,25 @@
     position:relative!important;
     width:100%!important;
     min-height:100svh!important;
-    height:auto!important;
+    height:100svh!important;
+    box-sizing:border-box!important;
     display:flex!important;
     flex-direction:column!important;
     align-items:center!important;
-    justify-content:center!important;
+    justify-content:flex-start!important;
     gap:0!important;
-    padding:max(18px,env(safe-area-inset-top)) 16px max(18px,env(safe-area-inset-bottom))!important;
+    padding:clamp(72px,13svh,104px) 16px max(18px,env(safe-area-inset-bottom))!important;
     border:0!important;
     border-radius:0!important;
     box-shadow:none!important;
-    overflow:hidden!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
     background:
       radial-gradient(circle at 82% 16%,rgba(255,255,255,.10),transparent 22%),
       radial-gradient(circle at 10% 72%,rgba(255,255,255,.045),transparent 25%),
       linear-gradient(150deg,color-mix(in srgb,var(--primary) 96%,#10261a),color-mix(in srgb,var(--primary) 67%,#173725))!important;
     isolation:isolate;
+    -webkit-overflow-scrolling:touch;
   }
 
   .login-story{display:contents!important}
@@ -107,7 +110,7 @@
 
 @media(max-width:390px){
   .login-experience{
-    padding:max(14px,env(safe-area-inset-top)) 12px max(14px,env(safe-area-inset-bottom))!important;
+    padding:clamp(64px,11svh,88px) 12px max(14px,env(safe-area-inset-bottom))!important;
   }
   .clay-stage{
     width:204px!important;
@@ -130,13 +133,10 @@
   .login-trust>span:last-child{display:none!important}
 }
 
-/* Só compacta em alturas realmente extremas. Em iPhone/Safari normal o layout-base
-   permanece estável antes e depois do primeiro toque, evitando o salto de viewport. */
+/* Só compacta em alturas realmente extremas. */
 @media(max-width:760px) and (max-height:560px){
   .login-experience{
-    min-height:100svh!important;
-    padding:max(8px,env(safe-area-inset-top)) 14px max(8px,env(safe-area-inset-bottom))!important;
-    overflow-y:auto!important;
+    padding:18px 14px max(8px,env(safe-area-inset-bottom))!important;
   }
   .clay-stage{
     width:196px!important;
@@ -154,10 +154,4 @@
 @media(max-width:760px) and (max-height:460px){
   .clay-stage{display:none!important}
   .login-card{padding-top:18px!important}
-}
-
-@supports(height:100dvh){
-  @media(max-width:760px){
-    .login-shell{min-height:100svh!important}
-  }
 }
