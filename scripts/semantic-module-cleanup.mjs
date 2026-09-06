@@ -1,6 +1,8 @@
 import {existsSync,readFileSync,writeFileSync,renameSync,readdirSync,statSync} from 'node:fs';
 import {join,extname} from 'node:path';
 
+// One-time migration. Workflow files are intentionally left untouched here;
+// CI references are updated directly through GitHub after this code migration succeeds.
 const mappings=[
   ['js/admin/approved-lifecycle-r18.js','js/admin/approved-lifecycle.js'],
   ['js/admin/refactor-r18.js','js/admin/candidate-detail-data.js'],
@@ -24,12 +26,8 @@ for(const [oldPath,newPath] of mappings){
   renameSync(oldPath,newPath);
 }
 
-const textExtensions=new Set(['.js','.mjs','.html','.yml','.yaml','.json','.md']);
-const skip=new Set([
-  'scripts/semantic-module-cleanup.mjs',
-  '.github/workflows/one-time-semantic-module-cleanup.yml',
-  'scripts/check-homologation-architecture.mjs'
-]);
+const textExtensions=new Set(['.js','.mjs','.html','.json','.md']);
+const skip=new Set(['scripts/semantic-module-cleanup.mjs','scripts/check-homologation-architecture.mjs']);
 function filesUnder(root){
   if(!existsSync(root))return [];
   const out=[];
@@ -40,7 +38,7 @@ function filesUnder(root){
   }
   return out;
 }
-const files=['index.html','admin/index.html','portal/index.html',...filesUnder('js'),...filesUnder('.github/workflows'),...filesUnder('tests'),...filesUnder('scripts')]
+const files=['index.html','admin/index.html','portal/index.html',...filesUnder('js'),...filesUnder('tests'),...filesUnder('scripts')]
   .filter((value,index,array)=>array.indexOf(value)===index&&!skip.has(value));
 
 const adminBase=new Map(mappings.filter(([oldPath])=>oldPath.startsWith('js/admin/')).map(([oldPath,newPath])=>[oldPath.split('/').at(-1),newPath.split('/').at(-1)]));
@@ -55,8 +53,8 @@ for(const file of files){
   if(!existsSync(file))continue;
   let source=readFileSync(file,'utf8'),next=source;
   for(const [oldPath,newPath] of mappings){
-    next=next.split(oldPath).join(newPath);
     next=next.split('../'+oldPath).join('../'+newPath);
+    next=next.split(oldPath).join(newPath);
   }
   if(file.startsWith('js/admin/'))for(const [oldBase,newBase] of adminBase)next=next.split(oldBase).join(newBase);
   if(file.startsWith('js/portal/'))for(const [oldBase,newBase] of portalBase)next=next.split(oldBase).join(newBase);
@@ -81,7 +79,7 @@ for(const [oldPath,newPath] of mappings){
   if(!existsSync(newPath))throw new Error(`Canonical module missing: ${newPath}`);
 }
 
-const scanFiles=['index.html','admin/index.html','portal/index.html','.github/workflows/real-data-ci.yml',...filesUnder('js')];
+const scanFiles=['index.html','admin/index.html','portal/index.html',...filesUnder('js')];
 for(const file of scanFiles){
   const source=readFileSync(file,'utf8');
   for(const [oldPath] of mappings){
