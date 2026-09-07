@@ -1,5 +1,6 @@
 import { access, cp, copyFile, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { checkSiteAssets } from './check-site-assets.mjs';
 
 const root=process.cwd();
 const out=path.resolve(process.argv[2]||'site-dist');
@@ -17,6 +18,8 @@ async function rewrite(relative,transform){
   if(next!==source)await writeFile(file,next,'utf8');
 }
 
+// Fail before deleting the previous build or publishing a broken entry point.
+await checkSiteAssets(root);
 await rm(out,{recursive:true,force:true});
 await mkdir(out,{recursive:true});
 for(const dir of ['admin','portal','css','js','icons']){
@@ -38,6 +41,7 @@ for(const relative of ['index.html','login.html','admin/index.html','portal/inde
   await rewrite(relative,source=>source.replace(htmlAssetPattern,`$1?v=${assetKey}$2`));
 }
 
+await checkSiteAssets(out);
 await writeFile(path.join(out,'release.json'),JSON.stringify({environment,build:buildId,commit,publishedAt:new Date().toISOString()})+'\n','utf8');
 console.log(`Canonical site build ready: ${out}`);
 console.log(`Environment: ${environment}`);
