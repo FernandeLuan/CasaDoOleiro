@@ -70,7 +70,7 @@
     const person=matches[0],filters=page.querySelector('.planning-board-filters');
     if(!filters)return;
     const meta=[person.country||'—',person.unit||person.unitName||'—',personPeriod(person)].filter(Boolean).join(' · ');
-    const status=typeof statusMeta==='function'?statusMeta(person.status):[person.status||'',''];
+    const status=typeof adminCandidateStatus==='function'?adminCandidateStatus(person):(typeof statusMeta==='function'?statusMeta(person.status):[person.status||'','']);
     const node=document.createElement('div');
     node.className='planning-board-selected planning-board-mobile-selected';
     node.innerHTML=`<div><strong>${escapeHtml(person.name||'Voluntário')}</strong><span>${escapeHtml(meta)}</span>${status?.[0]?`<span class="badge ${escapeHtml(status[1]||'')}">${escapeHtml(status[0])}</span>`:''}</div><button class="btn btn-outline btn-xs" type="button" onclick="openPlanningBoardPerson('${encodeURIComponent(String(person.id||''))}')">Abrir perfil</button>`;
@@ -107,95 +107,25 @@
     style.id='planningMobileFiltersStyles';
     style.textContent=`
       .planning-board-mobile-filter-button{display:none}
-
-      /* Um único padrão de placeholder em todo o Admin. */
-      .input::placeholder,.textarea::placeholder,input::placeholder,textarea::placeholder{
-        font-family:var(--font-body)!important;
-        font-size:inherit!important;
-        font-weight:400!important;
-        color:var(--muted)!important;
-        opacity:.78!important;
-      }
-
-      /* Pendências operacionais: ícone à esquerda, número e rótulo empilhados à direita. */
-      .manager-home-pending .pending-grid .metric{
-        display:grid!important;
-        grid-template-columns:42px minmax(0,1fr)!important;
-        gap:12px!important;
-        align-items:center!important;
-        justify-content:stretch!important;
-        text-align:left!important;
-        padding:12px 14px!important;
-      }
-      .manager-home-pending .pending-grid .metric-icon{
-        width:42px!important;height:42px!important;margin:0!important;justify-self:start!important;
-      }
+      .input::placeholder,.textarea::placeholder,input::placeholder,textarea::placeholder{font-family:var(--font-body)!important;font-size:inherit!important;font-weight:400!important;color:var(--muted)!important;opacity:.78!important}
+      .manager-home-pending .pending-grid .metric{display:grid!important;grid-template-columns:42px minmax(0,1fr)!important;gap:12px!important;align-items:center!important;justify-content:stretch!important;text-align:left!important;padding:12px 14px!important}
+      .manager-home-pending .pending-grid .metric-icon{width:42px!important;height:42px!important;margin:0!important;justify-self:start!important}
       .manager-home-pending .pending-grid .metric>div:last-child{width:auto!important;min-width:0!important}
-      .manager-home-pending .pending-grid .metric strong{
-        display:block!important;text-align:left!important;font-size:1.08rem!important;line-height:1.05!important;margin:0!important;
-      }
-      .manager-home-pending .pending-grid .metric span{
-        display:block!important;text-align:left!important;font-size:.68rem!important;line-height:1.2!important;margin-top:4px!important;
-      }
-
+      .manager-home-pending .pending-grid .metric strong{display:block!important;text-align:left!important;font-size:1.08rem!important;line-height:1.05!important;margin:0!important}
+      .manager-home-pending .pending-grid .metric span{display:block!important;text-align:left!important;font-size:.68rem!important;line-height:1.2!important;margin-top:4px!important}
       @media(max-width:700px){
         .planning-board-top{display:none!important}
         .planning-board-filter-caption{display:none!important}
-        .planning-board-filters{
-          display:grid!important;
-          grid-template-columns:minmax(0,1fr) 46px!important;
-          gap:8px!important;
-          align-items:center!important;
-          margin-top:0!important;
-          margin-bottom:12px!important;
-        }
+        .planning-board-filters{display:grid!important;grid-template-columns:minmax(0,1fr) 46px!important;gap:8px!important;align-items:center!important;margin-top:0!important;margin-bottom:12px!important}
         .planning-board-filters>.planning-board-search{grid-column:auto!important;min-width:0}
         .planning-board-search .input{height:46px!important;padding-left:36px!important}
-        .planning-board-filters>select,
-        .planning-board-filters>input[type="date"],
-        .planning-board-filters>.planning-board-clear{display:none!important}
-        .planning-board-mobile-filter-button{
-          position:relative;
-          width:46px;
-          height:46px;
-          display:grid!important;
-          place-items:center;
-          border:1px solid var(--border);
-          border-radius:13px;
-          background:var(--surface);
-          color:var(--text);
-          font-size:.76rem;
-          box-shadow:0 3px 16px rgba(0,0,0,.035);
-        }
-        .planning-board-mobile-filter-button.active{
-          border-color:var(--primary);
-          background:var(--primary-soft);
-          color:var(--primary);
-        }
-        .planning-board-mobile-filter-button .filter-dot{
-          position:absolute;
-          top:7px;
-          right:7px;
-          width:7px;
-          height:7px;
-          border-radius:50%;
-          background:var(--primary);
-          box-shadow:0 0 0 2px var(--surface);
-        }
-        .planning-board-selected{
-          display:grid!important;
-          grid-template-columns:minmax(0,1fr) auto!important;
-          align-items:center!important;
-          gap:8px!important;
-        }
+        .planning-board-filters>select,.planning-board-filters>input[type="date"],.planning-board-filters>.planning-board-clear{display:none!important}
+        .planning-board-mobile-filter-button{position:relative;width:46px;height:46px;display:grid!important;place-items:center;border:1px solid var(--border);border-radius:13px;background:var(--surface);color:var(--text);font-size:.76rem;box-shadow:0 3px 16px rgba(0,0,0,.035)}
+        .planning-board-mobile-filter-button.active{border-color:var(--primary);background:var(--primary-soft);color:var(--primary)}
+        .planning-board-mobile-filter-button .filter-dot{position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;background:var(--primary);box-shadow:0 0 0 2px var(--surface)}
+        .planning-board-selected{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;gap:8px!important}
         .planning-board-selected>div{min-width:0!important}
-        .planning-board-selected .btn{
-          white-space:nowrap!important;
-          flex:0 0 auto!important;
-          min-width:max-content!important;
-          padding-left:10px!important;
-          padding-right:10px!important;
-        }
+        .planning-board-selected .btn{white-space:nowrap!important;flex:0 0 auto!important;min-width:max-content!important;padding-left:10px!important;padding-right:10px!important}
         .planning-board-mobile-selected{margin:0 0 12px!important}
       }
       .planning-mobile-filter-modal{display:grid;gap:12px}
@@ -223,7 +153,6 @@
     const active=activeFilters();
     button.classList.toggle('active',active);
     button.innerHTML=`<i class="fa-solid fa-sliders" aria-hidden="true"></i>${active?'<span class="filter-dot" aria-hidden="true"></span>':''}`;
-
     const input=filters.querySelector('.planning-board-search input');
     if(input&&!input.dataset.mobileStableSearch){
       input.dataset.mobileStableSearch='1';
@@ -248,7 +177,6 @@
       mobileSearchSuggestion(state.planningBoardSearch);
     });
   };
-
   window.openPlanningMobileFilters=function(){
     const view=String(state.planningBoardView||'day');
     const from=String(state.planningBoardFrom||defaultRange().from);
@@ -263,7 +191,6 @@
     openModal('Filtros','Refine a visualização do planejamento.',body);
     modalRoot.querySelector('.modal')?.classList.add('filter-modal');
   };
-
   window.applyPlanningMobileFilters=function(){
     const view=document.getElementById('planningMobileView')?.value||'day';
     const status=document.getElementById('planningMobileStatus')?.value||'all';
@@ -281,7 +208,6 @@
     if(typeof updatePlanningBoardFilter==='function')updatePlanningBoardFilter('from',from);
     else if(typeof render==='function')render();
   };
-
   window.clearPlanningMobileFilters=function(){
     state.planningBoardView='day';
     closeModal();
@@ -289,9 +215,24 @@
     else if(typeof render==='function')render();
   };
 
+  // Explicit render lifecycle: never observe the entire app subtree.
+  let enhanceFrame=0;
+  function scheduleEnhance(){
+    if(enhanceFrame)return;
+    enhanceFrame=requestAnimationFrame(()=>{enhanceFrame=0;enhance()});
+  }
+  const baseRenderManager=window.renderManager;
+  if(typeof baseRenderManager==='function'){
+    renderManager=function(...args){
+      const result=baseRenderManager.apply(this,args);
+      if(state.managerPage==='planning')scheduleEnhance();
+      return result;
+    };
+    window.renderManager=renderManager;
+    render=function(){return renderManager()};
+    window.render=render;
+  }
+  window.addEventListener('resize',scheduleEnhance,{passive:true});
   installStyles();
-  const observer=new MutationObserver(()=>requestAnimationFrame(enhance));
-  const root=document.getElementById('app');
-  if(root)observer.observe(root,{childList:true,subtree:true});
-  requestAnimationFrame(enhance);
+  scheduleEnhance();
 })();
