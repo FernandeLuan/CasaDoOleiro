@@ -70,15 +70,11 @@
     },{loading:false});
   };
 
+  const baseOccupancy=services.applications.listOccupancyMonth?.bind(services.applications);
   services.applications.listOccupancyMonth=async function(month,{unitId=null}={}){
-    if(!month)return [];
     const forced=assistantUnit()||normalizeUnit(unitId);
-    return services.run(async()=>{
-      const context=await services.firebase(),{firestore}=context.modules,constraints=[firestore.where('status','==','approved'),firestore.where('stayMonths','array-contains',String(month))];
-      if(forced)constraints.unshift(firestore.where('unitId','==',forced));
-      const started=Date.now(),snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'applications'),...constraints));
-      services.recordQuery?.('applications/occupancy-month-r31',started,snapshot.size,{month:String(month),unitId:forced||'all'});return snapshot.docs.map(mapApplicationDoc).filter(row=>!row.inactive);
-    },{loading:false});
+    if(baseOccupancy)return baseOccupancy(month,{unitId:forced||'all'});
+    return [];
   };
 
   const basePendingChanges=services.planning.listPendingChanges?.bind(services.planning);
