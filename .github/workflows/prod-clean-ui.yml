@@ -64,8 +64,17 @@ jobs:
           retention-days: 7
 
   e2e:
+    name: e2e / ${{ matrix.project }} / ${{ matrix.shard }}-4
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [chromium, iphone-webkit]
+        shard: [1, 2, 3, 4]
+    env:
+      APP_ENV: production
+      E2E_SITE_ROOT: release-dist
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -77,14 +86,35 @@ jobs:
           java-version: '21'
       - name: Install test dependencies
         run: npm install --no-audit --no-fund
-      - name: Install Chromium and WebKit
-        run: npx playwright install --with-deps chromium webkit
-      - name: Run isolated browser regression
-        run: npm run test:e2e:emulated
-      - name: Upload Playwright report on failure
-        if: failure()
+      - name: Install selected browser
+        run: npx playwright install --with-deps ${{ matrix.project == 'chromium' && 'chromium' || 'webkit' }}
+      - name: Build the canonical site under test
+        run: |
+          node scripts/build-site.mjs release-dist
+          node scripts/check-site-assets.mjs release-dist
+      - name: Run bounded isolated browser regression
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p .e2e-diagnostics
+          echo "Browser: ${{ matrix.project }} | shard: ${{ matrix.shard }}/4"
+          echo "Commit: $GITHUB_SHA"
+          echo "Emulator project: demo-casadooleiro"
+          timeout --signal=TERM --kill-after=30s 16m \
+            npx firebase emulators:exec --only auth,firestore --project demo-casadooleiro \
+            'npm run test:e2e:seed && npx playwright test --project=${{ matrix.project }} --shard=${{ matrix.shard }}/4 --workers=1 --retries=0' \
+            2>&1 | tee .e2e-diagnostics/ci.log
+      - name: Upload browser diagnostics
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
-          path: playwright-report/
+          name: e2e-${{ matrix.project }}-${{ matrix.shard }}-4
+          path: |
+            .e2e-diagnostics/
+            playwright-report/
+            test-results/
+            firebase-debug.log
+            firestore-debug.log
+            ui-debug.log
+          if-no-files-found: warn
           retention-days: 7
