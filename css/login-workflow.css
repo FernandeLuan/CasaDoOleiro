@@ -1,3 +1,4 @@
+/* Login-only workflow compatibility. */
 /* Round 18 — contenção de rolagem, detalhe Admin enxuto e Ocupação como tela. */
 html,body{overscroll-behavior-y:none!important;overflow-x:hidden}
 body{padding-bottom:0!important;min-height:100dvh}
