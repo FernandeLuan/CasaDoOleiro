@@ -1,7 +1,6 @@
 /* R71 — Conta mais leve, scroll desktop dedicado e Histórico direto na página. */
 (function accountHistoryScrollR71(){
-  const params=new URLSearchParams(location.search);
-  if(params.get('demo')!=='admin'||!/\/admin\//.test(location.pathname))return;
+  if(!/\/admin\//.test(location.pathname))return;
   if(window.__OLEIRO_ACCOUNT_HISTORY_SCROLL_R71__)return;
   window.__OLEIRO_ACCOUNT_HISTORY_SCROLL_R71__=true;
 

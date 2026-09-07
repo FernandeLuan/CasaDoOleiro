@@ -1,0 +1,13 @@
+/* Apresentação do contato de emergência na conta. */
+.account-emergency-card .emergency-person-row>.account-person-icon{display:none!important}
+.account-emergency-card .emergency-person-row{grid-template-columns:minmax(0,1fr) auto!important;align-items:start!important}
+.r32-emergency-person{min-width:0}
+.r32-emergency-person>small{display:block;margin-bottom:7px;color:var(--muted);font-weight:600}
+.r32-emergency-values{display:grid;gap:6px;min-width:0}
+.r32-emergency-value{display:grid;gap:1px;min-width:0}
+.r32-emergency-value>span{font-size:.58rem;color:var(--muted);font-weight:600}
+.r32-emergency-value>strong{font-size:.67rem;color:var(--text);overflow-wrap:anywhere}
+
+@media (max-width:520px){
+  .account-emergency-card .emergency-person-row{grid-template-columns:minmax(0,1fr) auto!important}
+}

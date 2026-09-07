@@ -1,4 +1,4 @@
-/* Round 27 — histórico e refinamentos estruturais. */
+/* Histórico de candidaturas e eventos. */
 .person-history-tabs{grid-template-columns:repeat(3,minmax(0,1fr))!important}
 .candidate-history-panel{display:grid;gap:14px;margin-top:14px}
 .candidate-history-panel .section-head{margin:0}

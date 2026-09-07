@@ -12,7 +12,7 @@
 }
 
 *{box-sizing:border-box;margin:0;padding:0;font-family:var(--font-body);-webkit-tap-highlight-color:transparent}
-html,body{width:100%;max-width:100%;min-height:100%;background:var(--bg);color:var(--text);overflow-x:clip}
+html,body{width:100%;max-width:100%;min-height:100%;background:var(--app-bg,var(--bg));color:var(--text);overflow-x:clip}
 body{padding-bottom:calc(78px + env(safe-area-inset-bottom));overscroll-behavior-x:none}
 button,input,textarea,select{font:inherit}
 button{cursor:pointer}

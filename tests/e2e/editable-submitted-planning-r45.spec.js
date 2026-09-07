@@ -5,7 +5,7 @@ test('submitted candidate planning stays editable and shared by application part
   const rules=fs.readFileSync('firestore.rules','utf8');
   const planning=fs.readFileSync('js/portal/planejamento.js','utf8');
   const app=fs.readFileSync('js/portal/app.js','utf8');
-  const adjustment=fs.readFileSync('js/portal/candidate-adjustment-r37.js','utf8');
+  const adjustment=fs.readFileSync('js/portal/candidate-adjustment.js','utf8');
   expect(rules).toContain("app.status in ['pending', 'analysis', 'adjustments']");
   expect(rules).toContain("app.participantUids.hasAny([data.createdByUid])");
   expect(rules).toContain("candidateEditable(resource.data.applicationId)");

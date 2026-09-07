@@ -65,7 +65,7 @@
 
   window.saveVolunteerEmergencyContact=async function(encodedId,index){
     const id=decodeURIComponent(encodedId),p=candidateById(id),i=Number(index),uid=(p?.participantUids||[])[i],button=document.getElementById('saveEmergencyContactButton');if(!p||!uid)return showToast(text('emergency.error'));
-    const row={name:document.getElementById('editEmergencyName')?.value.trim()||'',relationship:document.getElementById('editEmergencyRelationship')?.value.trim()||'',phone:document.getElementById('editEmergencyPhone')?.value.trim()||''};if(hasContact(row)&&(!row.name||!row.phone))return showToast(text('emergency.required'));
+    const row={name:document.getElementById('editEmergencyName')?.value.trim()||'',relationship:document.getElementById('editEmergencyRelationship')?.value.trim()||'',phone:document.getElementById('editEmergencyPhone')?.value.trim()||''};if(!row.name||!row.phone)return showToast(text('emergency.required'));
     if(button){button.disabled=true;button.innerHTML=`<i class="fa-solid fa-circle-notch fa-spin"></i> ${escapeHtml(typeof t==='function'?t('action.saving'):'Salvando...')}`}
     try{const saved=await window.OleiroServices.profiles.updateEmergencyContact(uid,row);p.participantProfiles=p.participantProfiles||[];p.participantProfiles[i]={...(p.participantProfiles[i]||{}),id:String(uid),emergencyContact:saved};p.emergencyProfilesLoaded=true;renderPersonModal(p,'account');showToast(text('emergency.saved'))}catch(error){console.error(error);showToast(error?.message||text('emergency.error'));if(button?.isConnected){button.disabled=false;button.textContent=text('emergency.save')}}
   };

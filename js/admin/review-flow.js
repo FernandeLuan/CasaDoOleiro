@@ -22,7 +22,7 @@
   R.adjustmentReady=adjustmentReady;
 
   R.statusMeta=function(session){
-    if(session?.status==='plan_approved')return {badges:'<span class="badge info">Planejamento aprovado</span>',classes:''};
+    if(session?.status==='plan_approved')return {badges:'',classes:''};
     if(adjustmentReady(session))return {badges:'<span class="badge success">Ajustado</span>',classes:'r32-card-ready'};
     return baseStatusMeta(session);
   };

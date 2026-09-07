@@ -1,3 +1,5 @@
+/* Canonical stylesheet. Rules retain their original cascade order. */
+/* Consolidated from css/round19.css. */
 /* Round 19 — gênero na ocupação, destaque de pendências e acabamento da Conta. */
 .occupancy-screen-legend{margin-bottom:22px!important;gap:14px!important}
 .occupancy-person-dot.male,.legend-dot.male{background:#527fb4!important}

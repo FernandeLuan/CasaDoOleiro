@@ -35,10 +35,20 @@
       return services.run(async()=>{
         const context=await services.firebase(),{firestore}=context.modules,max=Math.max(1,Math.min(Number(limit)||20,50));
         const constraints=[firestore.orderBy('createdAt','desc')];if(cursor)constraints.push(firestore.startAfter(cursor));constraints.push(firestore.limit(max));
-        const started=Date.now(),snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'applications',String(applicationId),'history'),...constraints));
-        services.recordQuery?.('applications/history',started,snapshot.size,{applicationId:String(applicationId),limit:max,append:!!cursor});
-        const items=snapshot.docs.map(doc=>({id:doc.id,...doc.data()})),last=snapshot.docs.at(-1)||null;
-        return {items,nextCursor:snapshot.size===max?last:null,hasMore:snapshot.size===max};
+        const started=Date.now();
+        try{
+          const snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'applications',String(applicationId),'history'),...constraints));
+          services.recordQuery?.('applications/history',started,snapshot.size,{applicationId:String(applicationId),limit:max,append:!!cursor});
+          const items=snapshot.docs.map(doc=>({id:doc.id,...doc.data()})),last=snapshot.docs.at(-1)||null;
+          return {items,nextCursor:snapshot.size===max?last:null,hasMore:snapshot.size===max};
+        }catch(error){
+          const detail=`${error?.code||''} ${error?.message||''}`;
+          if(/permission-denied|missing or insufficient permissions|failed-precondition|index/i.test(detail)){
+            console.warn('Histórico detalhado indisponível; usando eventos do registro principal.',error);
+            return {items:[],nextCursor:null,hasMore:false,fallback:true};
+          }
+          throw error;
+        }
       },{loading:false});
     }
   };

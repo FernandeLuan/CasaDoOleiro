@@ -1,12 +1,11 @@
-/* Shell da homologação: navegação desktop, Planejamento e Ocupação como páginas reais. */
-(function homologationShell(){
-  const params=new URLSearchParams(location.search);
-  if(params.get('demo')!=='admin'||!/\/admin\//.test(location.pathname))return;
+/* Shell administrativo: navegação desktop e composição das páginas de gestão. */
+(function adminShell(){
+  if(!/\/admin\//.test(location.pathname))return;
 
   function installShellStyles(){
-    if(document.getElementById('homologationShellStyles'))return;
+    if(document.getElementById('adminShellStyles'))return;
     const style=document.createElement('style');
-    style.id='homologationShellStyles';
+    style.id='adminShellStyles';
     style.textContent=`
       .admin-sidebar-r62{display:none}
       @media(min-width:1024px){
@@ -113,8 +112,8 @@
   }
 
   function install(){
-    if(window.__OLEIRO_HOMOLOGATION_SHELL__)return;
-    window.__OLEIRO_HOMOLOGATION_SHELL__=true;
+    if(window.__OLEIRO_ADMIN_SHELL__)return;
+    window.__OLEIRO_ADMIN_SHELL__=true;
     installShellStyles();
 
     function sidebarItem(active,icon,label,action){

@@ -1,12 +1,11 @@
-/* R65 — Planejamento deixa de ser uma segunda lista de voluntários e vira quadro por dia/voluntário. */
-(function planningBoardR65(){
-  const params=new URLSearchParams(location.search);
-  if(params.get('demo')!=='admin'||!/\/admin\//.test(location.pathname))return;
-  if(window.__OLEIRO_PLANNING_BOARD_R65__)return;
-  window.__OLEIRO_PLANNING_BOARD_R65__=true;
+/* Planejamento em quadro por dia e voluntário. */
+(function planningBoard(){
+  if(!/\/admin\//.test(location.pathname))return;
+  if(window.__OLEIRO_PLANNING_BOARD__)return;
+  window.__OLEIRO_PLANNING_BOARD__=true;
 
-  if(!document.querySelector('link[data-planning-board-r65]')){
-    const link=document.createElement('link');link.rel='stylesheet';link.href='../css/planning-board-r65.css?v=20260903-r65';link.dataset.planningBoardR65='1';document.head.appendChild(link);
+  if(!document.querySelector('link[data-planning-board]')){
+    const link=document.createElement('link');link.rel='stylesheet';link.href='../css/planning-board.css?v=20260903-r65';link.dataset.planningBoard='1';document.head.appendChild(link);
   }
 
   const baseRenderManager=window.renderManager||renderManager;

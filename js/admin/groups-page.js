@@ -1,7 +1,6 @@
-/* Página de Grupos da homologação: unidades lado a lado e edição inline de integrantes. */
+/* Página administrativa de Grupos: unidades lado a lado e edição inline de integrantes. */
 (function groupsPage(){
-  const params=new URLSearchParams(location.search);
-  if(params.get('demo')!=='admin'||!/\/admin\//.test(location.pathname))return;
+  if(!/\/admin\//.test(location.pathname))return;
   if(window.__OLEIRO_GROUPS_PAGE__)return;
   window.__OLEIRO_GROUPS_PAGE__=true;
 

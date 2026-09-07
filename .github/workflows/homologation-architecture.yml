@@ -1,0 +1,43 @@
+name: Homologation Architecture
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'admin/**'
+      - 'portal/**'
+      - 'js/**'
+      - 'css/**'
+      - 'scripts/build-site.mjs'
+      - 'scripts/check-site-assets.mjs'
+      - 'scripts/check-homologation-architecture.mjs'
+      - 'tests/site-assets.test.mjs'
+      - '.github/workflows/deploy-homologacao.yml'
+      - '.github/workflows/homologation-architecture.yml'
+
+jobs:
+  architecture:
+    if: github.head_ref == 'test/homologacao-clean-ui'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Validate canonical homologation architecture
+        run: node scripts/check-homologation-architecture.mjs
+      - name: Test local asset integrity
+        run: node --test tests/site-assets.test.mjs
+      - name: Validate canonical build and all entry points
+        run: node scripts/build-site.mjs site-dist
+      - name: Validate changed JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --name-only origin/main...HEAD -- '*.js' '*.mjs' | while read -r file; do
+            [ -f "$file" ] || continue
+            node --check "$file"
+          done

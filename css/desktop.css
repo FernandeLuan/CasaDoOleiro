@@ -1,5 +1,4 @@
-/* Round 49/50 — desktop layout pass.
-   Everything in this file starts at 1024px so the mobile experience stays unchanged. */
+/* Desktop layout. Everything in this file starts at 1024px so the mobile experience stays unchanged. */
 @media (min-width:1024px){
   #app{max-width:1360px}
   .app-header{padding:16px 32px 14px}

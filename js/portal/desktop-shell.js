@@ -1,8 +1,6 @@
-/* Shell desktop da homologação para candidato e voluntário aprovado. */
+/* Shell desktop do portal para candidato e voluntário aprovado. */
 (function portalDesktopShell(){
-  const params=new URLSearchParams(location.search);
-  const demo=params.get('demo');
-  if(!['candidate','volunteer'].includes(demo)||!/\/portal\//.test(location.pathname))return;
+  if(!/\/portal\//.test(location.pathname))return;
   if(window.__OLEIRO_PORTAL_DESKTOP_SHELL__)return;
   window.__OLEIRO_PORTAL_DESKTOP_SHELL__=true;
 

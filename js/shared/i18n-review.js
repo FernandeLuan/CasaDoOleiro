@@ -1,5 +1,5 @@
-/* Round 31/32 — keyed strings for session-specific review UX. */
-(function i18nR31(){
+/* Traduções por chave para a experiência de revisão de atividades. */
+(function reviewI18n(){
   const messages=window.OleiroI18nMessages;if(!messages)return;
   const add=(lang,rows)=>Object.assign(messages[lang]||(messages[lang]={}),rows);
   add('pt',{

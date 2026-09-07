@@ -1,7 +1,6 @@
-/* Página de Ocupação da homologação: calendário mensal, unidade e detalhe do dia. */
+/* Página administrativa de Ocupação: calendário mensal, unidade e detalhe do dia. */
 (function occupancyPage(){
-  const params=new URLSearchParams(location.search);
-  if(params.get('demo')!=='admin'||!/\/admin\//.test(location.pathname))return;
+  if(!/\/admin\//.test(location.pathname))return;
   if(window.__OLEIRO_OCCUPANCY_PAGE__)return;
   window.__OLEIRO_OCCUPANCY_PAGE__=true;
 

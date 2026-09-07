@@ -1,5 +1,5 @@
-/* Round 55 — ações de reunião são injetadas após a limpeza do fluxo de seleção. */
-(function adminMeetingActivityR55(){
+/* Ações administrativas disponíveis durante a etapa de reunião. */
+(function adminMeetingActivity(){
   const baseRenderPersonModal=window.renderPersonModal||renderPersonModal;
   const safe=value=>encodeURIComponent(String(value??''));
 
@@ -28,8 +28,8 @@
     return `<div class="admin-session-manage-actions admin-meeting-creation-actions"><button class="btn btn-outline btn-xs" type="button" onclick="openAdminReplicateActivity('${app}','${sid}','${day}')"><i class="fa-solid fa-copy"></i>Replicar atividade</button><button class="btn btn-soft btn-xs" type="button" onclick="openAdminPlanningActivity('${app}','${day}')"><i class="fa-solid fa-plus"></i>Adicionar atividade</button></div>`;
   }
 
-  /* selection-flow-r25 remove as ações administrativas durante meeting. Por isso esta camada
-     roda DEPOIS do render base e recoloca apenas as duas ações permitidas nesta etapa. */
+  /* O fluxo de seleção remove ações administrativas durante meeting; após o render base,
+     recolocamos apenas as duas ações permitidas nesta etapa. */
   function injectMeetingActions(p,tab){
     modalRoot.querySelectorAll('.admin-meeting-add-activity').forEach(node=>node.remove());
     if(!meetingCandidate(p)||(tab!=='plan'&&modalRoot.dataset.personTab!=='plan'))return;
