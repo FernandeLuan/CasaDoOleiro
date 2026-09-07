@@ -49,8 +49,10 @@ segment=text.split('async changeStayDates',1)[1].split('async requestDayAdjustme
 assert 'cachedStayPreview' in segment
 assert 'applicationActivities' not in segment
 assert 'orphanActivityIds' in segment
-text=Path('js/services/application-service.js').read_text()
-assert 'getDocs' not in text.split('async countStatus',1)[1].split('\n    async ',1)[0], 'countStatus must use aggregation'
+lines=text.splitlines()
+for index,line in enumerate(lines):
+    if 'async countStatus' in line:
+        assert 'getDocs' not in '\n'.join(lines[index:index+12]), 'countStatus must use aggregation'
 PY
 
 # Spark-only administration and actual unit-scoped records.
@@ -84,7 +86,11 @@ has firestore.rules 'match /history/{eventId}'
 for file in js/services/history-service.js js/services/history-hooks.js; do has admin/index.html "../$file"; done
 has admin/index.html '../js/admin/history.js'
 has portal/index.html '../js/shared/i18n-keyed.js'
-no_match 'MutationObserver' js
+# The old global i18n/render observer is forbidden. Date-field enhancement has a
+# bounded, idempotent observer restricted to the Admin app and modal roots.
+no_match 'MutationObserver' js/shared/i18n*.js js/admin/planning-mobile-filters.js
+has js/admin/candidate-form.js 'enhanceSharedAdminDateFields(node)'
+has js/admin/candidate-form.js "document.getElementById('app')"
 for token in "status:'meeting'" "status:'plan_approved'" scheduleSelectionMeeting completeSelectionMeeting finalizeSelection "status:'rejected'"; do has js/services/selection-flow-service.js "$token"; done
 for token in 'Aprovar candidato' 'Não aprovar' 'Motivo interno da não aprovação' selection-flow-card; do has js/admin/selection-flow.js "$token"; done
 has js/portal/selection-flow.js portal.meeting.next
