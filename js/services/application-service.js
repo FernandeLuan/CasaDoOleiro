@@ -1,7 +1,9 @@
 (function initApplicationService(){
   const services=window.OleiroServices=window.OleiroServices||{};
   const STAY_PREVIEW_TTL=2*60*1000;
+  const OCCUPANCY_TTL=60*1000;
   const stayPreviewCache=new Map();
+  const occupancyCache=new Map();
 
   function normalize(value){return String(value||'').trim().toLocaleLowerCase('pt-BR')}
   function isoDate(value){if(!value)return null;if(typeof value==='string')return value.slice(0,10);if(typeof value.toDate==='function')return value.toDate().toISOString().slice(0,10);return null}
@@ -11,6 +13,7 @@
   function stayPreviewKey(id,start,end){return `${String(id)}|${String(start)}|${String(end)}`}
   function cachedStayPreview(id,start,end){const key=stayPreviewKey(id,start,end),cached=stayPreviewCache.get(key);if(!cached||Date.now()-cached.at>STAY_PREVIEW_TTL){stayPreviewCache.delete(key);return null}return cached}
   function clearStayPreview(id){const prefix=`${String(id)}|`;for(const key of stayPreviewCache.keys())if(key.startsWith(prefix))stayPreviewCache.delete(key)}
+  function occupancyKey(month,unitId){return `${String(month)}|${String(unitId||'all')}`}
 
   function mapApplication(doc){
     const data=doc.data();
@@ -104,12 +107,20 @@
 
     async listOccupancyMonth(month,{unitId='all'}={}){
       if(!month)return [];
+      const normalizedUnit=unitId&&unitId!=='all'?normalize(unitId):'all';
+      const key=occupancyKey(month,normalizedUnit),hit=occupancyCache.get(key);
+      if(hit&&Date.now()-hit.at<OCCUPANCY_TTL){
+        services.recordQuery?.('applications/occupancy-month-cache',Date.now(),hit.rows.length,{month:String(month),unitId:normalizedUnit,cached:true});
+        return hit.rows;
+      }
       return services.run(async()=>{
-        const context=await services.firebase();const {firestore}=context.modules,started=Date.now(),constraints=[firestore.where('status','==','approved'),firestore.where('stayMonths','array-contains',String(month))],normalizedUnit=unitId&&unitId!=='all'?normalize(unitId):'';
-        if(normalizedUnit)constraints.push(firestore.where('unitId','==',normalizedUnit));
+        const context=await services.firebase();const {firestore}=context.modules,started=Date.now(),constraints=[firestore.where('status','==','approved'),firestore.where('stayMonths','array-contains',String(month))];
+        if(normalizedUnit!=='all')constraints.push(firestore.where('unitId','==',normalizedUnit));
         const snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'applications'),...constraints));
-        services.recordQuery?.('applications/occupancy-month',started,snapshot.size,{month:String(month),unitId:normalizedUnit||'all'});
-        return snapshot.docs.map(mapApplication).filter(row=>!row.inactive);
+        const rows=snapshot.docs.map(mapApplication).filter(row=>!row.inactive);
+        occupancyCache.set(key,{at:Date.now(),rows});
+        services.recordQuery?.('applications/occupancy-month',started,snapshot.size,{month:String(month),unitId:normalizedUnit});
+        return rows;
       },{loading:false,monitor:{area:'applications',action:'occupancy_month'}});
     },
 
@@ -124,6 +135,7 @@
     },
 
     async update(id,patch){
+      occupancyCache.clear();
       return services.run(async()=>{
         const context=await services.firebase();const {firestore}=context.modules;
         await firestore.updateDoc(firestore.doc(context.db,'applications',String(id)),{...patch,updatedAt:firestore.serverTimestamp()});return true;
@@ -131,6 +143,7 @@
     },
 
     async updateLifecycle(id,{applicationPatch={},participantUids=[],participantActive=null}={}){
+      occupancyCache.clear();
       return services.run(async()=>{
         const context=await services.firebase();const {firestore}=context.modules;const batch=firestore.writeBatch(context.db);const now=firestore.serverTimestamp();
         batch.update(firestore.doc(context.db,'applications',String(id)),{...applicationPatch,updatedAt:now});
@@ -153,6 +166,7 @@
 
     async changeStayDates(id,{stayStart,stayEnd,removeOutside=true}={}){
       if(!stayStart||!stayEnd||stayEnd<stayStart)throw new Error('Período inválido.');
+      occupancyCache.clear();
       return services.run(async()=>{
         const context=await services.firebase();const {firestore}=context.modules,cached=cachedStayPreview(id,stayStart,stayEnd);
         const sessions=cached?.sessions||await applicationSessions(context,id);
@@ -191,6 +205,7 @@
 
     async resetPlanning(id,{deadlineDays=7,participantUids=[]}={}){
       if(!id)throw new Error('Candidatura não encontrada.');
+      occupancyCache.clear();
       return services.run(async()=>{
         const context=await services.firebase();const {firestore}=context.modules;const applicationId=String(id);clearStayPreview(applicationId);
         const [sessions,activities]=await Promise.all([applicationSessions(context,applicationId),applicationActivities(context,applicationId)]);
