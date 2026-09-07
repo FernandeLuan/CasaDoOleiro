@@ -10,7 +10,9 @@ on:
       - 'js/**'
       - 'css/**'
       - 'scripts/build-site.mjs'
+      - 'scripts/check-site-assets.mjs'
       - 'scripts/check-homologation-architecture.mjs'
+      - 'tests/site-assets.test.mjs'
       - '.github/workflows/deploy-homologacao.yml'
       - '.github/workflows/homologation-architecture.yml'
 
@@ -22,8 +24,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
       - name: Validate canonical homologation architecture
         run: node scripts/check-homologation-architecture.mjs
+      - name: Test local asset integrity
+        run: node --test tests/site-assets.test.mjs
+      - name: Validate canonical build and all entry points
+        run: node scripts/build-site.mjs site-dist
       - name: Validate changed JavaScript syntax
         shell: bash
         run: |
