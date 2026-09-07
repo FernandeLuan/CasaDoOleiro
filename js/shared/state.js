@@ -11,7 +11,7 @@ const state = {
   volunteerMode: 'candidate',
   volunteerPlanStatus: 'draft',
   candidateTab: 'candidates',
-  candidateFilter: 'approved',
+  candidateFilter: 'all',
   candidateSearch: '',
   candidateUnit: 'all',
   candidateVisibleCount: 10,

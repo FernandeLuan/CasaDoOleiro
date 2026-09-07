@@ -2,7 +2,7 @@ import {test,expect} from '@playwright/test';
 import fs from 'node:fs';
 
 test('selection transitions derive activity refs without a second Firestore query',async()=>{
-  const source=fs.readFileSync('js/services/selection-flow-r25-service.js','utf8');
+  const source=fs.readFileSync('js/services/selection-flow-service.js','utf8');
   const start=source.indexOf('async function planningDocs');
   const end=source.indexOf('function ensureBatchSize',start);
   expect(start).toBeGreaterThanOrEqual(0);

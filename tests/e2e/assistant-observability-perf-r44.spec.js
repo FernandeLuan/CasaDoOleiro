@@ -3,7 +3,7 @@ import fs from 'node:fs';
 
 test('assistant stays unit-scoped and can run candidate lifecycle', async () => {
   const rules=fs.readFileSync('firestore.rules','utf8');
-  const ui=fs.readFileSync('js/admin/activity-assistant-r31.js','utf8');
+  const ui=fs.readFileSync('js/admin/activity-assistant.js','utf8');
   const apps=fs.readFileSync('js/services/application-service.js','utf8');
   const scoped=fs.readFileSync('js/services/review-flow-r31-service.js','utf8');
   const groups=fs.readFileSync('js/services/group-service.js','utf8');

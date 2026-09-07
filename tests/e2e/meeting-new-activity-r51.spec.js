@@ -3,8 +3,8 @@ import fs from 'node:fs';
 
 test('meeting stage exposes contextual replicate and add actions while keeping approved planning locked', async () => {
   const portal=fs.readFileSync('portal/index.html','utf8');
-  const feature=fs.readFileSync('js/portal/meeting-activity-r51.js','utf8');
-  const selection=fs.readFileSync('js/portal/selection-flow-r25.js','utf8');
+  const feature=fs.readFileSync('js/portal/meeting-activity.js','utf8');
+  const selection=fs.readFileSync('js/portal/selection-flow.js','utf8');
 
   expect(selection).toContain("state.currentApplication?.status==='meeting'");
   expect(selection).toContain('volunteerAgendaContent(false)');
@@ -20,8 +20,8 @@ test('meeting stage exposes contextual replicate and add actions while keeping a
   expect(feature).toContain("state.volunteerMode='approved'");
   expect(feature).toContain('try{return baseSaveActivity(...args)}finally{state.volunteerMode=previousMode}');
 
-  const selectionAt=portal.indexOf('selection-flow-r25.js');
-  const r51At=portal.indexOf('meeting-activity-r51.js');
+  const selectionAt=portal.indexOf('selection-flow.js');
+  const r51At=portal.indexOf('meeting-activity.js');
   expect(selectionAt).toBeGreaterThan(-1);
   expect(r51At).toBeGreaterThan(selectionAt);
 });
