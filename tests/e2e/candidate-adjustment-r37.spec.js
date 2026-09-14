@@ -13,7 +13,7 @@ async function login(page,email,password,target){
   await page.locator('#email').fill(email);await page.locator('#password').fill(password);await page.locator('#loginButton').click();await expect(page).toHaveURL(new RegExp(`/${target}/`),{timeout:30_000});
 }
 async function relogin(page,email,password,target){await page.evaluate(()=>window.OleiroAuth?.signOut?.());await login(page,email,password,target)}
-const navAction=(page,label)=>page.getByRole('button',{name:new RegExp(`^[^\p{L}\p{N}]*${label}$`,'u')});
+const navAction=(page,label)=>page.getByRole('button',{name:new RegExp(`^.{0,3}${label}$`)});
 async function openVolunteerByStatus(page,status,name){
   const list=page.locator('#candidateList');await navAction(page,'Voluntariado').click();
   try{await expect(list).toBeVisible({timeout:10_000})}catch{await navAction(page,'Voluntariado').click();await expect(list).toBeVisible({timeout:20_000})}
