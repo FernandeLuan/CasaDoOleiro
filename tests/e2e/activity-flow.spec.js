@@ -13,7 +13,7 @@ async function login(page,email,password,target){
   await page.waitForFunction(async()=>{try{const context=await window.OleiroFirebase?.ready;return !!context?.configured&&typeof window.OleiroAuth?.signIn==='function'}catch{return false}},undefined,{timeout:30_000});
   await page.locator('#email').fill(email);await page.locator('#password').fill(password);await page.locator('#loginButton').click();await expect(page).toHaveURL(new RegExp(`/${target}/`),{timeout:30_000});
 }
-const navAction=(page,label)=>page.locator('#navRoot').getByRole('button',{name:new RegExp(`${label}$`)});
+const navAction=(page,label)=>page.getByRole('button',{name:new RegExp(`^[^\p{L}\p{N}]*${label}$`,'u')});
 async function openPendingVolunteer(page){
   await navAction(page,'Voluntariado').click();
   const list=page.locator('#candidateList');await expect(list).toBeVisible({timeout:20_000});await expect(list.getByText(/Carregando voluntários/)).toHaveCount(0,{timeout:20_000});
