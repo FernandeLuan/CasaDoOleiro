@@ -12,12 +12,15 @@ async function signIn(page,email,password,target){
   await page.locator('#email').fill(email);await page.locator('#password').fill(password);await page.locator('#loginButton').click();await expect(page).toHaveURL(new RegExp(`/${target}/`),{timeout:30_000});
 }
 async function login(page){await signIn(page,'admin@oleiro.test','Admin123!','admin')}
-const navAction=(page,label)=>page.locator('#navRoot').getByRole('button',{name:new RegExp(`${label}$`)});
-async function openPendingVolunteer(page){
-  await navAction(page,'Voluntariado').click();const list=page.locator('#candidateList');await expect(list).toBeVisible({timeout:20_000});
-  const apply=async()=>{await page.locator('#app').getByRole('button',{name:/Filtros/}).click();await page.locator('#candidateStatusFilter').selectOption('pending');await page.locator('#modalRoot').getByRole('button',{name:/Aplicar$/}).click();await expect(list.getByText(/Carregando voluntários/)).toHaveCount(0,{timeout:20_000})};
-  await apply();let item=list.locator('.list-item.clickable').filter({hasText:'Voluntário E2E'}).first();if(!(await item.isVisible().catch(()=>false))&&await page.getByText('Não foi possível aplicar os filtros.').count()){await apply();item=list.locator('.list-item.clickable').filter({hasText:'Voluntário E2E'}).first()}
-  await expect(item).toBeVisible({timeout:20_000});await item.click();return page.locator('#modalRoot');
+const navAction=(page,label)=>page.getByRole('button',{name:new RegExp(`^.{0,3}${label}$`)});
+async function openAdminPlanning(page,name){
+  const desktop=page.locator('.admin-sidebar-nav-r62 button.admin-sidebar-item-r62').filter({hasText:'Planejamento'}).first();
+  if(await desktop.isVisible().catch(()=>false))await desktop.click();else{const mobile=page.locator('#navRoot button.nav-btn').filter({hasText:'Planejamento'}).first();await expect(mobile).toHaveCount(1,{timeout:20_000});await mobile.evaluate(button=>button.click())}
+  const board=page.locator('.planning-board-page');await expect(board).toBeVisible({timeout:20_000});
+  const search=board.getByPlaceholder('Buscar voluntário por nome');await expect(search).toBeVisible();await search.fill(name);
+  const selected=board.locator('.planning-board-selected').filter({hasText:name});await expect(selected).toBeVisible({timeout:20_000});await selected.getByRole('button',{name:/Abrir perfil/}).click();
+  const detail=page.locator('.planning-detail-page');await expect(detail).toBeVisible({timeout:20_000});await expect(detail.locator('.planning-page-loading')).toHaveCount(0,{timeout:20_000});
+  return detail.locator('.planning-page-content');
 }
 async function expectHorizontal(buttons){
   await expect(buttons).toHaveCount(3);
@@ -26,13 +29,20 @@ async function expectHorizontal(buttons){
   expect(Math.max(...boxes.map(b=>b.top))-Math.min(...boxes.map(b=>b.top))).toBeLessThanOrEqual(2);
   expect(boxes[0].left).toBeLessThan(boxes[1].left);expect(boxes[1].left).toBeLessThan(boxes[2].left);expect(boxes.every(b=>b.width>0)).toBe(true);
 }
+async function expectAdminContextActions(card){
+  const trigger=card.getByRole('button',{name:/^Ações de /});await expect(trigger).toBeVisible();await trigger.click();
+  const menu=card.locator('.planning-activity-menu');await expect(menu).toBeVisible();
+  await expect(menu.getByRole('button',{name:'Editar'})).toBeVisible();
+  await expect(menu.getByRole('button',{name:'Mover'})).toBeVisible();
+  await expect(menu.getByRole('button',{name:'Excluir'})).toBeVisible();
+}
 
 test.beforeEach(async()=>{await seedEmulators()});
 
-test('Editar Mover e Excluir stay on the same row in Admin planning',async({page})=>{
-  await login(page);const modal=await openPendingVolunteer(page);const planning=modal.getByRole('button',{name:/Planejamento/}).first();if(await planning.count())await planning.click();
-  const day=modal.locator('details[data-plan-date="2026-09-15"]');await expect(day).toBeVisible({timeout:20_000});if((await day.getAttribute('open'))===null)await day.locator('summary').click();await expect(day).toHaveAttribute('open','');
-  const card=day.locator('.admin-portal-activity-card').filter({hasText:'Oficina candidato E2E'});await expect(card).toBeVisible();await expectHorizontal(card.locator('.admin-session-manage-actions>.btn'));
+test('Admin planning exposes Editar Mover and Excluir in the contextual activity menu',async({page})=>{
+  await login(page);const planning=await openAdminPlanning(page,'Voluntário E2E');
+  const day=planning.locator('.planning-person-day[data-plan-date="2026-09-15"]');await expect(day).toBeVisible({timeout:20_000});
+  const card=day.locator('.admin-portal-activity-card').filter({hasText:'Oficina candidato E2E'});await expect(card).toBeVisible();await expectAdminContextActions(card);
 });
 
 test('Editar Mover e Excluir stay on the same row in candidate portal planning',async({page})=>{

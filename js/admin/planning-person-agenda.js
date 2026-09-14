@@ -87,7 +87,7 @@
 
   function activityActionsHtml(p,s){
     const app=safe(p.id),sid=safe(s.id),date=safe(iso(s.date)),activity=safe(s.activityId||''),status=String(s.status||'proposed'),review=String(s.reviewStatus||''),changeReview=String(s.changeReviewStatus||'analysis');
-    const out=[];
+    const out=[],preApproval=!['approved','meeting'].includes(String(p?.status||''));
     if(s.postApprovalProposal===true&&review==='analysis'){
       out.push(iconAction('Aprovar','fa-check',`planningReviewPostApproval('${app}','${activity}','approve')`,'primary'));
       out.push(iconAction('Reajustar','fa-rotate',`planningOpenPostApprovalAdjustment('${app}','${activity}')`,'warning'));
@@ -103,12 +103,14 @@
       }
       return out.join('');
     }
+    if(preApproval&&!['requested','analysis'].includes(String(s.adminAdjustmentStatus||'')))out.push(iconAction('Pedir ajuste','fa-rotate',`requestR31SessionAdjustment('${app}','${sid}','${date}')`,'warning'));
     if(status==='proposed')out.push(iconAction('Confirmar','fa-check',`planningConfirmSession('${app}','${sid}')`,'primary'));
     if(status!=='rejected'&&review!=='rejected'){
       out.push(iconAction('Editar','fa-pen',`planningOpenEdit('${app}','${sid}','${date}')`));
       out.push(iconAction('Duplicar','fa-copy',`planningOpenDuplicate('${app}','${sid}')`));
       out.push(iconAction('Mover','fa-arrows-up-down-left-right',`planningOpenMove('${app}','${sid}')`));
       out.push(iconAction('Grupo','fa-people-group',`planningOpenGroup('${app}','${sid}')`));
+      if(preApproval)out.push(iconAction('Excluir','fa-trash',`requestAdminDeletePlanningSession('${app}','${sid}','${date}')`,'danger'));
     }
     return out.join('');
   }
