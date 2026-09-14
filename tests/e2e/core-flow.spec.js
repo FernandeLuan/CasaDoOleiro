@@ -33,7 +33,7 @@ async function login(page,email,password,target,language='pt'){
   await expect(page).toHaveURL(new RegExp(`/${target}/`),{timeout:30_000});
 }
 
-const navAction=(page,label)=>page.locator('#navRoot').getByRole('button',{name:new RegExp(`${label}$`)});
+const navAction=(page,label)=>page.getByRole('button',{name:new RegExp(`^[^\p{L}\p{N}]*${label}$`,'u')});
 const appAction=(page,label)=>page.locator('#app').getByRole('button',{name:new RegExp(label)});
 const activityCard=(page,label)=>page.locator('.activity-card').filter({hasText:label});
 
@@ -63,8 +63,7 @@ test.beforeEach(async()=>{
 
 test('Admin manages independent A/B/C/D groups for Rodeio and Indaial',async({page})=>{
   await login(page,'admin@oleiro.test','Admin123!','admin');
-  await navAction(page,'Menu').click();
-  await page.locator('#app .menu-list').getByRole('button',{name:/Grupos\b/}).click();
+  await navAction(page,'Grupos').click();
   await expect(page.locator('#managerGroupUnit')).toBeVisible({timeout:20_000});
   await expect(page.locator('.group-details')).toHaveCount(4,{timeout:20_000});
 
