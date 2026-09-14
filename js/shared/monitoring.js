@@ -6,6 +6,9 @@
   const sensitiveKey=/(email|phone|password|passwd|token|authorization|cookie|contact|secret|name|messageText)/i;
   const queue=[];
   const slowQuerySeen=new Map();
+  const slowQueryBreadcrumbMs=1200;
+  const slowQueryReportMs=2500;
+  const slowQueryCriticalMs=4000;
   const monitoringStartedAt=Date.now();
   const reported=typeof WeakSet==='function'?new WeakSet():null;
   let initialized=false;
@@ -91,12 +94,13 @@
   function flushQueue(){while(queue.length){const item=queue.shift();sendException(item.error,item.meta)}}
   function captureSlowQuery(row={}) {
     const durationMs=Number(row.ms)||0,name=String(row.name||'unknown');
-    if(!config.enabled||!config.dsn||durationMs<1200)return null;
+    if(!config.enabled||!config.dsn||durationMs<slowQueryBreadcrumbMs)return null;
     const seen=(slowQuerySeen.get(name)||0)+1;slowQuerySeen.set(name,seen);
     const coldStart=row.coldStart===true||(Date.now()-monitoringStartedAt<10000);
-    if(initialized&&window.Sentry?.addBreadcrumb)window.Sentry.addBreadcrumb({category:'firestore.performance',message:name,level:durationMs>=4000?'warning':'info',data:{durationMs,count:Number(row.count)||0,coldStart,seen}});
-    if(coldStart&&seen<3)return null;
-    if(durationMs<2500&&seen<2)return null;
+    if(initialized&&window.Sentry?.addBreadcrumb)window.Sentry.addBreadcrumb({category:'firestore.performance',message:name,level:durationMs>=slowQueryCriticalMs?'warning':'info',data:{durationMs,count:Number(row.count)||0,coldStart,seen}});
+    if(durationMs<slowQueryReportMs)return null;
+    if(coldStart&&durationMs<slowQueryCriticalMs)return null;
+    if(durationMs<slowQueryCriticalMs&&seen<2)return null;
     return captureException(new Error(`Slow Firestore query: ${name} (${durationMs}ms)`),{area:'performance',action:'slow_firestore_query',extra:{query:name,durationMs,count:Number(row.count)||0,unitId:row.unitId||'',status:row.status||'',coldStart,seen}});
   }
   function load(){
