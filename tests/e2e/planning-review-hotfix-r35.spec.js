@@ -16,7 +16,8 @@ async function openAdminPlanning(page,name){
   const detail=page.locator('.planning-detail-page');await expect(detail).toBeVisible({timeout:20_000});await expect(detail.locator('.planning-page-loading')).toHaveCount(0,{timeout:20_000});
   return detail.locator('.planning-page-content');
 }
-async function ensureDay(root,date){const day=root.locator(`details[data-plan-date="${date}"]`);await expect(day).toBeVisible({timeout:20_000});await day.evaluate(node=>{node.open=true});return day}
+async function ensureDay(root,date){const day=root.locator(`.planning-person-day[data-plan-date="${date}"]`);await expect(day).toBeVisible({timeout:20_000});return day}
+async function openCardActions(card){const trigger=card.getByRole('button',{name:/^Ações de /});await expect(trigger).toBeVisible();await trigger.click();const menu=card.locator('.planning-activity-menu');await expect(menu).toBeVisible();return menu}
 async function sessionState(page,applicationId,matcher){return page.evaluate(async({applicationId,matcher})=>{const rows=await window.OleiroServices.planning.listSessions({applicationId});const row=rows.find(item=>item.id===matcher||item.activityName===matcher);return row||null},{applicationId,matcher})}
 
 async function createApprovedProposal(page,name,period='Tarde'){
@@ -37,7 +38,7 @@ test('post-approval activity returned for readjustment stays horizontal and resu
   const activityName='Nova atividade reajuste E2E';
   await login(page,'approved@oleiro.test','Approved123!','portal');await createApprovedProposal(page,activityName);
 
-  await relogin(page,'admin@oleiro.test','Admin123!','admin');const planning=await openAdminPlanning(page,'Aprovado E2E');const day=await ensureDay(planning,'2026-09-23');let card=day.locator('.admin-portal-activity-card').filter({hasText:activityName});await expect(card).toBeVisible();await card.getByRole('button',{name:/Reajustar$/}).click();await page.locator('#postApprovalReajustNote').fill('Trocar o período antes de aprovar.');await page.locator('#modalRoot').getByRole('button',{name:/Enviar reajuste/}).click();
+  await relogin(page,'admin@oleiro.test','Admin123!','admin');const planning=await openAdminPlanning(page,'Aprovado E2E');const day=await ensureDay(planning,'2026-09-23');let card=day.locator('.admin-portal-activity-card').filter({hasText:activityName});await expect(card).toBeVisible();let menu=await openCardActions(card);await menu.getByRole('button',{name:/^Reajustar$/}).click();await page.locator('#planningPostAdjustment').fill('Trocar o período antes de aprovar.');await page.locator('#modalRoot').getByRole('button',{name:/Enviar reajuste/}).click();
   await expect.poll(async()=>{const row=await sessionState(page,'e2e-approved-application',activityName);return row?.reviewStatus||''},{timeout:20_000}).toBe('adjustments');
 
   await relogin(page,'approved@oleiro.test','Approved123!','portal');await navAction(page,'Agenda').click();card=page.locator('.activity-card.post-approval-proposal').filter({hasText:activityName});await expect(card).toBeVisible({timeout:20_000});const buttons=card.locator('.candidate-session-actions>.btn');await expect(buttons).toHaveCount(2);const tops=await buttons.evaluateAll(nodes=>nodes.map(node=>Math.round(node.getBoundingClientRect().top)));expect(Math.max(...tops)-Math.min(...tops)).toBeLessThanOrEqual(2);
@@ -46,7 +47,7 @@ test('post-approval activity returned for readjustment stays horizontal and resu
 });
 
 test('approving planning resolves Ajustado instead of carrying the tag into approved planning',async({page})=>{
-  await login(page,'admin@oleiro.test','Admin123!','admin');let planning=await openAdminPlanning(page,'Voluntário E2E');let day=await ensureDay(planning,'2026-09-15');let card=day.locator('.admin-portal-activity-card').filter({hasText:'Oficina candidato E2E'});await card.getByRole('button',{name:/Pedir ajuste/}).click();await page.locator('#r31SessionAdjustNote').fill('Trocar o período.');await page.locator('#r31SessionAdjustSave').click();
+  await login(page,'admin@oleiro.test','Admin123!','admin');let planning=await openAdminPlanning(page,'Voluntário E2E');let day=await ensureDay(planning,'2026-09-15');let card=day.locator('.admin-portal-activity-card').filter({hasText:'Oficina candidato E2E'});let menu=await openCardActions(card);await menu.getByRole('button',{name:/^Pedir ajuste$/}).click();await page.locator('#r31SessionAdjustNote').fill('Trocar o período.');await page.locator('#r31SessionAdjustSave').click();
   await expect.poll(async()=>{const row=await sessionState(page,'e2e-application','e2e-candidate-session');return row?.adminAdjustmentStatus||''},{timeout:20_000}).toBe('requested');
 
   await relogin(page,'voluntario@oleiro.test','Volunteer123!','portal');await navAction(page,'Planejamento').click();card=page.locator('.activity-card').filter({hasText:'Oficina candidato E2E'});await expect(card.getByRole('button',{name:/Ajustar atividade/})).toBeVisible({timeout:20_000});await card.getByRole('button',{name:/Ajustar atividade/}).click();await expect(page.locator('#r31ActTime')).toHaveCount(0);await page.locator('#r31ActPeriod').selectOption('Noite');await page.locator('#r31VolunteerAdjustSave').click();await expect(page.locator('.activity-card').filter({hasText:'Oficina candidato E2E'})).toContainText('Ajustado');
