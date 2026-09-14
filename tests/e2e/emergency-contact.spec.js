@@ -15,7 +15,7 @@ async function login(page){
   await page.locator('#email').fill('voluntario@oleiro.test');await page.locator('#password').fill('Volunteer123!');await page.locator('#loginButton').click();await expect(page).toHaveURL(/\/portal\//,{timeout:30_000});
 }
 
-const profileNav=page=>page.getByRole('button',{name:/^[^\p{L}\p{N}]*Perfil$/u});
+const profileNav=page=>page.getByRole('button',{name:/^.{0,3}Perfil$/});
 
 test.beforeEach(async()=>{await seedEmulators()});
 
