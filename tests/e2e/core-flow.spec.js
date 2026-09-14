@@ -33,7 +33,7 @@ async function login(page,email,password,target,language='pt'){
   await expect(page).toHaveURL(new RegExp(`/${target}/`),{timeout:30_000});
 }
 
-const navAction=(page,label)=>page.getByRole('button',{name:new RegExp(`^[^\p{L}\p{N}]*${label}$`,'u')});
+const navAction=(page,label)=>page.getByRole('button',{name:new RegExp(`^.{0,3}${label}$`)});
 const appAction=(page,label)=>page.locator('#app').getByRole('button',{name:new RegExp(label)});
 const activityCard=(page,label)=>page.locator('.activity-card').filter({hasText:label});
 
