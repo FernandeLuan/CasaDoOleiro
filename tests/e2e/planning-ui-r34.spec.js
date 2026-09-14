@@ -15,7 +15,7 @@ async function login(page){await signIn(page,'admin@oleiro.test','Admin123!','ad
 const navAction=(page,label)=>page.getByRole('button',{name:new RegExp(`^.{0,3}${label}$`)});
 async function openAdminPlanning(page,name){
   const desktop=page.locator('.admin-sidebar-nav-r62 button.admin-sidebar-item-r62').filter({hasText:'Planejamento'}).first();
-  if(await desktop.isVisible().catch(()=>false))await desktop.click();else await page.locator('#navRoot button.nav-btn:visible').filter({hasText:'Planejamento'}).first().click();
+  if(await desktop.isVisible().catch(()=>false))await desktop.click();else{const mobile=page.locator('#navRoot button.nav-btn').filter({hasText:'Planejamento'}).first();await expect(mobile).toHaveCount(1,{timeout:20_000});await mobile.evaluate(button=>button.click())}
   const board=page.locator('.planning-board-page');await expect(board).toBeVisible({timeout:20_000});
   const search=board.getByPlaceholder('Buscar voluntário por nome');await expect(search).toBeVisible();await search.fill(name);
   const selected=board.locator('.planning-board-selected').filter({hasText:name});await expect(selected).toBeVisible({timeout:20_000});await selected.getByRole('button',{name:/Abrir perfil/}).click();
