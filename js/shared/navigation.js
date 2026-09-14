@@ -1,9 +1,9 @@
 /* Navegação compartilhada: troca de tela usa estado em memória e atualiza dados em segundo plano. */
 function scrollPageTop(){
   const reset=()=>{window.scrollTo({top:0,left:0,behavior:'auto'});document.documentElement.scrollTop=0;document.body.scrollTop=0;const page=document.querySelector('.page');if(page){page.scrollTop=0;page.scrollLeft=0;typeof page.scrollTo==='function'&&page.scrollTo({top:0,left:0,behavior:'auto'})}};
-  reset();requestAnimationFrame(reset);setTimeout(reset,40);
+  reset();
 }
-function afterNavigation(){try{document.activeElement?.blur?.()}catch{}scrollPageTop()}
+function afterNavigation(){if(typeof closeOccupancyDayPopup==='function')closeOccupancyDayPopup();try{document.activeElement?.blur?.()}catch{}scrollPageTop()}
 async function goHome(){
   if(state.role==='manager')state.managerPage='home';else if(state.role==='volunteer')state.volunteerPage='home';render();afterNavigation();
   if(state.role==='manager'){

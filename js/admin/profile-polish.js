@@ -71,8 +71,11 @@
 
       @media(max-width:1023px){
         html{-webkit-text-size-adjust:100%!important}
-        html,body,#app,.admin-shell-r62,.admin-content-r62{overscroll-behavior:none!important}
-        html,body,#app{max-width:100%!important;overflow-x:hidden!important}
+        /* The document owns mobile scrolling; wrappers must not become scroll containers. */
+        html{overflow-x:clip!important;overflow-y:auto!important;overscroll-behavior-y:auto!important}
+        body,#app,.admin-shell-r62,.admin-content-r62{max-width:100%!important;overflow-x:clip!important;overscroll-behavior-y:auto!important}
+        body:not(.modal-open):not(.occupancy-day-modal-open){overflow-y:visible!important}
+        #app,.admin-shell-r62,.admin-content-r62,.admin-content-r62>.page{overflow-x:clip!important;overflow-y:visible!important}
         .admin-content-r62>.page{padding-bottom:calc(68px + env(safe-area-inset-bottom))!important}
         .candidate-search .input,.planning-board-search .input,
         .candidate-search .input::placeholder,.planning-board-search .input::placeholder{
@@ -258,8 +261,9 @@
   }
 
   function polish(){moveHistoryTabsToHeader();simplifyPlanningDayHeaders();ensureEmergencyActions()}
-  let attempts=0;function settle(){polish();attempts+=1;if(attempts<12)setTimeout(settle,90)}
+  let polishFrame=null;
+  function schedulePolish(){if(polishFrame!==null)return;polishFrame=requestAnimationFrame(()=>{polishFrame=null;polish()})}
   const baseRenderManager=typeof window.renderManager==='function'?window.renderManager:null;
-  if(baseRenderManager){renderManager=function(){const result=baseRenderManager();queueMicrotask(polish);requestAnimationFrame(polish);setTimeout(polish,60);return result};window.renderManager=renderManager;render=function(){return renderManager()};window.render=render}
-  installStyles();requestAnimationFrame(settle);
+  if(baseRenderManager){renderManager=function(){const result=baseRenderManager();schedulePolish();return result};window.renderManager=renderManager;render=function(){return renderManager()};window.render=render}
+  installStyles();schedulePolish();
 })();

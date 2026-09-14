@@ -30,6 +30,12 @@ jobs:
           node-version: '24'
       - name: Validate queries, monitoring and local assets
         run: node --test tests/*.test.mjs
+      - name: Install browser regression dependencies
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium webkit
+      - name: Validate mobile scrolling before publication
+        run: npx playwright test tests/e2e/mobile-scroll.spec.js
       - name: Build canonical production application
         env:
           APP_ENV: production

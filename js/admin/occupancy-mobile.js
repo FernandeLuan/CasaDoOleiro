@@ -44,7 +44,7 @@
       html:has(body .occupancy-page-screen),
       body:has(.occupancy-page-screen){
         min-height:0!important;
-        overscroll-behavior-y:none!important;
+        overscroll-behavior-y:auto!important;
       }
       body:has(.occupancy-page-screen){padding-bottom:0!important}
       body:has(.occupancy-page-screen) #app{
@@ -269,7 +269,6 @@
     window.renderManager=function(){
       ensureUnitState();
       const result=baseRenderManager();
-      queueMicrotask(ensureUnitButtons);
       requestAnimationFrame(ensureUnitButtons);
       return result;
     };
