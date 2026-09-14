@@ -29,13 +29,20 @@ async function expectHorizontal(buttons){
   expect(Math.max(...boxes.map(b=>b.top))-Math.min(...boxes.map(b=>b.top))).toBeLessThanOrEqual(2);
   expect(boxes[0].left).toBeLessThan(boxes[1].left);expect(boxes[1].left).toBeLessThan(boxes[2].left);expect(boxes.every(b=>b.width>0)).toBe(true);
 }
+async function expectAdminContextActions(card){
+  const trigger=card.getByRole('button',{name:/^Ações de /});await expect(trigger).toBeVisible();await trigger.click();
+  const menu=card.locator('.planning-activity-menu');await expect(menu).toBeVisible();
+  await expect(menu.getByRole('button',{name:'Editar'})).toBeVisible();
+  await expect(menu.getByRole('button',{name:'Mover'})).toBeVisible();
+  await expect(menu.getByRole('button',{name:'Excluir'})).toBeVisible();
+}
 
 test.beforeEach(async()=>{await seedEmulators()});
 
-test('Editar Mover e Excluir stay on the same row in Admin planning',async({page})=>{
+test('Admin planning exposes Editar Mover and Excluir in the contextual activity menu',async({page})=>{
   await login(page);const planning=await openAdminPlanning(page,'Voluntário E2E');
-  const day=planning.locator('details[data-plan-date="2026-09-15"]');await expect(day).toBeVisible({timeout:20_000});if((await day.getAttribute('open'))===null)await day.locator('summary').click();await expect(day).toHaveAttribute('open','');
-  const card=day.locator('.admin-portal-activity-card').filter({hasText:'Oficina candidato E2E'});await expect(card).toBeVisible();await expectHorizontal(card.locator('.admin-session-manage-actions>.btn'));
+  const day=planning.locator('.planning-person-day[data-plan-date="2026-09-15"]');await expect(day).toBeVisible({timeout:20_000});
+  const card=day.locator('.admin-portal-activity-card').filter({hasText:'Oficina candidato E2E'});await expect(card).toBeVisible();await expectAdminContextActions(card);
 });
 
 test('Editar Mover e Excluir stay on the same row in candidate portal planning',async({page})=>{
