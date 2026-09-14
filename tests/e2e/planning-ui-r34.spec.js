@@ -14,11 +14,11 @@ async function signIn(page,email,password,target){
 async function login(page){await signIn(page,'admin@oleiro.test','Admin123!','admin')}
 const navAction=(page,label)=>page.getByRole('button',{name:new RegExp(`^.{0,3}${label}$`)});
 async function openAdminPlanning(page,name){
-  await page.waitForFunction(()=>typeof window.navigateManager==='function',{timeout:20_000});await page.evaluate(()=>window.navigateManager('planning'));
-  const list=page.locator('#planningCandidateList');await expect(list).toBeVisible({timeout:20_000});
-  let item=list.locator('.list-item.clickable').filter({hasText:name}).first();
-  if(!(await item.isVisible().catch(()=>false))){await page.locator('#planningCandidateSearch').fill(name);item=list.locator('.list-item.clickable').filter({hasText:name}).first()}
-  await expect(item).toBeVisible({timeout:20_000});await item.click();
+  const desktop=page.locator('.admin-sidebar-nav-r62 button.admin-sidebar-item-r62').filter({hasText:'Planejamento'}).first();
+  if(await desktop.isVisible().catch(()=>false))await desktop.click();else await page.locator('#navRoot button.nav-btn:visible').filter({hasText:'Planejamento'}).first().click();
+  const board=page.locator('.planning-board-page');await expect(board).toBeVisible({timeout:20_000});
+  const search=board.getByPlaceholder('Buscar voluntário por nome');await expect(search).toBeVisible();await search.fill(name);
+  const selected=board.locator('.planning-board-selected').filter({hasText:name});await expect(selected).toBeVisible({timeout:20_000});await selected.getByRole('button',{name:/Abrir perfil/}).click();
   const detail=page.locator('.planning-detail-page');await expect(detail).toBeVisible({timeout:20_000});await expect(detail.locator('.planning-page-loading')).toHaveCount(0,{timeout:20_000});
   return detail.locator('.planning-page-content');
 }
