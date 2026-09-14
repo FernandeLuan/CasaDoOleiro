@@ -8,7 +8,7 @@ async function login(page,email,password,target){await prepare(page);await page.
 async function relogin(page,email,password,target){await page.evaluate(()=>window.OleiroAuth?.signOut?.());await login(page,email,password,target)}
 const navAction=(page,label)=>page.getByRole('button',{name:new RegExp(`^.{0,3}${label}$`)});
 async function openAdminPlanning(page,name){
-  await page.evaluate(()=>navigateManager('planning'));
+  await page.waitForFunction(()=>typeof window.navigateManager==='function',{timeout:20_000});await page.evaluate(()=>window.navigateManager('planning'));
   const list=page.locator('#planningCandidateList');await expect(list).toBeVisible({timeout:20_000});
   let item=list.locator('.list-item.clickable').filter({hasText:name}).first();
   if(!(await item.isVisible().catch(()=>false))){await page.locator('#planningCandidateSearch').fill(name);item=list.locator('.list-item.clickable').filter({hasText:name}).first()}
