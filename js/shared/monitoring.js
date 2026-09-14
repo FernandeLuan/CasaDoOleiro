@@ -72,6 +72,12 @@
       if(meta.sessionId)scope.setTag('sessionId',String(meta.sessionId));
       if(meta.status)scope.setTag('recordStatus',String(meta.status));
       if(meta.extra)scope.setExtras(scrub(meta.extra));
+      if(meta.action==='slow_firestore_query'){
+        scope.setLevel('warning');
+        scope.setFingerprint(['firestore-slow-query',meta.extra.query]);
+        eventId=window.Sentry.captureMessage(`Slow Firestore query: ${meta.extra.query}`,'warning');
+        return;
+      }
       eventId=window.Sentry.captureException(error instanceof Error?error:new Error(String(error||'Unknown error')));
     });
     return eventId;
@@ -91,13 +97,22 @@
   function flushQueue(){while(queue.length){const item=queue.shift();sendException(item.error,item.meta)}}
   function captureSlowQuery(row={}) {
     const durationMs=Number(row.ms)||0,name=String(row.name||'unknown');
-    if(!config.enabled||!config.dsn||durationMs<1200)return null;
-    const seen=(slowQuerySeen.get(name)||0)+1;slowQuerySeen.set(name,seen);
-    const coldStart=row.coldStart===true||(Date.now()-monitoringStartedAt<10000);
-    if(initialized&&window.Sentry?.addBreadcrumb)window.Sentry.addBreadcrumb({category:'firestore.performance',message:name,level:durationMs>=4000?'warning':'info',data:{durationMs,count:Number(row.count)||0,coldStart,seen}});
-    if(coldStart&&seen<3)return null;
-    if(durationMs<2500&&seen<2)return null;
-    return captureException(new Error(`Slow Firestore query: ${name} (${durationMs}ms)`),{area:'performance',action:'slow_firestore_query',extra:{query:name,durationMs,count:Number(row.count)||0,unitId:row.unitId||'',status:row.status||'',coldStart,seen}});
+    if(!config.enabled||!config.dsn||!Number.isFinite(durationMs)||durationMs<1200)return null;
+    const now=Date.now(),coldStart=row.coldStart===true||(now-monitoringStartedAt<10000);
+    if(initialized&&window.Sentry?.addBreadcrumb)window.Sentry.addBreadcrumb({category:'firestore.performance',message:name,level:durationMs>=4000?'warning':'info',data:{durationMs,count:Number(row.count)||0,coldStart}});
+    // Mild latency remains diagnostic context; it never accumulates into an error.
+    if(durationMs<2500)return null;
+    // Keep startup latency out of recurrence counts, but surface extreme stalls.
+    if(coldStart&&durationMs<8000)return null;
+    const previous=slowQuerySeen.get(name);
+    const recent=(previous?.recent||[]).filter(at=>now-at<60000);
+    recent.push(now);
+    const state={recent:recent.slice(-3),lastReported:previous?.lastReported??null};
+    slowQuerySeen.set(name,state);
+    if(durationMs<8000&&state.recent.length<3)return null;
+    if(state.lastReported!==null&&now-state.lastReported<300000)return null;
+    state.lastReported=now;
+    return captureException(new Error(`Slow Firestore query: ${name}`),{area:'performance',action:'slow_firestore_query',extra:{query:name,durationMs,count:Number(row.count)||0,coldStart,seen:state.recent.length}});
   }
   function load(){
     if(loading||initialized||!config.enabled||!config.dsn)return;

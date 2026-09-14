@@ -28,8 +28,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Validate local assets
-        run: node --test tests/site-assets.test.mjs
+      - name: Validate queries, monitoring and local assets
+        run: node --test tests/*.test.mjs
       - name: Build canonical production application
         env:
           APP_ENV: production

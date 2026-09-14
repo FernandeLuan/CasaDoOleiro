@@ -20,8 +20,7 @@
         const context=await services.firebase();const {firestore}=context.modules;const missing=[];const rows=new Map();
         ids.forEach(uid=>{const hit=!force?cached(uid):null;if(hit)rows.set(uid,hit);else missing.push(uid)});
         if(missing.length){
-          const started=Date.now();const snapshots=await Promise.all(missing.map(uid=>firestore.getDoc(firestore.doc(context.db,'volunteer_profiles',uid))));
-          services.recordQuery?.('profiles/by-ids',started,snapshots.filter(snapshot=>snapshot.exists()).length,{requested:ids.length,pointReads:missing.length,cacheHits:ids.length-missing.length});
+          const snapshots=await Promise.all(missing.map(uid=>services.readDocument(context,'volunteer_profiles',uid,'profiles/by-id')));
           snapshots.forEach((snapshot,index)=>{const uid=missing[index],data=snapshot.exists()?snapshot.data():{missing:true};rows.set(uid,remember(uid,data))});
         }
         return ids.map(uid=>rows.get(uid)||{id:uid,missing:true});
@@ -33,7 +32,7 @@
       return services.run(async()=>{
         const context=await services.firebase();const {firestore}=context.modules;
         await firestore.updateDoc(firestore.doc(context.db,'volunteer_profiles',id),{emergencyContact,updatedAt:firestore.serverTimestamp()});
-        const previous=cached(id)||{};remember(id,{...previous,emergencyContact});return emergencyContact;
+        const previous=cached(id);if(previous&&!previous.missing)remember(id,{...previous,emergencyContact});else cache.delete(id);return emergencyContact;
       },{loading:false});
     },
     invalidate(uid){if(uid)cache.delete(String(uid));else cache.clear()}

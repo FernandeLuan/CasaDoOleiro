@@ -39,12 +39,11 @@
 
   async function enrichApplicationProfiles(context,item){
     if(!item||item.profileHydrated)return item;
-    const {firestore}=context.modules;const uids=(item.participantUids||[]).map(String).filter(Boolean);
+    const uids=[...new Set((item.participantUids||[]).map(String).filter(Boolean))];
     if(!uids.length)return {...item,profileHydrated:true};
-    const started=Date.now();
-    const snapshots=await Promise.all(uids.map(uid=>firestore.getDoc(firestore.doc(context.db,'volunteer_profiles',uid))));
-    services.recordQuery?.('applications/profile-enrichment',started,snapshots.filter(snapshot=>snapshot.exists()).length,{pointReads:uids.length});
-    const profiles=snapshots.filter(snapshot=>snapshot.exists()).map(snapshot=>snapshot.data());
+    const profiles=services.profiles?.getByIds
+      ?await services.profiles.getByIds(uids)
+      :(await Promise.all(uids.map(uid=>services.readDocument(context,'volunteer_profiles',uid,'profiles/by-id')))).filter(snapshot=>snapshot.exists()).map(snapshot=>snapshot.data());
     const phones=profiles.map(profile=>profile.phone||profile.whatsapp||'').filter(Boolean);
     return {...item,phone:item.phone||phones.join(' / '),participantPhones:item.participantPhones?.length?item.participantPhones:phones,profileHydrated:true};
   }
@@ -126,9 +125,8 @@
 
     async getById(id,{enrichProfiles=true}={}){
       return services.run(async()=>{
-        const context=await services.firebase();const {firestore}=context.modules,applicationId=String(id),started=Date.now();
-        const snapshot=await firestore.getDoc(firestore.doc(context.db,'applications',applicationId));
-        services.recordQuery?.('applications/by-id',started,snapshot.exists()?1:0,{applicationId});
+        const context=await services.firebase(),applicationId=String(id);
+        const snapshot=await services.readDocument(context,'applications',applicationId,'applications/by-id');
         if(!snapshot.exists())return null;
         const item=mapApplication(snapshot);return enrichProfiles?enrichApplicationProfiles(context,item):item;
       },{loading:false});
