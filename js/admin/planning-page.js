@@ -60,6 +60,9 @@
   renderPersonModal=function(p,tab='plan'){
     if(!p)return;
     if(state.managerPage!=='planning'||String(state.managerPlanningPersonId||'')!==String(p.id))return baseRenderPersonModal(p,tab);
+    // Durante o carregamento assíncrono, preserve o modal legado no DOM para que
+    // hydrateAdminPlanPage/hydrateAdminAccount possam concluir e renderizar o estado final.
+    if(state.managerPlanningLoading)return baseRenderPersonModal(p,tab);
     return capturePersonBody(p,tab);
   };
 
@@ -68,11 +71,15 @@
     if(state.managerPage!=='planning')state.managerPlanningOrigin=state.managerPage||'volunteer';else if(!state.managerPlanningPersonId)state.managerPlanningOrigin='planning';
     state.managerPage='planning';state.managerPlanningPersonId=String(id);state.managerPlanningTab=tab;state.managerPlanningBody='';state.managerPlanningLoading=true;
     render();if(typeof afterNavigation==='function')afterNavigation();
+    const previousVisibility=modalRoot?.style?.visibility||'';
+    const previousPointerEvents=modalRoot?.style?.pointerEvents||'';
+    if(modalRoot){modalRoot.style.visibility='hidden';modalRoot.style.pointerEvents='none'}
     try{
       const result=await baseOpenPerson(id,tab);
       if(state.managerPage==='planning'&&String(state.managerPlanningPersonId)===String(id))captureVisibleModalBody(candidateById(id)||p,tab);
       return result;
     }finally{
+      if(modalRoot){modalRoot.style.visibility=previousVisibility;modalRoot.style.pointerEvents=previousPointerEvents}
       state.managerPlanningLoading=false;if(state.managerPage==='planning'&&String(state.managerPlanningPersonId)===String(id))render();
     }
   };
