@@ -150,3 +150,6 @@
 .planning-feedback-internal-option input:checked+.planning-feedback-switch{background:var(--primary)}
 .planning-feedback-internal-option input:checked+.planning-feedback-switch::after{transform:translateX(18px)}
 .planning-feedback-internal-option input:focus-visible+.planning-feedback-switch{outline:2px solid var(--primary);outline-offset:2px}
+
+.planning-feedback-modal-field textarea{height:180px!important;min-height:180px!important;max-height:220px!important;resize:vertical}
+@media(max-width:480px){.planning-feedback-modal-field textarea{height:165px!important;min-height:165px!important}}
