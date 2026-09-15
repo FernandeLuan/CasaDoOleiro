@@ -13,7 +13,7 @@ async function login(page,email,password,target){
   await page.locator('#email').fill(email);await page.locator('#password').fill(password);await page.locator('#loginButton').click();await expect(page).toHaveURL(new RegExp(`/${target}/`),{timeout:30_000});
 }
 async function relogin(page,email,password,target){await page.evaluate(()=>window.OleiroAuth?.signOut?.());await login(page,email,password,target)}
-const navAction=(page,label)=>page.locator('#navRoot').getByRole('button',{name:new RegExp(`${label}$`)});
+const navAction=(page,label)=>page.getByRole('button',{name:new RegExp(`^.{0,3}${label}$`)});
 async function openVolunteerByStatus(page,status,name){
   const list=page.locator('#candidateList');await navAction(page,'Voluntariado').click();
   try{await expect(list).toBeVisible({timeout:10_000})}catch{await navAction(page,'Voluntariado').click();await expect(list).toBeVisible({timeout:20_000})}
@@ -30,7 +30,7 @@ async function addActivity(page,date,name,period){
 
 test.beforeEach(async()=>{await seedEmulators()});
 
-test('analysis stays locked; requested adjustment can add new drafts and resubmit them together',async({page})=>{
+test('analysis remains editable; requested adjustment can add new drafts and resubmit them together',async({page})=>{
   await login(page,'voluntario@oleiro.test','Volunteer123!','portal');await navAction(page,'Planejamento').click();
 
   // Build a second pre-existing activity so the adjustment can prove that unrelated old
@@ -38,8 +38,8 @@ test('analysis stays locked; requested adjustment can add new drafts and resubmi
   await addActivity(page,'2026-09-16','Atividade antiga E2E','Manhã');
   await page.getByRole('button',{name:/Enviar planejamento/}).click();
   await expect.poll(()=>page.evaluate(()=>state.currentApplication?.status),{timeout:20_000}).toBe('analysis');
-  await expect(page.getByRole('button',{name:/Adicionar atividade/})).toHaveCount(0);
-  await expect(page.locator('.activity-card .activity-actions')).toHaveCount(0);
+  await expect(page.getByRole('button',{name:/Adicionar atividade/}).first()).toBeVisible();
+  await expect(page.locator('.activity-card .activity-actions').first()).toBeVisible();
 
   await relogin(page,'admin@oleiro.test','Admin123!','admin');const modal=await openVolunteerByStatus(page,'analysis','Voluntário E2E');
   const day=modal.locator('details[data-plan-date="2026-09-15"]');await ensureDetailsOpen(day);const card=day.locator('.admin-portal-activity-card').filter({hasText:'Oficina candidato E2E'});await expect(card).toBeVisible();
@@ -62,6 +62,6 @@ test('analysis stays locked; requested adjustment can add new drafts and resubmi
   await page.locator('.activity-card').filter({hasText:'Oficina candidato E2E'}).getByRole('button',{name:/Ajustar atividade/}).click();await page.locator('#r31ActPeriod').selectOption('Noite');await page.locator('#r31VolunteerAdjustSave').click();
   await page.getByRole('button',{name:/Reenviar planejamento/}).click();
   await expect.poll(()=>page.evaluate(()=>state.currentApplication?.status),{timeout:20_000}).toBe('analysis');
-  await expect(page.getByRole('button',{name:/Adicionar atividade/})).toHaveCount(0);await expect(page.locator('.activity-card').filter({hasText:'Nova no reajuste E2E'}).locator('.activity-actions')).toHaveCount(0);
+  await expect(page.getByRole('button',{name:/Adicionar atividade/}).first()).toBeVisible();await expect(page.locator('.activity-card').filter({hasText:'Nova no reajuste E2E'}).locator('.activity-actions')).toBeVisible();
   await expect.poll(()=>page.evaluate(async()=>{const rows=await window.OleiroServices.planning.listSessions({applicationId:'e2e-application'});return rows.some(row=>row.activityName==='Nova no reajuste E2E'&&row.status==='proposed')}),{timeout:20_000}).toBe(true);
 });

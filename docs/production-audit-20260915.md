@@ -14,6 +14,7 @@ Baseline unit suite: 28 passing tests. No production data was read or migrated.
 - `admin/planning-board` replaced the guarded navigation implementation and rendered the current route again. Add the same early guard.
 - `shared/smart-interactions` skipped animation but still invoked underlying route wrappers. Current routes/tabs now stop before either invocation or motion scheduling. Explicit data refresh functions remain available.
 - Portal boot (`app.js`) and planning day loading (`planning-days.js`) can overlap calls to `planning.listSessions`. Identical application/date queries now share outstanding work through `service-core.shareQuery`, scoped to database/auth identity. No completed result is cached, failed reads are evicted, and different ranges/users are independent. This reduces simultaneous duplicate reads, not normal refreshes.
+- Admin browser home cache now records a scope composed of authenticated UID, role and unit IDs. Old/unscoped cache entries are discarded before restore; a regression tests account and permission changes.
 - Three identity wrappers were removed from `portal/review-flow` and `portal/candidate-adjustment`: two `openActivityModal` wrappers and one `requestDeletePlanningSession`. They only forwarded the exact arguments and return value to captured predecessors. No module or CSS file was deleted.
 
 ## Runtime responsibility map
@@ -50,7 +51,7 @@ These are current effective owners/decorators, not a claim that the entire legac
 24 have no unique commits (contained in or identical to main).
 Two diverge:
 
-- `fix/firestore-slow-query-monitoring`: 41 unique commits. Monitoring changes are superseded by the tested main implementation. E2E navigation/path corrections merit selective adaptation; some assertions still demand locked analysis, contrary to the current requirements. Do not merge this branch wholesale.
+- `fix/firestore-slow-query-monitoring`: 41 unique commits. Monitoring changes are superseded by the tested main implementation. E2E navigation selectors and three renamed source-file references were selectively adapted; some assertions still demand locked analysis, contrary to the current requirements. Do not merge this branch wholesale.
 - `feat/transactional-email-outbox-r48`: 12 unique commits, PR #18. Includes a Worker, Resend integration, outbox index, tests and external rollout requirements. Main has no Worker. PR explicitly requires an external test and verified email domain before merge. This is unfinished functionality, not proven dead code; preserve until its intended inclusion is decided and validated.
 
 No branch has been deleted. The final rollback must never be deleted or advanced.
@@ -61,8 +62,8 @@ No branch has been deleted. The final rollback must never be deleted or advanced
 - The supplied Sentry stack has no operation/collection context. The legacy rules mismatch is confirmed in source, but cannot yet be attributed conclusively to that exact event or to currently deployed rules.
 - Existing browser tests include references to removed module names, old modal layouts and an assertion that analysis is locked. Full browser regression must be repaired and pass before merging.
 - Assistant profile reads and coordinator/global access warrant an explicit role-by-operation security review; do not broaden rules to mask denied reads.
-- Existing browser/service caches are not uniformly scoped to auth identity. Admin sessionStorage can restore a previous user's UI data; no claim of complete cache audit/repair is made yet.
+- Existing service caches are not uniformly scoped to auth identity. Admin home sessionStorage has now been fixed; group/profile caches and cross-mutation invalidation still need review.
 - Legacy wrappers remain in production. `candidate-view.js` is explicitly retired from loading but retained for old cached pages/rollback compatibility. CSS removal and full inline-handler runtime coverage remain pending.
-- Local dependency downloads are unavailable in this environment. Node tests can run locally; emulator/browser validation is delegated to GitHub Actions, not represented as already passed.
+- Local dependency downloads are unavailable in this environment. 33 Node tests pass locally. CI run 34995778652 passed the first audit commit, including rules compilation and 48 combinations of status/application/ownership with edit, move, delete and forbidden-field assertions. Full browser regression exposed stale expectations/selectors; updates are under validation.
 
 Do not merge or clean branches until the full validation and deployment gates are satisfied.

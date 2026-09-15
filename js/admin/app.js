@@ -29,17 +29,24 @@ function compactManagerScheduleRow(row={}){
 function compactMovementRow(row={}){return {id:row.id||'',name:row.name||'Voluntário',from:String(row.from||'').slice(0,10),to:String(row.to||'').slice(0,10),unit:row.unit||'',unitName:row.unitName||'',status:row.status||'approved',inactive:row.inactive===true}}
 function readManagerBrowserCache(){
   try{
+    const scope=managerBrowserCacheScope();if(!scope)return null;
     const record=JSON.parse(sessionStorage.getItem(MANAGER_BROWSER_CACHE_KEY)||'null');
-    if(!record||record.date!==_oleiroToday||Date.now()-Number(record.savedAt||0)>MANAGER_BROWSER_CACHE_MS){sessionStorage.removeItem(MANAGER_BROWSER_CACHE_KEY);return null}
+    if(!record||record.scope!==scope||record.date!==_oleiroToday||Date.now()-Number(record.savedAt||0)>MANAGER_BROWSER_CACHE_MS){sessionStorage.removeItem(MANAGER_BROWSER_CACHE_KEY);return null}
     return record;
   }catch{return null}
 }
 function writeManagerBrowserCache(patch={}){
   try{
+    const scope=managerBrowserCacheScope();if(!scope)return;
     const current=readManagerBrowserCache()||{date:_oleiroToday};
-    const next={...current,...patch,date:_oleiroToday,savedAt:Date.now()};
+    const next={...current,...patch,scope,date:_oleiroToday,savedAt:Date.now()};
     sessionStorage.setItem(MANAGER_BROWSER_CACHE_KEY,JSON.stringify(next));
   }catch{}
+}
+function managerBrowserCacheScope(){
+  const session=state.currentSession;
+  if(!session?.uid||state.role!=='manager')return null;
+  return JSON.stringify([session.uid,session.user?.role||session.role,[...(session.user?.unitIds||[])].sort()]);
 }
 function clearManagerBrowserSchedule(){
   try{

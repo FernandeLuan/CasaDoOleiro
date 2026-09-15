@@ -29,6 +29,6 @@ test('monitoring catches asset failures and avoids cold-start Firestore noise', 
   const core=fs.readFileSync('js/services/service-core.js','utf8');
   expect(monitoring).toContain('asset_load_failed');
   expect(monitoring).toContain('slowQuerySeen');
-  expect(monitoring).toContain('coldStart&&seen<3');
+  expect(monitoring).toContain('coldStart&&durationMs<8000');
   expect(core).toContain('performance.now()<10000');
 });
