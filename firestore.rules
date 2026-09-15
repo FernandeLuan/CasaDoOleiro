@@ -206,11 +206,6 @@ service cloud.firestore {
         ]);
     }
 
-    function assistantMayManageApplication() {
-      return assistantHasUnit(resource.data.unitId)
-        && request.resource.data.unitId == resource.data.unitId
-        && request.resource.data.participantUids == resource.data.participantUids;
-    }
 
     function assistantMayManageVolunteerUser() {
       return isActivityAssistant()
@@ -346,7 +341,6 @@ service cloud.firestore {
       );
       allow create, delete: if isManager();
       allow update: if isManager()
-        || assistantMayManageApplication()
         || assistantMayRequestApplicationAdjustment()
         || participantMaySubmitApplication()
         || participantMayResetEmptyAdjustment();
