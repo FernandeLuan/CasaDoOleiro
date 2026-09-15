@@ -102,3 +102,8 @@
 /* Feedback compartilhado pelo administrador no portal do voluntário. */
 .volunteer-feedback{margin-top:11px;padding-top:10px;border-top:1px solid var(--border);display:grid;gap:4px}
 .volunteer-feedback strong{font-size:.64rem;color:var(--text);font-weight:650}.volunteer-feedback p{margin:0!important;font-size:.62rem!important;line-height:1.48!important;color:var(--muted)!important;white-space:pre-wrap;overflow-wrap:anywhere}.volunteer-feedback span{font-size:.56rem;color:var(--muted);line-height:1.35}
+
+
+/* Defensive guard: legacy candidate planning header was retired.
+   If an older cached runtime tries to render it, never duplicate period/status in Planning. */
+.candidate-plan-compact-head{display:none!important}
