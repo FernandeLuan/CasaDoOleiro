@@ -3,6 +3,7 @@
   if(window.__OLEIRO_SMART_INTERACTIONS__)return;
   window.__OLEIRO_SMART_INTERACTIONS__=true;
   document.body.classList.add('ui-smart-interactions');
+  window.OleiroUI=window.OleiroUI||{};
 
   const reducedMotion=()=>window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches===true;
   const scrollStorageKey='oleiro.ui.scroll.v1';
@@ -15,6 +16,8 @@
   let motionTimer=0;
   let modalGeneration=0;
   let previousFocus=null;
+  const horizontalStorageKey='oleiro.ui.horizontal.v1';
+  let horizontalStore=parseStore(horizontalStorageKey);
 
   function viewKey(){
     try{
@@ -29,9 +32,35 @@
     return location.pathname;
   }
 
+  function captureViewAnchor(){
+    const selectors=['[data-session-id]','[data-plan-date]','[data-person-id]','.planning-candidate-list .list-item','.candidate-list .list-item'];
+    const nodes=[...document.querySelectorAll(selectors.join(','))].filter(node=>{
+      const rect=node.getBoundingClientRect();return rect.bottom>0&&rect.top<window.innerHeight;
+    });
+    if(!nodes.length)return null;
+    nodes.sort((a,b)=>Math.abs(a.getBoundingClientRect().top-92)-Math.abs(b.getBoundingClientRect().top-92));
+    const node=nodes[0],rect=node.getBoundingClientRect();
+    if(node.dataset.sessionId)return {type:'session',value:node.dataset.sessionId,offset:rect.top};
+    if(node.dataset.planDate)return {type:'date',value:node.dataset.planDate,offset:rect.top};
+    if(node.dataset.personId)return {type:'person',value:node.dataset.personId,offset:rect.top};
+    return null;
+  }
+  function anchorNode(anchor){
+    if(!anchor?.value)return null;
+    if(anchor.type==='session')return document.querySelector(`[data-session-id="${CSS.escape(String(anchor.value))}"]`);
+    if(anchor.type==='date')return document.querySelector(`[data-plan-date="${CSS.escape(String(anchor.value))}"]`);
+    if(anchor.type==='person')return document.querySelector(`[data-person-id="${CSS.escape(String(anchor.value))}"]`);
+    return null;
+  }
+  function restoreViewAnchor(anchor){
+    if(!anchor)return false;
+    const node=anchorNode(anchor);if(!node)return false;
+    requestAnimationFrame(()=>{const delta=node.getBoundingClientRect().top-Number(anchor.offset||0);if(Math.abs(delta)>1)window.scrollBy({top:delta,left:0,behavior:'auto'})});
+    return true;
+  }
   function currentScroll(){
     const page=document.querySelector('#app main.page');
-    return {windowY:Math.max(window.scrollY||0,document.documentElement.scrollTop||0,document.body.scrollTop||0),pageY:page?.scrollTop||0};
+    return {windowY:Math.max(window.scrollY||0,document.documentElement.scrollTop||0,document.body.scrollTop||0),pageY:page?.scrollTop||0,anchor:captureViewAnchor()};
   }
   function saveCurrentScroll(key=viewKey()){
     scrollStore[key]=currentScroll();
@@ -40,12 +69,23 @@
   function restoreScroll(key=viewKey()){
     const saved=scrollStore[key];if(!saved)return;
     requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      if(saved.anchor&&restoreViewAnchor(saved.anchor))return;
       const page=document.querySelector('#app main.page');
       if(page&&saved.pageY>0)page.scrollTop=saved.pageY;
       window.scrollTo({top:saved.windowY||0,left:0,behavior:'auto'});
       document.documentElement.scrollTop=saved.windowY||0;
       document.body.scrollTop=saved.windowY||0;
     }));
+  }
+
+  const horizontalSelector='.tabs,.calendar-strip,.planning-profile-tabs,.bottom-nav';
+  function horizontalKey(node,index=0){const cls=[...node.classList].filter(Boolean).slice(0,3).join('.');return viewKey()+'::'+node.tagName.toLowerCase()+'.'+cls+'::'+index}
+  function rememberHorizontalScrolls(){
+    [...document.querySelectorAll(horizontalSelector)].forEach((node,index)=>{if(node.scrollLeft>0)horizontalStore[horizontalKey(node,index)]=node.scrollLeft});
+    saveStore(horizontalStorageKey,horizontalStore);
+  }
+  function restoreHorizontalScrolls(){
+    requestAnimationFrame(()=>[...document.querySelectorAll(horizontalSelector)].forEach((node,index)=>{const value=Number(horizontalStore[horizontalKey(node,index)]||0);if(value>0)node.scrollLeft=value}));
   }
 
   function animationTarget(scope){
@@ -118,9 +158,17 @@
   const modalRootEl=()=>document.getElementById('modalRoot');
   const contextualTitle=title=>{
     const value=String(title||'').toLowerCase();
-    if(/novo candidato|nova candidatura|criar candidato|cadastrar candidato/.test(value))return false;
-    return /feedback|grupo|mover|filtro|filtr|reajuste|recusar|alterar|editar|detalhes|informações|informacoes|período|periodo/.test(value);
+    if(/novo candidato|nova candidatura|criar candidato|cadastrar candidato|adicionar atividade|duplicar atividade/.test(value))return false;
+    return /feedback|grupo|mover|filtro|filtr|reajuste|recusar|alterar|editar|detalhes|informações|informacoes|período|periodo|ajuste|confirmar/.test(value);
   };
+  function modalPresentation(title,modal){
+    const controls=[...modal.querySelectorAll('input:not([type="hidden"]),textarea,select')].filter(el=>!el.disabled);
+    const textControls=controls.filter(el=>el.matches('textarea,input:not([type="checkbox"]):not([type="radio"])')).length;
+    const largeWorkflow=/novo candidato|nova candidatura|criar candidato|cadastrar candidato|adicionar atividade|duplicar atividade/i.test(String(title||''));
+    if(largeWorkflow||controls.length>8||textControls>6)return 'dialog';
+    if(contextualTitle(title)||controls.length<=6)return 'contextual';
+    return 'dialog';
+  }
   function focusModal(modal){
     const target=modal?.querySelector('input:not([type="hidden"]):not([disabled]),textarea:not([disabled]),select:not([disabled]),button:not([disabled])');
     requestAnimationFrame(()=>target?.focus?.({preventScroll:true}));
@@ -145,8 +193,10 @@
   function enhanceModal(title,forceContextual=false){
     const root=modalRootEl(),backdrop=root?.querySelector('.modal-backdrop'),modal=backdrop?.querySelector('.modal');if(!backdrop||!modal)return;
     backdrop.classList.add('ui-smart-backdrop');
-    const contextual=forceContextual||contextualTitle(title);
-    if(contextual){backdrop.classList.add('ui-contextual-backdrop');modal.classList.add('ui-contextual-modal')}
+    const presentation=forceContextual?'contextual':modalPresentation(title,modal);
+    modal.dataset.uiPresentation=window.innerWidth<760?'sheet':presentation;
+    backdrop.dataset.uiPresentation=modal.dataset.uiPresentation;
+    if(presentation==='contextual'){backdrop.classList.add('ui-contextual-backdrop');modal.classList.add('ui-contextual-modal')}
     bindSheetDrag(modal);focusModal(modal);
   }
   function smartOpenModal(title,subtitle,body,footer=''){
@@ -172,8 +222,14 @@
   if(originalCloseModal){window.closeModal=smartCloseModal}
   document.addEventListener('keydown',event=>{if(event.key==='Escape'&&document.body.classList.contains('modal-open'))window.closeModal?.()});
 
+  /* API única de interação/estado para os outros módulos. */
+  window.OleiroUI.viewKey=viewKey;
+  window.OleiroUI.captureViewAnchor=captureViewAnchor;
+  window.OleiroUI.restoreViewAnchor=restoreViewAnchor;
+  window.OleiroUI.saveViewState=()=>{saveCurrentScroll();rememberHorizontalScrolls()};
+  window.OleiroUI.restoreViewState=()=>{restoreScroll(viewKey());restoreHorizontalScrolls()};
+
   /* Drawer público reutilizável para novos fluxos sem criar outro padrão visual. */
-  window.OleiroUI=window.OleiroUI||{};
   window.OleiroUI.openDrawer=function({title='',subtitle='',body='',footer=''}={}){
     window.OleiroUI.closeDrawer();
     const host=document.createElement('div');host.id='uiSmartDrawerRoot';
@@ -203,8 +259,11 @@
   /* Se o app renderizar outra tela, só melhoramos os componentes novos; não alteramos dados. */
   const app=document.getElementById('app');
   if(app){
-    const observer=new MutationObserver(()=>enhanceDetails(app));
+    const observer=new MutationObserver(()=>{enhanceDetails(app);restoreHorizontalScrolls()});
     observer.observe(app,{childList:true,subtree:true});
   }
-  enhanceDetails(document);
+  let horizontalTimer=0;
+  document.addEventListener('scroll',event=>{const target=event.target;if(!(target instanceof Element)||!target.matches(horizontalSelector))return;window.clearTimeout(horizontalTimer);horizontalTimer=window.setTimeout(rememberHorizontalScrolls,90)},true);
+  window.addEventListener('pagehide',()=>{saveCurrentScroll();rememberHorizontalScrolls()});
+  enhanceDetails(document);restoreHorizontalScrolls();
 })();

@@ -29,6 +29,21 @@
   const planningPerson=()=>typeof candidateById==='function'?candidateById(state.managerPlanningPersonId):null;
   const sessionName=s=>s?.activityName||s?.activity?.name||'Atividade';
   const sessionPeriod=s=>typeof activityPeriodValue==='function'?activityPeriodValue(s||{},s?.activity||{}):(s?.period||s?.activity?.period||'Sem preferência');
+  const stableTime=value=>{if(!value)return '';try{if(typeof value?.toDate==='function')return value.toDate().toISOString();if(value instanceof Date)return value.toISOString()}catch{}return String(value)};
+  const hashText=value=>{let hash=2166136261;for(const char of String(value||'')){hash^=char.charCodeAt(0);hash=Math.imul(hash,16777619)}return (hash>>>0).toString(36)};
+  function sessionSignature(s){
+    const activity=s?.activity||{};
+    return JSON.stringify([
+      String(s?.id||''),String(s?.activityId||activity.id||''),sessionName(s),
+      String(s?.activityDescription||activity.description||''),Number(s?.duration||activity.duration)||0,
+      String(s?.materials||activity.materials||''),String(s?.notes||activity.notes||''),
+      iso(s?.date),sessionPeriod(s),String(s?.groupId||activity.groupId||''),String(s?.participation||activity.participation||''),
+      String(s?.status||''),String(s?.reviewStatus||''),String(s?.changeReviewStatus||''),s?.postApprovalProposal===true?'1':'0',
+      String(s?.feedback||''),s?.feedbackInternal===true?'1':'0',String(s?.feedbackAuthorName||''),stableTime(s?.feedbackUpdatedAt),
+      stableTime(s?.updatedAt),stableTime(s?.confirmedAt)
+    ]);
+  }
+  const daySignature=sessions=>hashText((sessions||[]).map(sessionSignature).sort().join('||'));
   const asFeedbackDate=value=>{if(!value)return null;if(typeof value?.toDate==='function')return value.toDate();const date=value instanceof Date?value:new Date(value);return Number.isNaN(date.getTime())?null:date};
   function feedbackWhen(value){const date=asFeedbackDate(value);if(!date)return '';const locale=typeof currentLocale==='function'?currentLocale():'pt-BR';return new Intl.DateTimeFormat(locale,{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(date)}
   function knownFeedbackAuthorName(value=''){const raw=String(value||'').trim(),lower=raw.toLowerCase();if(lower==='ctcasadooleirorodeio@gmail.com')return 'Luan';if(raw.includes('@'))return '';return raw}
@@ -151,12 +166,12 @@
     const total=sessions.reduce((sum,row)=>sum+rowMinutes(row),0),count=sessions.length;const summary=count?`${count} ${count===1?'atividade':'atividades'} · ${minutesLabel(total)}`:'Sem atividade';let inner=prepareDayContent(content,p,sessions);
     if(!count)inner=`<div class="planning-person-empty"><i class="fa-regular fa-calendar"></i><span>Nenhuma atividade planejada</span></div>`;
     const plus=`<button class="planning-person-add" type="button" title="Adicionar atividade em ${escapeHtml(shortDate(date))}" aria-label="Adicionar atividade em ${escapeHtml(shortDate(date))}" onclick="event.preventDefault();event.stopPropagation();closePlanningActivityActions();openAdminPlanningActivity('${safe(p.id)}','${safe(date)}')"><i class="fa-solid fa-plus"></i></button>`;
-    return `<article class="planning-person-day ${count?'has-activities':'is-empty'}" data-plan-date="${escapeHtml(date)}"><header class="planning-person-day-head"><div class="planning-person-day-copy"><div class="planning-person-day-title"><strong>${escapeHtml(shortDate(date))}</strong><span class="planning-person-day-summary">${escapeHtml(summary)}${signals?`<span class="planning-person-day-signals">${signals}</span>`:''}</span></div></div>${plus}</header><div class="planning-person-day-body">${inner}</div></article>`;
+    return `<article class="planning-person-day ${count?'has-activities':'is-empty'}" data-plan-date="${escapeHtml(date)}" data-day-signature="${daySignature(sessions)}"><header class="planning-person-day-head"><div class="planning-person-day-copy"><div class="planning-person-day-title"><strong>${escapeHtml(shortDate(date))}</strong><span class="planning-person-day-summary">${escapeHtml(summary)}${signals?`<span class="planning-person-day-signals">${signals}</span>`:''}</span></div></div>${plus}</header><div class="planning-person-day-body">${inner}</div></article>`;
   }
 
   function agendaHtml(p,data){
     if(!data.dates.length)return '<div class="empty planning-person-no-days"><i class="fa-regular fa-calendar-xmark"></i>Não há dias úteis de atividade entre chegada e saída.</div>';
-    sessionRegistry.clear();const byDate=new Map();data.sessions.forEach(row=>{const date=iso(row.date);if(!byDate.has(date))byDate.set(date,[]);byDate.get(date).push(row)});const weeks=groupWeeks(data.dates);
+    sessionRegistry.clear();data.sessions.forEach(row=>sessionRegistry.set(String(row.id),row));const byDate=new Map();data.sessions.forEach(row=>{const date=iso(row.date);if(!byDate.has(date))byDate.set(date,[]);byDate.get(date).push(row)});const weeks=groupWeeks(data.dates);
     return `<div class="planning-person-weeks">${weeks.map(week=>`<section class="planning-person-week"><header class="planning-person-week-head"><div><span>SEMANA ${week.index}</span><strong>${escapeHtml(shortDate(week.monday))} → ${escapeHtml(shortDate(week.friday))}</strong></div></header><div class="planning-person-week-days">${week.days.map(date=>dayCardHtml(p,date,(byDate.get(date)||[]))).join('')}</div></section>`).join('')}</div>`;
   }
 
@@ -165,6 +180,35 @@
     if(!planning){planning=document.createElement('div');planning.className='planning-by-day admin-refactor-planning';const footer=content.querySelector('.admin-plan-review-footer');if(footer)content.insertBefore(planning,footer);else content.appendChild(planning)}planning.classList.add('planning-person-agenda');return planning;
   }
   function mountAgenda(root,p,data){const planning=ensurePlanningContainer(root);if(!planning)return;closePlanningActivityActions();planning.innerHTML=agendaHtml(p,data);root.classList.add('planning-person-agenda-page');const eyebrow=root.querySelector('.planning-profile-copy>.eyebrow');if(eyebrow)eyebrow.textContent='Planejamento do voluntário';if(typeof applyI18n==='function')applyI18n(planning)}
+  function patchAgenda(root,p,data){
+    const planning=ensurePlanningContainer(root);if(!planning)return;
+    const anchor=window.OleiroUI?.captureViewAnchor?.()||null;
+    const currentDays=[...planning.querySelectorAll('.planning-person-day[data-plan-date]')];
+    const currentDates=currentDays.map(node=>String(node.dataset.planDate||''));
+    const nextDates=(data.dates||[]).map(String);
+    if(currentDates.length!==nextDates.length||currentDates.some((date,index)=>date!==nextDates[index])){
+      mountAgenda(root,p,data);
+      window.OleiroUI?.restoreViewAnchor?.(anchor);
+      return;
+    }
+    closePlanningActivityActions();
+    sessionRegistry.clear();(data.sessions||[]).forEach(row=>sessionRegistry.set(String(row.id),row));
+    const byDate=new Map();(data.sessions||[]).forEach(row=>{const date=iso(row.date);if(!byDate.has(date))byDate.set(date,[]);byDate.get(date).push(row)});
+    let changed=0;
+    nextDates.forEach(date=>{
+      const current=planning.querySelector(`.planning-person-day[data-plan-date="${CSS.escape(date)}"]`);
+      if(!current)return;
+      const sessions=byDate.get(date)||[],signature=daySignature(sessions);
+      if(String(current.dataset.daySignature||'')===signature)return;
+      const template=document.createElement('template');template.innerHTML=dayCardHtml(p,date,sessions);const next=template.content.firstElementChild;if(!next)return;
+      next.classList.add('ui-local-patch');current.replaceWith(next);changed+=1;
+      window.setTimeout(()=>next.isConnected&&next.classList.remove('ui-local-patch'),360);
+    });
+    root.classList.add('planning-person-agenda-page');
+    const eyebrow=root.querySelector('.planning-profile-copy>.eyebrow');if(eyebrow)eyebrow.textContent='Planejamento do voluntário';
+    if(changed&&typeof applyI18n==='function')applyI18n(planning);
+    window.OleiroUI?.restoreViewAnchor?.(anchor);
+  }
   function mountLoading(root){const planning=ensurePlanningContainer(root);if(planning)planning.innerHTML='<div class="empty compact-loading planning-person-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando planejamento...</div>'}
   function mountError(root,error){const planning=ensurePlanningContainer(root);if(planning)planning.innerHTML=`<div class="notice danger planning-person-error"><i class="fa-solid fa-triangle-exclamation"></i><div>${escapeHtml(error?.message||'Não foi possível carregar o planejamento.')}</div></div>`}
 
@@ -177,7 +221,7 @@
 
   async function refreshPlanning(applicationId){
     const id=String(applicationId||state.managerPlanningPersonId||'');if(id)cache.delete(id);if(typeof invalidateManagerScheduleCache==='function')invalidateManagerScheduleCache();if(typeof invalidateManagerPendingChanges==='function')invalidateManagerPendingChanges();if(state.planningBoardLoadedRange!==undefined)state.planningBoardLoadedRange='';
-    const p=id&&typeof candidateById==='function'?candidateById(id):null;if(!p)return null;const data=await loadAgenda(p,{force:true});const root=app.querySelector('.planning-detail-page');if(root&&String(state.managerPlanningPersonId)===id&&String(state.managerPlanningTab||'plan')==='plan')mountAgenda(root,p,data);return data;
+    const p=id&&typeof candidateById==='function'?candidateById(id):null;if(!p)return null;const data=await loadAgenda(p,{force:true});const root=app.querySelector('.planning-detail-page');if(root&&String(state.managerPlanningPersonId)===id&&String(state.managerPlanningTab||'plan')==='plan')patchAgenda(root,p,data);return data;
   }
   window.refreshPlanningPersonAgenda=refreshPlanning;
 

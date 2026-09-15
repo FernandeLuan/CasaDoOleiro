@@ -60,6 +60,12 @@
   renderPersonModal=function(p,tab='plan'){
     if(!p)return;
     if(state.managerPage!=='planning'||String(state.managerPlanningPersonId||'')!==String(p.id))return baseRenderPersonModal(p,tab);
+    const canPatchPlan=tab==='plan'&&!state.managerPlanningLoading&&app.querySelector('.planning-person-agenda-page')&&typeof window.refreshPlanningPersonAgenda==='function';
+    if(canPatchPlan){
+      if(modalRoot.querySelector('.modal-backdrop'))closeModal();
+      Promise.resolve(window.refreshPlanningPersonAgenda(p.id)).catch(error=>{console.error('Falha ao atualizar planejamento localmente:',error);showToast('A alteração foi salva, mas a tela não pôde ser atualizada.')});
+      return;
+    }
     return capturePersonBody(p,tab);
   };
 
