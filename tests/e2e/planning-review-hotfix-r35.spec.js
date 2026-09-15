@@ -10,7 +10,7 @@ const navAction=(page,label)=>page.getByRole('button',{name:new RegExp(`^.{0,3}$
 async function openVolunteer(page,status,name){
   await navAction(page,'Voluntariado').click();const list=page.locator('#candidateList');await expect(list).toBeVisible({timeout:20_000});
   await page.locator('#app').getByRole('button',{name:/Filtros/}).click();await page.locator('#candidateStatusFilter').selectOption(status);await page.locator('#modalRoot').getByRole('button',{name:/Aplicar$/}).click();await expect(list.getByText(/Carregando voluntários/)).toHaveCount(0,{timeout:20_000});
-  const item=list.locator('.list-item.clickable').filter({hasText:name}).first();await expect(item).toBeVisible({timeout:20_000});await item.click();return page.locator('#modalRoot');
+  const item=list.locator('.list-item.clickable').filter({hasText:name}).first();await expect(item).toBeVisible({timeout:20_000});await item.click();const detail=page.locator('#app');await expect(detail.locator('.person-refactor-tabs button.active')).toContainText('Planejamento',{timeout:20_000});return detail;
 }
 async function ensureDay(modal,date){const day=modal.locator(`details[data-plan-date="${date}"]`);await expect(day).toBeVisible({timeout:20_000});await day.evaluate(node=>{node.open=true});return day}
 async function sessionState(page,applicationId,matcher){return page.evaluate(async({applicationId,matcher})=>{const rows=await window.OleiroServices.planning.listSessions({applicationId});const row=rows.find(item=>item.id===matcher||item.activityName===matcher);return row||null},{applicationId,matcher})}
