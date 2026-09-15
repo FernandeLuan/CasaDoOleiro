@@ -49,8 +49,8 @@
 
   volunteerPlan=function(){
     if(state.volunteerMode==='approved')return baseVolunteerPlan();
-    const editable=['draft','adjustments'].includes(state.volunteerPlanStatus||'draft');
-    return `<section class="section candidate-plan-refactor compact-page-top">${compactHeader()}<div class="candidate-plan-content">${volunteerAgendaContent(editable)}</div>${submitControl()}</section>`;
+    const editable=window.OleiroRules?.candidatePlanningEditable?.(state.volunteerPlanStatus||'draft')??['draft','submitted','adjustments'].includes(state.volunteerPlanStatus||'draft');
+    return `<section class="section candidate-plan-refactor compact-page-top"><div class="candidate-plan-content">${volunteerAgendaContent(editable)}</div>${submitControl()}</section>`;
   };
 
   installCandidateStatusStyles();
