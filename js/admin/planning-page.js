@@ -38,6 +38,7 @@
     const template=document.createElement('template');template.innerHTML=String(body||'');
     template.content.querySelectorAll('.person-refactor-tabs,.planning-profile-tabs,.person-history-tabs').forEach(node=>node.remove());
     if(tab==='plan')template.content.querySelectorAll('.admin-plan-review-footer,.planning-admin-footer').forEach(node=>node.remove());
+    if(tab==='account')template.content.querySelectorAll('.account-status-line').forEach(node=>node.remove());
     return template.innerHTML;
   }
 
