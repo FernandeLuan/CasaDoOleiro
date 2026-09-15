@@ -70,10 +70,8 @@
 .planning-person-agenda .planning-activity-feedback>strong{font-size:var(--ui-text-sm);line-height:1.4;color:var(--text);font-weight:650}
 .planning-person-agenda .planning-activity-feedback>p{margin:0;font-size:var(--ui-text-sm);line-height:1.48;color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere}
 .planning-person-agenda .planning-activity-feedback>span{font-size:var(--ui-text-xs);line-height:1.35;color:var(--muted)}
-.planning-feedback-modal-actions{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:9px;width:100%}
-.planning-feedback-modal-actions .btn{margin:0!important}
-.field-help{display:block;margin-top:6px;color:var(--muted);font-size:var(--ui-text-xs);line-height:1.4}
-@media(max-width:480px){.planning-feedback-modal-actions{grid-template-columns:1fr}}
+.planning-feedback-modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;width:100%}
+.planning-feedback-modal-actions .btn{margin:0!important;min-width:0}
 
 /* No seletor de grupos, o título já informa o contexto; as opções ficam só A/B/C/D/Livre. */
 .activity-group-picker>small{display:none!important}
