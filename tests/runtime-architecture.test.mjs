@@ -48,6 +48,15 @@ test('admin shell delegates planning page ownership',()=>{
   assert.ok(!shell.includes('function planningDetailHtml('),'Admin shell must not duplicate planning page markup');
 });
 
+test('analysis and adjustments expose canonical planning approval',()=>{
+  const planning=readFileSync('js/admin/planning-page.js','utf8');
+  assert.ok(planning.includes("['analysis','adjustments'].includes(status)"));
+  assert.ok(planning.includes('requestApprovePlanning'));
+  assert.ok(planning.includes('approvePlanningConfirmR25'));
+  assert.ok(planning.includes('approveCandidate('));
+  assert.ok(planning.includes(".admin-plan-review-footer,.planning-admin-footer"),'legacy footer stays stripped only after approval is migrated');
+});
+
 test('all local script references exist',()=>{
   for(const htmlPath of ['portal/index.html','admin/index.html']){
     for(const path of localScripts(htmlPath))assert.ok(existsSync(path),`${htmlPath} references missing script ${path}`);
