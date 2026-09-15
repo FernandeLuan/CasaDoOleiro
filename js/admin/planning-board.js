@@ -167,6 +167,7 @@
   renderManager=function(){const result=baseRenderManager();replacePlanningIndex();return result};window.renderManager=renderManager;
   render=function(){return renderManager()};window.render=render;
   navigateManager=function(page){
+    if(String(state.managerPage||'home')===String(page||'home'))return;
     if(page!=='planning')return baseNavigateManager(page);
     state.managerPage='planning';state.managerPlanningPersonId='';state.managerPlanningBody='';state.managerPlanningTab='plan';state.managerPlanningOrigin='planning';render();if(typeof afterNavigation==='function')afterNavigation();loadPlanningBoardData().catch(console.error);
   };

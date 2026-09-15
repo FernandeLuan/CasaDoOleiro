@@ -39,7 +39,8 @@
       if(!applicationId)return [];
       return services.run(async()=>{
         const context=await services.firebase();
-        const rows=await applicationSessions(context,applicationId,{from,to});
+        const key=JSON.stringify(['activity_sessions',String(applicationId),from||null,to||null]);
+        const rows=await services.shareQuery(context,key,()=>applicationSessions(context,applicationId,{from,to}));
         return rows.sort(typeof activityScheduleCompare==='function'?activityScheduleCompare:(a,b)=>String(a.date||'').localeCompare(String(b.date||'')));
       },{loading:false});
     },
@@ -147,7 +148,8 @@
             batch.delete(ref);
             deletedSessionIds.push(String(session.id));
           }else{
-            const statusPatch={status:finalStatus},groupPatch=groupRequested?{groupId}:{};
+            // Editing content must not rewrite the workflow state of a legacy session.
+            const statusPatch=managerCreated||postApprovalProposal?{status:finalStatus}:{},groupPatch=groupRequested?{groupId}:{};
             batch.update(ref,{...sessionDefinition,...statusPatch,...groupPatch,updatedAt:now});
             resultSessions.push({...session,...sessionDefinition,...statusPatch,...groupPatch,date});
           }
@@ -189,7 +191,7 @@
         };
         activityCache.set(String(activityRef.id),activity);
         return {activityId:activityRef.id,activity,sessions:resultSessions,deletedSessionIds};
-      },{loading:false});
+      },{loading:false,monitor:{area:'planning',action:'save_activity',applicationId:String(applicationId),activityId:activityId?String(activityId):''}});
     },
 
     async reviewPostApprovalProposal({applicationId,activityId,decision,note=''}){
@@ -218,7 +220,7 @@
         await batch.commit();
         const cached=activityCache.get(String(activityId));if(cached)Object.assign(cached,{postApprovalProposal:true,reviewStatus,reviewNote:decision==='adjustments'?reviewNote:'',status:sessionStatus});
         return {reviewStatus,status:sessionStatus,sessionIds:sessions.map(row=>String(row.id)),countDelta};
-      },{loading:false});
+      },{loading:false,monitor:{area:'planning',action:'review_post_approval',applicationId:String(applicationId),activityId:String(activityId)}});
     },
 
     async updateSession(sessionId,patch){
@@ -231,7 +233,7 @@
           {...patch,updatedAt:firestore.serverTimestamp()}
         );
         return true;
-      },{loading:false});
+      },{loading:false,monitor:{area:'planning',action:'update_session',sessionId:String(sessionId)}});
     }
   };
 })();

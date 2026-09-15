@@ -3,7 +3,7 @@ import fs from 'node:fs';
 
 test('requested session adjustment has a narrow participant exception', async () => {
   const rules = fs.readFileSync('firestore.rules', 'utf8');
-  const portal = fs.readFileSync('js/portal/review-flow-r31.js', 'utf8');
+  const portal = fs.readFileSync('js/portal/session-review-ui.js', 'utf8');
   const marker = "resource.data.adminAdjustmentStatus == 'requested'";
   expect(rules).toContain(marker);
   expect(rules).toContain("request.resource.data.adminAdjustmentStatus == 'requested'");

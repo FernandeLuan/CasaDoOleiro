@@ -1,13 +1,14 @@
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
 
-test('assistant stays unit-scoped and can run candidate lifecycle', async () => {
+test('assistant stays unit-scoped without candidate approval lifecycle rights', async () => {
   const rules=fs.readFileSync('firestore.rules','utf8');
   const ui=fs.readFileSync('js/admin/activity-assistant.js','utf8');
   const apps=fs.readFileSync('js/services/application-service.js','utf8');
-  const scoped=fs.readFileSync('js/services/review-flow-r31-service.js','utf8');
+  const scoped=fs.readFileSync('js/services/review-service.js','utf8');
   const groups=fs.readFileSync('js/services/group-service.js','utf8');
-  expect(rules).toContain('assistantMayManageApplication');
+  expect(rules).not.toContain('assistantMayManageApplication');
+  expect(rules).toContain('assistantMayRequestApplicationAdjustment');
   expect(rules).toContain('assistantMayManageVolunteerUser');
   expect(rules).toContain('resource.data.unitIds.hasAny(currentUser().unitIds)');
   expect(rules).toContain('isActivityAssistant() && assistantHasUnit(resource.data.unitId)');

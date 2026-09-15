@@ -5,7 +5,7 @@ test('admin meeting planning reinjects replicate and add actions after selection
   const index=fs.readFileSync('admin/index.html','utf8');
   const feature=fs.readFileSync('js/admin/meeting-activity.js','utf8');
   const selection=fs.readFileSync('js/admin/selection-flow.js','utf8');
-  const adminFlow=fs.readFileSync('js/admin/refinements-r20.js','utf8');
+  const adminFlow=fs.readFileSync('js/admin/candidate-planning-management.js','utf8');
 
   expect(index).toContain('meeting-activity.js?v=20260902-r52');
   expect(index.indexOf('meeting-activity.js')).toBeGreaterThan(index.indexOf('selection-flow.js'));
