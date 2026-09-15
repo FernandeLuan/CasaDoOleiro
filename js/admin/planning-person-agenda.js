@@ -29,6 +29,10 @@
   const planningPerson=()=>typeof candidateById==='function'?candidateById(state.managerPlanningPersonId):null;
   const sessionName=s=>s?.activityName||s?.activity?.name||'Atividade';
   const sessionPeriod=s=>typeof activityPeriodValue==='function'?activityPeriodValue(s||{},s?.activity||{}):(s?.period||s?.activity?.period||'Sem preferência');
+  const asFeedbackDate=value=>{if(!value)return null;if(typeof value?.toDate==='function')return value.toDate();const date=value instanceof Date?value:new Date(value);return Number.isNaN(date.getTime())?null:date};
+  function feedbackWhen(value){const date=asFeedbackDate(value);if(!date)return '';const locale=typeof currentLocale==='function'?currentLocale():'pt-BR';return new Intl.DateTimeFormat(locale,{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(date)}
+  function feedbackAuthor(){const session=state.currentSession||{},user=session.user||{},name=String(user.displayName||user.name||session.email||'').trim();return {uid:String(session.uid||''),name:(name||'Autor não registrado').slice(0,120)}}
+  function feedbackHtml(s){const value=String(s?.feedback||'').trim();if(!value)return '';const author=String(s?.feedbackAuthorName||'').trim()||'Autor não registrado',when=feedbackWhen(s?.feedbackUpdatedAt);return `<section class='planning-activity-feedback' aria-label='Feedback da atividade'><strong>Feedback da atividade:</strong><p data-no-i18n>${escapeHtml(value)}</p><span>${escapeHtml(author)}${when?` · ${escapeHtml(when)}`:''}</span></section>`}
 
   function weekdayParts(value){
     const date=new Date(`${iso(value)}T12:00:00`),locale=typeof currentLocale==='function'?currentLocale():'pt-BR';
@@ -106,6 +110,7 @@
     if(status==='proposed')out.push(iconAction('Confirmar','fa-check',`planningConfirmSession('${app}','${sid}')`,'primary'));
     if(status!=='rejected'&&review!=='rejected'){
       out.push(iconAction('Editar','fa-pen',`planningOpenEdit('${app}','${sid}','${date}')`));
+      out.push(iconAction(s.feedback?'Editar feedback':'Adicionar feedback','fa-comment-dots',`planningOpenFeedback('${app}','${sid}')`));
       out.push(iconAction('Duplicar','fa-copy',`planningOpenDuplicate('${app}','${sid}')`));
       out.push(iconAction('Mover','fa-arrows-up-down-left-right',`planningOpenMove('${app}','${sid}')`));
       out.push(iconAction('Grupo','fa-people-group',`planningOpenGroup('${app}','${sid}')`));
@@ -120,6 +125,8 @@
     if(s.postApprovalProposal===true&&String(s.reviewStatus||'analysis')==='analysis')card.querySelectorAll('.r32-session-signal-wrap').forEach(node=>node.remove());
     const meta=card.querySelector('.admin-portal-activity-title>p');if(meta)meta.textContent=`${Number(s.duration||s.activity?.duration)||60} min · ${sessionPeriod(s)} · ${groupLabel(s)}`;
     card.querySelectorAll('.admin-portal-group').forEach(node=>node.remove());
+    card.querySelectorAll('.planning-activity-feedback').forEach(node=>node.remove());
+    const feedback=feedbackHtml(s),main=card.querySelector('.admin-portal-activity-main');if(feedback&&main)main.insertAdjacentHTML('beforeend',feedback);
     const actions=activityActionsHtml(p,s),head=card.querySelector('.admin-portal-activity-head');if(!head)return;
     const status=head.querySelector(':scope > .admin-portal-status');let tools=head.querySelector(':scope > .planning-activity-tools');
     if(!tools){tools=document.createElement('div');tools.className='planning-activity-tools';head.appendChild(tools)}
@@ -187,6 +194,22 @@
   window.planningOpenExistingAdjustment=function(encodedApplicationId,encodedSessionId){closePlanningActivityActions();openModal('Solicitar reajuste','Explique o que o voluntário precisa alterar nesta proposta.','<div class="field"><label for="planningExistingAdjustment">Orientação ao voluntário</label><textarea id="planningExistingAdjustment" class="textarea" placeholder="Ex.: manter a data e alterar apenas o período."></textarea></div>',`<button class="btn btn-primary btn-block" type="button" onclick="planningReviewExistingChange('${encodedApplicationId}','${encodedSessionId}','adjustments',document.getElementById('planningExistingAdjustment').value.trim())">Enviar reajuste</button>`)};
   window.planningOpenExistingReject=function(encodedApplicationId,encodedSessionId){closePlanningActivityActions();openModal('Recusar alteração','A atividade será mantida como estava antes da solicitação.','<div class="field"><label for="planningExistingReject">Motivo da recusa <small>(opcional)</small></label><textarea id="planningExistingReject" class="textarea"></textarea></div>',`<button class="btn btn-danger btn-block" type="button" onclick="planningReviewExistingChange('${encodedApplicationId}','${encodedSessionId}','reject',document.getElementById('planningExistingReject').value.trim())">Recusar alteração</button>`)};
   window.planningOpenEdit=function(encodedApplicationId,encodedSessionId,encodedDate){closePlanningActivityActions();if(typeof openAdminEditPlanningSession!=='function')return showToast('Edição indisponível.');openAdminEditPlanningSession(encodedApplicationId,encodedSessionId,encodedDate)};
+
+  window.planningOpenFeedback=async function(encodedApplicationId,encodedSessionId){
+    const applicationId=decodeURIComponent(encodedApplicationId),sessionId=decodeURIComponent(encodedSessionId),s=await getSession(applicationId,sessionId);closePlanningActivityActions();if(!s)return showToast('Atividade não encontrada.');
+    const current=String(s.feedback||''),editing=!!current.trim(),title=editing?'Editar feedback':'Adicionar feedback';
+    openModal(title,escapeHtml(sessionName(s)),`<div class='field'><label for='planningActivityFeedback'>Feedback da atividade</label><textarea id='planningActivityFeedback' class='textarea' rows='5' maxlength='2000' placeholder='Escreva um feedback sobre esta realização da atividade.'>${escapeHtml(current)}</textarea><small class='field-help'>Este feedback pertence somente a esta realização da atividade.</small></div>`,`<div class='planning-feedback-modal-actions'><button class='btn btn-outline' type='button' onclick='closeModal()'>Cancelar</button><button id='planningFeedbackSave' class='btn btn-primary' type='button' onclick="planningSaveFeedback('${safe(applicationId)}','${safe(sessionId)}')">Salvar feedback</button></div>`);
+    requestAnimationFrame(()=>document.getElementById('planningActivityFeedback')?.focus());
+  };
+  window.planningSaveFeedback=async function(encodedApplicationId,encodedSessionId){
+    const applicationId=decodeURIComponent(encodedApplicationId),sessionId=decodeURIComponent(encodedSessionId),text=String(document.getElementById('planningActivityFeedback')?.value||'').trim(),button=document.getElementById('planningFeedbackSave');if(!text)return showToast('Escreva o feedback antes de salvar.');if(text.length>2000)return showToast('O feedback deve ter no máximo 2.000 caracteres.');
+    const s=await getSession(applicationId,sessionId);if(!s)return showToast('Atividade não encontrada.');const existed=!!String(s.feedback||'').trim(),actor=feedbackAuthor();if(button){button.disabled=true;button.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Salvando...'}
+    try{
+      await window.OleiroServices.planning.updateSession(sessionId,{feedback:text,feedbackAuthorUid:actor.uid,feedbackAuthorName:actor.name,feedbackUpdatedAt:new Date()});
+      try{await window.OleiroServices.history?.append?.(applicationId,existed?'activity_feedback_updated':'activity_feedback_added',{unitId:s.unitId||'',metadata:{sessionId:String(sessionId),activityName:sessionName(s)}})}catch(error){console.warn('Feedback salvo, mas o histórico não pôde ser registrado:',error)}
+      closeModal();await refreshPlanning(applicationId);showToast(existed?'Feedback atualizado.':'Feedback adicionado.');
+    }catch(error){console.error(error);showToast(error?.message||'Não foi possível salvar o feedback.');if(button?.isConnected){button.disabled=false;button.textContent='Salvar feedback'}}
+  };
 
   function selectGroupChoices(groupId){const groups=String(groupId||'Livre').split('+').map(v=>v.trim()).filter(Boolean);document.querySelectorAll('input[data-group-choice="manager-primary"]').forEach(box=>{box.checked=groups.includes(box.value)||(groups.length===0&&box.value==='Livre');box.dispatchEvent(new Event('change',{bubbles:true}))})}
   window.planningOpenDuplicate=async function(encodedApplicationId,encodedSessionId){const applicationId=decodeURIComponent(encodedApplicationId),sessionId=decodeURIComponent(encodedSessionId),s=await getSession(applicationId,sessionId);closePlanningActivityActions();if(!s)return showToast('Atividade não encontrada.');openAdminPlanningActivity(safe(applicationId),safe(iso(s.date)));requestAnimationFrame(()=>setTimeout(()=>{const set=(id,value)=>{const el=document.getElementById(id);if(el)el.value=value??''};set('managerActName',sessionName(s));set('managerActDesc',s.activityDescription||s.activity?.description||'');set('managerActDuration',Number(s.duration||s.activity?.duration)||60);set('managerActMaterials',s.materials||s.activity?.materials||'');set('managerActNotes',s.notes||s.activity?.notes||'');set('managerActPeriod',sessionPeriod(s));selectGroupChoices(s.groupId||'Livre');const title=document.querySelector('#modalRoot .modal-title,.modal h2');if(title&&/adicionar/i.test(title.textContent||''))title.textContent='Duplicar atividade'},0))};
