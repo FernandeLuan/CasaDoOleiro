@@ -92,6 +92,22 @@ test('analysis copy never says editing is blocked',()=>{
   assert.ok(home.includes('continuar adicionando e ajustando atividades'));
 });
 
+test('legacy plan_approved sessions stay editable during candidate analysis',()=>{
+  const review=readFileSync('js/portal/review-flow.js','utf8');
+  assert.ok(review.includes("['pending','analysis','adjustments'].includes"));
+  assert.ok(review.includes("row.status==='plan_approved'&&!candidateWorkflowOpen"));
+});
+
+test('submitted candidate uses autosync status instead of fake resend control',()=>{
+  const planning=readFileSync('js/portal/planejamento.js','utf8');
+  const i18n=readFileSync('js/shared/i18n-keyed.js','utf8');
+  const product=readFileSync('js/portal/product-current.js','utf8');
+  assert.ok(planning.includes('candidate-plan-sync-state'));
+  assert.ok(planning.includes("t('portal.home.submittedBody')"));
+  assert.ok(product.includes("badge(t('portal.profile.analysis'),'info')"));
+  assert.ok(!i18n.includes('edição fica bloqueada'));
+});
+
 test('all local script references exist',()=>{
   for(const htmlPath of ['portal/index.html','admin/index.html']){
     for(const path of localScripts(htmlPath))assert.ok(existsSync(path),`${htmlPath} references missing script ${path}`);
