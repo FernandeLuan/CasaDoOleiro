@@ -151,9 +151,9 @@
     const current=typeof state!=='undefined'?String(state.volunteerPage||'home'):'';return current===String(page||'home')?{noop:true}:{direction:directionFor(volunteerOrder,current,page),scope:'page'}
   });
   wrap('goHome',()=>((state.role==='manager'?state.managerPage:state.volunteerPage)==='home'?{noop:true}:{direction:'back',scope:'page'}));
-  wrap('openManagerOccupancy',()=>{
+  wrap('openManagerOccupancy',(options={})=>{
     const current=typeof state!=='undefined'?String(state.managerPage||''):'';
-    return current==='occupancy'?{noop:true}:{direction:'forward',scope:'page'};
+    return current==='occupancy'?(options.force?{skipMotion:true}:{noop:true}):{direction:'forward',scope:'page'};
   });
   wrap('openHouseInfo',()=>({direction:'forward',scope:'page'}));
   wrap('closePlanningDetail',()=>({direction:'back',scope:'page'}));

@@ -16,4 +16,5 @@ test('outer navigation wrapper prevents render, reads and motion for current rou
   window.navigateManager('groups');assert.equal(calls,1);assert.equal(motions,2);
   state.managerPage='home';window.goHome();assert.equal(calls,1);
   state.managerPage='occupancy';window.openManagerOccupancy();assert.equal(calls,1);
+  window.openManagerOccupancy({force:true});assert.equal(calls,2);assert.equal(motions,2);
 });
