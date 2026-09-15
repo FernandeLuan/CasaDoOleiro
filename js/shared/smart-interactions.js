@@ -150,7 +150,10 @@
     const current=typeof state!=='undefined'?String(state.volunteerPage||''):'';return current===String(page||'')?{skipMotion:true}:{direction:directionFor(volunteerOrder,current,page),scope:'page'}
   });
   wrap('goHome',()=>({direction:'back',scope:'page'}));
-  wrap('openManagerOccupancy',()=>({direction:'forward',scope:'page'}));
+  wrap('openManagerOccupancy',()=>{
+    const current=typeof state!=='undefined'?String(state.managerPage||''):'';
+    return current==='occupancy'?{skipMotion:true}:{direction:'forward',scope:'page'};
+  });
   wrap('openHouseInfo',()=>({direction:'forward',scope:'page'}));
   wrap('closePlanningDetail',()=>({direction:'back',scope:'page'}));
   const profileTabOrder=['plan','account','history'];
