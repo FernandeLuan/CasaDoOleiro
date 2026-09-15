@@ -83,6 +83,9 @@
       beginNavigation(plan.direction||'forward',plan.scope||'page');
       let result;
       try{result=base.apply(this,args)}catch(error){pendingMotion=null;throw error}
+      if(plan.waitForSettle&&result&&typeof result.then==='function'){
+        return Promise.resolve(result).then(value=>{scheduleMotion();return value},error=>{pendingMotion=null;throw error});
+      }
       scheduleMotion();
       return result;
     };
@@ -106,7 +109,7 @@
     const same=typeof state!=='undefined'&&String(state.managerPlanningPersonId||'')===String(id)&&state.managerPage==='planning';
     if(!same)return {direction:'forward',scope:'page'};
     const order=['plan','account','history'],a=order.indexOf(String(state.managerPlanningTab||'plan')),b=order.indexOf(String(tab||'plan'));
-    return {direction:b<a?'back':'forward',scope:'content'};
+    return {direction:b<a?'back':'forward',scope:'content',waitForSettle:true};
   });
 
   /* Modais: bottom sheet no mobile e drawer lateral para ações contextuais no desktop. */

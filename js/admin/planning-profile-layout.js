@@ -88,26 +88,29 @@
     return `${tabs(p,'history')}<section class="candidate-history-panel planning-history-r69"><div class="section-head"><div><h3>Histórico do candidato</h3><p>Ações e mudanças registradas neste processo.</p></div></div>${content}</section>`;
   }
 
-  function renderHistoryState(p,rows,opts){
+  function renderHistoryState(p,rows,opts,{resetScroll=false}={}){
     state.managerPlanningPersonId=String(p.id);state.managerPlanningTab='history';state.managerPlanningLoading=false;state.managerPlanningBody=historyPanel(p,rows,opts);state.managerPage='planning';
     if(typeof render==='function')render();
-    if(typeof afterNavigation==='function')afterNavigation();
+    if(resetScroll&&typeof afterNavigation==='function')afterNavigation();
   }
   async function openHistory(id){
     const p=typeof candidateById==='function'?candidateById(id):null;if(!p)return;
     const cached=state.adminHistoryCache?.[String(p.id)];
     const cachedRows=Array.isArray(cached?.items)?mergeRows(p,cached.items):mergeRows(p,[]);
-    renderHistoryState(p,cachedRows,{loading:!cached?.loadedAt});
+    if(cached?.loadedAt)renderHistoryState(p,cachedRows,{});
     try{
-      if(!window.OleiroServices?.history?.list){renderHistoryState(p,cachedRows,{});return}
+      if(!window.OleiroServices?.history?.list){
+        if(!cached?.loadedAt)renderHistoryState(p,cachedRows,{});
+        return
+      }
       const result=await window.OleiroServices.history.list(p.id,{limit:50,cursor:null});
       const rows=mergeRows(p,result?.items||[]);
       state.adminHistoryCache=state.adminHistoryCache||{};
       state.adminHistoryCache[String(p.id)]={items:result?.items||[],cursor:result?.nextCursor||null,hasMore:!!result?.hasMore,loadedAt:Date.now(),loading:false,error:''};
-      if(state.managerPage==='planning'&&String(state.managerPlanningPersonId)===String(p.id)&&state.managerPlanningTab==='history')renderHistoryState(p,rows,{});
+      if(state.managerPage==='planning'&&String(state.managerPlanningPersonId)===String(p.id))renderHistoryState(p,rows,{});
     }catch(error){
       console.error('Falha ao carregar histórico na página dedicada:',error);
-      if(state.managerPage==='planning'&&String(state.managerPlanningPersonId)===String(p.id)&&state.managerPlanningTab==='history')renderHistoryState(p,cachedRows,{error:'Não foi possível carregar o histórico.'});
+      if(state.managerPage==='planning'&&String(state.managerPlanningPersonId)===String(p.id))renderHistoryState(p,cachedRows,{error:'Não foi possível carregar o histórico.'});
     }
   }
 

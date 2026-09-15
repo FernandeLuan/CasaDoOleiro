@@ -65,15 +65,22 @@
 
   openPerson=async function(id,tab='plan'){
     const p=candidateById(id);if(!p)return;
+    const samePerson=state.managerPage==='planning'&&String(state.managerPlanningPersonId||'')===String(id);
     if(state.managerPage!=='planning')state.managerPlanningOrigin=state.managerPage||'volunteer';else if(!state.managerPlanningPersonId)state.managerPlanningOrigin='planning';
-    state.managerPage='planning';state.managerPlanningPersonId=String(id);state.managerPlanningTab=tab;state.managerPlanningBody='';state.managerPlanningLoading=true;
-    render();if(typeof afterNavigation==='function')afterNavigation();
+    state.managerPage='planning';state.managerPlanningPersonId=String(id);state.managerPlanningLoading=true;
+    if(!samePerson){
+      state.managerPlanningTab=tab;
+      state.managerPlanningBody='';
+      render();
+      if(typeof afterNavigation==='function')afterNavigation();
+    }
     try{
       const result=await baseOpenPerson(id,tab);
       if(state.managerPage==='planning'&&String(state.managerPlanningPersonId)===String(id))captureVisibleModalBody(candidateById(id)||p,tab);
       return result;
     }finally{
-      state.managerPlanningLoading=false;if(state.managerPage==='planning'&&String(state.managerPlanningPersonId)===String(id))render();
+      state.managerPlanningLoading=false;
+      if(state.managerPage==='planning'&&String(state.managerPlanningPersonId)===String(id)&&!state.managerPlanningBody)render();
     }
   };
 
