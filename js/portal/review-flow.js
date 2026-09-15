@@ -20,7 +20,7 @@
     if(!args?.data)return args;const {time:_legacyTime,...data}=args.data;return {...args,data:{...data,period:activityPeriodValue(data)}};
   }
   function adjustmentReady(value){
-    const row=rawSession(value);if(row.status==='plan_approved'||row.adminAdjustmentStatus!=='requested')return false;if(row._r32AdjustmentReady===true)return true;const requested=timeMs(row.adminAdjustmentRequestedAt),updated=timeMs(row.updatedAt);return requested>0&&updated>requested;
+    const row=rawSession(value);if(row.adminAdjustmentStatus!=='requested')return false;if(row._r32AdjustmentReady===true)return true;const requested=timeMs(row.adminAdjustmentRequestedAt),updated=timeMs(row.updatedAt);return requested>0&&updated>requested;
   }
   window.isR32AdjustmentReady=adjustmentReady;
 
@@ -63,9 +63,9 @@
   volunteerAgendaContent=function(editable=false){
     const html=baseAgendaContent(editable),template=document.createElement('template');template.innerHTML=html;
     [...template.content.querySelectorAll('.day-block[id^="vday-"]')].forEach(day=>{
-      const date=day.id.slice(5),sessions=(typeof getSessions==='function'?getSessions(date,true):[]).map(rawSession),sessionAdjustments=sessions.filter(row=>row.status!=='plan_approved'&&(row.adminAdjustmentStatus==='requested'||row.adminAdjustmentStatus==='analysis'));
+      const date=day.id.slice(5),sessions=(typeof getSessions==='function'?getSessions(date,true):[]).map(rawSession),sessionAdjustments=sessions.filter(row=>row.adminAdjustmentStatus==='requested'||row.adminAdjustmentStatus==='analysis');
       day.querySelectorAll('.day-info-button').forEach(button=>button.remove());const heading=day.querySelector('.day-title>div:first-child');if(!heading)return;heading.querySelectorAll('.r32-day-state-badge').forEach(node=>node.remove());heading.querySelectorAll('.badge.warning').forEach(node=>node.remove());if(!sessionAdjustments.length)return;
-      const pending=sessions.filter(row=>row.status!=='plan_approved'&&row.adminAdjustmentStatus==='requested'&&!adjustmentReady(row)),ready=sessions.filter(row=>row.status!=='plan_approved'&&row.adminAdjustmentStatus==='requested'&&adjustmentReady(row)),sent=sessions.filter(row=>row.status!=='plan_approved'&&row.adminAdjustmentStatus==='analysis');let label='',tone='';
+      const pending=sessions.filter(row=>row.adminAdjustmentStatus==='requested'&&!adjustmentReady(row)),ready=sessions.filter(row=>row.adminAdjustmentStatus==='requested'&&adjustmentReady(row)),sent=sessions.filter(row=>row.adminAdjustmentStatus==='analysis');let label='',tone='';
       if(pending.length){label=text('portal.plan.adjust');tone='warning'}else if(ready.length){label=text('review.adjusted');tone='success'}else if(sent.length){label=text('review.sent');tone='success'}
       if(label)heading.insertAdjacentHTML('beforeend',`<span class="badge ${tone} r32-day-state-badge">${escapeHtml(label)}</span>`);
     });
@@ -79,7 +79,7 @@
   };
 
   submitPlan=async function(){
-    const pending=(state.sessions||[]).filter(row=>row.adminAdjustmentStatus==='requested'&&row.status!=='plan_approved');if(pending.some(row=>!adjustmentReady(row)))return showToast(text('review.adjustBeforeResend'));return baseSubmitPlan();
+    const pending=(state.sessions||[]).filter(row=>row.adminAdjustmentStatus==='requested');if(pending.some(row=>!adjustmentReady(row)))return showToast(text('review.adjustBeforeResend'));return baseSubmitPlan();
   };
 
   /* Round 33 — one authoritative post-approval path, including legacy manager_confirmed sessions. */
