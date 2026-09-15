@@ -29,10 +29,13 @@ async function expectHorizontal(buttons){
 
 test.beforeEach(async()=>{await seedEmulators()});
 
-test('Editar Mover e Excluir stay on the same row in Admin planning',async({page})=>{
-  await login(page);const modal=await openPendingVolunteer(page);const planning=modal.getByRole('button',{name:/Planejamento/}).first();if(await planning.count())await planning.click();
-  const day=modal.locator('details[data-plan-date="2026-09-15"]');await expect(day).toBeVisible({timeout:20_000});if((await day.getAttribute('open'))===null)await day.locator('summary').click();await expect(day).toHaveAttribute('open','');
-  const card=day.locator('.admin-portal-activity-card').filter({hasText:'Oficina candidato E2E'});await expect(card).toBeVisible();await expectHorizontal(card.locator('.admin-session-manage-actions>.btn'));
+test('Admin planning exposes edit and move in the compact activity action menu',async({page})=>{
+  await login(page);const detail=await openPendingVolunteer(page);
+  const day=detail.locator('.planning-person-day[data-plan-date="2026-09-15"]');await expect(day).toBeVisible({timeout:20_000});
+  const card=day.locator('.admin-portal-activity-card').filter({hasText:'Oficina candidato E2E'});await expect(card).toBeVisible();
+  await expect(card.locator('.admin-session-manage-actions')).toHaveCount(0);
+  const trigger=card.locator('.planning-activity-trigger');await expect(trigger).toBeVisible();await trigger.click();
+  await expect(card.getByRole('button',{name:/Editar$/})).toBeVisible();await expect(card.getByRole('button',{name:/Mover$/})).toBeVisible();
 });
 
 test('Editar Mover e Excluir stay on the same row in candidate portal planning',async({page})=>{
