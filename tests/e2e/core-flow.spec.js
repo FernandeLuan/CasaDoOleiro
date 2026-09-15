@@ -54,7 +54,9 @@ async function openPendingVolunteer(page){
   const candidate=list.locator('.list-item.clickable').filter({hasText:'Voluntário E2E'}).first();
   await expect(candidate).toBeVisible({timeout:20_000});
   await candidate.click();
-  return page.locator('#modalRoot');
+  const detail=page.locator('#app');
+  await expect(detail.locator('.person-refactor-tabs button.active')).toContainText('Planejamento',{timeout:20_000});
+  return detail;
 }
 
 test.beforeEach(async()=>{
