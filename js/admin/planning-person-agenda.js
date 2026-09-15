@@ -176,7 +176,7 @@
   }
 
   function ensurePlanningContainer(root){
-    const content=root.querySelector('.planning-page-content');if(!content)return null;content.querySelectorAll('.admin-plan-page-nav').forEach(node=>node.classList.add('planning-person-hidden-nav'));content.querySelectorAll('.admin-plan-loading').forEach(node=>node.remove());let planning=content.querySelector('.planning-by-day');
+    const content=root.querySelector('.planning-page-content');if(!content)return null;content.querySelectorAll('.admin-plan-page-nav').forEach(node=>node.classList.add('planning-person-hidden-nav'));content.querySelectorAll('.admin-plan-loading,.admin-plan-review-footer,.planning-admin-footer,.person-refactor-tabs,.person-history-tabs').forEach(node=>node.remove());let planning=content.querySelector('.planning-by-day');
     if(!planning){planning=document.createElement('div');planning.className='planning-by-day admin-refactor-planning';const footer=content.querySelector('.admin-plan-review-footer');if(footer)content.insertBefore(planning,footer);else content.appendChild(planning)}planning.classList.add('planning-person-agenda');return planning;
   }
   function mountAgenda(root,p,data){const planning=ensurePlanningContainer(root);if(!planning)return;closePlanningActivityActions();planning.innerHTML=agendaHtml(p,data);root.classList.add('planning-person-agenda-page');const eyebrow=root.querySelector('.planning-profile-copy>.eyebrow');if(eyebrow)eyebrow.textContent='Planejamento do voluntário';if(typeof applyI18n==='function')applyI18n(planning)}

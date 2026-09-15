@@ -29,6 +29,17 @@
     }
     return `<span class="badge ${escapeHtml(type||'')}">${escapeHtml(label)}</span>`;
   }
+  function profileTabs(p){
+    const id=encodeURIComponent(String(p?.id||'')),tab=String(state.managerPlanningTab||'plan');
+    const item=(value,label)=>`<button class="${tab===value?'active':''}" type="button" aria-current="${tab===value?'page':'false'}" onclick="openPerson(decodeURIComponent('${id}'),'${value}')">${label}</button>`;
+    return `<div class="person-refactor-tabs planning-profile-tabs" role="tablist" aria-label="Seções do voluntário">${item('plan','Planejamento')}${item('account','Conta')}${item('history','Histórico')}</div>`;
+  }
+  function sanitizeCapturedBody(body,tab='plan'){
+    const template=document.createElement('template');template.innerHTML=String(body||'');
+    template.content.querySelectorAll('.person-refactor-tabs,.planning-profile-tabs,.person-history-tabs').forEach(node=>node.remove());
+    if(tab==='plan')template.content.querySelectorAll('.admin-plan-review-footer,.planning-admin-footer').forEach(node=>node.remove());
+    return template.innerHTML;
+  }
 
   function planningList(){
     const rows=(state.candidates||[]).filter(p=>p.status!=='rejected');
@@ -45,7 +56,7 @@
     const p=planningPerson();if(!p)return planningList();
     const loading=state.managerPlanningLoading&&!state.managerPlanningBody;
     return `<section class="section planning-detail-page compact-page-top" data-person-id="${escapeHtml(String(p.id))}">
-      <header class="planning-profile-head"><div class="planning-profile-heading"><div class="planning-profile-copy"><div class="planning-profile-title-line"><h1>${escapeHtml(p.name||'Voluntário')}</h1></div><div class="planning-profile-meta"><span>${escapeHtml(p.country||'—')}</span><b>•</b><span>${escapeHtml(p.unit||p.unitName||'—')}</span><b>•</b><span class="planning-profile-period-status"><span>${escapeHtml(personDates(p))}</span><b>•</b>${personBadge(p)}</span></div></div></div><button class="planning-close-button" type="button" onclick="closePlanningDetail()" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button></header>
+      <header class="planning-profile-head"><div class="planning-profile-heading"><div class="planning-profile-copy"><div class="planning-profile-title-line"><h1>${escapeHtml(p.name||'Voluntário')}</h1></div><div class="planning-profile-meta"><span>${escapeHtml(p.country||'—')}</span><b>•</b><span>${escapeHtml(p.unit||p.unitName||'—')}</span><b>•</b><span class="planning-profile-period-status"><span>${escapeHtml(personDates(p))}</span><b>•</b>${personBadge(p)}</span></div></div></div><button class="planning-close-button" type="button" onclick="closePlanningDetail()" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button>${profileTabs(p)}</header>
       <div class="planning-page-content">${loading?'<div class="empty compact-loading planning-page-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando planejamento...</div>':state.managerPlanningBody||'<div class="empty compact-loading planning-page-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando dados...</div>'}</div>
     </section>`;
   }
@@ -74,7 +85,7 @@
   }
   function applyCapturedBody(p,tab,body,{renderNow=true}={}){
     if(!body)return false;
-    state.managerPlanningBody=body;
+    state.managerPlanningBody=sanitizeCapturedBody(body,tab);
     state.managerPlanningTab=tab;
     state.managerPlanningPersonId=String(p.id);
     capturedProfileChanged=true;

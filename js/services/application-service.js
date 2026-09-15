@@ -88,18 +88,17 @@
       },{loading:false});
     },
 
-    async listUpcoming({field='stayStart',from,limit=3}={}){
+    async listUpcoming({field='stayStart',from,to='',limit=3}={}){
       if(!from||!['stayStart','stayEnd'].includes(field))return [];
       return services.run(async()=>{
-        const context=await services.firebase();const {firestore}=context.modules,max=Math.max(1,Math.min(Number(limit)||3,10)),started=Date.now();
-        const snapshot=await firestore.getDocs(firestore.query(
-          firestore.collection(context.db,'applications'),
+        const context=await services.firebase();const {firestore}=context.modules,max=Math.max(1,Math.min(Number(limit)||3,50)),started=Date.now(),constraints=[
           firestore.where('status','==','approved'),
-          firestore.where(field,'>=',String(from)),
-          firestore.orderBy(field,'asc'),
-          firestore.limit(max)
-        ));
-        services.recordQuery?.('applications/upcoming',started,snapshot.size,{field,from:String(from),limit:max});
+          firestore.where(field,'>=',String(from))
+        ];
+        if(to)constraints.push(firestore.where(field,'<=',String(to)));
+        constraints.push(firestore.orderBy(field,'asc'),firestore.limit(max));
+        const snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'applications'),...constraints));
+        services.recordQuery?.('applications/upcoming',started,snapshot.size,{field,from:String(from),to:String(to||''),limit:max});
         return snapshot.docs.map(mapApplication).filter(row=>!row.inactive);
       },{loading:false});
     },

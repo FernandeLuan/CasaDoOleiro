@@ -3,6 +3,9 @@ const MANAGER_SCHEDULE_CACHE_MS=60000;
 const MANAGER_APPLICATION_REFRESH_MS=30000;
 const MANAGER_CHANGE_REFRESH_MS=120000;
 const MANAGER_DASHBOARD_REFRESH_MS=120000;
+const MANAGER_BROWSER_CACHE_MS=60*60*1000;
+const MANAGER_BROWSER_CACHE_KEY='oleiro.manager.home.v1';
+const MANAGER_MOVEMENT_DAYS=15;
 let _managerApplicationsRefreshAt=0;
 let _managerApplicationsRefreshPromise=null;
 let _managerPendingChangesAt=0;
@@ -11,19 +14,70 @@ let _managerDashboardAt=0;
 let _managerDashboardPromise=null;
 let _managerCandidateRequestKey='';
 let _managerBackgroundWarmupScheduled=false;
+function compactManagerScheduleRow(row={}){
+  const activity=row.activity||{};
+  return {
+    id:row.id||'',applicationId:row.applicationId||'',date:String(row.date||''),activityId:row.activityId||activity.id||'',
+    activityName:row.activityName||activity.name||'',activityDescription:row.activityDescription||activity.description||'',
+    duration:Number(row.duration||activity.duration||60),participation:row.participation||activity.participation||'Livre',
+    materials:row.materials||activity.materials||'',notes:row.notes||activity.notes||'',period:row.period||activity.period||'',
+    time:row.time||activity.time||'',ownerName:row.ownerName||activity.ownerName||activity.owner||'Voluntário',
+    groupId:row.groupId||'',status:row.status||'proposed',
+    activity:{id:row.activityId||activity.id||'',name:row.activityName||activity.name||'',description:row.activityDescription||activity.description||'',duration:Number(row.duration||activity.duration||60),participation:row.participation||activity.participation||'Livre',materials:row.materials||activity.materials||'',notes:row.notes||activity.notes||'',period:row.period||activity.period||'',time:row.time||activity.time||'',owner:row.ownerName||activity.ownerName||activity.owner||'Voluntário'}
+  };
+}
+function compactMovementRow(row={}){return {id:row.id||'',name:row.name||'Voluntário',from:String(row.from||'').slice(0,10),to:String(row.to||'').slice(0,10),unit:row.unit||'',unitName:row.unitName||'',status:row.status||'approved',inactive:row.inactive===true}}
+function readManagerBrowserCache(){
+  try{
+    const record=JSON.parse(sessionStorage.getItem(MANAGER_BROWSER_CACHE_KEY)||'null');
+    if(!record||record.date!==_oleiroToday||Date.now()-Number(record.savedAt||0)>MANAGER_BROWSER_CACHE_MS){sessionStorage.removeItem(MANAGER_BROWSER_CACHE_KEY);return null}
+    return record;
+  }catch{return null}
+}
+function writeManagerBrowserCache(patch={}){
+  try{
+    const current=readManagerBrowserCache()||{date:_oleiroToday};
+    const next={...current,...patch,date:_oleiroToday,savedAt:Date.now()};
+    sessionStorage.setItem(MANAGER_BROWSER_CACHE_KEY,JSON.stringify(next));
+  }catch{}
+}
+function clearManagerBrowserSchedule(){
+  try{
+    const current=readManagerBrowserCache();if(!current)return;
+    delete current.scheduleRows;delete current.scheduleSavedAt;current.savedAt=Date.now();
+    sessionStorage.setItem(MANAGER_BROWSER_CACHE_KEY,JSON.stringify(current));
+  }catch{}
+}
+function restoreManagerBrowserCache(){
+  const cached=readManagerBrowserCache();if(!cached)return {schedule:false,dashboard:false};
+  let schedule=false,dashboard=false;
+  if(Array.isArray(cached.scheduleRows)){
+    state.sessions=cached.scheduleRows;state.activities=[];state.scheduleFrom=_oleiroToday;state.scheduleTo=_oleiroToday;schedule=true;
+  }
+  if(cached.dashboard&&typeof cached.dashboard==='object'){
+    state.dashboardCounts=cached.dashboard.counts||{analysis:0,adjustments:0};
+    state.dashboardArrivals=Array.isArray(cached.dashboard.arrivals)?cached.dashboard.arrivals:[];
+    state.dashboardDepartures=Array.isArray(cached.dashboard.departures)?cached.dashboard.departures:[];
+    dashboard=true;
+  }
+  return {schedule,dashboard};
+}
+function managerDatePlusDays(value,days){const d=new Date(String(value)+'T12:00:00');d.setDate(d.getDate()+Number(days||0));return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 function managerScheduleKey(from,to,unit='all'){return `${from}|${to}|${unit}`}
 function mapManagerScheduleRows(rows){
   const names=new Map((state.candidates||[]).map(p=>[String(p.id),p.name]));
   return (rows||[]).map(row=>({...row,activity:{...(row.activity||{}),owner:row.activity?.owner&&row.activity.owner!=='Voluntário'?row.activity.owner:(names.get(String(row.applicationId))||row.ownerName||'Voluntário')}}));
 }
 function deriveAdminNotifications(){return []}
-function invalidateManagerScheduleCache(){_managerScheduleCache.clear();state.scheduleFrom=null;state.scheduleTo=null}
+function invalidateManagerScheduleCache(){_managerScheduleCache.clear();state.scheduleFrom=null;state.scheduleTo=null;clearManagerBrowserSchedule()}
 async function hydrateManagerSchedule(from=_oleiroToday,to=_oleiroToday,{force=false,unitId='all'}={}){
   if(!window.OleiroServices?.planning?.listManagerSchedule)return [];
   const key=managerScheduleKey(from,to,unitId),cached=_managerScheduleCache.get(key);
   if(!force&&cached&&Date.now()-cached.at<MANAGER_SCHEDULE_CACHE_MS){state.sessions=cached.rows;state.activities=[];state.scheduleFrom=from;state.scheduleTo=to;return cached.rows;}
   const rows=mapManagerScheduleRows(await window.OleiroServices.planning.listManagerSchedule({from,to,unitId}));
-  _managerScheduleCache.set(key,{at:Date.now(),rows});state.sessions=rows;state.activities=[];state.scheduleFrom=from;state.scheduleTo=to;return rows;
+  _managerScheduleCache.set(key,{at:Date.now(),rows});state.sessions=rows;state.activities=[];state.scheduleFrom=from;state.scheduleTo=to;
+  if(from===_oleiroToday&&to===_oleiroToday)writeManagerBrowserCache({scheduleRows:rows.map(compactManagerScheduleRow),scheduleSavedAt:Date.now()});
+  return rows;
 }
 
 async function hydrateManagerPendingChanges({force=false}={}){
@@ -65,17 +119,20 @@ async function hydrateManagerDashboardData({force=true}={}){
   if(_managerDashboardPromise)return _managerDashboardPromise;
   if(!force&&Date.now()-_managerDashboardAt<MANAGER_DASHBOARD_REFRESH_MS)return {counts:state.dashboardCounts,arrivals:state.dashboardArrivals,departures:state.dashboardDepartures};
   const service=window.OleiroServices.applications;
+  const through=managerDatePlusDays(_oleiroToday,MANAGER_MOVEMENT_DAYS);
+  state.managerDashboardLoading=true;
   _managerDashboardPromise=Promise.allSettled([
     service.countStatus?.('analysis')??0,service.countStatus?.('adjustments')??0,
-    service.listUpcoming?.({field:'stayStart',from:_oleiroToday,limit:3})??[],
-    service.listUpcoming?.({field:'stayEnd',from:_oleiroToday,limit:3})??[]
+    service.listUpcoming?.({field:'stayStart',from:_oleiroToday,to:through,limit:20})??[],
+    service.listUpcoming?.({field:'stayEnd',from:_oleiroToday,to:through,limit:20})??[]
   ]).then(results=>{
     const value=(index,fallback)=>results[index]?.status==='fulfilled'?results[index].value:fallback;
     results.forEach((result,index)=>{if(result.status==='rejected')console.warn(['Contagem em análise','Contagem de ajustes','Próximas chegadas','Próximas saídas'][index]+' indisponível:',result.reason)});
     state.dashboardCounts={analysis:Number(value(0,state.dashboardCounts?.analysis||0))||0,adjustments:Number(value(1,state.dashboardCounts?.adjustments||0))||0};
     state.dashboardArrivals=value(2,state.dashboardArrivals||[])||[];state.dashboardDepartures=value(3,state.dashboardDepartures||[])||[];_managerDashboardAt=Date.now();
+    writeManagerBrowserCache({dashboard:{counts:state.dashboardCounts,arrivals:state.dashboardArrivals.map(compactMovementRow),departures:state.dashboardDepartures.map(compactMovementRow),loadedAt:_managerDashboardAt}});
     if(state.managerPage==='home')render();return {counts:state.dashboardCounts,arrivals:state.dashboardArrivals,departures:state.dashboardDepartures};
-  }).finally(()=>{_managerDashboardPromise=null});
+  }).finally(()=>{state.managerDashboardLoading=false;_managerDashboardPromise=null;if(state.managerPage==='home')render()});
   return _managerDashboardPromise;
 }
 
@@ -143,18 +200,21 @@ function renderManager(){
 function render(){renderManager()}
 async function bootManager(){
   const session=await window.OleiroAuthGuard?.requireRole('manager');if(!session)return;
-  state.role='manager';state.currentSession=session;state.managerPage='home';state.groupsLoaded=false;state.groupsLoading=false;state.groupsUnitId=null;state.groupUnitId=state.groupUnitId||'';state.sessions=[];state.pendingChangeRequests=[];state.scheduleFrom=null;state.scheduleTo=null;state.dashboardCounts={analysis:0,adjustments:0};state.dashboardArrivals=[];state.dashboardDepartures=[];state.candidateHasMore=false;state.candidateCursor=null;state.candidateLoading=false;render();
+  state.role='manager';state.currentSession=session;state.managerPage='home';state.groupsLoaded=false;state.groupsLoading=false;state.groupsUnitId=null;state.groupUnitId=state.groupUnitId||'';state.sessions=[];state.pendingChangeRequests=[];state.scheduleFrom=null;state.scheduleTo=null;state.dashboardCounts={analysis:0,adjustments:0};state.dashboardArrivals=[];state.dashboardDepartures=[];state.candidateHasMore=false;state.candidateCursor=null;state.candidateLoading=false;
+  const restored=restoreManagerBrowserCache();state.managerTodayLoading=!restored.schedule;state.managerDashboardLoading=!restored.dashboard;render();
   try{
     await hydrateManagerBaseData();
   }catch(error){
     console.error('Falha ao carregar a lista principal da gestão:',error);showToast('Não foi possível carregar a lista de voluntários. Tente novamente.');
   }
   if(state.managerPage==='home')render();
-  try{
-    await hydrateManagerSchedule(_oleiroToday,_oleiroToday,{force:false});
-  }catch(error){
-    console.warn('Agenda de hoje indisponível no carregamento inicial:',error);
-  }
+  const initial=await Promise.allSettled([
+    hydrateManagerSchedule(_oleiroToday,_oleiroToday,{force:true}),
+    hydrateManagerDashboardData({force:true})
+  ]);
+  if(initial[0].status==='rejected')console.warn('Agenda de hoje indisponível no carregamento inicial:',initial[0].reason);
+  if(initial[1].status==='rejected')console.warn('Resumo do painel indisponível no carregamento inicial:',initial[1].reason);
+  state.managerTodayLoading=false;state.managerDashboardLoading=false;
   if(state.managerPage==='home')render();
   scheduleManagerBackgroundWarmup();
 }

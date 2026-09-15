@@ -96,6 +96,8 @@
   }
 
   const safe=value=>encodeURIComponent(String(value??''));
+  const HISTORY_BROWSER_CACHE_MS=60*60*1000;
+  const HISTORY_BROWSER_PREFIX='oleiro.admin.history.v1.';
   const asDate=value=>{if(!value)return null;if(typeof value?.toDate==='function')return value.toDate();const d=new Date(value);return Number.isNaN(d.getTime())?null:d};
   function when(value){const d=asDate(value);if(!d)return '—';const locale=typeof currentLocale==='function'?currentLocale():'pt-BR';return new Intl.DateTimeFormat(locale,{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(d)}
   function eventLabel(type){const map={candidate_created:'Perfil criado',planning_submitted:'Planejamento enviado',planning_approved:'Planejamento aprovado',meeting_scheduled:'Reunião agendada',meeting_completed:'Reunião realizada',candidate_approved:'Candidato aprovado',candidate_rejected:'Candidato não aprovado',activity_created:'Atividade criada',activity_updated:'Atividade atualizada',activity_feedback_added:'Feedback adicionado',activity_feedback_updated:'Feedback atualizado',session_moved:'Atividade movida',adjustment_requested:'Ajuste solicitado',stay_dates_changed:'Período alterado',post_proposal_reviewed:'Proposta revisada'};const key=String(type||'');return map[key]||key.replaceAll('_',' ').replace(/^./,c=>c.toUpperCase())||'Evento'}
@@ -113,6 +115,21 @@
   function metadata(row){const m=row?.metadata||{};if(row?.type==='meeting_scheduled')return [m.date,m.time].filter(Boolean).join(' • ');if(row?.type==='session_moved')return [m.date,m.period].filter(Boolean).join(' • ');if(row?.type==='stay_dates_changed')return m.stayStart&&m.stayEnd?`${m.stayStart} → ${m.stayEnd}`:'';return m.activityName||m.date||''}
   function legacyRows(p){const rows=[],push=(type,date)=>{if(date)rows.push({id:`legacy-${type}`,type,createdAt:date,actorRole:'',actorLabel:'Autor não registrado',metadata:{}})};push('candidate_created',p?.createdAt);push('planning_submitted',p?.planningSubmittedAt);push('planning_approved',p?.planningApprovedAt);push('meeting_scheduled',p?.meetingScheduledAt);push('meeting_completed',p?.meetingCompletedAt);if(p?.finalDecisionAt)push(p.finalDecision==='approved'?'candidate_approved':'candidate_rejected',p.finalDecisionAt);return rows}
   function mergeRows(p,rows){const persisted=rows||[],types=new Set(persisted.map(row=>row.type));return [...persisted,...legacyRows(p).filter(row=>!types.has(row.type))].sort((a,b)=>(asDate(b.createdAt)?.getTime()||0)-(asDate(a.createdAt)?.getTime()||0))}
+  function browserHistoryKey(id){return HISTORY_BROWSER_PREFIX+String(id||'')}
+  function browserHistoryRead(id){
+    try{
+      const record=JSON.parse(sessionStorage.getItem(browserHistoryKey(id))||'null');
+      if(!record||Date.now()-Number(record.savedAt||0)>HISTORY_BROWSER_CACHE_MS){sessionStorage.removeItem(browserHistoryKey(id));return null}
+      return {items:Array.isArray(record.items)?record.items:[],loadedAt:Number(record.loadedAt||record.savedAt||0)};
+    }catch{return null}
+  }
+  function browserHistoryWrite(id,items,loadedAt=Date.now()){
+    try{
+      const normalized=(items||[]).map(row=>{const date=asDate(row?.createdAt);return {...row,createdAt:date?date.toISOString():row?.createdAt}});
+      sessionStorage.setItem(browserHistoryKey(id),JSON.stringify({savedAt:Date.now(),loadedAt,items:normalized}));
+    }catch{}
+  }
+  function browserHistoryClear(id){try{sessionStorage.removeItem(browserHistoryKey(id))}catch{}}
   function historyTabs(p){const id=safe(p.id);return `<div class="person-refactor-tabs person-history-tabs planning-profile-tabs"><button type="button" onclick="openPerson(decodeURIComponent('${id}'),'plan')">Planejamento</button><button type="button" onclick="openPerson(decodeURIComponent('${id}'),'account')">Conta</button><button class="active" type="button" data-r71-history-tab="1">Histórico</button></div>`}
   function historyHtml(p,rows,{loading=false,error=''}={}){
     let content='';
@@ -120,7 +137,7 @@
     else if(error)content=`<div class="notice danger"><i class="fa-solid fa-triangle-exclamation"></i><div>${escapeHtml(error)}</div></div>`;
     else if(!rows.length)content='<div class="planning-history-r71-state"><span><i class="fa-regular fa-clock"></i> Nenhum evento registrado ainda.</span></div>';
     else content=`<div class="planning-history-r71-list">${rows.map(row=>{const meta=metadata(row),who=historyAuthor(row);return `<article class="planning-history-r71-event"><div class="planning-history-r71-dot"></div><div class="planning-history-r71-body"><div class="planning-history-r71-head"><strong>${escapeHtml(eventLabel(row.type))}</strong><time>${escapeHtml(when(row.createdAt))}</time></div>${meta?`<p data-no-i18n>${escapeHtml(meta)}</p>`:''}<span>${escapeHtml(who)}</span></div></article>`}).join('')}</div>`;
-    return `${historyTabs(p)}<section class="candidate-history-panel planning-history-r71"><div class="section-head"><div><h3>Histórico do candidato</h3><p>Ações e mudanças registradas neste processo.</p></div></div>${content}</section>`;
+    return `<section class="candidate-history-panel planning-history-r71"><div class="section-head"><div><h3>Histórico do candidato</h3><p>Ações e mudanças registradas neste processo.</p></div></div>${content}</section>`;
   }
   function renderHistory(p,rows,opts={}){
     state.managerPage='planning';
@@ -136,10 +153,18 @@
     /* Aba ativa: absolutamente nada acontece. */
     if(sameHistory)return;
     const previousTab=String(state.managerPlanningTab||'plan');
-    const cached=state.adminHistoryCache?.[String(p.id)],cachedRows=mergeRows(p,Array.isArray(cached?.items)?cached.items:[]);
+    state.adminHistoryCache=state.adminHistoryCache||{};
+    let cached=state.adminHistoryCache[String(p.id)];
+    if(!cached?.loadedAt){
+      const browser=browserHistoryRead(p.id);
+      if(browser){cached={items:browser.items,loadedAt:browser.loadedAt,cursor:null,hasMore:false,loading:false,error:''};state.adminHistoryCache[String(p.id)]=cached}
+    }
+    const cachedRows=mergeRows(p,Array.isArray(cached?.items)?cached.items:[]);
+    const fresh=!!cached?.loadedAt&&Date.now()-Number(cached.loadedAt)<HISTORY_BROWSER_CACHE_MS;
     window.OleiroUI?.prepareTabTransition?.(previousTab,'history');
     renderHistory(p,cachedRows,{loading:!cached?.loadedAt});
     window.OleiroUI?.finishTabTransition?.();
+    if(fresh)return;
     try{
       if(!window.OleiroServices?.history?.list){
         if(!cached?.loadedAt&&state.managerPlanningTab==='history')renderHistory(p,cachedRows);
@@ -148,7 +173,9 @@
       const result=await window.OleiroServices.history.list(p.id,{limit:50,cursor:null});
       const source=await resolveHistoryActors(result?.items||[]),rows=mergeRows(p,source);
       state.adminHistoryCache=state.adminHistoryCache||{};
-      state.adminHistoryCache[String(p.id)]={items:source,cursor:result?.nextCursor||null,hasMore:!!result?.hasMore,loadedAt:Date.now(),loading:false,error:''};
+      const loadedAt=Date.now();
+      state.adminHistoryCache[String(p.id)]={items:source,cursor:result?.nextCursor||null,hasMore:!!result?.hasMore,loadedAt,loading:false,error:''};
+      browserHistoryWrite(p.id,source,loadedAt);
       if(state.managerPage==='planning'&&String(state.managerPlanningPersonId)===String(p.id)&&state.managerPlanningTab==='history'){
         state.managerPlanningBody=historyHtml(p,rows,{});
         render();
@@ -162,6 +189,14 @@
     }
   }
   window.openPlanningHistoryR71=openHistory;
+  window.OleiroUI=window.OleiroUI||{};
+  window.OleiroUI.invalidateHistoryCache=id=>{if(!id)return;browserHistoryClear(id);if(state.adminHistoryCache)delete state.adminHistoryCache[String(id)]};
+  const historyService=window.OleiroServices?.history;
+  if(historyService?.append&&!historyService.append.__browserCacheWrapped){
+    const baseAppend=historyService.append.bind(historyService);
+    const wrapped=async function(applicationId,...args){const result=await baseAppend(applicationId,...args);window.OleiroUI?.invalidateHistoryCache?.(applicationId);return result};
+    wrapped.__browserCacheWrapped=true;historyService.append=wrapped;
+  }
 
   const baseOpenPerson=typeof window.openPerson==='function'?window.openPerson:null;
   if(baseOpenPerson){
