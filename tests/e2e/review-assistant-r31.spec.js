@@ -21,7 +21,7 @@ async function openVolunteerByStatus(page,status,name){
   const applyStatus=async()=>{await page.locator('#app').getByRole('button',{name:/Filtros/}).click();await page.locator('#candidateStatusFilter').selectOption(status);await page.locator('#modalRoot').getByRole('button',{name:/Aplicar$/}).click();await expect(list.getByText(/Carregando voluntários/)).toHaveCount(0,{timeout:20_000})};
   await applyStatus();let item=list.locator('.list-item.clickable').filter({hasText:name}).first();
   if(!(await item.isVisible().catch(()=>false))&&await page.getByText('Não foi possível aplicar os filtros.').count()){await applyStatus();item=list.locator('.list-item.clickable').filter({hasText:name}).first()}
-  await expect(item).toBeVisible({timeout:20_000});await item.click();return page.locator('#modalRoot');
+  await expect(item).toBeVisible({timeout:20_000});await item.click();const detail=page.locator('#app');await expect(detail.locator('.person-refactor-tabs button.active')).toContainText('Planejamento',{timeout:20_000});return detail;
 }
 async function openPlanning(modal){const tab=modal.getByRole('button',{name:/Planejamento/}).first();if(await tab.count())await tab.click()}
 async function ensureDetailsOpen(details){await expect(details).toBeVisible();await details.evaluate(node=>{node.open=true});await expect(details).toHaveJSProperty('open',true)}
@@ -75,13 +75,12 @@ test('Approved volunteer can add a new activity and Admin gets blue scoped info 
 
 test('Rodeio activity assistant is unit-scoped and has no candidate lifecycle controls',async({page})=>{
   await login(page,'assistant@oleiro.test','Assistant123!','admin');
-  for(const label of ['Início','Voluntariado','Agenda','Ocupação','Menu'])await expect(navAction(page,label)).toBeVisible();
+  for(const label of ['Início','Voluntariado','Planejamento','Ocupação','Grupos'])await expect(navAction(page,label)).toBeVisible();
   await navAction(page,'Voluntariado').click();const list=page.locator('#candidateList');await expect(list).toContainText('Aprovado E2E',{timeout:20_000});await expect(list).not.toContainText('Indaial E2E');await expect(page.locator('.candidate-add-button')).toHaveCount(0);
   const denied=await page.evaluate(async()=>{try{await window.OleiroServices.applications.getById('e2e-indaial-application');return 'allowed'}catch(error){return String(error?.code||error?.message||'denied')}});expect(denied).not.toBe('allowed');
 
-  const person=list.locator('.list-item.clickable').filter({hasText:'Aprovado E2E'}).first();await person.click();const modal=page.locator('#modalRoot');await expect(modal.locator('.person-refactor-tabs button.active')).toContainText('Planejamento');await openPlanning(modal);await expect(modal.getByRole('button',{name:/Estadia/})).toHaveCount(0);await expect(modal.getByRole('button',{name:/Aprovar planejamento/})).toHaveCount(0);await expect(modal.getByRole('button',{name:/Limpar/})).toHaveCount(0);await page.locator('.modal-close').click();
+  const person=list.locator('.list-item.clickable').filter({hasText:'Aprovado E2E'}).first();await person.click();const detail=page.locator('#app');await expect(detail.locator('.person-refactor-tabs button.active')).toContainText('Planejamento',{timeout:20_000});await expect(detail.getByRole('button',{name:/Estadia/})).toHaveCount(0);await expect(detail.getByRole('button',{name:/Aprovar planejamento/})).toHaveCount(0);await expect(detail.getByRole('button',{name:/Limpar/})).toHaveCount(0);
 
   await navAction(page,'Ocupação').click();await expect(page.locator('.r31-unit-tab')).toHaveCount(1);await expect(page.locator('.r31-unit-tab')).toHaveText('Rodeio');
-  await navAction(page,'Menu').click();await expect(page.locator('#app')).toContainText('Grupos');await expect(page.locator('#app')).toContainText('Informações do portal');await expect(page.locator('#app')).toContainText('Rotina');await expect(page.locator('#app')).not.toContainText('Minha conta');await expect(page.locator('#app')).not.toContainText('Unidades');
-  await page.locator('#app button').filter({hasText:'Grupos A, B, C, D e participação livre'}).click();await expect(page.locator('.r31-assistant-unit-lock')).toContainText('Rodeio',{timeout:20_000});
+  await navAction(page,'Grupos').click();await expect(page.locator('.r31-assistant-unit-lock')).toContainText('Rodeio',{timeout:20_000});
 });
