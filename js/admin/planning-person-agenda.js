@@ -134,7 +134,7 @@
     if(status)tools.appendChild(status);tools.querySelectorAll('.planning-activity-trigger,.planning-activity-menu').forEach(node=>node.remove());
     if(!actions)return;
     const button=document.createElement('button');button.type='button';button.className='planning-activity-trigger';button.title=`Ações de ${sessionName(s)}`;button.setAttribute('aria-label',button.title);button.setAttribute('aria-expanded','false');button.innerHTML='<i class="fa-solid fa-plus" aria-hidden="true"></i>';button.setAttribute('onclick','togglePlanningActivityActions(this,event)');
-    const menu=document.createElement('div');menu.className='planning-activity-menu';menu.hidden=true;menu.setAttribute('role','menu');menu.innerHTML=actions;tools.append(button,menu);
+    const menu=document.createElement('div');menu.className='planning-activity-menu';menu.setAttribute('role','menu');menu.setAttribute('aria-hidden','true');menu.innerHTML=actions;button.dataset.activityName=sessionName(s);tools.append(button,menu);
   }
 
   function prepareDayContent(content,p,sessions){
@@ -181,8 +181,8 @@
   }
   window.refreshPlanningPersonAgenda=refreshPlanning;
 
-  window.closePlanningActivityActions=function(){document.querySelectorAll('.planning-activity-menu:not([hidden])').forEach(menu=>{menu.hidden=true;menu.closest('.planning-activity-tools')?.querySelector('.planning-activity-trigger')?.setAttribute('aria-expanded','false')})};
-  window.togglePlanningActivityActions=function(button,event){event?.preventDefault?.();event?.stopPropagation?.();const menu=button?.closest('.planning-activity-tools')?.querySelector('.planning-activity-menu');if(!menu)return;const open=menu.hidden;closePlanningActivityActions();menu.hidden=!open;button.setAttribute('aria-expanded',String(open))};
+  window.closePlanningActivityActions=function(exceptMenu=null){document.querySelectorAll('.planning-activity-menu.is-open').forEach(menu=>{if(menu===exceptMenu)return;menu.classList.remove('is-open');menu.setAttribute('aria-hidden','true');const trigger=menu.closest('.planning-activity-tools')?.querySelector('.planning-activity-trigger');if(trigger){trigger.setAttribute('aria-expanded','false');const name=trigger.dataset.activityName||'atividade';trigger.title=`Ações de ${name}`;trigger.setAttribute('aria-label',trigger.title)}})};
+  window.togglePlanningActivityActions=function(button,event){event?.preventDefault?.();event?.stopPropagation?.();const menu=button?.closest('.planning-activity-tools')?.querySelector('.planning-activity-menu');if(!menu)return;const shouldOpen=!menu.classList.contains('is-open');closePlanningActivityActions(shouldOpen?menu:null);if(shouldOpen){menu.classList.add('is-open');menu.setAttribute('aria-hidden','false');button.setAttribute('aria-expanded','true');const name=button.dataset.activityName||'atividade';button.title=`Fechar ações de ${name}`;button.setAttribute('aria-label',button.title)}else{menu.classList.remove('is-open');menu.setAttribute('aria-hidden','true');button.setAttribute('aria-expanded','false');const name=button.dataset.activityName||'atividade';button.title=`Ações de ${name}`;button.setAttribute('aria-label',button.title)}};
 
   async function getSession(applicationId,sessionId){const cached=sessionRegistry.get(String(sessionId));if(cached)return cached;const rows=await window.OleiroServices?.planning?.listSessions?.({applicationId});return (rows||[]).find(row=>String(row.id)===String(sessionId))||null}
 
