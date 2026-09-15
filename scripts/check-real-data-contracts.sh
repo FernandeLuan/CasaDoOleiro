@@ -131,7 +131,8 @@ has js/admin/candidate-form.js 'Digite para buscar o país'
 has js/services/onboarding-service.js participantGenders
 has js/services/onboarding-service.js registrationLink
 for token in review-day-warning 'Voltar ao calendário'; do has js/admin/candidate-profile-details.js "$token"; done
-for token in home-unit-support-link managerCreated portal.plan.addBeforeSend; do has js/portal/planning-enhancements.js "$token"; done
+for token in home-unit-support-link managerCreated; do has js/portal/planning-enhancements.js "$token"; done
+has js/portal/planejamento.js portal.plan.addBeforeSend
 has firestore.rules participantMayResetEmptyAdjustment
 for file in admin portal; do has "$file/index.html" '../js/shared/i18n-flow-compat.js'; has "$file/index.html" format-detection; done
 
