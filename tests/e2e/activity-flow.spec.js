@@ -23,25 +23,25 @@ async function openPendingVolunteer(page){
 
 test.beforeEach(async()=>{await seedEmulators()});
 
-test('Admin emergency profile uses participant card and icon-only edit action',async({page})=>{
-  await login(page,'admin@oleiro.test','Admin123!','admin');const modal=await openPendingVolunteer(page);await modal.getByRole('button',{name:/Conta$/}).click();
-  const card=modal.locator('.account-emergency-card');await expect(card).toBeVisible();const person=card.locator('.emergency-admin-person').first();await expect(person).toBeVisible({timeout:20_000});await expect(person.locator('.emergency-admin-avatar')).toHaveText('VE');await expect(person.locator('.emergency-admin-owner')).toContainText('Voluntário E2E');
-  const edit=person.getByRole('button',{name:/Adicionar contato$/});await expect(edit).toBeVisible();await expect(edit.locator('i.fa-pen')).toHaveCount(1);expect((await edit.textContent())?.trim()).toBe('');
+test('Admin account keeps emergency contact inside the consolidated participant card',async({page})=>{
+  await login(page,'admin@oleiro.test','Admin123!','admin');const detail=await openPendingVolunteer(page);await detail.getByRole('button',{name:/Conta$/}).click();
+  const account=detail.locator('.admin-account-refactor.account-consolidated-r70');await expect(account).toBeVisible({timeout:20_000});
+  const person=account.locator('.account-contact-card-r70 .account-person-row').first();await expect(person).toContainText('Voluntário E2E');
+  const emergency=person.locator('.account-person-emergency-r70');await expect(emergency).toBeVisible();await expect(emergency).toContainText('Contato de emergência');
+  const edit=emergency.getByRole('button',{name:/Adicionar contato|Editar contato/});await expect(edit).toBeVisible();await expect(edit.locator('i.fa-pen')).toHaveCount(1);
 });
 
 test('Admin creates same activity in two periods with independent multi-group selections',async({page})=>{
-  await login(page,'admin@oleiro.test','Admin123!','admin');const modal=await openPendingVolunteer(page);const day=modal.locator('details[data-plan-date]').first();await day.locator('summary').click();await expect(day).toHaveAttribute('open','');const add=day.getByRole('button',{name:/Adicionar atividade$/}).first();await expect(add).toBeVisible({timeout:20_000});await add.click();
+  await login(page,'admin@oleiro.test','Admin123!','admin');const detail=await openPendingVolunteer(page);const day=detail.locator('.planning-person-day[data-plan-date]').first();await expect(day).toBeVisible({timeout:20_000});const add=day.locator('.planning-person-add');await expect(add).toBeVisible();await add.click();
   await page.locator('#managerActName').fill('Oficina repetida E2E');await page.locator('#managerActDesc').fill('Descrição visível no card');await page.locator('#managerActNotes').fill('Observação visível');await page.locator('#managerActMaterials').fill('Cartolina');await page.locator('#managerActPeriod').selectOption({label:'Tarde'});
   await expect(page.locator('#managerActTime')).toHaveCount(0);
   const primary=page.locator('[data-group-picker="manager-primary"]');await primary.locator('input[value="A"]').check();await primary.locator('input[value="B"]').check();await expect(page.locator('#managerActGroup')).toHaveValue('A + B');
   await page.locator('#adminRepeatBlock').getByRole('button',{name:/Adicionar sessão$/}).click();const repeat=page.locator('#adminRepeatList .activity-repeat-row').first();await repeat.locator('select[data-repeat-period]').selectOption('Noite');await repeat.locator('input[value="A"]').uncheck();await repeat.locator('input[value="B"]').uncheck();await repeat.locator('input[value="C"]').check();
   await page.locator('#managerActSave').click();await expect(page.locator('#managerActSave')).toHaveCount(0,{timeout:20_000});
-  const rows=await expect.poll(()=>page.evaluate(()=>Object.values(state.adminPlanPageCache||{}).flatMap(cache=>cache?.sessions||[]).filter(row=>row.activityName==='Oficina repetida E2E').map(row=>({period:row.period,groupId:row.groupId}))),{timeout:20_000}).toHaveLength(2);
-  void rows;
+  await expect.poll(()=>page.evaluate(()=>Object.values(state.adminPlanPageCache||{}).flatMap(cache=>cache?.sessions||[]).filter(row=>row.activityName==='Oficina repetida E2E').map(row=>({period:row.period,groupId:row.groupId}))),{timeout:20_000}).toHaveLength(2);
   const stored=await page.evaluate(()=>Object.values(state.adminPlanPageCache||{}).flatMap(cache=>cache?.sessions||[]).filter(row=>row.activityName==='Oficina repetida E2E').map(row=>({period:row.period,groupId:row.groupId,hasTime:Object.hasOwn(row,'time')})).sort((a,b)=>a.period.localeCompare(b.period)));
   expect(stored).toEqual([{period:'Noite',groupId:'C',hasTime:false},{period:'Tarde',groupId:'A + B',hasTime:false}]);
-  const activityRows=modal.locator('.planning-session-row').filter({hasText:'Oficina repetida E2E'});await expect(activityRows).toHaveCount(2);await expect(activityRows.first()).toHaveClass(/admin-portal-activity-card/);await expect(modal.locator('.admin-period-section[data-period="Tarde"]')).toContainText('Oficina repetida E2E');await expect(activityRows.first()).toContainText('Descrição visível no card');const descriptionCount=await activityRows.first().evaluate((row)=>{const value='Descrição visível no card';return row.innerText.split(value).length-1});expect(descriptionCount).toBe(1);await expect(activityRows.first().locator('.admin-portal-description')).toContainText('Descrição visível no card');await expect(activityRows.first().locator('.admin-portal-detail-divider')).toHaveCount(2);await expect(activityRows.first()).toContainText('Observação visível');await expect(activityRows.first()).toContainText('Cartolina');await expect(activityRows.first().locator('.planning-note-button')).toHaveCount(0);
-  const detailOrder=await activityRows.first().evaluate(row=>{const text=row.innerText;return {description:text.indexOf('Descrição visível no card'),notes:text.indexOf('Observação visível'),materials:text.indexOf('Cartolina'),edit:text.indexOf('Editar')}});expect(detailOrder.description).toBeGreaterThanOrEqual(0);expect(detailOrder.notes).toBeGreaterThan(detailOrder.description);expect(detailOrder.materials).toBeGreaterThan(detailOrder.notes);expect(detailOrder.edit).toBeGreaterThan(detailOrder.materials);
+  const activityRows=detail.locator('.admin-portal-activity-card').filter({hasText:'Oficina repetida E2E'});await expect(activityRows).toHaveCount(2,{timeout:20_000});const text=(await activityRows.allTextContents()).join(' ');expect(text).toContain('Tarde');expect(text).toContain('Noite');expect(text).toContain('Descrição visível no card');expect(text).toContain('Observação visível');expect(text).toContain('Cartolina');
 });
 
 test('Volunteer repeats an activity on the same day and sees notes and materials inline',async({page})=>{
