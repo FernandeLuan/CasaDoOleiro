@@ -16,6 +16,7 @@
   state.managerPlanningLoading=false;
 
   function planningPerson(){return candidateById(state.managerPlanningPersonId)}
+  function isActivityAssistant(){return String(state.currentSession?.user?.role||state.role||'')==='activity_assistant'}
   function personDates(p){const from=String(p?.stayStart||p?.from||'').slice(0,10),to=String(p?.stayEnd||p?.to||'').slice(0,10);return from&&to?`${fmtDate(from,true)} → ${fmtDate(to,true)}`:'Período não informado'}
   function personBadge(p){
     let label='',type='';
@@ -32,7 +33,7 @@
   function profileTabs(p){
     const id=encodeURIComponent(String(p?.id||'')),tab=String(state.managerPlanningTab||'plan');
     const item=(value,label)=>`<button class="${tab===value?'active':''}" type="button" aria-current="${tab===value?'page':'false'}" onclick="openPerson(decodeURIComponent('${id}'),'${value}')">${label}</button>`;
-    return `<div class="person-refactor-tabs planning-profile-tabs" role="tablist" aria-label="Seções do voluntário">${item('plan','Planejamento')}${item('account','Conta')}${item('history','Histórico')}</div>`;
+    return `<div class="person-refactor-tabs planning-profile-tabs" role="tablist" aria-label="Seções do voluntário">${item('plan','Planejamento')}${isActivityAssistant()?'':item('account','Conta')+item('history','Histórico')}</div>`;
   }
   function sanitizeCapturedBody(body,tab='plan'){
     const template=document.createElement('template');template.innerHTML=String(body||'');
@@ -44,7 +45,7 @@
 
   function planningReviewToolbar(p){
     const tab=String(state.managerPlanningTab||'plan'),status=String(p?.status||'');
-    if(tab!=='plan'||!['analysis','adjustments'].includes(status))return '';
+    if(isActivityAssistant()||tab!=='plan'||!['analysis','adjustments'].includes(status))return '';
     const id=encodeURIComponent(String(p.id||''));
     const title=status==='adjustments'?'Planejamento com ajustes':'Planejamento em análise';
     const description=status==='adjustments'
@@ -122,7 +123,7 @@
 
   openPerson=async function(id,tab='plan'){
     const p=candidateById(id);if(!p)return;
-    tab=tab==='account'?'account':'plan';
+    tab=isActivityAssistant()?'plan':(tab==='account'?'account':'plan');
     const samePerson=state.managerPage==='planning'&&String(state.managerPlanningPersonId||'')===String(id);
     const sameTab=samePerson&&String(state.managerPlanningTab||'plan')===tab;
     /* Tocar na aba que já está ativa não busca dados, não renderiza e não anima. */
@@ -154,6 +155,7 @@
   };
 
   window.requestApprovePlanning=function(encodedId){
+    if(isActivityAssistant())return showToast('Seu perfil não possui permissão para aprovar planejamentos.');
     const id=decodeURIComponent(String(encodedId||'')),p=candidateById(id);
     if(!p)return showToast('Cadastro não encontrado.');
     if(!['analysis','adjustments'].includes(String(p.status||'')))return showToast('Este planejamento não está aguardando aprovação.');
