@@ -22,3 +22,11 @@ test('pure candidate rules distinguish editable planning from approved and meeti
   for(const value of ['draft','submitted','adjustments'])assert.equal(window.OleiroRules.candidatePlanningEditable(value),true);
   for(const value of ['approved','meeting','rejected'])assert.equal(window.OleiroRules.candidatePlanningEditable(value),false);
 });
+
+
+test('legacy plan_approved sessions remain eligible for application-scoped adjustments',()=>{
+  const source=readFileSync('js/portal/review-flow.js','utf8');
+  assert.doesNotMatch(source,/row\.status==='plan_approved'\|\|row\.adminAdjustmentStatus!=='requested'/);
+  assert.doesNotMatch(source,/adminAdjustmentStatus==='requested'&&row\.status!=='plan_approved'/);
+  assert.match(source,/row\.status==='plan_approved'&&!candidateWorkflowOpen/);
+});
