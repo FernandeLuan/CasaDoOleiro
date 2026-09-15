@@ -1,7 +1,5 @@
 /* Round 20/28 — acabamento do Portal sem mecanismo paralelo de tradução. */
 (function refinementsR20Portal(){
-  function activeSessions(){return (state.sessions||[]).filter(row=>row.status!=='rejected'&&row.reviewStatus!=='rejected')}
-
   window.confirmVolunteerLogout=function(){openModal(t('portal.logout.title'),t('portal.logout.question'),`<div class="notice"><i class="fa-solid fa-right-from-bracket"></i><div>${escapeHtml(t('portal.logout.body'))}</div></div>`,`<div class="confirm-delete-actions"><button class="btn btn-outline" type="button" onclick="closeModal()">${escapeHtml(t('common.cancel'))}</button><button class="btn btn-danger" type="button" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i>${escapeHtml(t('action.signOut'))}</button></div>`)};
 
   const baseVolunteerHome=volunteerHome;
@@ -15,10 +13,8 @@
   const baseSessionCardVolunteer=sessionCardVolunteer;
   sessionCardVolunteer=function(s,editable){const managerCreated=s?.raw?.managerCreated===true||s?.activity?.managerCreated===true;if(state.volunteerMode!=='approved'&&managerCreated)return baseSessionCardVolunteer(s,false);return baseSessionCardVolunteer(s,editable)};
 
-  /* Nunca exibe uma ação de envio quando não existe sessão válida. */
-  const baseVolunteerPlan=volunteerPlan;
-  volunteerPlan=function(){let html=baseVolunteerPlan();if(state.volunteerMode!=='approved'&&state.volunteerPlanningLoadedFor===String(state.currentApplication?.id||'')&&activeSessions().length===0){html=html.replace(/<button class="btn btn-primary btn-block candidate-plan-submit"[^>]*>[\s\S]*?<\/button>/,`<button class="btn btn-soft btn-block candidate-plan-submit" type="button" disabled><i class="fa-solid fa-circle-info"></i>${escapeHtml(t('portal.plan.addBeforeSend'))}</button>`)}return html};
-
-  window.volunteerHome=volunteerHome;window.sessionCardVolunteer=sessionCardVolunteer;window.volunteerPlan=volunteerPlan;
+  /* O estado de envio pertence ao renderizador canônico de planejamento.js.
+     Este módulo só mantém refinamentos de suporte e atividades criadas pela gestão. */
+  window.volunteerHome=volunteerHome;window.sessionCardVolunteer=sessionCardVolunteer;
   if(state.role==='volunteer'&&typeof render==='function')render();
 })();
