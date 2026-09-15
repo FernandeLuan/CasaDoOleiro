@@ -149,12 +149,29 @@
   wrap('openManagerOccupancy',()=>({direction:'forward',scope:'page'}));
   wrap('openHouseInfo',()=>({direction:'forward',scope:'page'}));
   wrap('closePlanningDetail',()=>({direction:'back',scope:'page'}));
+  const profileTabOrder=['plan','account','history'];
+  const profileTabDirection=(from,to)=>{
+    const a=profileTabOrder.indexOf(String(from||'plan')),b=profileTabOrder.indexOf(String(to||'plan'));
+    return b<a?'back':'forward';
+  };
+  let preparedTabMotion=null;
+  window.OleiroUI.prepareTabTransition=(from,to)=>{
+    if(String(from||'')===String(to||'')){preparedTabMotion=null;return false}
+    saveCurrentScroll();
+    preparedTabMotion={direction:profileTabDirection(from,to),scope:'content'};
+    return true;
+  };
+  window.OleiroUI.finishTabTransition=()=>{
+    const motion=preparedTabMotion;preparedTabMotion=null;if(!motion)return;
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{playMotion(motion.direction,motion.scope);restoreScroll(viewKey())}));
+  };
+
   wrap('openPerson',(id,tab='plan')=>{
     const same=typeof state!=='undefined'&&String(state.managerPlanningPersonId||'')===String(id)&&state.managerPage==='planning';
     if(!same)return {direction:'forward',scope:'page'};
-    /* No perfil do mesmo voluntário, a troca de aba é instantânea.
-       Em iOS/Safari, animar o contêiner inteiro cria "ghost frames" e parece um refresh. */
-    return {skipMotion:true};
+    const current=String(state.managerPlanningTab||'plan'),next=String(tab||'plan');
+    if(current===next)return {skipMotion:true};
+    return {direction:profileTabDirection(current,next),scope:'content',waitForSettle:true};
   });
 
   /* Modais: bottom sheet no mobile e drawer lateral para ações contextuais no desktop. */

@@ -51,18 +51,45 @@
   }
 
   function managerPlanning(){return state.managerPlanningPersonId?planningDetail():planningList()}
-  function captureVisibleModalBody(p,tab='plan'){
-    const body=modalRoot.querySelector('.modal-body');if(!body)return false;
-    state.managerPlanningBody=body.innerHTML||'';state.managerPlanningTab=tab;state.managerPlanningPersonId=String(p.id);closeModal();if(state.managerPage==='planning')render();return true;
+  let deferProfileRender=0;
+  let capturedProfileChanged=false;
+
+  function capturePersonMarkup(p,tab='plan'){
+    let capturedBody='';
+    const realOpenModal=window.openModal;
+    const captureModal=(title,subtitle,body)=>{capturedBody=String(body||'')};
+    try{
+      window.openModal=captureModal;
+      try{openModal=captureModal}catch{}
+      baseRenderPersonModal(p,tab);
+    }finally{
+      window.openModal=realOpenModal;
+      try{openModal=realOpenModal}catch{}
+      /* O renderizador legado usa dataset do modal para saber qual perfil está ativo.
+         Mantemos os metadados, mas nunca criamos o modal visual. */
+      modalRoot.innerHTML='';
+      document.body.classList.remove('modal-open');
+    }
+    return capturedBody;
   }
-  function capturePersonBody(p,tab='plan'){baseRenderPersonModal(p,tab);captureVisibleModalBody(p,tab)}
+  function applyCapturedBody(p,tab,body,{renderNow=true}={}){
+    if(!body)return false;
+    state.managerPlanningBody=body;
+    state.managerPlanningTab=tab;
+    state.managerPlanningPersonId=String(p.id);
+    capturedProfileChanged=true;
+    if(renderNow&&state.managerPage==='planning')render();
+    return true;
+  }
+  function capturePersonBody(p,tab='plan',{renderNow=deferProfileRender===0}={}){
+    return applyCapturedBody(p,tab,capturePersonMarkup(p,tab),{renderNow});
+  }
 
   renderPersonModal=function(p,tab='plan'){
     if(!p)return;
     if(state.managerPage!=='planning'||String(state.managerPlanningPersonId||'')!==String(p.id))return baseRenderPersonModal(p,tab);
     const canPatchPlan=tab==='plan'&&!state.managerPlanningLoading&&app.querySelector('.planning-person-agenda-page')&&typeof window.refreshPlanningPersonAgenda==='function';
-    if(canPatchPlan){
-      if(modalRoot.querySelector('.modal-backdrop'))closeModal();
+    if(canPatchPlan&&deferProfileRender===0){
       Promise.resolve(window.refreshPlanningPersonAgenda(p.id)).catch(error=>{console.error('Falha ao atualizar planejamento localmente:',error);showToast('A alteração foi salva, mas a tela não pôde ser atualizada.')});
       return;
     }
@@ -71,22 +98,34 @@
 
   openPerson=async function(id,tab='plan'){
     const p=candidateById(id);if(!p)return;
+    tab=tab==='account'?'account':'plan';
     const samePerson=state.managerPage==='planning'&&String(state.managerPlanningPersonId||'')===String(id);
+    const sameTab=samePerson&&String(state.managerPlanningTab||'plan')===tab;
+    /* Tocar na aba que já está ativa não busca dados, não renderiza e não anima. */
+    if(sameTab)return;
     if(state.managerPage!=='planning')state.managerPlanningOrigin=state.managerPage||'volunteer';else if(!state.managerPlanningPersonId)state.managerPlanningOrigin='planning';
     state.managerPage='planning';state.managerPlanningPersonId=String(id);state.managerPlanningLoading=true;
+    capturedProfileChanged=false;
     if(!samePerson){
       state.managerPlanningTab=tab;
       state.managerPlanningBody='';
       render();
       if(typeof afterNavigation==='function')afterNavigation();
+    }else{
+      /* Enquanto o carregamento legado acontece, capturamos seus renders em memória
+         e só pintamos a nova aba uma vez, no final. */
+      deferProfileRender+=1;
     }
     try{
-      const result=await baseOpenPerson(id,tab);
-      if(state.managerPage==='planning'&&String(state.managerPlanningPersonId)===String(id))captureVisibleModalBody(candidateById(id)||p,tab);
-      return result;
+      return await baseOpenPerson(id,tab);
     }finally{
+      if(samePerson)deferProfileRender=Math.max(0,deferProfileRender-1);
       state.managerPlanningLoading=false;
-      if(state.managerPage==='planning'&&String(state.managerPlanningPersonId)===String(id)&&!state.managerPlanningBody)render();
+      if(state.managerPage==='planning'&&String(state.managerPlanningPersonId)===String(id)){
+        if(samePerson&&capturedProfileChanged)render();
+        else if(!state.managerPlanningBody)render();
+      }
+      capturedProfileChanged=false;
     }
   };
 

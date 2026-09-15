@@ -10,12 +10,13 @@
 .ui-page-motion{will-change:transform,opacity;backface-visibility:hidden}
 .ui-page-motion.ui-enter-forward{animation:uiPageForward var(--ui-motion) var(--ui-ease) both}
 .ui-page-motion.ui-enter-back{animation:uiPageBack var(--ui-motion) var(--ui-ease) both}
-.ui-page-motion.ui-enter-tab-forward{animation:uiTabForward 250ms var(--ui-ease) both}
-.ui-page-motion.ui-enter-tab-back{animation:uiTabBack 250ms var(--ui-ease) both}
+.ui-page-motion.ui-enter-tab-forward{animation:uiTabForward 290ms var(--ui-ease) both}
+.ui-page-motion.ui-enter-tab-back{animation:uiTabBack 290ms var(--ui-ease) both}
 @keyframes uiPageForward{from{opacity:.88;transform:translate3d(12px,0,0)}to{opacity:1;transform:translate3d(0,0,0)}}
 @keyframes uiPageBack{from{opacity:.88;transform:translate3d(-10px,0,0)}to{opacity:1;transform:translate3d(0,0,0)}}
-@keyframes uiTabForward{from{opacity:.9;transform:translate3d(6px,0,0)}to{opacity:1;transform:translate3d(0,0,0)}}
-@keyframes uiTabBack{from{opacity:.9;transform:translate3d(-6px,0,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+@keyframes uiTabForward{from{opacity:.98;transform:translate3d(18px,0,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+@keyframes uiTabBack{from{opacity:.98;transform:translate3d(-18px,0,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+.planning-detail-page .planning-page-content{overflow-x:clip}
 
 /* Elementos expansíveis existentes ganham continuidade em vez de abrir "seco". */
 .ui-smart-interactions details[open]>*:not(summary){animation:uiDetailsIn 240ms var(--ui-ease) both}

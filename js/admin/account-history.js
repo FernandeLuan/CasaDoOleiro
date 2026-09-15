@@ -129,22 +129,36 @@
     state.managerPlanningLoading=false;
     state.managerPlanningBody=historyHtml(p,rows,opts);
     render();
-    const scroller=document.querySelector('.admin-content-r62');if(scroller)scroller.scrollTop=0;else window.scrollTo(0,0);
   }
   async function openHistory(id){
     const p=typeof candidateById==='function'?candidateById(id):null;if(!p)return;
+    const sameHistory=state.managerPage==='planning'&&String(state.managerPlanningPersonId||'')===String(p.id)&&state.managerPlanningTab==='history';
+    /* Aba ativa: absolutamente nada acontece. */
+    if(sameHistory)return;
+    const previousTab=String(state.managerPlanningTab||'plan');
     const cached=state.adminHistoryCache?.[String(p.id)],cachedRows=mergeRows(p,Array.isArray(cached?.items)?cached.items:[]);
+    window.OleiroUI?.prepareTabTransition?.(previousTab,'history');
     renderHistory(p,cachedRows,{loading:!cached?.loadedAt});
+    window.OleiroUI?.finishTabTransition?.();
     try{
-      if(!window.OleiroServices?.history?.list){renderHistory(p,cachedRows);return}
+      if(!window.OleiroServices?.history?.list){
+        if(!cached?.loadedAt&&state.managerPlanningTab==='history')renderHistory(p,cachedRows);
+        return
+      }
       const result=await window.OleiroServices.history.list(p.id,{limit:50,cursor:null});
       const source=await resolveHistoryActors(result?.items||[]),rows=mergeRows(p,source);
       state.adminHistoryCache=state.adminHistoryCache||{};
       state.adminHistoryCache[String(p.id)]={items:source,cursor:result?.nextCursor||null,hasMore:!!result?.hasMore,loadedAt:Date.now(),loading:false,error:''};
-      if(state.managerPage==='planning'&&String(state.managerPlanningPersonId)===String(p.id)&&state.managerPlanningTab==='history')renderHistory(p,rows);
+      if(state.managerPage==='planning'&&String(state.managerPlanningPersonId)===String(p.id)&&state.managerPlanningTab==='history'){
+        state.managerPlanningBody=historyHtml(p,rows,{});
+        render();
+      }
     }catch(error){
       console.error('Falha ao carregar histórico R71:',error);
-      if(state.managerPage==='planning'&&String(state.managerPlanningPersonId)===String(p.id)&&state.managerPlanningTab==='history')renderHistory(p,cachedRows,{error:'Não foi possível carregar o histórico.'});
+      if(state.managerPage==='planning'&&String(state.managerPlanningPersonId)===String(p.id)&&state.managerPlanningTab==='history'){
+        state.managerPlanningBody=historyHtml(p,cachedRows,{error:'Não foi possível carregar o histórico.'});
+        render();
+      }
     }
   }
   window.openPlanningHistoryR71=openHistory;
