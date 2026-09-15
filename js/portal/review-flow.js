@@ -75,7 +75,7 @@
   if(typeof baseSaveAdjustment==='function')window.saveR31VolunteerSessionEditor=async function(encodedId){
     const id=decodeURIComponent(String(encodedId||'')),row=(state.sessions||[]).find(item=>String(item.id||item.sessionId)===id);
     if(row?.postApprovalProposal===true&&row?.reviewStatus==='adjustments'&&row?.activityId){closeModal();return openActivityModal(row.date,String(row.activityId))}
-    const candidateAdjustment=state.volunteerMode!=='approved'&&row?.adminAdjustmentStatus==='requested';await baseSaveAdjustment(encodedId);if(candidateAdjustment&&!document.getElementById('r31VolunteerAdjustSave')){row._r32AdjustmentReady=true;row._r32AdjustedAt=Date.now();render()}
+    const candidateAdjustment=state.volunteerMode!=='approved'&&row?.adminAdjustmentStatus==='requested';await baseSaveAdjustment(encodedId);const saveButton=document.getElementById('r31VolunteerAdjustSave');if(candidateAdjustment&&(!saveButton||saveButton.disabled)){row._r32AdjustmentReady=true;row._r32AdjustedAt=Date.now();render()}
   };
 
   submitPlan=async function(){
