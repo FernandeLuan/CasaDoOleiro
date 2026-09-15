@@ -80,6 +80,12 @@ test('delete confirmation has no missing inline handlers',()=>{
   assert.ok(confirmation.includes('tools/delete-volunteer.js'));
 });
 
+test('analysis copy never says editing is blocked',()=>{
+  const home=readFileSync('js/portal/round5-ui.js','utf8');
+  assert.ok(!home.includes('edição fica bloqueada'));
+  assert.ok(home.includes('continuar adicionando e ajustando atividades'));
+});
+
 test('all local script references exist',()=>{
   for(const htmlPath of ['portal/index.html','admin/index.html']){
     for(const path of localScripts(htmlPath))assert.ok(existsSync(path),`${htmlPath} references missing script ${path}`);
