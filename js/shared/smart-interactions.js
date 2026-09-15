@@ -120,6 +120,10 @@
     const base=window[name];if(typeof base!=='function'||base.__smartWrapped)return;
     const wrapped=function(...args){
       const plan=planner?.(...args)||{direction:'forward',scope:'page'};
+      if(plan.skipMotion){
+        pendingMotion=null;
+        return base.apply(this,args);
+      }
       beginNavigation(plan.direction||'forward',plan.scope||'page');
       let result;
       try{result=base.apply(this,args)}catch(error){pendingMotion=null;throw error}
@@ -148,8 +152,9 @@
   wrap('openPerson',(id,tab='plan')=>{
     const same=typeof state!=='undefined'&&String(state.managerPlanningPersonId||'')===String(id)&&state.managerPage==='planning';
     if(!same)return {direction:'forward',scope:'page'};
-    const order=['plan','account','history'],a=order.indexOf(String(state.managerPlanningTab||'plan')),b=order.indexOf(String(tab||'plan'));
-    return {direction:b<a?'back':'forward',scope:'content',waitForSettle:true};
+    /* No perfil do mesmo voluntário, a troca de aba é instantânea.
+       Em iOS/Safari, animar o contêiner inteiro cria "ghost frames" e parece um refresh. */
+    return {skipMotion:true};
   });
 
   /* Modais: bottom sheet no mobile e drawer lateral para ações contextuais no desktop. */
