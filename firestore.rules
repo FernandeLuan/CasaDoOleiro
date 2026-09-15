@@ -500,8 +500,8 @@ service cloud.firestore {
               (
                 (
                   candidateWindowOpen(resource.data.applicationId)
-                  && resource.data.status == 'proposed'
-                  && request.resource.data.status == 'proposed'
+                  && resource.data.status in ['proposed', 'plan_approved', 'confirmed']
+                  && request.resource.data.status == resource.data.status
                   && participantOwnsEditableLegacy(resource.data)
                 )
                 || (
@@ -543,7 +543,7 @@ service cloud.firestore {
           && (
             (
               candidateEditable(resource.data.applicationId)
-              && resource.data.status == 'proposed'
+              && resource.data.status in ['proposed', 'plan_approved', 'confirmed']
             )
             || (
               proposalApplication(resource.data.applicationId)

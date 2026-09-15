@@ -4,7 +4,6 @@
   const baseAgendaContent=window.volunteerAgendaContent||volunteerAgendaContent;
   const baseSaveAdjustment=window.saveR31VolunteerSessionEditor;
   const baseSubmitPlan=window.submitPlan||submitPlan;
-  const baseOpenActivityModal=window.openActivityModal||openActivityModal;
   const baseOpenR31VolunteerSessionEditor=window.openR31VolunteerSessionEditor;
   const planning=window.OleiroServices?.planning;
   const basePlanningSaveActivity=planning?.saveActivity?.bind(planning);
@@ -27,10 +26,6 @@
 
   if(basePlanningSaveActivity)planning.saveActivity=function(args={}){return basePlanningSaveActivity(normalizeActivityArgs(args))};
   if(baseCreateActivitySeries)planning.createActivitySeries=function(args={}){return baseCreateActivitySeries(normalizeActivityArgs(args))};
-
-  openActivityModal=function(date=null,id=null){
-    return baseOpenActivityModal(date,id);
-  };
 
   if(typeof baseOpenR31VolunteerSessionEditor==='function')window.openR31VolunteerSessionEditor=function(encodedId){
     const id=decodeURIComponent(String(encodedId||'')),row=(state.sessions||[]).find(item=>String(item.id||item.sessionId)===id);

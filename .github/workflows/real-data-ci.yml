@@ -7,6 +7,7 @@ on:
       - refactor/real-data-only
       - 'fix/**'
       - 'fix-*'
+      - 'audit/**'
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -38,7 +39,7 @@ jobs:
       - name: Check real-data source contracts
         run: bash scripts/check-real-data-contracts.sh
       - name: Check runtime architecture boundaries
-        run: node --test tests/runtime-architecture.test.mjs
+        run: node --test tests/*.test.mjs
       - name: Check canonical local assets
         run: node --test tests/site-assets.test.mjs
       - uses: actions/setup-java@v5
@@ -46,4 +47,6 @@ jobs:
           distribution: temurin
           java-version: '21'
       - name: Compile Firestore rules
-        run: npx --yes firebase-tools@14.14.0 emulators:exec --only firestore --project demo-casadooleiro "echo Firestore-rules-ok"
+        run: |
+          npm install --no-audit --no-fund
+          npx firebase emulators:exec --only auth,firestore --project demo-casadooleiro "npx playwright test tests/e2e/legacy-planning-permissions.spec.js --project=chromium"

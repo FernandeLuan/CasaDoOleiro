@@ -1,8 +1,6 @@
 /* Round 37 — session-scoped candidate adjustments may include new draft activities before resubmission. */
 (function candidateAdjustment(){
   const baseSessionCard=window.sessionCardVolunteer||sessionCardVolunteer;
-  const baseOpenActivityModal=window.openActivityModal||openActivityModal;
-  const baseRequestDelete=window.requestDeletePlanningSession||requestDeletePlanningSession;
   const planning=window.OleiroServices?.planning;
   const basePlanningSave=planning?.saveActivity?.bind(planning);
   const basePlanningSeries=planning?.createActivitySeries?.bind(planning);
@@ -83,14 +81,6 @@
       card.classList.add('r37-adjustment-draft');
     }
     return root.innerHTML;
-  };
-
-  openActivityModal=function(date=null,id=null){
-    return baseOpenActivityModal(date,id);
-  };
-
-  requestDeletePlanningSession=function(activityId,date){
-    return baseRequestDelete(activityId,date);
   };
 
   window.sessionCardVolunteer=sessionCardVolunteer;

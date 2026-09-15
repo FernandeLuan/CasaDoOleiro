@@ -120,6 +120,7 @@
     const base=window[name];if(typeof base!=='function'||base.__smartWrapped)return;
     const wrapped=function(...args){
       const plan=planner?.(...args)||{direction:'forward',scope:'page'};
+      if(plan.noop)return;
       if(plan.skipMotion){
         pendingMotion=null;
         return base.apply(this,args);
@@ -144,15 +145,15 @@
   };
 
   wrap('navigateManager',page=>{
-    const current=typeof state!=='undefined'?String(state.managerPage||''):'';return current===String(page||'')?{skipMotion:true}:{direction:directionFor(managerOrder,current,page),scope:'page'}
+    const current=typeof state!=='undefined'?String(state.managerPage||'home'):'';return current===String(page||'home')?{noop:true}:{direction:directionFor(managerOrder,current,page),scope:'page'}
   });
   wrap('navigateVolunteer',page=>{
-    const current=typeof state!=='undefined'?String(state.volunteerPage||''):'';return current===String(page||'')?{skipMotion:true}:{direction:directionFor(volunteerOrder,current,page),scope:'page'}
+    const current=typeof state!=='undefined'?String(state.volunteerPage||'home'):'';return current===String(page||'home')?{noop:true}:{direction:directionFor(volunteerOrder,current,page),scope:'page'}
   });
-  wrap('goHome',()=>({direction:'back',scope:'page'}));
+  wrap('goHome',()=>((state.role==='manager'?state.managerPage:state.volunteerPage)==='home'?{noop:true}:{direction:'back',scope:'page'}));
   wrap('openManagerOccupancy',()=>{
     const current=typeof state!=='undefined'?String(state.managerPage||''):'';
-    return current==='occupancy'?{skipMotion:true}:{direction:'forward',scope:'page'};
+    return current==='occupancy'?{noop:true}:{direction:'forward',scope:'page'};
   });
   wrap('openHouseInfo',()=>({direction:'forward',scope:'page'}));
   wrap('closePlanningDetail',()=>({direction:'back',scope:'page'}));
@@ -177,7 +178,7 @@
     const same=typeof state!=='undefined'&&String(state.managerPlanningPersonId||'')===String(id)&&state.managerPage==='planning';
     if(!same)return {direction:'forward',scope:'page'};
     const current=String(state.managerPlanningTab||'plan'),next=String(tab||'plan');
-    if(current===next)return {skipMotion:true};
+    if(current===next)return {noop:true};
     return {direction:profileTabDirection(current,next),scope:'content',waitForSettle:true};
   });
 
