@@ -1,9 +1,30 @@
+function candidatePlanningEditable(status=state.volunteerPlanStatus||'draft'){
+  return window.OleiroRules?.candidatePlanningEditable?.(status)??['draft','submitted','adjustments'].includes(String(status||'draft'));
+}
+function activeCandidateSessions(){
+  return (state.sessions||[]).filter(row=>row.status!=='rejected'&&row.reviewStatus!=='rejected');
+}
 function volunteerPlan(){
-  const acts=volunteerActivities();const status=state.volunteerPlanStatus||'draft';const approved=state.volunteerMode==='approved';const editable=!approved&&['draft','submitted','adjustments'].includes(status);const dates=volunteerStayDates();const periodLabel=dates.length?`${fmtDate(dates[0],true)}–${fmtDate(dates[dates.length-1],true)}`:t('portal.home.periodConfirm');
-  const submittedEditableNotice=typeof translateText==='function'?translateText('Planejamento enviado. A equipe já pode analisar, e você continua podendo editar, mover, adicionar ou excluir atividades até a aprovação.'):'Planejamento enviado. A equipe já pode analisar, e você continua podendo editar, mover, adicionar ou excluir atividades até a aprovação.';const notice=approved?t('portal.plan.approvedNotice'):status==='submitted'?submittedEditableNotice:status==='adjustments'?t('portal.plan.adjustmentsNotice'):t('portal.plan.draftNotice');
-  const submitButton=approved?`<button class="btn btn-soft btn-block" style="margin-top:12px" disabled><i class="fa-solid fa-circle-check"></i>${escapeHtml(t('portal.plan.approvedButton'))}</button>`:status==='submitted'?`<button class="btn btn-soft btn-block" style="margin-top:12px" disabled><i class="fa-solid fa-paper-plane"></i>${escapeHtml(t('portal.plan.sentButton'))}</button>`:`<button class="btn btn-primary btn-block" style="margin-top:12px" onclick="submitPlan()"><i class="fa-solid fa-paper-plane"></i>${escapeHtml(status==='adjustments'?t('portal.plan.resendButton'):t('portal.plan.sendButton'))}</button>`;
-  const hours=((state.sessions||[]).reduce((s,row)=>s+(Number(row.duration)||60),0)/60).toFixed(1).replace('.',',');
-  return `<section class="section volunteer-plan-page"><div class="plan-title-row"><div><h2>${escapeHtml(t('portal.plan.title'))}</h2><p>${escapeHtml(t('portal.plan.subtitle'))}</p></div><strong>${periodLabel}</strong></div><div class="notice ${status==='adjustments'?'warning':''}"><i class="fa-solid fa-circle-info"></i><div>${escapeHtml(notice)}</div></div><div style="margin-top:14px">${volunteerAgendaContent(editable)}</div><div class="card plan-summary" style="margin-top:14px"><span class="eyebrow">${escapeHtml(t('portal.plan.summary'))}</span><div class="stat-row"><span class="stat-pill">${escapeHtml(t('portal.home.activitiesCount',{count:acts.length}))}</span><span class="stat-pill">${escapeHtml(t('portal.home.sessionsCount',{count:(state.sessions||[]).length}))}</span><span class="stat-pill">${escapeHtml(t('portal.plan.hoursPlanned',{hours}))}</span></div>${submitButton}</div></section>`;
+  const acts=volunteerActivities(),status=state.volunteerPlanStatus||'draft',approved=state.volunteerMode==='approved',editable=!approved&&candidatePlanningEditable(status);
+  const dates=volunteerStayDates(),periodLabel=dates.length?`${fmtDate(dates[0],true)}–${fmtDate(dates[dates.length-1],true)}`:t('portal.home.periodConfirm');
+  const hours=((state.sessions||[]).reduce((sum,row)=>sum+(Number(row.duration)||60),0)/60).toFixed(1).replace('.',',');
+
+  if(!approved){
+    const active=activeCandidateSessions();
+    let submitButton='';
+    if(status==='submitted'){
+      submitButton=`<button class="btn btn-soft btn-block candidate-plan-submit" type="button" disabled><i class="fa-solid fa-paper-plane"></i>${escapeHtml(t('portal.plan.sentButton'))}</button>`;
+    }else if(status!=='rejected'&&active.length){
+      submitButton=`<button class="btn btn-primary btn-block candidate-plan-submit" type="button" onclick="submitPlan()"><i class="fa-solid fa-paper-plane"></i>${escapeHtml(status==='adjustments'?t('portal.plan.resendButton'):t('portal.plan.sendButton'))}</button>`;
+    }else if(status!=='rejected'){
+      submitButton=`<button class="btn btn-soft btn-block candidate-plan-submit" type="button" disabled><i class="fa-solid fa-circle-info"></i>${escapeHtml(t('portal.plan.addBeforeSend'))}</button>`;
+    }
+    return `<section class="section candidate-plan-refactor compact-page-top"><div class="candidate-plan-content">${volunteerAgendaContent(editable)}</div>${submitButton}</section>`;
+  }
+
+  const notice=t('portal.plan.approvedNotice');
+  const submitButton=`<button class="btn btn-soft btn-block" style="margin-top:12px" disabled><i class="fa-solid fa-circle-check"></i>${escapeHtml(t('portal.plan.approvedButton'))}</button>`;
+  return `<section class="section volunteer-plan-page"><div class="plan-title-row"><div><h2>${escapeHtml(t('portal.plan.title'))}</h2><p>${escapeHtml(t('portal.plan.subtitle'))}</p></div><strong>${periodLabel}</strong></div><div class="notice"><i class="fa-solid fa-circle-info"></i><div>${escapeHtml(notice)}</div></div><div style="margin-top:14px">${volunteerAgendaContent(false)}</div><div class="card plan-summary" style="margin-top:14px"><span class="eyebrow">${escapeHtml(t('portal.plan.summary'))}</span><div class="stat-row"><span class="stat-pill">${escapeHtml(t('portal.home.activitiesCount',{count:acts.length}))}</span><span class="stat-pill">${escapeHtml(t('portal.home.sessionsCount',{count:(state.sessions||[]).length}))}</span><span class="stat-pill">${escapeHtml(t('portal.plan.hoursPlanned',{hours}))}</span></div>${submitButton}</div></section>`;
 }
 function calendarMonthLabel(date){const locale=typeof currentLocale==='function'?currentLocale():'pt-BR';return new Intl.DateTimeFormat(locale,{month:'short'}).format(new Date(date+'T12:00:00')).replace('.','').toUpperCase()}
 function volunteerDayAdjustment(date){const rows=state.currentApplication?.dayAdjustments;return rows&&typeof rows==='object'?rows[date]||null:null}
@@ -32,7 +53,7 @@ function planningOwnerName(application,session){
 async function saveActivity(id){
   const approved=state.volunteerMode==='approved',existing=id?(state.activities||[]).find(a=>String(a.id)===String(id)):null,postApprovalProposal=approved&&(!id||(existing?.postApprovalProposal===true&&existing?.reviewStatus==='adjustments'));
   if(approved&&!postApprovalProposal)return showToast(t('portal.activity.adjustLocked'));
-  if(!approved&&!['draft','submitted','adjustments'].includes(state.volunteerPlanStatus||'draft'))return showToast(t('portal.activity.locked'));
+  if(!approved&&!candidatePlanningEditable(state.volunteerPlanStatus||'draft'))return showToast(t('portal.activity.locked'));
   const dates=[...document.querySelectorAll('input[name="actDate"]:checked')].map(x=>x.value);const data={name:document.getElementById('actName')?.value.trim()||'',description:document.getElementById('actDesc')?.value.trim()||'',duration:+document.getElementById('actDuration')?.value||60,participation:document.getElementById('actParticipation')?.value||'Livre',materials:document.getElementById('actMaterials')?.value.trim()||'Nenhum',notes:document.getElementById('actNotes')?.value.trim()||'',period:document.getElementById('actPeriod')?.value||'Sem preferência'};
   if(!data.name)return showToast(t('portal.activity.nameRequired'));if(!dates.length)return showToast(t('portal.activity.dateRequired'));const application=state.currentApplication,session=state.currentSession;if(!application?.id||!session?.uid)return showToast(t('portal.plan.invalidSession'));const ownerName=planningOwnerName(application,session);
   try{const result=await window.OleiroServices.planning.saveActivity({activityId:id,applicationId:application.id,unitId:application.unitId,createdByUid:session.uid,ownerName,data,dates,existingSessions:state.sessions||[],postApprovalProposal});applySavedActivityResult(result,dates);closeModal();render();showToast(approved?(id?t('portal.activity.adjusted'):t('portal.activity.proposed')):(id?t('portal.activity.updated'):t('portal.activity.saved')))}catch(error){console.error(error);showToast(error?.message||t('portal.activity.saveError'))}
