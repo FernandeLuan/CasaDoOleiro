@@ -125,6 +125,9 @@
     }
     if(status==='proposed')out.push(iconAction('Confirmar','fa-check',`planningConfirmSession('${app}','${sid}')`,'primary'));
     if(status!=='rejected'&&review!=='rejected'){
+      if(['analysis','adjustments'].includes(String(p?.status||''))&&!['requested','analysis'].includes(String(s.adminAdjustmentStatus||''))&&typeof window.requestR31SessionAdjustment==='function'){
+        out.push(iconAction('Pedir ajuste','fa-rotate',`requestR31SessionAdjustment('${app}','${sid}','${date}')`,'warning'));
+      }
       out.push(iconAction('Editar','fa-pen',`planningOpenEdit('${app}','${sid}','${date}')`));
       out.push(iconAction(s.feedback?'Editar feedback':'Adicionar feedback','fa-comment-dots',`planningOpenFeedback('${app}','${sid}')`));
       out.push(iconAction('Duplicar','fa-copy',`planningOpenDuplicate('${app}','${sid}')`));
