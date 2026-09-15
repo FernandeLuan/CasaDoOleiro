@@ -45,3 +45,22 @@ test('Firestore enforces legacy planning edits, authorship and approval boundari
     expect((await mutate('PATCH',{date:{stringValue:'2026-09-17'}})).status).toBe(403);
   }finally{await deleteApp(app)}
 });
+
+
+test('activity assistant cannot promote application lifecycle',async()=>{
+  test.setTimeout(60000);
+  await seedEmulators();
+  const app=initializeApp({projectId:'demo-casadooleiro'},'assistant-rules-'+Date.now());
+  const db=getFirestore(app);
+  const authHost=process.env.FIREBASE_AUTH_EMULATOR_HOST;
+  const dbHost=process.env.FIRESTORE_EMULATOR_HOST;
+  const response=await fetch(`http://${authHost}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=demo`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:'assistant@oleiro.test',password:'Assistant123!',returnSecureToken:true})});
+  expect(response.ok).toBeTruthy();
+  const {idToken}=await response.json();
+  try{
+    await db.doc('applications/e2e-application').update({status:'analysis',active:true});
+    const url=`http://${dbHost}/v1/projects/demo-casadooleiro/databases/(default)/documents/applications/e2e-application?updateMask.fieldPaths=status`;
+    const promote=await fetch(url,{method:'PATCH',headers:{Authorization:`Bearer ${idToken}`,'Content-Type':'application/json'},body:JSON.stringify({fields:{status:{stringValue:'approved'}}})});
+    expect(promote.status).toBe(403);
+  }finally{await deleteApp(app)}
+});
