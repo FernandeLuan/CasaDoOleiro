@@ -23,6 +23,12 @@ test('screen modules are loaded or explicitly retired',()=>{
   assert.deepEqual(unreferenced,[...retiredNotLoaded].sort(),'Unexpected dead/unloaded screen module. Retire it explicitly only after its behavior is merged and tested.');
 });
 
+test('round3 does not override candidate planning',()=>{
+  const round3=readFileSync('js/portal/round3-ui.js','utf8');
+  assert.ok(!/volunteerPlan\s*=\s*function/.test(round3),'round3 must not replace the canonical Planning renderer');
+  assert.ok(!round3.includes('edição fica bloqueada'));
+});
+
 test('candidate planning has one canonical page owner',()=>{
   const portalHtml=readFileSync('portal/index.html','utf8');
   const planning=readFileSync('js/portal/planejamento.js','utf8');
