@@ -13,7 +13,7 @@ function volunteerPlan(){
     const active=activeCandidateSessions();
     let submitButton='';
     if(status==='submitted'){
-      submitButton=`<button class="btn btn-soft btn-block candidate-plan-submit" type="button" disabled><i class="fa-solid fa-paper-plane"></i>${escapeHtml(t('portal.plan.sentButton'))}</button>`;
+      submitButton=`<div class="notice candidate-plan-sync-state"><i class="fa-solid fa-cloud-arrow-up"></i><div><strong>${escapeHtml(t('portal.profile.analysis'))}</strong><br>${escapeHtml(t('portal.home.submittedBody'))}</div></div>`;
     }else if(status!=='rejected'&&active.length){
       submitButton=`<button class="btn btn-primary btn-block candidate-plan-submit" type="button" onclick="submitPlan()"><i class="fa-solid fa-paper-plane"></i>${escapeHtml(status==='adjustments'?t('portal.plan.resendButton'):t('portal.plan.sendButton'))}</button>`;
     }else if(status!=='rejected'){
