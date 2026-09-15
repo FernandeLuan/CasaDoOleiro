@@ -51,7 +51,8 @@
 
   sessionCardVolunteer=function(s,editable){
     const html=baseSessionCard(s,editable),root=document.createElement('div');root.innerHTML=html;const card=root.firstElementChild;if(!card)return html;const row=rawSession(s?.raw||s);
-    if(row.status==='plan_approved'){
+    const candidateWorkflowOpen=state.volunteerMode!=='approved'&&['pending','analysis','adjustments'].includes(String(state.currentApplication?.status||''));
+    if(row.status==='plan_approved'&&!candidateWorkflowOpen){
       card.classList.remove('r31-card-warning','r31-card-info','r31-card-danger','r32-card-ready');card.querySelectorAll(':scope > .r31-review-divider,:scope > .r31-review-details,:scope > .activity-actions').forEach(node=>node.remove());
       const activityRow=card.querySelector('.activity-row'),statusBadge=activityRow?.querySelector(':scope > .badge');if(statusBadge){statusBadge.className='badge info';statusBadge.textContent=text('portal.meeting.planApproved')}else if(activityRow)activityRow.insertAdjacentHTML('beforeend',badge(text('portal.meeting.planApproved'),'info'));
       return root.innerHTML;
