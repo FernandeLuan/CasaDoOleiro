@@ -57,6 +57,21 @@ test('analysis and adjustments expose canonical planning approval',()=>{
   assert.ok(planning.includes(".admin-plan-review-footer,.planning-admin-footer"),'legacy footer stays stripped only after approval is migrated');
 });
 
+test('admin planning keeps request-adjustment in the contextual action rail',()=>{
+  const agenda=readFileSync('js/admin/planning-person-agenda.js','utf8');
+  assert.ok(agenda.includes("iconAction('Pedir ajuste'"));
+  assert.ok(agenda.includes('requestR31SessionAdjustment'));
+  assert.ok(agenda.includes("['analysis','adjustments'].includes"));
+});
+
+test('retired candidate renderer is safe if an old cached page still loads it',()=>{
+  const retired=readFileSync('js/portal/candidate-view.js','utf8');
+  const css=readFileSync('css/product-current.css','utf8');
+  assert.ok(retired.includes("['draft','submitted','adjustments']"));
+  assert.ok(!retired.includes('${compactHeader()}'),'Retired renderer must not bring back duplicated period/status');
+  assert.ok(css.includes('.candidate-plan-compact-head{display:none!important}'));
+});
+
 test('all local script references exist',()=>{
   for(const htmlPath of ['portal/index.html','admin/index.html']){
     for(const path of localScripts(htmlPath))assert.ok(existsSync(path),`${htmlPath} references missing script ${path}`);
