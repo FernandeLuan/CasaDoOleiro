@@ -56,9 +56,10 @@
 .planning-activity-tools .admin-portal-status .badge{font-size:var(--ui-text-xs)!important;line-height:1.15;padding:4px 7px!important;white-space:nowrap}
 .planning-activity-trigger{position:relative;z-index:143;width:29px;height:29px;border:1px solid var(--border);border-radius:9px;background:var(--surface-soft);color:var(--primary);display:grid;place-items:center;cursor:pointer;flex:0 0 auto;transition:background .18s ease,border-color .18s ease,box-shadow .18s ease}
 .planning-activity-trigger i{transition:transform .2s cubic-bezier(.22,.8,.3,1)}
-.planning-activity-trigger:hover,.planning-activity-trigger[aria-expanded="true"]{background:var(--primary-soft);border-color:color-mix(in srgb,var(--primary) 28%,var(--border));box-shadow:0 4px 12px rgba(24,42,32,.08)}
+.planning-activity-trigger:hover{background:var(--primary-soft);border-color:color-mix(in srgb,var(--primary) 28%,var(--border));box-shadow:0 4px 12px rgba(24,42,32,.08)}
+.planning-activity-trigger[aria-expanded="true"]{background:var(--surface);border-color:var(--border);border-left-color:transparent;box-shadow:none;border-radius:8px 9px 9px 8px}
 .planning-activity-trigger[aria-expanded="true"] i{transform:rotate(45deg)}
-.planning-activity-menu{position:absolute;right:35px;top:-4px;z-index:142;display:flex;align-items:center;gap:5px;flex-wrap:nowrap;width:max-content;max-width:min(245px,calc(100vw - 76px));padding:6px;background:var(--surface);border:1px solid var(--border);border-radius:11px;box-shadow:0 12px 26px rgba(24,42,32,.16);transform-origin:right center;clip-path:inset(0 0 0 100% round 11px);transform:translateX(10px) scaleX(.08);opacity:0;visibility:hidden;pointer-events:none;transition:clip-path .2s cubic-bezier(.22,.8,.3,1),transform .2s cubic-bezier(.22,.8,.3,1),opacity .12s ease,visibility 0s linear .2s}
+.planning-activity-menu{position:absolute;right:18px;top:-4px;z-index:142;display:flex;align-items:center;gap:5px;flex-wrap:nowrap;width:max-content;max-width:min(255px,calc(100vw - 66px));padding:6px 17px 6px 6px;background:var(--surface);border:1px solid var(--border);border-radius:11px 8px 8px 11px;box-shadow:0 12px 26px rgba(24,42,32,.16);transform-origin:right center;clip-path:inset(0 0 0 100% round 11px);transform:translateX(10px) scaleX(.08);opacity:0;visibility:hidden;pointer-events:none;transition:clip-path .2s cubic-bezier(.22,.8,.3,1),transform .2s cubic-bezier(.22,.8,.3,1),opacity .12s ease,visibility 0s linear .2s}
 .planning-activity-menu.is-open{clip-path:inset(0 0 0 0 round 11px);transform:translateX(0) scaleX(1);opacity:1;visibility:visible;pointer-events:auto;transition-delay:0s}
 .planning-activity-action{width:34px;height:34px;border:1px solid var(--border);border-radius:9px;background:var(--surface);color:var(--text);display:grid;place-items:center;cursor:pointer;font-size:var(--ui-text-md);opacity:0;transform:translateX(8px) scale(.94);transition:opacity .14s ease,transform .18s cubic-bezier(.22,.8,.3,1),background .15s ease,border-color .15s ease}
 .planning-activity-menu.is-open .planning-activity-action{opacity:1;transform:translateX(0) scale(1)}
@@ -113,7 +114,7 @@
   .planning-person-agenda .admin-portal-activity-main{padding:11px!important}
   .planning-person-agenda .admin-portal-activity-head{grid-template-columns:minmax(0,1fr) auto!important}
   .planning-activity-tools{gap:5px}
-  .planning-activity-menu{right:34px;top:-3px;max-width:min(238px,calc(100vw - 76px));padding:5px;gap:4px}
+  .planning-activity-menu{right:17px;top:-3px;max-width:min(248px,calc(100vw - 66px));padding:5px 16px 5px 5px;gap:4px}
   .planning-activity-action{width:32px;height:32px;border-radius:8px}
 }
 
