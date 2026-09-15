@@ -191,7 +191,7 @@
         };
         activityCache.set(String(activityRef.id),activity);
         return {activityId:activityRef.id,activity,sessions:resultSessions,deletedSessionIds};
-      },{loading:false});
+      },{loading:false,monitor:{area:'planning',action:'save_activity',applicationId:String(applicationId),activityId:activityId?String(activityId):''}});
     },
 
     async reviewPostApprovalProposal({applicationId,activityId,decision,note=''}){
@@ -220,7 +220,7 @@
         await batch.commit();
         const cached=activityCache.get(String(activityId));if(cached)Object.assign(cached,{postApprovalProposal:true,reviewStatus,reviewNote:decision==='adjustments'?reviewNote:'',status:sessionStatus});
         return {reviewStatus,status:sessionStatus,sessionIds:sessions.map(row=>String(row.id)),countDelta};
-      },{loading:false});
+      },{loading:false,monitor:{area:'planning',action:'review_post_approval',applicationId:String(applicationId),activityId:String(activityId)}});
     },
 
     async updateSession(sessionId,patch){
@@ -233,7 +233,7 @@
           {...patch,updatedAt:firestore.serverTimestamp()}
         );
         return true;
-      },{loading:false});
+      },{loading:false,monitor:{area:'planning',action:'update_session',sessionId:String(sessionId)}});
     }
   };
 })();
