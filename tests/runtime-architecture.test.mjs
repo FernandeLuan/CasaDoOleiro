@@ -72,6 +72,14 @@ test('retired candidate renderer is safe if an old cached page still loads it',(
   assert.ok(css.includes('.candidate-plan-compact-head{display:none!important}'));
 });
 
+test('delete confirmation has no missing inline handlers',()=>{
+  const confirmation=readFileSync('js/admin/confirmation.js','utf8');
+  assert.ok(confirmation.includes('window.syncDeleteVolunteerConfirm=function'));
+  assert.ok(confirmation.includes('window.confirmDeleteVolunteerApplication=function'));
+  assert.ok(confirmation.includes('window.copyDeleteVolunteerCommand=async function'));
+  assert.ok(confirmation.includes('tools/delete-volunteer.js'));
+});
+
 test('all local script references exist',()=>{
   for(const htmlPath of ['portal/index.html','admin/index.html']){
     for(const path of localScripts(htmlPath))assert.ok(existsSync(path),`${htmlPath} references missing script ${path}`);
