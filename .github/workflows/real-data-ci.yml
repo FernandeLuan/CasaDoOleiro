@@ -37,6 +37,8 @@ jobs:
         run: node -e "for (const p of ['firebase.json','firestore.indexes.json','functions/package.json','package.json']) JSON.parse(require('fs').readFileSync(p,'utf8'))"
       - name: Check real-data source contracts
         run: bash scripts/check-real-data-contracts.sh
+      - name: Check runtime architecture boundaries
+        run: node --test tests/runtime-architecture.test.mjs
       - name: Check canonical local assets
         run: node --test tests/site-assets.test.mjs
       - uses: actions/setup-java@v5
