@@ -63,6 +63,7 @@
   }
 
   function managerPlanning(){return state.managerPlanningPersonId?planningDetail():planningList()}
+  window.adminPlanningPageHtml=managerPlanning;
   let deferProfileRender=0;
   let capturedProfileChanged=false;
 
