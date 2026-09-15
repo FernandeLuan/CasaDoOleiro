@@ -24,6 +24,12 @@ has js/services/planning-service.js 'A consulta ampla foi bloqueada para protege
 has js/services/service-core.js recordQuery
 for token in hasSessions 'firestore.limit(1)' activity-delete-check getCountFromServer; do has js/services/planning-operations-service.js "$token"; done
 has js/portal/app.js declaredEmpty
+exists js/shared/domain-rules.js
+has js/shared/domain-rules.js "'draft','submitted','adjustments'"
+has portal/index.html '../js/shared/domain-rules.js'
+no_match 'candidate-view\.js' portal/index.html
+has js/portal/planejamento.js 'candidatePlanningEditable(status)'
+no_match 'volunteerPlan[[:space:]]*=[[:space:]]*function' js/portal/planning-enhancements.js
 for token in openAdminPlanningActivity managerUpdateSession requestAdminDeletePlanningSession; do has js/admin/candidate-planning-management.js "$token"; done
 has js/services/planning-service.js manager_confirmed
 has js/services/selection-flow-service.js "where('status','==','confirmed')"
