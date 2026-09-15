@@ -99,7 +99,17 @@
   const asDate=value=>{if(!value)return null;if(typeof value?.toDate==='function')return value.toDate();const d=new Date(value);return Number.isNaN(d.getTime())?null:d};
   function when(value){const d=asDate(value);if(!d)return '—';const locale=typeof currentLocale==='function'?currentLocale():'pt-BR';return new Intl.DateTimeFormat(locale,{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(d)}
   function eventLabel(type){const map={candidate_created:'Perfil criado',planning_submitted:'Planejamento enviado',planning_approved:'Planejamento aprovado',meeting_scheduled:'Reunião agendada',meeting_completed:'Reunião realizada',candidate_approved:'Candidato aprovado',candidate_rejected:'Candidato não aprovado',activity_created:'Atividade criada',activity_updated:'Atividade atualizada',activity_feedback_added:'Feedback adicionado',activity_feedback_updated:'Feedback atualizado',session_moved:'Atividade movida',adjustment_requested:'Ajuste solicitado',stay_dates_changed:'Período alterado',post_proposal_reviewed:'Proposta revisada'};const key=String(type||'');return map[key]||key.replaceAll('_',' ').replace(/^./,c=>c.toUpperCase())||'Evento'}
-  function historyAuthor(row){const actor=String(row?.actorLabel||'').trim();if(actor&&actor!=='Registro anterior')return actor;return String(row?.actorRole||'').toLowerCase()==='system'&&actor!=='Registro anterior'?'Sistema':'Autor não registrado'}
+  function usableActorName(value){const actor=String(value||'').trim();return !!actor&&actor!=='Registro anterior'&&!actor.includes('@')}
+  function historyAuthor(row){const actor=String(row?.actorLabel||'').trim();if(usableActorName(actor))return actor;if(String(row?.actorRole||'').toLowerCase()==='system'&&!row?.actorUid)return 'Sistema';return 'Autor não registrado'}
+  async function resolveHistoryActors(rows){
+    const source=(rows||[]).map(row=>({...row})),uids=[...new Set(source.filter(row=>row?.actorUid&&!usableActorName(row.actorLabel)&&String(row.actorRole||'').toLowerCase()!=='system').map(row=>String(row.actorUid)))];
+    if(!uids.length||!window.OleiroServices?.users?.getByIds)return source;
+    try{
+      const users=await window.OleiroServices.users.getByIds(uids),byId=new Map((users||[]).filter(user=>!user?.missing).map(user=>[String(user.id),String(user.displayName||user.name||'').trim()]));
+      source.forEach(row=>{const name=byId.get(String(row.actorUid||''));if(name)row.actorLabel=name});
+    }catch(error){console.warn('Não foi possível resolver os autores do histórico:',error)}
+    return source;
+  }
   function metadata(row){const m=row?.metadata||{};if(row?.type==='meeting_scheduled')return [m.date,m.time].filter(Boolean).join(' • ');if(row?.type==='session_moved')return [m.date,m.period].filter(Boolean).join(' • ');if(row?.type==='stay_dates_changed')return m.stayStart&&m.stayEnd?`${m.stayStart} → ${m.stayEnd}`:'';return m.activityName||m.date||''}
   function legacyRows(p){const rows=[],push=(type,date)=>{if(date)rows.push({id:`legacy-${type}`,type,createdAt:date,actorRole:'',actorLabel:'Autor não registrado',metadata:{}})};push('candidate_created',p?.createdAt);push('planning_submitted',p?.planningSubmittedAt);push('planning_approved',p?.planningApprovedAt);push('meeting_scheduled',p?.meetingScheduledAt);push('meeting_completed',p?.meetingCompletedAt);if(p?.finalDecisionAt)push(p.finalDecision==='approved'?'candidate_approved':'candidate_rejected',p.finalDecisionAt);return rows}
   function mergeRows(p,rows){const persisted=rows||[],types=new Set(persisted.map(row=>row.type));return [...persisted,...legacyRows(p).filter(row=>!types.has(row.type))].sort((a,b)=>(asDate(b.createdAt)?.getTime()||0)-(asDate(a.createdAt)?.getTime()||0))}
@@ -128,7 +138,7 @@
     try{
       if(!window.OleiroServices?.history?.list){renderHistory(p,cachedRows);return}
       const result=await window.OleiroServices.history.list(p.id,{limit:50,cursor:null});
-      const source=result?.items||[],rows=mergeRows(p,source);
+      const source=await resolveHistoryActors(result?.items||[]),rows=mergeRows(p,source);
       state.adminHistoryCache=state.adminHistoryCache||{};
       state.adminHistoryCache[String(p.id)]={items:source,cursor:result?.nextCursor||null,hasMore:!!result?.hasMore,loadedAt:Date.now(),loading:false,error:''};
       if(state.managerPage==='planning'&&String(state.managerPlanningPersonId)===String(p.id)&&state.managerPlanningTab==='history')renderHistory(p,rows);
