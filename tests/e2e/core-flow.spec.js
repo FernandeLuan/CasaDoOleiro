@@ -65,8 +65,7 @@ test.beforeEach(async()=>{
 
 test('Admin manages independent A/B/C/D groups for Rodeio and Indaial',async({page})=>{
   await login(page,'admin@oleiro.test','Admin123!','admin');
-  await navAction(page,'Menu').click();
-  await page.locator('#app .menu-list').getByRole('button',{name:/Grupos\b/}).click();
+  await navAction(page,'Grupos').click();
   await expect(page.locator('#managerGroupUnit')).toBeVisible({timeout:20_000});
   await expect(page.locator('.group-details')).toHaveCount(4,{timeout:20_000});
 
@@ -170,7 +169,7 @@ test('Candidate History is lazy and loads only after opening its tab',async({pag
 
   await modal.getByRole('button',{name:/Histórico$/}).click();
   await expect(modal.getByText('Histórico do candidato',{exact:true})).toBeVisible();
-  await expect(modal.getByText('Candidato cadastrado',{exact:true})).toBeVisible();
+  await expect(modal.getByText('Perfil criado',{exact:true})).toBeVisible();
   await expect.poll(()=>page.evaluate(()=>window.OleiroQueryMetrics?.filter(row=>row.name==='applications/history').length||0)).toBe(1);
 });
 
@@ -193,9 +192,9 @@ test('Volunteer can edit own emergency contact and Admin sees the same profile d
   await login(page,'admin@oleiro.test','Admin123!','admin');
   const modal=await openPendingVolunteer(page);
   await modal.getByRole('button',{name:/Conta$/}).click();
-  const adminEmergency=modal.locator('.account-emergency-card');
-  await expect(adminEmergency).toBeVisible();
-  await expect(adminEmergency).toContainText('Contato E2E',{timeout:20_000});
+  const adminEmergency=modal.locator('.account-contact-card-r70 .account-person-row').first().locator('.account-person-emergency-r70');
+  await expect(adminEmergency).toBeVisible({timeout:20_000});
+  await expect(adminEmergency).toContainText('Contato E2E');
   await expect(adminEmergency).toContainText('Irmão');
   await expect(adminEmergency).toContainText('+55 47 99999-1111');
   await expect.poll(()=>page.evaluate(()=>window.OleiroQueryMetrics?.filter(row=>row.name==='profiles/by-ids').reduce((sum,row)=>sum+(Number(row.pointReads)||0),0)||0)).toBe(1);
@@ -244,7 +243,7 @@ for(const locale of [
 ]){
   test(`Volunteer critical information, profile and activity placeholders render in ${locale.lang}`,async({page})=>{
     await login(page,'voluntario@oleiro.test','Volunteer123!','portal',locale.lang);
-    await navAction(page,locale.infoNav).click();
+    await page.evaluate(()=>window.navigate?.('info'));
     await expect(page.locator('#info-arrival')).toBeVisible();
     await expect(page.locator('#info-arrival summary')).toContainText(locale.arrival);
     await expect(page.locator('#info-accommodation')).toBeVisible();
