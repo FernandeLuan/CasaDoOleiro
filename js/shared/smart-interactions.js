@@ -60,7 +60,7 @@
     const cls=scope==='content'?(direction==='back'?'ui-enter-tab-back':'ui-enter-tab-forward'):(direction==='back'?'ui-enter-back':'ui-enter-forward');
     target.classList.add('ui-page-motion',cls);
     window.clearTimeout(motionTimer);
-    motionTimer=window.setTimeout(()=>target.classList.remove('ui-page-motion',cls),320);
+    motionTimer=window.setTimeout(()=>target.classList.remove('ui-page-motion',cls),430);
   }
   function scheduleMotion(){
     const snapshot=pendingMotion;if(!snapshot)return;
@@ -163,7 +163,7 @@
       originalCloseModal();
       previousFocus?.focus?.({preventScroll:true});
       previousFocus=null;
-    },175);
+    },240);
   }
   if(originalOpenModal){window.openModal=smartOpenModal}
   if(originalCloseModal){window.closeModal=smartCloseModal}
