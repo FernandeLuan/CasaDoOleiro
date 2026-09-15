@@ -1,0 +1,150 @@
+/* Smart Interactions — movimento e continuidade sem redesenhar o produto. */
+.ui-smart-interactions{
+  --ui-motion-fast:150ms;
+  --ui-motion:220ms;
+  --ui-motion-slow:280ms;
+  --ui-ease:cubic-bezier(.22,.8,.3,1);
+}
+
+/* Navegação entre telas: a estrutura visual permanece igual, só muda a entrada. */
+.ui-page-motion{will-change:transform,opacity;backface-visibility:hidden}
+.ui-page-motion.ui-enter-forward{animation:uiPageForward var(--ui-motion) var(--ui-ease) both}
+.ui-page-motion.ui-enter-back{animation:uiPageBack var(--ui-motion) var(--ui-ease) both}
+.ui-page-motion.ui-enter-tab-forward{animation:uiTabForward 180ms var(--ui-ease) both}
+.ui-page-motion.ui-enter-tab-back{animation:uiTabBack 180ms var(--ui-ease) both}
+@keyframes uiPageForward{from{opacity:.55;transform:translate3d(24px,0,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+@keyframes uiPageBack{from{opacity:.55;transform:translate3d(-20px,0,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+@keyframes uiTabForward{from{opacity:.5;transform:translate3d(12px,0,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+@keyframes uiTabBack{from{opacity:.5;transform:translate3d(-12px,0,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+
+/* Elementos expansíveis existentes ganham continuidade em vez de abrir "seco". */
+.ui-smart-interactions details[open]>*:not(summary){animation:uiDetailsIn 180ms var(--ui-ease) both}
+@keyframes uiDetailsIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+
+/* Microinterações reutilizáveis em controles que já existem. */
+.ui-smart-interactions .clickable,
+.ui-smart-interactions .menu-link,
+.ui-smart-interactions .activity-card,
+.ui-smart-interactions .person-card,
+.ui-smart-interactions .planning-person-day,
+.ui-smart-interactions .planning-person-activity-card{
+  -webkit-tap-highlight-color:transparent;
+}
+.ui-smart-interactions .clickable:active,
+.ui-smart-interactions .menu-link:active,
+.ui-smart-interactions .person-card:active{transform:scale(.993)}
+.ui-smart-interactions .planning-activity-action:active,
+.ui-smart-interactions .planning-person-add:active,
+.ui-smart-interactions .planning-activity-trigger:active{transform:scale(.94)}
+
+/* Fundo dos painéis contextuais. */
+.ui-smart-interactions .modal-backdrop.ui-smart-backdrop{
+  animation:uiBackdropIn var(--ui-motion-fast) ease both;
+}
+.ui-smart-interactions .modal-backdrop.ui-smart-backdrop.is-closing{
+  animation:uiBackdropOut var(--ui-motion-fast) ease both;
+  pointer-events:none;
+}
+@keyframes uiBackdropIn{from{background:rgba(0,0,0,0)}to{background:rgba(0,0,0,.48)}}
+@keyframes uiBackdropOut{from{opacity:1}to{opacity:0}}
+
+/* Desktop: edições contextuais entram como drawer lateral.
+   Formulários grandes continuam usando o modal atual. */
+@media(min-width:760px){
+  .ui-smart-interactions .modal-backdrop.ui-contextual-backdrop{
+    align-items:stretch!important;
+    justify-content:flex-end!important;
+    padding:12px!important;
+  }
+  .ui-smart-interactions .modal.ui-contextual-modal{
+    width:min(420px,calc(100vw - 24px))!important;
+    max-width:420px!important;
+    height:calc(100dvh - 24px)!important;
+    max-height:calc(100dvh - 24px)!important;
+    border-radius:22px!important;
+    box-shadow:-18px 0 48px rgba(0,0,0,.18)!important;
+    animation:uiDrawerIn var(--ui-motion) var(--ui-ease) both;
+  }
+  .ui-smart-interactions .modal.ui-contextual-modal.is-closing{
+    animation:uiDrawerOut 170ms ease-in both;
+  }
+  @keyframes uiDrawerIn{from{opacity:.75;transform:translate3d(34px,0,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+  @keyframes uiDrawerOut{from{opacity:1;transform:translate3d(0,0,0)}to{opacity:.4;transform:translate3d(36px,0,0)}}
+}
+
+/* Mobile: modais viram bottom sheets, preservando conteúdo, cores e botões atuais. */
+@media(max-width:759px){
+  .ui-smart-interactions .modal-backdrop.ui-smart-backdrop{
+    align-items:flex-end!important;
+    justify-content:center!important;
+    padding:0!important;
+  }
+  .ui-smart-interactions .modal-backdrop.ui-smart-backdrop .modal{
+    width:100%!important;
+    max-width:none!important;
+    max-height:88dvh!important;
+    margin:0!important;
+    border-radius:24px 24px 0 0!important;
+    box-shadow:0 -18px 48px rgba(0,0,0,.20)!important;
+    animation:uiSheetIn var(--ui-motion) var(--ui-ease) both;
+    transform-origin:center bottom;
+  }
+  .ui-smart-interactions .modal-backdrop.ui-smart-backdrop .modal.is-closing{
+    animation:uiSheetOut 170ms ease-in both;
+  }
+  .ui-smart-interactions .modal-backdrop.ui-smart-backdrop .modal-head{
+    position:relative!important;
+    padding-top:20px!important;
+    touch-action:none;
+  }
+  .ui-smart-interactions .modal-backdrop.ui-smart-backdrop .modal-head::before{
+    content:"";
+    position:absolute;
+    top:7px;
+    left:50%;
+    transform:translateX(-50%);
+    width:38px;
+    height:4px;
+    border-radius:999px;
+    background:color-mix(in srgb,var(--muted) 28%,transparent);
+  }
+  .ui-smart-interactions .modal-backdrop.ui-smart-backdrop .modal-footer{
+    box-shadow:0 -8px 22px rgba(25,42,32,.035);
+  }
+  @keyframes uiSheetIn{from{opacity:.72;transform:translate3d(0,34px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+  @keyframes uiSheetOut{from{opacity:1;transform:translate3d(0,0,0)}to{opacity:.5;transform:translate3d(0,46px,0)}}
+}
+
+/* API de drawer reutilizável para novas telas/ações. */
+.ui-smart-drawer-backdrop{
+  position:fixed;z-index:190;inset:0;background:rgba(0,0,0,.42);
+  display:flex;justify-content:flex-end;align-items:stretch;padding:12px;
+  animation:uiBackdropIn var(--ui-motion-fast) ease both;
+}
+.ui-smart-drawer{
+  width:min(430px,calc(100vw - 24px));height:calc(100dvh - 24px);
+  background:var(--surface);border:1px solid var(--border);border-radius:22px;
+  box-shadow:-18px 0 48px rgba(0,0,0,.18);display:flex;flex-direction:column;overflow:hidden;
+  animation:uiDrawerIn var(--ui-motion) var(--ui-ease) both;
+}
+.ui-smart-drawer-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px;border-bottom:1px solid var(--border)}
+.ui-smart-drawer-head h2{font-size:.94rem;margin:0}.ui-smart-drawer-head p{margin:4px 0 0;color:var(--muted);font-size:.62rem;line-height:1.45}
+.ui-smart-drawer-body{flex:1;min-height:0;overflow:auto;padding:16px;-webkit-overflow-scrolling:touch}
+.ui-smart-drawer-footer{flex:0 0 auto;padding:12px 16px;border-top:1px solid var(--border)}
+.ui-smart-drawer-close{width:36px;height:36px;border:0;border-radius:11px;background:var(--surface-2);color:var(--text);display:grid;place-items:center}
+@media(max-width:759px){
+  .ui-smart-drawer-backdrop{padding:0;align-items:flex-end}
+  .ui-smart-drawer{width:100%;height:auto;max-height:88dvh;border-radius:24px 24px 0 0;animation:uiSheetIn var(--ui-motion) var(--ui-ease) both}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .ui-page-motion,
+  .ui-smart-interactions details[open]>*:not(summary),
+  .ui-smart-interactions .modal-backdrop.ui-smart-backdrop,
+  .ui-smart-interactions .modal-backdrop.ui-smart-backdrop .modal,
+  .ui-smart-drawer-backdrop,
+  .ui-smart-drawer{
+    animation:none!important;
+    transition:none!important;
+  }
+}
