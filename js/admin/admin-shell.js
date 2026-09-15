@@ -146,28 +146,10 @@
     }
 
     function planningPerson(){return typeof candidateById==='function'?candidateById(state.managerPlanningPersonId):null}
-    function planningDates(p){
-      const from=String(p?.stayStart||p?.from||'').slice(0,10),to=String(p?.stayEnd||p?.to||'').slice(0,10);
-      return from&&to?`${fmtDate(from,true)} → ${fmtDate(to,true)}`:'Período não informado';
+    function planningPageHtml(){
+      if(typeof window.adminPlanningPageHtml==='function')return window.adminPlanningPageHtml();
+      return '<section class="section"><div class="empty compact-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando planejamento...</div></section>';
     }
-    function planningBadge(p){
-      const meta=typeof statusMeta==='function'?statusMeta(p?.status):[p?.status||'Status',''];
-      return `<span class="badge ${escapeHtml(meta?.[1]||'')}">${escapeHtml(meta?.[0]||'Status')}</span>`;
-    }
-    function planningListHtml(){
-      const rows=(state.candidates||[]).filter(p=>p.status!=='rejected');
-      const body=typeof candidateListHtml==='function'?candidateListHtml(rows):rows.map(personCompact).join('');
-      return `<section class="section planning-index-page compact-page-top"><div class="planning-index-head"><div><span class="eyebrow">Planejamento</span><h1>Planejamentos dos voluntários</h1><p>Consulte, revise e acompanhe os planejamentos em uma tela dedicada.</p></div></div><div class="candidate-tools candidate-tools-compact planning-index-tools"><div class="filter-search candidate-search"><i class="fa-solid fa-magnifying-glass"></i><input id="planningCandidateSearch" class="input" type="search" value="${escapeHtml(state.candidateSearch||'')}" placeholder="Buscar voluntário por nome" oninput="updatePlanningCandidateSearch(this.value)"></div></div><div class="planning-index-count"><span>${rows.length} ${rows.length===1?'perfil':'perfis'} nesta página</span></div><div id="planningCandidateList" class="list planning-candidate-list">${body||'<div class="empty"><i class="fa-regular fa-calendar-xmark"></i>Nenhum planejamento encontrado.</div>'}</div></section>`;
-    }
-    function planningDetailHtml(){
-      const p=planningPerson();
-      if(!p)return planningListHtml();
-      const loading=state.managerPlanningLoading&&!state.managerPlanningBody,tab=String(state.managerPlanningTab||'plan'),id=encodeURIComponent(String(p.id));
-      const tabButton=(value,label)=>`<button class="${tab===value?'active':''}" type="button" aria-current="${tab===value?'page':'false'}" onclick="openPerson(decodeURIComponent('${id}'),'${value}')">${label}</button>`;
-      const tabs=`<div class="person-refactor-tabs planning-profile-tabs" role="tablist" aria-label="Seções do voluntário">${tabButton('plan','Planejamento')}${tabButton('account','Conta')}${tabButton('history','Histórico')}</div>`;
-      return `<section class="section planning-detail-page compact-page-top" data-person-id="${escapeHtml(String(p.id))}"><header class="planning-profile-head"><div class="planning-profile-heading"><div class="planning-profile-copy"><span class="eyebrow">Perfil do candidato</span><div class="planning-profile-title-line"><h1>${escapeHtml(p.name||'Voluntário')}</h1></div><div class="planning-profile-meta"><span>${escapeHtml(p.country||'—')}</span><b>•</b><span>${escapeHtml(p.unit||p.unitName||'—')}</span><b>•</b><span>${escapeHtml(planningDates(p))}</span>${planningBadge(p)}</div></div></div><button class="planning-close-button" type="button" onclick="closePlanningDetail()" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button>${tabs}</header><div class="planning-page-content">${loading?'<div class="empty compact-loading planning-page-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando planejamento...</div>':state.managerPlanningBody||'<div class="empty compact-loading planning-page-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando dados...</div>'}</div></section>`;
-    }
-    function planningPageHtml(){return state.managerPlanningPersonId?planningDetailHtml():planningListHtml()}
     function dateParts(iso){
       const raw=String(iso||''),match=raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
       if(!match)return {day:'—',short:'—',weekday:'Dia',weekdayShort:'—'};
