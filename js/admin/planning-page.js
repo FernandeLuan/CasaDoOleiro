@@ -42,6 +42,17 @@
     return template.innerHTML;
   }
 
+  function planningReviewToolbar(p){
+    const tab=String(state.managerPlanningTab||'plan'),status=String(p?.status||'');
+    if(tab!=='plan'||!['analysis','adjustments'].includes(status))return '';
+    const id=encodeURIComponent(String(p.id||''));
+    const title=status==='adjustments'?'Planejamento com ajustes':'Planejamento em análise';
+    const description=status==='adjustments'
+      ?'Revise os ajustes solicitados. Quando estiver tudo certo, aprove o planejamento.'
+      :'Revise as atividades enviadas. Quando estiver tudo certo, aprove o planejamento.';
+    return `<section class="planning-review-toolbar" aria-label="Ações de revisão do planejamento"><div class="planning-review-toolbar-copy"><span class="eyebrow">${escapeHtml(title)}</span><p>${escapeHtml(description)}</p></div><button class="btn btn-primary planning-approve-button" type="button" onclick="requestApprovePlanning('${id}')"><i class="fa-solid fa-check"></i>Aprovar planejamento</button></section>`;
+  }
+
   function planningList(){
     const rows=(state.candidates||[]).filter(p=>p.status!=='rejected');
     const body=typeof candidateListHtml==='function'?candidateListHtml(rows):rows.map(personCompact).join('');
@@ -58,7 +69,7 @@
     const loading=state.managerPlanningLoading&&!state.managerPlanningBody;
     return `<section class="section planning-detail-page compact-page-top" data-person-id="${escapeHtml(String(p.id))}">
       <header class="planning-profile-head"><div class="planning-profile-heading"><div class="planning-profile-copy"><div class="planning-profile-title-line"><h1>${escapeHtml(p.name||'Voluntário')}</h1></div><div class="planning-profile-meta"><span>${escapeHtml(p.country||'—')}</span><b>•</b><span>${escapeHtml(p.unit||p.unitName||'—')}</span><b>•</b><span class="planning-profile-period-status"><span>${escapeHtml(personDates(p))}</span><b>•</b>${personBadge(p)}</span></div></div></div><button class="planning-close-button" type="button" onclick="closePlanningDetail()" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button>${profileTabs(p)}</header>
-      <div class="planning-page-content">${loading?'<div class="empty compact-loading planning-page-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando planejamento...</div>':state.managerPlanningBody||'<div class="empty compact-loading planning-page-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando dados...</div>'}</div>
+      <div class="planning-page-content">${planningReviewToolbar(p)}${loading?'<div class="empty compact-loading planning-page-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando planejamento...</div>':state.managerPlanningBody||'<div class="empty compact-loading planning-page-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando dados...</div>'}</div>
     </section>`;
   }
 
@@ -142,6 +153,17 @@
     }
   };
 
+  window.requestApprovePlanning=function(encodedId){
+    const id=decodeURIComponent(String(encodedId||'')),p=candidateById(id);
+    if(!p)return showToast('Cadastro não encontrado.');
+    if(!['analysis','adjustments'].includes(String(p.status||'')))return showToast('Este planejamento não está aguardando aprovação.');
+    openModal(
+      'Aprovar planejamento?',
+      `Confirme a aprovação de ${escapeHtml(p.name||'voluntário')}.`,
+      '<div class="notice"><i class="fa-solid fa-circle-check"></i><div>As atividades propostas serão confirmadas e o planejamento inicial deixará de ficar editável para o candidato.</div></div>',
+      `<div class="confirm-delete-actions"><button class="btn btn-outline" type="button" onclick="closeModal()">Cancelar</button><button id="approvePlanningConfirmR25" class="btn btn-primary" type="button" onclick="approveCandidate(decodeURIComponent('${encodeURIComponent(String(p.id))}'))"><i class="fa-solid fa-check"></i>Aprovar planejamento</button></div>`
+    );
+  };
   window.closePlanningDetail=function(){
     const origin=state.managerPlanningOrigin==='volunteer'?'volunteer':'planning';state.managerPlanningPersonId='';state.managerPlanningBody='';state.managerPlanningTab='plan';
     if(origin==='volunteer')return navigateManager('volunteer');state.managerPage='planning';render();if(typeof afterNavigation==='function')afterNavigation();
