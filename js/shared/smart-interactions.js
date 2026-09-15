@@ -143,8 +143,12 @@
     if(a<0||b<0)return 'forward';return b<a?'back':'forward';
   };
 
-  wrap('navigateManager',page=>({direction:directionFor(managerOrder,typeof state!=='undefined'?state.managerPage:'',page),scope:'page'}));
-  wrap('navigateVolunteer',page=>({direction:directionFor(volunteerOrder,typeof state!=='undefined'?state.volunteerPage:'',page),scope:'page'}));
+  wrap('navigateManager',page=>{
+    const current=typeof state!=='undefined'?String(state.managerPage||''):'';return current===String(page||'')?{skipMotion:true}:{direction:directionFor(managerOrder,current,page),scope:'page'}
+  });
+  wrap('navigateVolunteer',page=>{
+    const current=typeof state!=='undefined'?String(state.volunteerPage||''):'';return current===String(page||'')?{skipMotion:true}:{direction:directionFor(volunteerOrder,current,page),scope:'page'}
+  });
   wrap('goHome',()=>({direction:'back',scope:'page'}));
   wrap('openManagerOccupancy',()=>({direction:'forward',scope:'page'}));
   wrap('openHouseInfo',()=>({direction:'forward',scope:'page'}));

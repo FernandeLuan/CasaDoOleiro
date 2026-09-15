@@ -52,13 +52,13 @@ function restoreManagerBrowserCache(){
   const cached=readManagerBrowserCache();if(!cached)return {schedule:false,dashboard:false};
   let schedule=false,dashboard=false;
   if(Array.isArray(cached.scheduleRows)){
-    state.sessions=cached.scheduleRows;state.activities=[];state.scheduleFrom=_oleiroToday;state.scheduleTo=_oleiroToday;schedule=true;
+    state.sessions=cached.scheduleRows;state.managerTodaySessions=cached.scheduleRows;state.managerTodayLoaded=true;state.activities=[];state.scheduleFrom=_oleiroToday;state.scheduleTo=_oleiroToday;schedule=true;
   }
   if(cached.dashboard&&typeof cached.dashboard==='object'){
     state.dashboardCounts=cached.dashboard.counts||{analysis:0,adjustments:0};
     state.dashboardArrivals=Array.isArray(cached.dashboard.arrivals)?cached.dashboard.arrivals:[];
     state.dashboardDepartures=Array.isArray(cached.dashboard.departures)?cached.dashboard.departures:[];
-    dashboard=true;
+    state.managerDashboardLoaded=true;dashboard=true;
   }
   return {schedule,dashboard};
 }
@@ -69,14 +69,18 @@ function mapManagerScheduleRows(rows){
   return (rows||[]).map(row=>({...row,activity:{...(row.activity||{}),owner:row.activity?.owner&&row.activity.owner!=='Voluntário'?row.activity.owner:(names.get(String(row.applicationId))||row.ownerName||'Voluntário')}}));
 }
 function deriveAdminNotifications(){return []}
-function invalidateManagerScheduleCache(){_managerScheduleCache.clear();state.scheduleFrom=null;state.scheduleTo=null;clearManagerBrowserSchedule()}
+function invalidateManagerScheduleCache(){_managerScheduleCache.clear();state.scheduleFrom=null;state.scheduleTo=null;state.managerTodaySessions=[];state.managerTodayLoaded=false;clearManagerBrowserSchedule()}
 async function hydrateManagerSchedule(from=_oleiroToday,to=_oleiroToday,{force=false,unitId='all'}={}){
   if(!window.OleiroServices?.planning?.listManagerSchedule)return [];
   const key=managerScheduleKey(from,to,unitId),cached=_managerScheduleCache.get(key);
-  if(!force&&cached&&Date.now()-cached.at<MANAGER_SCHEDULE_CACHE_MS){state.sessions=cached.rows;state.activities=[];state.scheduleFrom=from;state.scheduleTo=to;return cached.rows;}
+  if(!force&&cached&&Date.now()-cached.at<MANAGER_SCHEDULE_CACHE_MS){
+    state.sessions=cached.rows;state.activities=[];state.scheduleFrom=from;state.scheduleTo=to;
+    if(from===_oleiroToday&&to===_oleiroToday){state.managerTodaySessions=cached.rows;state.managerTodayLoaded=true}
+    return cached.rows;
+  }
   const rows=mapManagerScheduleRows(await window.OleiroServices.planning.listManagerSchedule({from,to,unitId}));
   _managerScheduleCache.set(key,{at:Date.now(),rows});state.sessions=rows;state.activities=[];state.scheduleFrom=from;state.scheduleTo=to;
-  if(from===_oleiroToday&&to===_oleiroToday)writeManagerBrowserCache({scheduleRows:rows.map(compactManagerScheduleRow),scheduleSavedAt:Date.now()});
+  if(from===_oleiroToday&&to===_oleiroToday){state.managerTodaySessions=rows;state.managerTodayLoaded=true;writeManagerBrowserCache({scheduleRows:rows.map(compactManagerScheduleRow),scheduleSavedAt:Date.now()})}
   return rows;
 }
 
@@ -129,7 +133,7 @@ async function hydrateManagerDashboardData({force=true}={}){
     const value=(index,fallback)=>results[index]?.status==='fulfilled'?results[index].value:fallback;
     results.forEach((result,index)=>{if(result.status==='rejected')console.warn(['Contagem em análise','Contagem de ajustes','Próximas chegadas','Próximas saídas'][index]+' indisponível:',result.reason)});
     state.dashboardCounts={analysis:Number(value(0,state.dashboardCounts?.analysis||0))||0,adjustments:Number(value(1,state.dashboardCounts?.adjustments||0))||0};
-    state.dashboardArrivals=value(2,state.dashboardArrivals||[])||[];state.dashboardDepartures=value(3,state.dashboardDepartures||[])||[];_managerDashboardAt=Date.now();
+    state.dashboardArrivals=value(2,state.dashboardArrivals||[])||[];state.dashboardDepartures=value(3,state.dashboardDepartures||[])||[];_managerDashboardAt=Date.now();state.managerDashboardLoaded=true;
     writeManagerBrowserCache({dashboard:{counts:state.dashboardCounts,arrivals:state.dashboardArrivals.map(compactMovementRow),departures:state.dashboardDepartures.map(compactMovementRow),loadedAt:_managerDashboardAt}});
     if(state.managerPage==='home')render();return {counts:state.dashboardCounts,arrivals:state.dashboardArrivals,departures:state.dashboardDepartures};
   }).finally(()=>{state.managerDashboardLoading=false;_managerDashboardPromise=null;if(state.managerPage==='home')render()});
@@ -200,7 +204,7 @@ function renderManager(){
 function render(){renderManager()}
 async function bootManager(){
   const session=await window.OleiroAuthGuard?.requireRole('manager');if(!session)return;
-  state.role='manager';state.currentSession=session;state.managerPage='home';state.groupsLoaded=false;state.groupsLoading=false;state.groupsUnitId=null;state.groupUnitId=state.groupUnitId||'';state.sessions=[];state.pendingChangeRequests=[];state.scheduleFrom=null;state.scheduleTo=null;state.dashboardCounts={analysis:0,adjustments:0};state.dashboardArrivals=[];state.dashboardDepartures=[];state.candidateHasMore=false;state.candidateCursor=null;state.candidateLoading=false;
+  state.role='manager';state.currentSession=session;state.managerPage='home';state.groupsLoaded=false;state.groupsLoading=false;state.groupsUnitId=null;state.groupUnitId=state.groupUnitId||'';state.sessions=[];state.managerTodaySessions=[];state.managerTodayLoaded=false;state.managerDashboardLoaded=false;state.pendingChangeRequests=[];state.scheduleFrom=null;state.scheduleTo=null;state.dashboardCounts={analysis:0,adjustments:0};state.dashboardArrivals=[];state.dashboardDepartures=[];state.candidateHasMore=false;state.candidateCursor=null;state.candidateLoading=false;
   const restored=restoreManagerBrowserCache();state.managerTodayLoading=!restored.schedule;state.managerDashboardLoading=!restored.dashboard;render();
   try{
     await hydrateManagerBaseData();

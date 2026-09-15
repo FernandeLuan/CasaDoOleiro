@@ -162,8 +162,10 @@
     function planningDetailHtml(){
       const p=planningPerson();
       if(!p)return planningListHtml();
-      const loading=state.managerPlanningLoading&&!state.managerPlanningBody;
-      return `<section class="section planning-detail-page compact-page-top" data-person-id="${escapeHtml(String(p.id))}"><header class="planning-profile-head"><div class="planning-profile-heading"><div class="planning-profile-copy"><span class="eyebrow">Perfil do candidato</span><div class="planning-profile-title-line"><h1>${escapeHtml(p.name||'Voluntário')}</h1></div><div class="planning-profile-meta"><span>${escapeHtml(p.country||'—')}</span><b>•</b><span>${escapeHtml(p.unit||p.unitName||'—')}</span><b>•</b><span>${escapeHtml(planningDates(p))}</span>${planningBadge(p)}</div></div></div><button class="planning-close-button" type="button" onclick="closePlanningDetail()" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button></header><div class="planning-page-content">${loading?'<div class="empty compact-loading planning-page-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando planejamento...</div>':state.managerPlanningBody||'<div class="empty compact-loading planning-page-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando dados...</div>'}</div></section>`;
+      const loading=state.managerPlanningLoading&&!state.managerPlanningBody,tab=String(state.managerPlanningTab||'plan'),id=encodeURIComponent(String(p.id));
+      const tabButton=(value,label)=>`<button class="${tab===value?'active':''}" type="button" aria-current="${tab===value?'page':'false'}" onclick="openPerson(decodeURIComponent('${id}'),'${value}')">${label}</button>`;
+      const tabs=`<div class="person-refactor-tabs planning-profile-tabs" role="tablist" aria-label="Seções do voluntário">${tabButton('plan','Planejamento')}${tabButton('account','Conta')}${tabButton('history','Histórico')}</div>`;
+      return `<section class="section planning-detail-page compact-page-top" data-person-id="${escapeHtml(String(p.id))}"><header class="planning-profile-head"><div class="planning-profile-heading"><div class="planning-profile-copy"><span class="eyebrow">Perfil do candidato</span><div class="planning-profile-title-line"><h1>${escapeHtml(p.name||'Voluntário')}</h1></div><div class="planning-profile-meta"><span>${escapeHtml(p.country||'—')}</span><b>•</b><span>${escapeHtml(p.unit||p.unitName||'—')}</span><b>•</b><span>${escapeHtml(planningDates(p))}</span>${planningBadge(p)}</div></div></div><button class="planning-close-button" type="button" onclick="closePlanningDetail()" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button>${tabs}</header><div class="planning-page-content">${loading?'<div class="empty compact-loading planning-page-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando planejamento...</div>':state.managerPlanningBody||'<div class="empty compact-loading planning-page-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando dados...</div>'}</div></section>`;
     }
     function planningPageHtml(){return state.managerPlanningPersonId?planningDetailHtml():planningListHtml()}
     function dateParts(iso){
@@ -319,7 +321,8 @@
       state.occupancySelectedDate=String(iso||'').slice(0,10);
       if(state.managerPage==='occupancy')renderOccupancyShell();
     };
-    window.openManagerOccupancy=async function(){
+    window.openManagerOccupancy=async function({force=false}={}){
+      if(state.managerPage==='occupancy'&&!force)return;
       state.managerPage='occupancy';
       state.occupancyScreenMonth=occupancyMonth();
       state.occupancySelectedDate=occupancySelectedDate();
@@ -344,7 +347,7 @@
       state.occupancyScreenMonth=`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}`;
       state.occupancySelectedDate=String(_oleiroToday).startsWith(state.occupancyScreenMonth)?_oleiroToday:`${state.occupancyScreenMonth}-01`;
       state.occupancyCandidates=[];
-      return window.openManagerOccupancy();
+      return window.openManagerOccupancy({force:true});
     };
 
     function standardPageHtml(){

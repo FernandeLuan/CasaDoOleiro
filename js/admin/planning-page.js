@@ -153,6 +153,7 @@
   managerNav=function(){const item=(id,icon,label)=>`<button class="nav-btn ${state.managerPage===id?'active':''}" onclick="navigateManager('${id}')"><i class="fa-solid ${icon}"></i><span>${label}</span></button>`;return `<nav class="bottom-nav">${item('home','fa-house','Início')}${item('volunteer','fa-users','Voluntariado')}${item('planning','fa-calendar-check','Planejamento')}${item('agenda','fa-calendar-days','Agenda')}${item('occupancy','fa-bed','Ocupação')}${item('menu','fa-bars','Menu')}</nav>`};
   renderManager=function(){if(state.managerPage!=='planning')return baseRenderManager();app.innerHTML=header()+`<main class="page">${managerPlanning()}</main>`;navRoot.innerHTML=managerNav();if(typeof applyI18n==='function'){applyI18n(app);applyI18n(navRoot)}};render=function(){renderManager()};
   navigateManager=function(page){
+    if(String(state.managerPage||'')===String(page||''))return;
     if(page!=='planning')return baseNavigateManager(page);
     state.managerPage='planning';state.managerPlanningPersonId='';state.managerPlanningBody='';state.managerPlanningTab='plan';state.managerPlanningOrigin='planning';state.candidateFilter='all';render();if(typeof afterNavigation==='function')afterNavigation();
     if(typeof loadManagerCandidates==='function')loadManagerCandidates({force:true}).then(()=>{if(state.managerPage==='planning'&&!state.managerPlanningPersonId)render()}).catch(error=>{console.error(error);showToast('Não foi possível carregar os planejamentos.')});

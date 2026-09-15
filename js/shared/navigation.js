@@ -5,6 +5,7 @@ function scrollPageTop(){
 }
 function afterNavigation(){if(typeof closeOccupancyDayPopup==='function')closeOccupancyDayPopup();try{document.activeElement?.blur?.()}catch{}scrollPageTop()}
 async function goHome(){
+  if((state.role==='manager'&&state.managerPage==='home')||(state.role==='volunteer'&&state.volunteerPage==='home'))return;
   if(state.role==='manager')state.managerPage='home';else if(state.role==='volunteer')state.volunteerPage='home';render();afterNavigation();
   if(state.role==='manager'){
     if(typeof refreshManagerApplications==='function')refreshManagerApplications().catch(console.error);
@@ -12,6 +13,13 @@ async function goHome(){
   }
 }
 function navigateManager(page){
+  page=String(page||'home');
+  if(String(state.managerPage||'home')===page)return;
+  if(page==='home'&&typeof restoreManagerBrowserCache==='function'){
+    const restored=restoreManagerBrowserCache();
+    state.managerTodayLoading=!restored.schedule;
+    state.managerDashboardLoading=!restored.dashboard;
+  }
   state.managerPage=page;
   if(page==='agenda'){
     if(!state.agendaFrom||!state.agendaTo){state.agendaFrom=_oleiroToday;state.agendaTo=_oleiroToday;state.agendaAnchor=_oleiroToday;state.selectedDate=_oleiroToday;}
@@ -20,8 +28,12 @@ function navigateManager(page){
   if(page==='volunteer'&&typeof refreshManagerApplications==='function')refreshManagerApplications().catch(error=>console.error('Não foi possível atualizar os voluntários:',error));
   if(page==='groups'&&typeof ensureManagerGroups==='function'&&!state.groupsLoaded)ensureManagerGroups().then(()=>{if(state.managerPage==='groups')render()}).catch(error=>{console.error(error);showToast('Não foi possível carregar os grupos.')});
   if(page==='agenda'&&typeof hydrateManagerSchedule==='function')hydrateManagerSchedule(state.agendaFrom,state.agendaTo,{force:true}).then(()=>{if(state.managerPage==='agenda')render()}).catch(error=>{console.error(error);showToast('Não foi possível atualizar a agenda.')});
+  if(page==='home'){
+    if(typeof hydrateManagerDashboardData==='function')hydrateManagerDashboardData({force:false}).catch(console.error);
+    if(typeof hydrateManagerSchedule==='function')hydrateManagerSchedule(_oleiroToday,_oleiroToday,{force:false}).then(()=>{state.managerTodayLoading=false;if(state.managerPage==='home')render()}).catch(error=>{state.managerTodayLoading=false;console.error(error);if(state.managerPage==='home')render()});
+  }
 }
-function navigateVolunteer(page){state.volunteerPage=page;render();afterNavigation()}
+function navigateVolunteer(page){page=String(page||'home');if(String(state.volunteerPage||'home')===page)return;state.volunteerPage=page;render();afterNavigation()}
 function header(){return `<header class="app-header simplified-header"><div class="brand-row"><div class="brand" role="button" tabindex="0" aria-label="Ir para a tela inicial" onclick="goHome()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goHome()}"><div class="brand-mark"><i class="fa-solid fa-seedling"></i></div><div class="brand-copy"><strong>Casa do Oleiro</strong></div></div><div class="header-actions"><button class="icon-btn language-button" onclick="openLanguageModal()" aria-label="Idioma"><span class="current-language-code">${typeof currentLanguageCode==='function'?currentLanguageCode():'PT'}</span></button><button class="icon-btn" onclick="toggleTheme()" aria-label="Tema"><i class="fa-solid ${state.theme==='dark'?'fa-sun':'fa-moon'}"></i></button></div></div></header>`;}
 function managerNav(){const items=[['home','fa-house','Início'],['volunteer','fa-users','Voluntariado'],['agenda','fa-calendar-days','Agenda'],['groups','fa-people-group','Grupos'],['menu','fa-bars','Menu']];return `<nav class="bottom-nav">${items.map(([id,ic,tx])=>`<button class="nav-btn ${state.managerPage===id?'active':''}" onclick="navigateManager('${id}')"><i class="fa-solid ${ic}"></i><span>${tx}</span></button>`).join('')}</nav>`;}
 function volunteerNav(){const approved=state.volunteerMode==='approved';const items=approved?[['home','fa-house','Início'],['agenda','fa-calendar-check','Agenda'],['stay','fa-location-dot','Estadia'],['info','fa-circle-info','Informações'],['profile','fa-user','Perfil']]:[['home','fa-house','Início'],['plan','fa-calendar-plus','Planejamento'],['stay','fa-location-dot','Estadia'],['info','fa-circle-info','Informações'],['profile','fa-user','Perfil']];if(approved&&state.volunteerPage==='plan')state.volunteerPage='agenda';return `<nav class="bottom-nav">${items.map(([id,ic,tx])=>`<button class="nav-btn ${state.volunteerPage===id?'active':''}" onclick="navigateVolunteer('${id}')"><i class="fa-solid ${ic}"></i><span>${tx}</span></button>`).join('')}</nav>`;}

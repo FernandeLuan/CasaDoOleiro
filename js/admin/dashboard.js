@@ -21,8 +21,8 @@ function releaseManagerHomeScrollLock(){
 }
 function managerHome(){
   releaseManagerHomeScrollLock();
-  const todaySessions=getSessions(_oleiroToday),todayScheduleLoaded=String(state.scheduleFrom||'')===String(_oleiroToday)&&String(state.scheduleTo||'')===String(_oleiroToday),arrivals=nextMovements('from'),departures=nextMovements('to');
-  const todayLoading=state.managerTodayLoading===true||!todayScheduleLoaded,dashboardLoading=state.managerDashboardLoading===true;
+  const todayRows=Array.isArray(state.managerTodaySessions)?state.managerTodaySessions:[],todaySessions=todayRows.filter(row=>String(row.date||'')===String(_oleiroToday)).map(session=>{const activity=session.activity||{};return {activity:{...activity,name:session.activityName||activity.name||'Atividade',owner:session.ownerName||activity.ownerName||activity.owner||'Voluntário',duration:Number(session.duration||activity.duration||60)},group:session.groupId||'A definir',status:session.status||'proposed',raw:session}}),arrivals=nextMovements('from'),departures=nextMovements('to');
+  const todayLoading=state.managerTodayLoaded!==true,dashboardLoading=state.managerDashboardLoaded!==true;
   const todayHtml=todayLoading?'<div class="empty compact-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando atividades...</div>':todaySessions.length?todaySessions.map(s=>agendaItem(s.activity.name,s.activity.owner,s.group,s.status,activityPeriodValue(s.raw||{},s.activity),s.activity.duration)).join(''):'<div class="empty">Nenhuma atividade prevista para hoje.</div>';
   const movementsLoading='<div class="empty compact-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando movimentações...</div>';
   return `<style id="managerHomeStyles">
