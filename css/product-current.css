@@ -97,3 +97,8 @@
   .stay-date-modal-native{width:calc(100vw - 20px)!important;max-width:440px!important}
 }
 @media(max-width:350px){.candidate-decision-actions{grid-template-columns:1fr!important}.candidate-lifecycle-actions{grid-template-columns:1fr!important}.profile-status{white-space:normal}}
+
+
+/* Feedback compartilhado pelo administrador no portal do voluntário. */
+.volunteer-feedback{margin-top:11px;padding-top:10px;border-top:1px solid var(--border);display:grid;gap:4px}
+.volunteer-feedback strong{font-size:.64rem;color:var(--text);font-weight:650}.volunteer-feedback p{margin:0!important;font-size:.62rem!important;line-height:1.48!important;color:var(--muted)!important;white-space:pre-wrap;overflow-wrap:anywhere}.volunteer-feedback span{font-size:.56rem;color:var(--muted);line-height:1.35}
