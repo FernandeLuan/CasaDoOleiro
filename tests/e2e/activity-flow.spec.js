@@ -18,7 +18,7 @@ async function openPendingVolunteer(page){
   await navAction(page,'Voluntariado').click();
   const list=page.locator('#candidateList');await expect(list).toBeVisible({timeout:20_000});await expect(list.getByText(/Carregando voluntários/)).toHaveCount(0,{timeout:20_000});
   await page.locator('#app').getByRole('button',{name:/Filtros/}).click();await page.locator('#candidateStatusFilter').selectOption('pending');await page.locator('#modalRoot').getByRole('button',{name:/Aplicar$/}).click();
-  await expect(list.getByText(/Carregando voluntários/)).toHaveCount(0,{timeout:20_000});const candidate=list.locator('.list-item.clickable').filter({hasText:'Voluntário E2E'}).first();await expect(candidate).toBeVisible({timeout:20_000});await candidate.click();return page.locator('#modalRoot');
+  await expect(list.getByText(/Carregando voluntários/)).toHaveCount(0,{timeout:20_000});const candidate=list.locator('.list-item.clickable').filter({hasText:'Voluntário E2E'}).first();await expect(candidate).toBeVisible({timeout:20_000});await candidate.click();const detail=page.locator('#app');await expect(detail.locator('.person-refactor-tabs button.active')).toContainText('Planejamento',{timeout:20_000});return detail;
 }
 
 test.beforeEach(async()=>{await seedEmulators()});
