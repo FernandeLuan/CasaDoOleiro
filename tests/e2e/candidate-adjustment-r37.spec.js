@@ -18,7 +18,7 @@ async function openVolunteerByStatus(page,status,name){
   const list=page.locator('#candidateList');await navAction(page,'Voluntariado').click();
   try{await expect(list).toBeVisible({timeout:10_000})}catch{await navAction(page,'Voluntariado').click();await expect(list).toBeVisible({timeout:20_000})}
   await page.locator('#app').getByRole('button',{name:/Filtros/}).click();await page.locator('#candidateStatusFilter').selectOption(status);await page.locator('#modalRoot').getByRole('button',{name:/Aplicar$/}).click();await expect(list.getByText(/Carregando voluntários/)).toHaveCount(0,{timeout:20_000});
-  const item=list.locator('.list-item.clickable').filter({hasText:name}).first();await expect(item).toBeVisible({timeout:20_000});await item.click();return page.locator('#modalRoot');
+  const item=list.locator('.list-item.clickable').filter({hasText:name}).first();await expect(item).toBeVisible({timeout:20_000});await item.click();const detail=page.locator('#app');await expect(detail.locator('.person-refactor-tabs button.active')).toContainText('Planejamento',{timeout:20_000});return detail;
 }
 async function ensureDetailsOpen(details){await expect(details).toBeVisible();await details.evaluate(node=>{node.open=true});await expect(details).toHaveJSProperty('open',true)}
 
