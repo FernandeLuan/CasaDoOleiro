@@ -190,6 +190,8 @@
     app.classList.add('portal-desktop-root');
     app.querySelector(':scope > .portal-sidebar-desktop')?.remove();
     app.insertAdjacentHTML('afterbegin',sidebarHtml());
+    const sidebar=app.querySelector(':scope > .portal-sidebar-desktop');
+    if(sidebar&&typeof applyI18n==='function')applyI18n(sidebar);
   }
 
   installStyles();
