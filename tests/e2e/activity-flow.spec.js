@@ -27,7 +27,7 @@ test('Admin account keeps emergency contact inside the consolidated participant 
   await login(page,'admin@oleiro.test','Admin123!','admin');const detail=await openPendingVolunteer(page);await detail.getByRole('button',{name:/Conta$/}).click();
   const account=detail.locator('.admin-account-refactor.account-consolidated-r70');await expect(account).toBeVisible({timeout:20_000});
   const person=account.locator('.account-contact-card-r70 .account-person-row').first();await expect(person).toContainText('Voluntário E2E');
-  const emergency=person.locator('.account-person-emergency-r70');await expect(emergency).toBeVisible();await expect(emergency).toContainText('Contato de emergência');
+  const emergency=person.locator('.account-person-emergency-r70, .account-person-emergency-inline-r71');await expect(emergency).toBeVisible();await expect(emergency).toContainText('Contato de emergência');
   const edit=emergency.getByRole('button',{name:/Adicionar contato|Editar contato/});await expect(edit).toBeVisible();await expect(edit.locator('i.fa-pen, i.fa-plus')).toHaveCount(1);
 });
 
