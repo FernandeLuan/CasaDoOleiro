@@ -180,7 +180,7 @@ test('Volunteer can edit own emergency contact and Admin sees the same profile d
   await login(page,'admin@oleiro.test','Admin123!','admin');
   const modal=await openPendingVolunteer(page);
   await modal.getByRole('button',{name:/Conta$/}).click();
-  const adminEmergency=modal.locator('.account-contact-card-r70 .account-person-row').first().locator('.account-person-emergency-r70');
+  const adminEmergency=modal.locator('.account-contact-card-r70 .account-person-row').first().locator('.account-person-emergency-r70, .account-person-emergency-inline-r71');
   await expect(adminEmergency).toBeVisible({timeout:20_000});
   await expect(adminEmergency).toContainText('Contato E2E');
   await expect(adminEmergency).toContainText('Irmão');
