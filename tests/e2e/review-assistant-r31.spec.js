@@ -28,15 +28,16 @@ async function ensureDayVisible(day){await expect(day).toBeVisible({timeout:20_0
 async function openAdminActions(card){const trigger=card.locator('.planning-activity-trigger');await expect(trigger).toBeVisible();await trigger.click()}
 async function expectDecisionMenu(card){
   await openAdminActions(card);
-  await expect(card.getByRole('button',{name:/Aprovar$/})).toBeVisible();
+  await expect(card.getByRole('button',{name:/Aprovar(?: alteração)?$/})).toBeVisible();
   await expect(card.getByRole('button',{name:/Reajustar$/})).toBeVisible();
-  await expect(card.getByRole('button',{name:/Recusar$/})).toBeVisible();
+  await expect(card.getByRole('button',{name:/Recusar(?: alteração)?$/})).toBeVisible();
 }
 
 test.beforeEach(async()=>{await seedEmulators()});
 
 test('Admin adjustment stays on one activity and volunteer resubmits that session',async({page})=>{
-  await login(page,'admin@oleiro.test','Admin123!','admin');const modal=await openVolunteerByStatus(page,'pending','Voluntário E2E');
+  await login(page,'voluntario@oleiro.test','Volunteer123!','portal');await navAction(page,'Planejamento').click();await page.getByRole('button',{name:/Enviar planejamento/}).click();await expect.poll(()=>page.evaluate(()=>state.currentApplication?.status),{timeout:20_000}).toBe('analysis');
+  await relogin(page,'admin@oleiro.test','Admin123!','admin');const modal=await openVolunteerByStatus(page,'analysis','Voluntário E2E');
   await expect(modal.locator('.person-refactor-tabs button.active')).toContainText('Planejamento');
   await openPlanning(modal);
   const day=modal.locator('.planning-person-day[data-plan-date="2026-09-15"]');await ensureDayVisible(day);
@@ -71,7 +72,7 @@ test('Approved volunteer can add a new activity and Admin gets blue scoped info 
   await page.locator('#actName').fill('Nova atividade proposta E2E');await page.locator('#actDesc').fill('Proposta nova para análise');await page.locator('#actNotes').fill('Observação da proposta');await page.locator('#actPeriod').selectOption('Tarde');await page.locator('#modalRoot').getByRole('button',{name:/Enviar para análise/}).click();
   await expect.poll(()=>page.evaluate(()=>state.sessions.some(row=>row.activityName==='Nova atividade proposta E2E'&&row.postApprovalProposal===true&&row.reviewStatus==='analysis')),{timeout:20_000}).toBe(true);
 
-  await relogin(page,'admin@oleiro.test','Admin123!','admin');const modal=await openVolunteerByStatus(page,'approved','Aprovado E2E');await openPlanning(modal);const day=modal.locator('.planning-person-day[data-plan-date="2026-09-23"]');await ensureDayVisible(day);const review=day.locator('.admin-portal-activity-card').filter({hasText:'Nova atividade proposta E2E'});await expect(review).toHaveClass(/r31-card-info/);await expect(review).toContainText('Nova atividade');await expect(day.locator('.r31-day-signal.info')).toBeVisible();const info=review.locator('.r32-session-signal.info');await expect(info).toBeVisible();await info.click();await expect(page.locator('#r32SessionSignalPopover')).toHaveText('Nova atividade proposta pelo voluntário.');await expect(review.locator('.admin-session-manage-actions')).toHaveCount(0);
+  await relogin(page,'admin@oleiro.test','Admin123!','admin');const modal=await openVolunteerByStatus(page,'approved','Aprovado E2E');await openPlanning(modal);const day=modal.locator('.planning-person-day[data-plan-date="2026-09-23"]');await ensureDayVisible(day);const review=day.locator('.admin-portal-activity-card').filter({hasText:'Nova atividade proposta E2E'});await expect(review).toHaveClass(/r31-card-info/);await expect(review).toContainText('Nova atividade');await expect(day.locator('.r31-day-signal.info')).toBeVisible();await expect(review.locator('.r32-session-signal.info')).toHaveCount(0);await expect(review.locator('.admin-session-manage-actions')).toHaveCount(0);
   await expectDecisionMenu(review);
 });
 
@@ -83,6 +84,6 @@ test('Rodeio activity assistant is unit-scoped and has no candidate lifecycle co
 
   const person=list.locator('.list-item.clickable').filter({hasText:'Aprovado E2E'}).first();await person.click();const detail=page.locator('#app');await expect(detail.locator('.person-refactor-tabs button.active')).toContainText('Planejamento',{timeout:20_000});await expect(detail.getByRole('button',{name:/Conta$/})).toHaveCount(0);await expect(detail.getByRole('button',{name:/Histórico$/})).toHaveCount(0);await expect(detail.getByRole('button',{name:/Estadia/})).toHaveCount(0);await expect(detail.getByRole('button',{name:/Aprovar planejamento/})).toHaveCount(0);await expect(detail.getByRole('button',{name:/Limpar/})).toHaveCount(0);
 
-  await navAction(page,'Ocupação').click();await expect(page.locator('.r31-unit-tab')).toHaveCount(1);await expect(page.locator('.r31-unit-tab')).toHaveText('Rodeio');
-  await navAction(page,'Grupos').click();await expect(page.locator('.r31-assistant-unit-lock')).toContainText('Rodeio',{timeout:20_000});
+  await navAction(page,'Ocupação').click();const occupancyUnits=page.locator('.occupancy-v2-unit');await expect(occupancyUnits).toHaveCount(1,{timeout:20_000});await expect(occupancyUnits).toHaveText('Rodeio');
+  await navAction(page,'Grupos').click();const groupUnits=page.locator('.groups-unit-column');await expect(groupUnits).toHaveCount(1,{timeout:20_000});await expect(groupUnits).toContainText('Rodeio');await expect(page.getByText('Indaial',{exact:true})).toHaveCount(0);
 });
