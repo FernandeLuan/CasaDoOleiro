@@ -31,6 +31,10 @@ async function login(page,email,password,target,language='pt'){
   await page.locator('#password').fill(password);
   await page.locator('#loginButton').click();
   await expect(page).toHaveURL(new RegExp(`/${target}/`),{timeout:30_000});
+  await page.waitForFunction(targetName=>{
+    if(typeof window.render!=='function')return false;
+    return targetName==='portal'?typeof window.navigateVolunteer==='function':targetName==='admin'?typeof window.navigateManager==='function':true;
+  },target,{timeout:20_000});
 }
 
 const navAction=(page,label)=>page.getByRole('button',{name:new RegExp(`^.{0,3}${label}$`)});
