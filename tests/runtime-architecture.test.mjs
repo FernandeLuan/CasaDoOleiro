@@ -101,6 +101,12 @@ test('legacy plan_approved sessions stay editable during candidate analysis',()=
   assert.ok(review.includes("row.status==='plan_approved'&&!candidateWorkflowOpen"));
 });
 
+test('desktop volunteer sidebar is localized after dynamic insertion',()=>{
+  const shell=readFileSync('js/portal/desktop-shell.js','utf8');
+  assert.ok(shell.includes("const sidebar=app.querySelector(':scope > .portal-sidebar-desktop')"));
+  assert.ok(shell.includes("applyI18n(sidebar)"),'desktop sidebar inserted after render must receive the active locale');
+});
+
 test('submitted candidate uses autosync status instead of fake resend control',()=>{
   const planning=readFileSync('js/portal/planejamento.js','utf8');
   const i18n=readFileSync('js/shared/i18n-keyed.js','utf8');
