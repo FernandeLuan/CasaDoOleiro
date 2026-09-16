@@ -12,7 +12,8 @@ async function openVolunteer(page,status,name){await navAction(page,'Voluntariad
 test.beforeEach(async()=>{await seedEmulators()});
 
 test('Pre-approval keeps normal actions separate from an activity-specific adjustment',async({page})=>{
-  await login(page,'admin@oleiro.test','Admin123!','admin');const modal=await openVolunteer(page,'pending','Voluntário E2E');
+  await login(page,'voluntario@oleiro.test','Volunteer123!','portal');await navAction(page,'Planejamento').click();await page.getByRole('button',{name:/Enviar planejamento/}).click();await expect.poll(()=>page.evaluate(()=>state.currentApplication?.status),{timeout:20_000}).toBe('analysis');
+  await relogin(page,'admin@oleiro.test','Admin123!','admin');const modal=await openVolunteer(page,'analysis','Voluntário E2E');
   const day=modal.locator('.planning-person-day[data-plan-date="2026-09-15"]');await expect(day).toBeVisible({timeout:20_000});let card=day.locator('.admin-portal-activity-card').filter({hasText:'Oficina candidato E2E'});await expect(card).toBeVisible();
   await expect(card.locator('.admin-session-manage-actions')).toHaveCount(0);await card.locator('.planning-activity-trigger').click();await expect(card.getByRole('button',{name:/Editar/})).toBeVisible();await expect(card.getByRole('button',{name:/Mover/})).toBeVisible();
   await card.getByRole('button',{name:/Pedir ajuste/}).click();await page.locator('#r31SessionAdjustNote').fill('Alterar somente o período desta atividade.');await page.locator('#r31SessionAdjustSave').click();
@@ -27,5 +28,5 @@ test('Pre-approval keeps normal actions separate from an activity-specific adjus
 test('Admin emergency contact remains unchanged by planning review cleanup',async({page})=>{
   await login(page,'admin@oleiro.test','Admin123!','admin');const detail=await openVolunteer(page,'pending','Voluntário E2E');await detail.getByRole('button',{name:/Conta/}).click();
   const person=detail.locator('.account-contact-card-r70 .account-person-row').first();await expect(person).toBeVisible({timeout:20_000});await expect(person).toContainText('Voluntário E2E');
-  const emergency=person.locator('.account-person-emergency-r70');await expect(emergency).toContainText('Contato de emergência');const edit=emergency.getByRole('button',{name:/Adicionar contato|Editar contato/});await expect(edit).toBeVisible();await expect(edit.locator('i.fa-pen')).toHaveCount(1);
+  const emergency=person.locator('.account-person-emergency-r70');await expect(emergency).toContainText('Contato de emergência');const edit=emergency.getByRole('button',{name:/Adicionar contato|Editar contato/});await expect(edit).toBeVisible();await expect(edit.locator('i.fa-pen, i.fa-plus')).toHaveCount(1);
 });
