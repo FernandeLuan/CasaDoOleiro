@@ -103,8 +103,14 @@ test('legacy plan_approved sessions stay editable during candidate analysis',()=
 
 test('desktop volunteer sidebar is localized after dynamic insertion',()=>{
   const shell=readFileSync('js/portal/desktop-shell.js','utf8');
+  const i18n=readFileSync('js/shared/i18n-keyed.js','utf8');
+  assert.ok(shell.includes("const navText=(key,fallback)=>typeof t==='function'?t(key):fallback"));
+  assert.ok(shell.includes("navText('portal.nav.profile','Perfil')"));
+  assert.ok(shell.includes("navText('portal.nav.stay','Estadia')"));
   assert.ok(shell.includes("const sidebar=app.querySelector(':scope > .portal-sidebar-desktop')"));
   assert.ok(shell.includes("applyI18n(sidebar)"),'desktop sidebar inserted after render must receive the active locale');
+  assert.ok(i18n.includes("'portal.nav.profile':'Profile'"));
+  assert.ok(i18n.includes("'portal.nav.stay':'Stay'"));
 });
 
 test('submitted candidate uses autosync status instead of fake resend control',()=>{
