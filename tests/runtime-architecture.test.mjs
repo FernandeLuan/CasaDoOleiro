@@ -101,6 +101,13 @@ test('legacy plan_approved sessions stay editable during candidate analysis',()=
   assert.ok(review.includes("row.status==='plan_approved'&&!candidateWorkflowOpen"));
 });
 
+test('planning day cache signature includes review-state fields',()=>{
+  const agenda=readFileSync('js/admin/planning-person-agenda.js','utf8');
+  for(const field of ['adminAdjustmentStatus','adminAdjustmentNote','adminAdjustmentRequestedAt','adminAdjustmentSubmittedAt','_r32AdjustmentReady','changeReviewStatus','changeProposal']){
+    assert.ok(agenda.includes(`s?.${field}`),`day signature must include ${field}`);
+  }
+});
+
 test('desktop volunteer sidebar is localized after dynamic insertion',()=>{
   const shell=readFileSync('js/portal/desktop-shell.js','utf8');
   const i18n=readFileSync('js/shared/i18n-keyed.js','utf8');
