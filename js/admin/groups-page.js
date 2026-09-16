@@ -74,9 +74,10 @@
   }
 
   function units(){
-    const rows=Array.isArray(state.units)?state.units:[];
+    const rows=Array.isArray(state.units)?state.units:[],scoped=window.OleiroServices?.accessScope?.isActivityAssistant?.()===true?String(window.OleiroServices.accessScope.unitId?.()||'').toLowerCase():'';
+    const visible=scoped?rows.filter(row=>String(row?.id||'').toLowerCase()===scoped):rows;
     const preferred=['rodeio','indaial'];
-    return [...rows].sort((a,b)=>{
+    return [...visible].sort((a,b)=>{
       const ai=preferred.indexOf(String(a.id||'').toLowerCase()),bi=preferred.indexOf(String(b.id||'').toLowerCase());
       if(ai>=0||bi>=0)return (ai<0?99:ai)-(bi<0?99:bi);
       return String(a.name||a.id).localeCompare(String(b.name||b.id),'pt-BR');
