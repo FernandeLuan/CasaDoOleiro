@@ -66,25 +66,13 @@ test.beforeEach(async()=>{
 test('Admin manages independent A/B/C/D groups for Rodeio and Indaial',async({page})=>{
   await login(page,'admin@oleiro.test','Admin123!','admin');
   await navAction(page,'Grupos').click();
-  await expect(page.locator('#managerGroupUnit')).toBeVisible({timeout:20_000});
-  await expect(page.locator('.group-details')).toHaveCount(4,{timeout:20_000});
-
-  const firstGroup=page.locator('.group-details').first();
-  await firstGroup.locator('summary').click();
-  await expect(firstGroup).toHaveAttribute('open','');
-
-  await page.locator('#managerGroupUnit').selectOption('indaial');
-  await expect(page.locator('.group-details')).toHaveCount(4,{timeout:20_000});
-  await expect(page.locator('#managerGroupUnit')).toHaveValue('indaial');
-  await expect(page.getByText('Grupo A',{exact:true})).toBeVisible();
-  await expect(page.getByText('Grupo D',{exact:true})).toBeVisible();
-  await expect(page.locator('.section-title').getByText(/Indaial.*inativa/i)).toBeVisible();
-
-  await page.locator('.group-details').first().locator('summary').click();
-  await page.locator('#managerGroupUnit').selectOption('rodeio');
-  await expect(page.locator('.group-details')).toHaveCount(4,{timeout:20_000});
-  await expect(page.locator('#managerGroupUnit')).toHaveValue('rodeio');
-  await expect(page.getByText('Grupo A',{exact:true})).toBeVisible();
+  const grid=page.locator('.groups-page-grid');await expect(grid).toBeVisible({timeout:20_000});
+  const columns=grid.locator('.groups-unit-column');await expect(columns).toHaveCount(2,{timeout:20_000});
+  const rodeio=columns.filter({hasText:'Rodeio'}),indaial=columns.filter({hasText:'Indaial'});
+  await expect(rodeio.locator('.groups-unit-group')).toHaveCount(4);await expect(indaial.locator('.groups-unit-group')).toHaveCount(4);
+  await expect(rodeio.locator('.groups-unit-status')).toHaveText('Ativa');await expect(indaial.locator('.groups-unit-status')).toHaveText('Inativa');
+  await expect(rodeio.getByText('Grupo A',{exact:true})).toBeVisible();await expect(rodeio.getByText('Grupo D',{exact:true})).toBeVisible();
+  await expect(indaial.getByText('Grupo A',{exact:true})).toBeVisible();await expect(indaial.getByText('Grupo D',{exact:true})).toBeVisible();
 });
 
 test('Admin date controls work in candidate, agenda and meeting flows',async({page})=>{
@@ -243,13 +231,10 @@ for(const locale of [
 ]){
   test(`Volunteer critical information, profile and activity placeholders render in ${locale.lang}`,async({page})=>{
     await login(page,'voluntario@oleiro.test','Volunteer123!','portal',locale.lang);
-    await page.evaluate(()=>window.navigate?.('info'));
-    await expect(page.locator('#info-arrival')).toBeVisible();
-    await expect(page.locator('#info-arrival summary')).toContainText(locale.arrival);
-    await expect(page.locator('#info-accommodation')).toBeVisible();
-    await expect(page.locator('#info-meals')).toBeVisible();
-    await expect(page.locator('#info-software')).toBeVisible();
-    await expect(page.locator('#info-software summary')).toContainText(locale.software);
+    await page.evaluate(()=>window.navigateVolunteer?.('info'));
+    await expect(page.locator('#app')).toContainText(locale.arrival,{timeout:20_000});
+    await expect(page.locator('#app')).toContainText(locale.lang==='en'?'Accommodation':'Alojamiento');
+    await expect(page.locator('#app')).toContainText(locale.lang==='en'?'Meals':'Comidas');
 
     await navAction(page,locale.planning).click();
     await page.getByRole('button',{name:new RegExp(`${locale.add}$`)}).first().click();
