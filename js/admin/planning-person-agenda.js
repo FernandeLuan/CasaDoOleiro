@@ -38,7 +38,8 @@
       String(s?.activityDescription||activity.description||''),Number(s?.duration||activity.duration)||0,
       String(s?.materials||activity.materials||''),String(s?.notes||activity.notes||''),
       iso(s?.date),sessionPeriod(s),String(s?.groupId||activity.groupId||''),String(s?.participation||activity.participation||''),
-      String(s?.status||''),String(s?.reviewStatus||''),String(s?.changeReviewStatus||''),s?.postApprovalProposal===true?'1':'0',
+      String(s?.status||''),String(s?.reviewStatus||''),String(s?.reviewNote||''),String(s?.changeReviewStatus||''),String(s?.changeNote||''),JSON.stringify(s?.changeProposal||null),s?.postApprovalProposal===true?'1':'0',
+      String(s?.adminAdjustmentStatus||''),String(s?.adminAdjustmentNote||''),stableTime(s?.adminAdjustmentRequestedAt),stableTime(s?.adminAdjustmentSubmittedAt),s?._r32AdjustmentReady===true?'1':'0',
       String(s?.feedback||''),s?.feedbackInternal===true?'1':'0',String(s?.feedbackAuthorName||''),stableTime(s?.feedbackUpdatedAt),
       stableTime(s?.updatedAt),stableTime(s?.confirmedAt)
     ]);

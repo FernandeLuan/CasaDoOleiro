@@ -13,12 +13,12 @@
       .planning-detail-page .account-overview-r70{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(340px,.88fr);gap:18px;align-items:start}
       .planning-detail-page .account-side-r70{display:grid;gap:14px;align-content:start}
       .planning-detail-page .account-contact-card-r70{display:grid;gap:0!important;padding:0!important;overflow:hidden}
-      .planning-detail-page .account-contact-card-r70>.account-person-row{display:block!important;width:100%!important;padding:14px!important;margin:0!important;border:0!important;text-align:left!important}
-      .planning-detail-page .account-contact-card-r70>.account-person-row+.account-person-row{border-top:1px solid var(--border)!important}
-      .planning-detail-page .account-contact-card-r70>.account-person-row>.avatar,
+      .planning-detail-page .account-contact-card-r70 .account-person-row{display:block!important;width:100%!important;padding:14px!important;margin:0!important;border:0!important;text-align:left!important}
+      .planning-detail-page .account-contact-card-r70 .account-person-row+.account-person-row{border-top:1px solid var(--border)!important}
+      .planning-detail-page .account-contact-card-r70 .account-person-row>.avatar,
       .planning-detail-page .account-emergency-card .avatar,
       .planning-detail-page .emergency-person-row>.avatar{display:none!important}
-      .planning-detail-page .account-contact-card-r70>.account-person-row>div:last-child{display:grid!important;width:100%!important;min-width:0;gap:3px;margin:0!important;padding:0!important;justify-items:start!important;text-align:left!important}
+      .planning-detail-page .account-contact-card-r70 .account-person-row>div:last-child{display:grid!important;width:100%!important;min-width:0;gap:3px;margin:0!important;padding:0!important;justify-items:start!important;text-align:left!important}
       .planning-detail-page .account-person-sections-r70{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,.72fr);gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);width:100%;text-align:left}
       .planning-detail-page .account-person-section-r70{min-width:0;display:grid;gap:4px;align-content:start;justify-items:start;text-align:left}
       .planning-detail-page .account-person-section-head-r70{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:26px;width:100%;text-align:left}
@@ -40,7 +40,7 @@
       @media(max-width:720px){
         .planning-detail-page .account-person-sections-r70{grid-template-columns:1fr}
         .planning-detail-page .account-side-r70{grid-template-columns:1fr}
-        .planning-detail-page .account-contact-card-r70>.account-person-row{padding:14px!important}
+        .planning-detail-page .account-contact-card-r70 .account-person-row{padding:14px!important}
         .account-unit-segment button{min-height:42px;font-size:.72rem}
       }
     `;document.head.appendChild(style);
@@ -53,9 +53,9 @@
     if(typeof state==='undefined'||state.managerPage!=='planning'||String(state.managerPlanningTab||'')!=='account')return;
     const root=document.querySelector('.planning-detail-page'),account=root?.querySelector('.admin-account-refactor');if(!account||account.classList.contains('account-consolidated-r70'))return;
     const contactCard=account.querySelector('.account-contact-card'),emergencyCard=account.querySelector('.account-emergency-card'),accessCard=account.querySelector('.account-access-card'),stayCard=account.querySelector('.account-stay-card'),registrationCard=account.querySelector('.account-registration-card');if(!contactCard)return;
-    const contactRows=[...contactCard.querySelectorAll(':scope > .account-person-row')],emergencyRows=emergencyCard?[...emergencyCard.querySelectorAll('.emergency-person-row')]:[],accessRows=accessCard?[...accessCard.querySelectorAll('.account-access-row')]:[];
+    const contactRows=[...contactCard.querySelectorAll('.account-person-row')],emergencyRows=emergencyCard?[...emergencyCard.querySelectorAll('.emergency-person-row')]:[],accessRows=accessCard?[...accessCard.querySelectorAll('.account-access-row')]:[];
     contactCard.classList.add('account-contact-card-r70');
-    contactRows.forEach((row,index)=>{if(row.querySelector('.account-person-sections-r70'))return;const detail=row.querySelector(':scope > div:last-child');if(!detail)return;const emergency=emergencyContent(emergencyRows[index]),access=accessStatus(accessRows[index]),sections=document.createElement('div');sections.className='account-person-sections-r70';sections.innerHTML=`<section class="account-person-section-r70 account-person-emergency-r70"><div class="account-person-section-head-r70"><span>Contato de emergência</span></div><div class="account-person-emergency-body-r70">${emergency.html}</div></section><section class="account-person-section-r70 account-person-access-r70"><div class="account-person-section-head-r70"><span>Acesso ao portal</span></div><div class="account-access-status-r70"><i class="fa-solid ${access.done?'fa-circle-check':'fa-clock'}"></i><span>${escapeHtml(access.text)}</span></div></section>`;if(emergency.button)sections.querySelector('.account-person-emergency-r70 .account-person-section-head-r70')?.appendChild(emergency.button);detail.appendChild(sections)});
+    contactRows.forEach((row,index)=>{if(row.querySelector('.account-person-sections-r70'))return;let detail=row.querySelector(':scope > div:last-child');if(!detail){detail=document.createElement('div');detail.className='account-person-detail-r70';row.appendChild(detail)}const emergency=emergencyContent(emergencyRows[index]),access=accessStatus(accessRows[index]),sections=document.createElement('div');sections.className='account-person-sections-r70';sections.innerHTML=`<section class="account-person-section-r70 account-person-emergency-r70"><div class="account-person-section-head-r70"><span>Contato de emergência</span></div><div class="account-person-emergency-body-r70">${emergency.html}</div></section><section class="account-person-section-r70 account-person-access-r70"><div class="account-person-section-head-r70"><span>Acesso ao portal</span></div><div class="account-access-status-r70"><i class="fa-solid ${access.done?'fa-circle-check':'fa-clock'}"></i><span>${escapeHtml(access.text)}</span></div></section>`;if(emergency.button)sections.querySelector('.account-person-emergency-r70 .account-person-section-head-r70')?.appendChild(emergency.button);detail.appendChild(sections)});
     emergencyCard?.remove();accessCard?.remove();
     const statusLine=account.querySelector(':scope > .account-status-line'),overview=document.createElement('div');overview.className='account-overview-r70';const side=document.createElement('div');side.className='account-side-r70';const insertBefore=statusLine?.nextSibling||account.firstChild;account.insertBefore(overview,insertBefore);overview.appendChild(contactCard);overview.appendChild(side);if(stayCard)side.appendChild(stayCard);if(registrationCard)side.appendChild(registrationCard);account.classList.add('account-consolidated-r70');
   }

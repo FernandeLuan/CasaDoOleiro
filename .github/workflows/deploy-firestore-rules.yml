@@ -1,0 +1,50 @@
+name: Deploy Firestore rules
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - firestore.rules
+      - .github/workflows/deploy-firestore-rules.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: firestore-rules-production
+  cancel-in-progress: false
+
+jobs:
+  validate-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install test dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Validate candidate planning permissions in emulators
+        run: npx firebase emulators:exec --only auth,firestore --project demo-casadooleiro "npx playwright test tests/e2e/legacy-planning-permissions.spec.js --project=chromium"
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: casadooleiro-35c4e
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: github-homologacao@casadooleiro-35c4e.iam.gserviceaccount.com
+
+      - name: Deploy Firestore rules only
+        run: npx firebase deploy --only firestore:rules --project casadooleiro-35c4e --non-interactive

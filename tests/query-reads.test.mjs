@@ -53,3 +53,17 @@ test('emergency-only updates do not create an incomplete cached profile',async()
   const profiles=s.services.profiles.getByIds(['u']);await tick();assert.equal(s.reads.length,1);
   resolve(s.pending[0],{phone:'456'});assert.equal((await profiles)[0].phone,'456');
 });
+
+test('identical simultaneous queries share reads, but refreshes, failures and users do not',async()=>{
+  const s=setup();let reads=0,resolveQuery;
+  const read=()=>{reads++;return new Promise(resolve=>{resolveQuery=resolve})};
+  const a=s.services.shareQuery(s.context,'same',read),b=s.services.shareQuery(s.context,'same',read);
+  await tick();assert.equal(reads,1);resolveQuery(['fresh']);assert.equal(await a,await b);
+  const c=s.services.shareQuery(s.context,'same',read);await tick();assert.equal(reads,2);resolveQuery(['new']);await c;
+  await assert.rejects(s.services.shareQuery(s.context,'same',()=>Promise.reject(new Error('denied'))),/denied/);
+  assert.equal(await s.services.shareQuery(s.context,'same',()=>42),42);
+  const old=s.services.shareQuery(s.context,'same',read);await tick();const oldResolve=resolveQuery;
+  s.context.auth.currentUser={uid:'other'};
+  const current=s.services.shareQuery(s.context,'same',read);await tick();assert.equal(reads,4);
+  oldResolve(['old']);resolveQuery(['current']);assert.notEqual(await old,await current);
+});

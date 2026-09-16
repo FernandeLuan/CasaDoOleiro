@@ -4,7 +4,6 @@
   const baseAgendaContent=window.volunteerAgendaContent||volunteerAgendaContent;
   const baseSaveAdjustment=window.saveR31VolunteerSessionEditor;
   const baseSubmitPlan=window.submitPlan||submitPlan;
-  const baseOpenActivityModal=window.openActivityModal||openActivityModal;
   const baseOpenR31VolunteerSessionEditor=window.openR31VolunteerSessionEditor;
   const planning=window.OleiroServices?.planning;
   const basePlanningSaveActivity=planning?.saveActivity?.bind(planning);
@@ -21,16 +20,12 @@
     if(!args?.data)return args;const {time:_legacyTime,...data}=args.data;return {...args,data:{...data,period:activityPeriodValue(data)}};
   }
   function adjustmentReady(value){
-    const row=rawSession(value);if(row.status==='plan_approved'||row.adminAdjustmentStatus!=='requested')return false;if(row._r32AdjustmentReady===true)return true;const requested=timeMs(row.adminAdjustmentRequestedAt),updated=timeMs(row.updatedAt);return requested>0&&updated>requested;
+    const row=rawSession(value);if(row.adminAdjustmentStatus!=='requested')return false;if(row._r32AdjustmentReady===true)return true;const requested=timeMs(row.adminAdjustmentRequestedAt),updated=timeMs(row.updatedAt);return requested>0&&updated>requested;
   }
   window.isR32AdjustmentReady=adjustmentReady;
 
   if(basePlanningSaveActivity)planning.saveActivity=function(args={}){return basePlanningSaveActivity(normalizeActivityArgs(args))};
   if(baseCreateActivitySeries)planning.createActivitySeries=function(args={}){return baseCreateActivitySeries(normalizeActivityArgs(args))};
-
-  openActivityModal=function(date=null,id=null){
-    return baseOpenActivityModal(date,id);
-  };
 
   if(typeof baseOpenR31VolunteerSessionEditor==='function')window.openR31VolunteerSessionEditor=function(encodedId){
     const id=decodeURIComponent(String(encodedId||'')),row=(state.sessions||[]).find(item=>String(item.id||item.sessionId)===id);
@@ -68,9 +63,9 @@
   volunteerAgendaContent=function(editable=false){
     const html=baseAgendaContent(editable),template=document.createElement('template');template.innerHTML=html;
     [...template.content.querySelectorAll('.day-block[id^="vday-"]')].forEach(day=>{
-      const date=day.id.slice(5),sessions=(typeof getSessions==='function'?getSessions(date,true):[]).map(rawSession),sessionAdjustments=sessions.filter(row=>row.status!=='plan_approved'&&(row.adminAdjustmentStatus==='requested'||row.adminAdjustmentStatus==='analysis'));
+      const date=day.id.slice(5),sessions=(typeof getSessions==='function'?getSessions(date,true):[]).map(rawSession),sessionAdjustments=sessions.filter(row=>row.adminAdjustmentStatus==='requested'||row.adminAdjustmentStatus==='analysis');
       day.querySelectorAll('.day-info-button').forEach(button=>button.remove());const heading=day.querySelector('.day-title>div:first-child');if(!heading)return;heading.querySelectorAll('.r32-day-state-badge').forEach(node=>node.remove());heading.querySelectorAll('.badge.warning').forEach(node=>node.remove());if(!sessionAdjustments.length)return;
-      const pending=sessions.filter(row=>row.status!=='plan_approved'&&row.adminAdjustmentStatus==='requested'&&!adjustmentReady(row)),ready=sessions.filter(row=>row.status!=='plan_approved'&&row.adminAdjustmentStatus==='requested'&&adjustmentReady(row)),sent=sessions.filter(row=>row.status!=='plan_approved'&&row.adminAdjustmentStatus==='analysis');let label='',tone='';
+      const pending=sessions.filter(row=>row.adminAdjustmentStatus==='requested'&&!adjustmentReady(row)),ready=sessions.filter(row=>row.adminAdjustmentStatus==='requested'&&adjustmentReady(row)),sent=sessions.filter(row=>row.adminAdjustmentStatus==='analysis');let label='',tone='';
       if(pending.length){label=text('portal.plan.adjust');tone='warning'}else if(ready.length){label=text('review.adjusted');tone='success'}else if(sent.length){label=text('review.sent');tone='success'}
       if(label)heading.insertAdjacentHTML('beforeend',`<span class="badge ${tone} r32-day-state-badge">${escapeHtml(label)}</span>`);
     });
@@ -80,11 +75,11 @@
   if(typeof baseSaveAdjustment==='function')window.saveR31VolunteerSessionEditor=async function(encodedId){
     const id=decodeURIComponent(String(encodedId||'')),row=(state.sessions||[]).find(item=>String(item.id||item.sessionId)===id);
     if(row?.postApprovalProposal===true&&row?.reviewStatus==='adjustments'&&row?.activityId){closeModal();return openActivityModal(row.date,String(row.activityId))}
-    const candidateAdjustment=state.volunteerMode!=='approved'&&row?.adminAdjustmentStatus==='requested';await baseSaveAdjustment(encodedId);if(candidateAdjustment&&!document.getElementById('r31VolunteerAdjustSave')){row._r32AdjustmentReady=true;row._r32AdjustedAt=Date.now();render()}
+    const candidateAdjustment=state.volunteerMode!=='approved'&&row?.adminAdjustmentStatus==='requested';await baseSaveAdjustment(encodedId);const saveButton=document.getElementById('r31VolunteerAdjustSave');if(candidateAdjustment&&(!saveButton||saveButton.disabled)){row._r32AdjustmentReady=true;row._r32AdjustedAt=Date.now();render()}
   };
 
   submitPlan=async function(){
-    const pending=(state.sessions||[]).filter(row=>row.adminAdjustmentStatus==='requested'&&row.status!=='plan_approved');if(pending.some(row=>!adjustmentReady(row)))return showToast(text('review.adjustBeforeResend'));return baseSubmitPlan();
+    const pending=(state.sessions||[]).filter(row=>row.adminAdjustmentStatus==='requested');if(pending.some(row=>!adjustmentReady(row)))return showToast(text('review.adjustBeforeResend'));return baseSubmitPlan();
   };
 
   /* Round 33 — one authoritative post-approval path, including legacy manager_confirmed sessions. */

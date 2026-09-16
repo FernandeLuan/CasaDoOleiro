@@ -149,33 +149,34 @@
     const active=String(state.volunteerPage||'home')===page;
     return `<button class="portal-sidebar-item ${active?'active':''}" type="button" onclick="navigateVolunteer('${page}')"><i class="fa-solid ${icon}"></i><span>${label}</span></button>`;
   }
+  const navText=(key,fallback)=>typeof t==='function'?t(key):fallback;
 
   function sidebarHtml(){
     const approved=String(state.volunteerMode||'candidate')==='approved';
-    const roleLabel=approved?'Voluntário':'Candidato';
-    const planItem=approved?sidebarItem('agenda','fa-calendar-check','Agenda'):sidebarItem('plan','fa-calendar-plus','Planejamento');
+    const roleLabel=approved?navText('portal.nav.volunteer','Voluntário'):navText('portal.nav.candidate','Candidato');
+    const planItem=approved?sidebarItem('agenda','fa-calendar-check',navText('portal.nav.agenda','Agenda')):sidebarItem('plan','fa-calendar-plus',navText('portal.nav.planning','Planejamento'));
     const language=typeof currentLanguageCode==='function'?currentLanguageCode():'PT';
     const dark=String(state.theme||'light')==='dark';
-    return `<aside class="portal-sidebar-desktop" aria-label="Navegação do ${roleLabel.toLowerCase()}">
-      <button class="portal-sidebar-brand" type="button" onclick="navigateVolunteer('home')" aria-label="Ir para o início">
+    return `<aside class="portal-sidebar-desktop" aria-label="${roleLabel}">
+      <button class="portal-sidebar-brand" type="button" onclick="navigateVolunteer('home')" aria-label="${navText('portal.nav.home','Início')}">
         <span class="portal-sidebar-brand-mark"><i class="fa-solid fa-seedling"></i></span>
         <span class="portal-sidebar-brand-copy"><strong>Casa do Oleiro</strong><small>${roleLabel}</small></span>
       </button>
       <nav class="portal-sidebar-nav">
-        ${sidebarItem('home','fa-house','Início')}
+        ${sidebarItem('home','fa-house',navText('portal.nav.home','Início'))}
         ${planItem}
-        ${sidebarItem('stay','fa-location-dot','Estadia')}
-        ${sidebarItem('info','fa-circle-info','Informações')}
-        ${sidebarItem('profile','fa-user','Perfil')}
+        ${sidebarItem('stay','fa-location-dot',navText('portal.nav.stay','Estadia'))}
+        ${sidebarItem('info','fa-circle-info',navText('portal.nav.info','Informações'))}
+        ${sidebarItem('profile','fa-user',navText('portal.nav.profile','Perfil'))}
       </nav>
       <div class="portal-sidebar-spacer"></div>
       <div class="portal-sidebar-tools">
-        <button class="portal-sidebar-item" type="button" onclick="openLanguageModal()"><i class="fa-solid fa-language"></i><span>Idioma · ${language}</span></button>
-        <button class="portal-sidebar-item" type="button" onclick="toggleTheme()"><i class="fa-solid ${dark?'fa-sun':'fa-moon'}"></i><span>${dark?'Tema claro':'Tema escuro'}</span></button>
+        <button class="portal-sidebar-item" type="button" onclick="openLanguageModal()"><i class="fa-solid fa-language"></i><span>${navText('portal.nav.language','Idioma')} · ${language}</span></button>
+        <button class="portal-sidebar-item" type="button" onclick="toggleTheme()"><i class="fa-solid ${dark?'fa-sun':'fa-moon'}"></i><span>${dark?navText('portal.nav.themeLight','Tema claro'):navText('portal.nav.themeDark','Tema escuro')}</span></button>
       </div>
       <div class="portal-sidebar-account">
-        <button class="portal-sidebar-item" type="button" onclick="navigateVolunteer('profile')"><i class="fa-solid fa-user"></i><span>Meu perfil</span></button>
-        <button class="portal-sidebar-item" type="button" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i><span>Sair</span></button>
+        <button class="portal-sidebar-item" type="button" onclick="navigateVolunteer('profile')"><i class="fa-solid fa-user"></i><span>${navText('portal.nav.myProfile','Meu perfil')}</span></button>
+        <button class="portal-sidebar-item" type="button" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i><span>${navText('portal.nav.signout','Sair')}</span></button>
       </div>
     </aside>`;
   }
@@ -190,6 +191,8 @@
     app.classList.add('portal-desktop-root');
     app.querySelector(':scope > .portal-sidebar-desktop')?.remove();
     app.insertAdjacentHTML('afterbegin',sidebarHtml());
+    const sidebar=app.querySelector(':scope > .portal-sidebar-desktop');
+    if(sidebar&&typeof applyI18n==='function')applyI18n(sidebar);
   }
 
   installStyles();

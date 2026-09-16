@@ -54,12 +54,15 @@ test('admin shell delegates planning page ownership',()=>{
   assert.ok(!shell.includes('function planningDetailHtml('),'Admin shell must not duplicate planning page markup');
 });
 
-test('analysis and adjustments expose canonical planning approval',()=>{
+test('analysis and adjustments expose one canonical planning approval confirmation',()=>{
   const planning=readFileSync('js/admin/planning-page.js','utf8');
+  const selection=readFileSync('js/admin/selection-flow.js','utf8');
   assert.ok(planning.includes("['analysis','adjustments'].includes(status)"));
   assert.ok(planning.includes('requestApprovePlanning'));
-  assert.ok(planning.includes('approvePlanningConfirmR25'));
-  assert.ok(planning.includes('approveCandidate('));
+  assert.ok(planning.includes('return approveCandidate(id)'));
+  assert.ok(!planning.includes('approvePlanningConfirmR25'),'planning page must not create a second approval confirmation');
+  assert.ok(selection.includes('approvePlanningConfirmR25'),'selection flow owns the single approval confirmation');
+  assert.ok(selection.includes('confirmApprovePlanningR25'));
   assert.ok(planning.includes(".admin-plan-review-footer,.planning-admin-footer"),'legacy footer stays stripped only after approval is migrated');
 });
 
@@ -98,6 +101,25 @@ test('legacy plan_approved sessions stay editable during candidate analysis',()=
   assert.ok(review.includes("row.status==='plan_approved'&&!candidateWorkflowOpen"));
 });
 
+test('planning day cache signature includes review-state fields',()=>{
+  const agenda=readFileSync('js/admin/planning-person-agenda.js','utf8');
+  for(const field of ['adminAdjustmentStatus','adminAdjustmentNote','adminAdjustmentRequestedAt','adminAdjustmentSubmittedAt','_r32AdjustmentReady','changeReviewStatus','changeProposal']){
+    assert.ok(agenda.includes(`s?.${field}`),`day signature must include ${field}`);
+  }
+});
+
+test('desktop volunteer sidebar is localized after dynamic insertion',()=>{
+  const shell=readFileSync('js/portal/desktop-shell.js','utf8');
+  const i18n=readFileSync('js/shared/i18n-keyed.js','utf8');
+  assert.ok(shell.includes("const navText=(key,fallback)=>typeof t==='function'?t(key):fallback"));
+  assert.ok(shell.includes("navText('portal.nav.profile','Perfil')"));
+  assert.ok(shell.includes("navText('portal.nav.stay','Estadia')"));
+  assert.ok(shell.includes("const sidebar=app.querySelector(':scope > .portal-sidebar-desktop')"));
+  assert.ok(shell.includes("applyI18n(sidebar)"),'desktop sidebar inserted after render must receive the active locale');
+  assert.ok(i18n.includes("'portal.nav.profile':'Profile'"));
+  assert.ok(i18n.includes("'portal.nav.stay':'Stay'"));
+});
+
 test('submitted candidate uses autosync status instead of fake resend control',()=>{
   const planning=readFileSync('js/portal/planejamento.js','utf8');
   const i18n=readFileSync('js/shared/i18n-keyed.js','utf8');
@@ -112,4 +134,13 @@ test('all local script references exist',()=>{
   for(const htmlPath of ['portal/index.html','admin/index.html']){
     for(const path of localScripts(htmlPath))assert.ok(existsSync(path),`${htmlPath} references missing script ${path}`);
   }
+});
+
+
+test('production keeps Firestore rules deployment behind emulator validation',()=>{
+  const workflow=readFileSync('.github/workflows/deploy-firestore-rules.yml','utf8');
+  assert.ok(workflow.includes('legacy-planning-permissions.spec.js'),'rules deploy must run the permission regression first');
+  assert.ok(workflow.includes('google-github-actions/auth@v3'),'rules deploy must use short-lived Google credentials');
+  assert.ok(workflow.includes('--only firestore:rules'),'production workflow must deploy Firestore rules explicitly');
+  assert.ok(!workflow.includes('FIREBASE_TOKEN'),'production rules deploy must not depend on a long-lived Firebase token');
 });

@@ -114,7 +114,7 @@
 
       /* Desktop: o avatar foi removido; não reservar a antiga coluna de 44px. */
       @media(min-width:901px){
-        .planning-detail-page .account-contact-card-r70>.account-person-row.account-person-inline-r71{
+        .planning-detail-page .account-contact-card-r70 .account-person-row.account-person-inline-r71{
           grid-template-columns:minmax(0,1fr) minmax(210px,.72fr)!important;
           gap:14px 18px!important;
           padding:14px!important;
@@ -142,7 +142,7 @@
 
       /* No mobile não sobra coluna do avatar removido: conteúdo começa no mesmo eixo de Período. */
       @media(max-width:900px){
-        .planning-detail-page .account-contact-card-r70>.account-person-row.account-person-inline-r71{
+        .planning-detail-page .account-contact-card-r70 .account-person-row.account-person-inline-r71{
           grid-template-columns:minmax(0,1fr)!important;
           gap:0!important;
           padding:14px!important;

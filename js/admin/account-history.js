@@ -30,7 +30,7 @@
         body.modal-open .admin-content-r62{overflow:hidden!important}
       }
 
-      .planning-detail-page .account-contact-card-r70>.account-person-row.account-person-inline-r71{
+      .planning-detail-page .account-contact-card-r70 .account-person-row.account-person-inline-r71{
         display:grid!important;
         grid-template-columns:44px minmax(0,1fr) minmax(210px,.72fr)!important;
         gap:14px 18px!important;
@@ -81,7 +81,7 @@
       .planning-history-r71-state{min-height:150px;display:grid;place-items:center;color:var(--muted);font-size:.72rem}
 
       @media(max-width:900px){
-        .planning-detail-page .account-contact-card-r70>.account-person-row.account-person-inline-r71{
+        .planning-detail-page .account-contact-card-r70 .account-person-row.account-person-inline-r71{
           grid-template-columns:44px minmax(0,1fr)!important;
         }
         .planning-detail-page .account-person-inline-r71>.account-person-emergency-inline-r71{
@@ -211,7 +211,7 @@
   function postProcessAccount(){
     if(typeof state==='undefined'||state.managerPage!=='planning'||state.managerPlanningTab!=='account')return;
     const root=document.querySelector('.planning-detail-page .account-contact-card-r70');if(!root)return;
-    [...root.querySelectorAll(':scope > .account-person-row')].forEach(row=>{
+    [...root.querySelectorAll('.account-person-row')].forEach(row=>{
       if(row.classList.contains('account-person-inline-r71'))return;
       const detail=row.querySelector(':scope > div:last-child');
       const sections=detail?.querySelector('.account-person-sections-r70');

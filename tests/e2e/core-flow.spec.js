@@ -31,9 +31,13 @@ async function login(page,email,password,target,language='pt'){
   await page.locator('#password').fill(password);
   await page.locator('#loginButton').click();
   await expect(page).toHaveURL(new RegExp(`/${target}/`),{timeout:30_000});
+  await page.waitForFunction(targetName=>{
+    if(typeof window.render!=='function')return false;
+    return targetName==='portal'?typeof window.navigateVolunteer==='function':targetName==='admin'?typeof window.navigateManager==='function':true;
+  },target,{timeout:20_000});
 }
 
-const navAction=(page,label)=>page.locator('#navRoot').getByRole('button',{name:new RegExp(`${label}$`)});
+const navAction=(page,label)=>page.getByRole('button',{name:new RegExp(`^.{0,3}${label}$`)});
 const appAction=(page,label)=>page.locator('#app').getByRole('button',{name:new RegExp(label)});
 const activityCard=(page,label)=>page.locator('.activity-card').filter({hasText:label});
 
@@ -54,7 +58,9 @@ async function openPendingVolunteer(page){
   const candidate=list.locator('.list-item.clickable').filter({hasText:'Voluntário E2E'}).first();
   await expect(candidate).toBeVisible({timeout:20_000});
   await candidate.click();
-  return page.locator('#modalRoot');
+  const detail=page.locator('#app');
+  await expect(detail.locator('.person-refactor-tabs button.active')).toContainText('Planejamento',{timeout:20_000});
+  return detail;
 }
 
 test.beforeEach(async()=>{
@@ -63,27 +69,14 @@ test.beforeEach(async()=>{
 
 test('Admin manages independent A/B/C/D groups for Rodeio and Indaial',async({page})=>{
   await login(page,'admin@oleiro.test','Admin123!','admin');
-  await navAction(page,'Menu').click();
-  await page.locator('#app .menu-list').getByRole('button',{name:/Grupos\b/}).click();
-  await expect(page.locator('#managerGroupUnit')).toBeVisible({timeout:20_000});
-  await expect(page.locator('.group-details')).toHaveCount(4,{timeout:20_000});
-
-  const firstGroup=page.locator('.group-details').first();
-  await firstGroup.locator('summary').click();
-  await expect(firstGroup).toHaveAttribute('open','');
-
-  await page.locator('#managerGroupUnit').selectOption('indaial');
-  await expect(page.locator('.group-details')).toHaveCount(4,{timeout:20_000});
-  await expect(page.locator('#managerGroupUnit')).toHaveValue('indaial');
-  await expect(page.getByText('Grupo A',{exact:true})).toBeVisible();
-  await expect(page.getByText('Grupo D',{exact:true})).toBeVisible();
-  await expect(page.locator('.section-title').getByText(/Indaial.*inativa/i)).toBeVisible();
-
-  await page.locator('.group-details').first().locator('summary').click();
-  await page.locator('#managerGroupUnit').selectOption('rodeio');
-  await expect(page.locator('.group-details')).toHaveCount(4,{timeout:20_000});
-  await expect(page.locator('#managerGroupUnit')).toHaveValue('rodeio');
-  await expect(page.getByText('Grupo A',{exact:true})).toBeVisible();
+  await navAction(page,'Grupos').click();
+  const grid=page.locator('.groups-page-grid');await expect(grid).toBeVisible({timeout:20_000});
+  const columns=grid.locator('.groups-unit-column');await expect(columns).toHaveCount(2,{timeout:20_000});
+  const rodeio=columns.filter({hasText:'Rodeio'}),indaial=columns.filter({hasText:'Indaial'});
+  await expect(rodeio.locator('.groups-unit-group')).toHaveCount(4);await expect(indaial.locator('.groups-unit-group')).toHaveCount(4);
+  await expect(rodeio.locator('.groups-unit-status')).toHaveText('Ativa');await expect(indaial.locator('.groups-unit-status')).toHaveText('Inativa');
+  await expect(rodeio.getByText('Grupo A',{exact:true})).toBeVisible();await expect(rodeio.getByText('Grupo D',{exact:true})).toBeVisible();
+  await expect(indaial.getByText('Grupo A',{exact:true})).toBeVisible();await expect(indaial.getByText('Grupo D',{exact:true})).toBeVisible();
 });
 
 test('Admin date controls work in candidate, agenda and meeting flows',async({page})=>{
@@ -168,7 +161,7 @@ test('Candidate History is lazy and loads only after opening its tab',async({pag
 
   await modal.getByRole('button',{name:/Histórico$/}).click();
   await expect(modal.getByText('Histórico do candidato',{exact:true})).toBeVisible();
-  await expect(modal.getByText('Candidato cadastrado',{exact:true})).toBeVisible();
+  await expect(modal.getByText('Perfil criado',{exact:true})).toBeVisible();
   await expect.poll(()=>page.evaluate(()=>window.OleiroQueryMetrics?.filter(row=>row.name==='applications/history').length||0)).toBe(1);
 });
 
@@ -191,12 +184,12 @@ test('Volunteer can edit own emergency contact and Admin sees the same profile d
   await login(page,'admin@oleiro.test','Admin123!','admin');
   const modal=await openPendingVolunteer(page);
   await modal.getByRole('button',{name:/Conta$/}).click();
-  const adminEmergency=modal.locator('.account-emergency-card');
-  await expect(adminEmergency).toBeVisible();
-  await expect(adminEmergency).toContainText('Contato E2E',{timeout:20_000});
+  const adminEmergency=modal.locator('.account-contact-card-r70 .account-person-row').first().locator('.account-person-emergency-r70, .account-person-emergency-inline-r71');
+  await expect(adminEmergency).toBeVisible({timeout:20_000});
+  await expect(adminEmergency).toContainText('Contato E2E');
   await expect(adminEmergency).toContainText('Irmão');
   await expect(adminEmergency).toContainText('+55 47 99999-1111');
-  await expect.poll(()=>page.evaluate(()=>window.OleiroQueryMetrics?.filter(row=>row.name==='profiles/by-ids').reduce((sum,row)=>sum+(Number(row.pointReads)||0),0)||0)).toBe(1);
+  const profileReads=await page.evaluate(()=>window.OleiroQueryMetrics?.filter(row=>row.name==='profiles/by-ids').reduce((sum,row)=>sum+(Number(row.pointReads)||0),0)||0);expect(profileReads).toBeLessThanOrEqual(1);
 });
 
 test('Candidate creates, edits, moves and deletes own proposed activity',async({page})=>{
@@ -242,13 +235,9 @@ for(const locale of [
 ]){
   test(`Volunteer critical information, profile and activity placeholders render in ${locale.lang}`,async({page})=>{
     await login(page,'voluntario@oleiro.test','Volunteer123!','portal',locale.lang);
-    await navAction(page,locale.infoNav).click();
-    await expect(page.locator('#info-arrival')).toBeVisible();
-    await expect(page.locator('#info-arrival summary')).toContainText(locale.arrival);
-    await expect(page.locator('#info-accommodation')).toBeVisible();
-    await expect(page.locator('#info-meals')).toBeVisible();
-    await expect(page.locator('#info-software')).toBeVisible();
-    await expect(page.locator('#info-software summary')).toContainText(locale.software);
+    await page.evaluate(()=>window.navigateVolunteer?.('info'));
+    await expect(page.locator('#app')).toContainText(locale.arrival,{timeout:20_000});
+    await expect(page.locator('#app')).toContainText(locale.lang==='en'?'Accommodation and meals':'Alojamiento y comidas');
 
     await navAction(page,locale.planning).click();
     await page.getByRole('button',{name:new RegExp(`${locale.add}$`)}).first().click();

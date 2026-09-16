@@ -5,6 +5,18 @@
     loadingDelayMs:600
   });
   const pendingDocuments=new WeakMap();
+  const pendingQueries=new WeakMap();
+
+  // Only identical, simultaneous queries share work; subsequent calls read fresh data.
+  function shareQuery(context,key,read){
+    const user=context.auth?.currentUser||null;
+    let scope=pendingQueries.get(context.db);
+    if(!scope||scope.user!==user){scope={user,reads:new Map()};pendingQueries.set(context.db,scope)}
+    if(scope.reads.has(key))return scope.reads.get(key);
+    const task=Promise.resolve().then(read).finally(()=>{if(scope.reads.get(key)===task)scope.reads.delete(key)});
+    scope.reads.set(key,task);
+    return task;
+  }
 
   // Share only outstanding reads. Completed results are never retained here.
   function readDocument(context,collection,id,name){
@@ -48,5 +60,5 @@
   }
 
   window.OleiroServices=window.OleiroServices||{};
-  Object.assign(window.OleiroServices,{config,run,firebase,recordQuery,readDocument});
+  Object.assign(window.OleiroServices,{config,run,firebase,recordQuery,readDocument,shareQuery});
 })();
