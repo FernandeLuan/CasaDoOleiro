@@ -233,8 +233,7 @@ for(const locale of [
     await login(page,'voluntario@oleiro.test','Volunteer123!','portal',locale.lang);
     await page.evaluate(()=>window.navigateVolunteer?.('info'));
     await expect(page.locator('#app')).toContainText(locale.arrival,{timeout:20_000});
-    await expect(page.locator('#app')).toContainText(locale.lang==='en'?'Accommodation':'Alojamiento');
-    await expect(page.locator('#app')).toContainText(locale.lang==='en'?'Meals':'Comidas');
+    await expect(page.locator('#app')).toContainText(locale.lang==='en'?'Accommodation and meals':'Alojamiento y comidas');
 
     await navAction(page,locale.planning).click();
     await page.getByRole('button',{name:new RegExp(`${locale.add}$`)}).first().click();
