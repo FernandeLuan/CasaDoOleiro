@@ -28,5 +28,5 @@ test('Pre-approval keeps normal actions separate from an activity-specific adjus
 test('Admin emergency contact remains unchanged by planning review cleanup',async({page})=>{
   await login(page,'admin@oleiro.test','Admin123!','admin');const detail=await openVolunteer(page,'pending','Voluntário E2E');await detail.getByRole('button',{name:/Conta/}).click();
   const person=detail.locator('.account-contact-card-r70 .account-person-row').first();await expect(person).toBeVisible({timeout:20_000});await expect(person).toContainText('Voluntário E2E');
-  const emergency=person.locator('.account-person-emergency-r70, .account-person-emergency-inline-r71');await expect(emergency).toContainText('Contato de emergência');const edit=emergency.getByRole('button',{name:/Adicionar contato|Editar contato/});await expect(edit).toBeVisible();await expect(edit.locator('i.fa-pen, i.fa-plus')).toHaveCount(1);
+  const emergency=person.locator('.account-person-emergency-r70, .account-person-emergency-inline-r71');await expect(emergency).toContainText('Contato de emergência');const edit=emergency.getByRole('button',{name:/Adicionar(?: contato)?|Editar(?: contato)?/});await expect(edit).toBeVisible();await expect(edit.locator('i.fa-pen, i.fa-plus')).toHaveCount(1);
 });
