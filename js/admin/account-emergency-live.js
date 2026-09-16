@@ -79,7 +79,7 @@
   function patchAccount(){
     const p=currentPerson();if(!p)return;
     const root=document.querySelector('.planning-detail-page .account-contact-card-r70');if(!root)return;
-    const rows=[...root.querySelectorAll(':scope > .account-person-row')];
+    const rows=[...root.querySelectorAll('.account-person-row')];
     rows.forEach((row,index)=>{
       const block=emergencyBlock(row);if(!block)return;
       const body=block.querySelector('.account-person-emergency-body-r70');if(!body)return;
