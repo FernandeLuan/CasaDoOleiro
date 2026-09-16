@@ -159,12 +159,7 @@
     const id=decodeURIComponent(String(encodedId||'')),p=candidateById(id);
     if(!p)return showToast('Cadastro não encontrado.');
     if(!['analysis','adjustments'].includes(String(p.status||'')))return showToast('Este planejamento não está aguardando aprovação.');
-    openModal(
-      'Aprovar planejamento?',
-      `Confirme a aprovação de ${escapeHtml(p.name||'voluntário')}.`,
-      '<div class="notice"><i class="fa-solid fa-circle-check"></i><div>As atividades propostas serão confirmadas e o planejamento inicial deixará de ficar editável para o candidato.</div></div>',
-      `<div class="confirm-delete-actions"><button class="btn btn-outline" type="button" onclick="closeModal()">Cancelar</button><button id="approvePlanningConfirmR25" class="btn btn-primary" type="button" onclick="approveCandidate(decodeURIComponent('${encodeURIComponent(String(p.id))}'))"><i class="fa-solid fa-check"></i>Aprovar planejamento</button></div>`
-    );
+    return approveCandidate(id);
   };
   window.closePlanningDetail=function(){
     const origin=state.managerPlanningOrigin==='volunteer'?'volunteer':'planning';state.managerPlanningPersonId='';state.managerPlanningBody='';state.managerPlanningTab='plan';
