@@ -54,12 +54,15 @@ test('admin shell delegates planning page ownership',()=>{
   assert.ok(!shell.includes('function planningDetailHtml('),'Admin shell must not duplicate planning page markup');
 });
 
-test('analysis and adjustments expose canonical planning approval',()=>{
+test('analysis and adjustments expose one canonical planning approval confirmation',()=>{
   const planning=readFileSync('js/admin/planning-page.js','utf8');
+  const selection=readFileSync('js/admin/selection-flow.js','utf8');
   assert.ok(planning.includes("['analysis','adjustments'].includes(status)"));
   assert.ok(planning.includes('requestApprovePlanning'));
-  assert.ok(planning.includes('approvePlanningConfirmR25'));
-  assert.ok(planning.includes('approveCandidate('));
+  assert.ok(planning.includes('return approveCandidate(id)'));
+  assert.ok(!planning.includes('approvePlanningConfirmR25'),'planning page must not create a second approval confirmation');
+  assert.ok(selection.includes('approvePlanningConfirmR25'),'selection flow owns the single approval confirmation');
+  assert.ok(selection.includes('confirmApprovePlanningR25'));
   assert.ok(planning.includes(".admin-plan-review-footer,.planning-admin-footer"),'legacy footer stays stripped only after approval is migrated');
 });
 
