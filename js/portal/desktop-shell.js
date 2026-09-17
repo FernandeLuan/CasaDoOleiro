@@ -118,11 +118,14 @@
       }
 
       @media(max-width:1023px){
+        /* Keep document scrolling on mobile: body must not retain a second
+           scroll offset when modal-open temporarily sets overflow:hidden. */
         html,body{
           height:auto!important;
           min-height:100%!important;
           max-height:none!important;
-          overflow-y:auto!important;
+          overflow-x:clip!important;
+          overflow-y:visible!important;
         }
         body.modal-open{overflow-y:hidden!important}
         .portal-sidebar-desktop{display:none!important}
