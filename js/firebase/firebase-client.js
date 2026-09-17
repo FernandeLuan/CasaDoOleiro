@@ -1,5 +1,5 @@
 (function initOleiroFirebase(){
-  const SDK_VERSION='12.17.1';
+  const SDK_VERSION='12.19.0';
   let readyPromise=null;
 
   function hasConfig(config){
