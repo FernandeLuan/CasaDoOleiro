@@ -1,6 +1,41 @@
 import {test,expect} from '@playwright/test';
 import fs from 'node:fs';
 
+test('portal returns to the top after saving a modal while scrolled',async({page})=>{
+  await page.setViewportSize({width:390,height:844});
+  const links=[...fs.readFileSync('portal/index.html','utf8').matchAll(/<link[^>]*href="(\.\.\/css\/[^"?]+)[^"]*"[^>]*>/g)].map(m=>`<link rel="stylesheet" href="${m[1]}">`).join('');
+  await page.route('**/portal/scroll-fixture',route=>route.fulfill({contentType:'text/html',body:`<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">${links}</head><body><div id="app" class="portal-desktop-root"><main class="page"><section style="height:3000px"><h1 id="top">Planejamento</h1><button id="edit" style="margin-top:800px" onclick="openModal('Editar atividade','','<input id=actName value=Atividade>', '<button id=save onclick=saveFixture()>Salvar</button>')">Editar</button></section></main></div><div id="modalRoot"></div></body></html>`}));
+  await page.goto('/portal/scroll-fixture');
+  await page.evaluate(()=>{
+    window.state={role:'volunteer',volunteerPage:'plan',volunteerMode:'candidate'};
+    window.modalRoot=document.getElementById('modalRoot');
+    window.saveFixture=()=>{
+      closeModal();
+      const main=document.querySelector('main');
+      main.innerHTML=main.innerHTML;
+    };
+  });
+  const source=fs.readFileSync('js/portal/desktop-shell.js','utf8');
+  await page.addStyleTag({content:source.match(/style.textContent\s*=\s*`([\s\S]*?)`/)[1]});
+  await page.addScriptTag({path:'js/shared/modal-system.js'});
+  await page.addScriptTag({path:'js/shared/smart-interactions.js'});
+  for(const height of [640,844]){
+    await page.evaluate(()=>window.scrollTo(0,700));
+    await page.locator('#edit').click();
+    await page.locator('#actName').fill('Atividade editada');
+    await page.setViewportSize({width:390,height});
+    await page.locator('#save').click();
+    await expect(page.locator('.modal')).toHaveCount(0);
+    // A nested body scroller can retain an inaccessible offset after overflow toggles.
+    expect(await page.evaluate(()=>getComputedStyle(document.body).overflowY)).toBe('visible');
+    expect(await page.evaluate(()=>document.body.scrollTop)).toBe(0);
+    await page.evaluate(()=>window.scrollTo(0,0));
+    await expect.poll(()=>page.locator('#top').evaluate(el=>el.getBoundingClientRect().top)).toBeGreaterThanOrEqual(0);
+    await page.evaluate(()=>window.scrollTo(0,900));
+    await expect.poll(()=>page.evaluate(()=>window.scrollY)).toBe(900);
+  }
+});
+
 test('mobile document scroll survives viewport changes, modals and navigation',async({page})=>{
   await page.setViewportSize({width:390,height:844});
   const links=[...fs.readFileSync('admin/index.html','utf8').matchAll(/<link[^>]*href="(\.\.\/css\/[^"?]+)[^"]*"[^>]*>/g)].map(m=>`<link rel="stylesheet" href="${m[1]}">`).join('');
