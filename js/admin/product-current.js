@@ -56,9 +56,47 @@
   /* Recusado já implica acesso inativo; não repetir duas tags. */
   personCompact=function(p){const [label,type]=statusMeta(p.status),meta=p.status==='pending'?candidateDeadlineMeta(p):null,extra=meta?`<div class="candidate-deadline-mini"><i class="fa-regular fa-clock"></i>${meta.label}</div>`:'',inactive=p.inactive&&p.status!=='rejected'?badge('Inativo','danger'):'',period=p.from&&p.to?`${fmtDate(p.from,true)}–${fmtDate(p.to,true)}`:'Período não informado',id=candidateActionArg(p.id);return `<div class="list-item clickable" onclick="openPerson(decodeURIComponent('${id}'))"><div class="avatar">${String(p.name||'V').split(' ').map(x=>x[0]).slice(0,2).join('')}</div><div class="item-main"><h3>${escapeHtml(p.name)}</h3><p>${escapeHtml(p.country||'—')} • ${escapeHtml(p.unit||'—')} • ${period}</p><div class="item-meta">${badge(label,type)}${inactive}</div>${extra}</div><i class="fa-solid fa-chevron-right" style="color:var(--muted);margin-top:11px"></i></div>`};
 
-  /* Visão geral: atividades + horas são mais úteis que contar sessões. */
+  /* Visão geral: atividades + horas + jornada completa na Casa. */
+  function candidateJourneyProject(p){
+    return (window.OleiroProjects?.list?.()||[]).find(project=>String(project.applicationId||'')===String(p?.id||''))||null;
+  }
+  function candidateJourneyDays(p){
+    const from=String(p?.from||p?.stayStart||'').slice(0,10),to=String(p?.to||p?.stayEnd||'').slice(0,10);
+    if(!from||!to)return null;
+    const a=new Date(from+'T12:00:00'),b=new Date(to+'T12:00:00');
+    if(Number.isNaN(a.getTime())||Number.isNaN(b.getTime())||b<a)return null;
+    return Math.round((b-a)/86400000)+1;
+  }
+  function candidateJourneyOverview(p){
+    const project=candidateJourneyProject(p),days=candidateJourneyDays(p),hours=planHours(p),activities=Number(p?.activities||p?.activityCount||0);
+    const period=p?.from&&p?.to?`${fmtDate(p.from,true)}–${fmtDate(p.to,true)}`:'Período não informado';
+    return `<section class="candidate-journey-overview">
+      <div class="candidate-journey-head">
+        <span class="candidate-journey-icon"><i class="fa-solid fa-route"></i></span>
+        <div><small>Jornada na Casa</small><strong>Overview da experiência</strong><p>${escapeHtml(period)}${days?` • ${days} ${days===1?'dia':'dias'}`:''}</p></div>
+      </div>
+      <div class="candidate-journey-stats">
+        <div><span>Atividades</span><strong>${activities||'—'}</strong></div>
+        <div><span>Carga planejada</span><strong>${hours??'—'}</strong></div>
+        <div><span>Unidade</span><strong>${escapeHtml(p?.unit||'—')}</strong></div>
+      </div>
+      ${project?`<div class="candidate-journey-project">
+        <span><i class="fa-solid fa-seedling"></i></span>
+        <div><small>Projeto Legado</small><strong>${escapeHtml(project.title||'Projeto')}</strong><p>${escapeHtml(project.status==='completed'?(project.result||'Legado concluído.'):'Status: '+(statusMeta(project.status)?.[0]||project.status||'—'))}</p></div>
+        ${project.status==='completed'?'<i class="fa-solid fa-circle-check candidate-journey-complete"></i>':''}
+      </div>`:''}
+    </section>`;
+  }
   const basePersonTabContent=personTabContent;
-  personTabContent=function(p,tab){let html=basePersonTabContent(p,tab);if(tab==='overview'){const hours=planHours(p);html=html.replace(/<span class="stat-pill">\d+ sessões<\/span>/,`<span class="stat-pill">${hours??'—'} planejadas</span>`)}return html};
+  personTabContent=function(p,tab){
+    let html=basePersonTabContent(p,tab);
+    if(tab==='overview'){
+      const hours=planHours(p);
+      html=html.replace(/<span class="stat-pill">\d+ sessões<\/span>/,`<span class="stat-pill">${hours??'—'} planejadas</span>`);
+      html+=candidateJourneyOverview(p);
+    }
+    return html;
+  };
 
   /* Abrir candidato usa dados em memória imediatamente. Planejamento só relê sessões quando
      o cache realmente envelheceu; contato só relê quando ainda não foi hidratado. */
