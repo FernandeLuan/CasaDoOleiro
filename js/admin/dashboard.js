@@ -42,49 +42,73 @@ function dashboardQuickAction({icon,title,count,label,action,tone=''}) {
   </button>`;
 }
 let _managerHomePendingIndex=0;
+const _managerHomePendingDismissed=new Set();
 function managerHomePendingSlides(volunteerAnalysis,volunteerAdjustments,projectCounts){
   return [
-    volunteerAnalysis?{icon:'fa-clipboard-check',eyebrow:'Voluntariado',title:`${volunteerAnalysis} ${volunteerAnalysis===1?'perfil em análise':'perfis em análise'}`,text:'Há candidatura aguardando sua revisão.',action:"openDashboardVolunteerFilter('analysis')"}:null,
-    volunteerAdjustments?{icon:'fa-rotate',eyebrow:'Voluntariado',title:`${volunteerAdjustments} ${volunteerAdjustments===1?'ajuste pendente':'ajustes pendentes'}`,text:'Há mudanças que precisam ser revisadas.',action:"openDashboardVolunteerFilter('adjustments')"}:null,
-    projectCounts.analysis?{icon:'fa-seedling',eyebrow:'Projetos',title:`${projectCounts.analysis} ${projectCounts.analysis===1?'projeto em análise':'projetos em análise'}`,text:'Há Projeto Legado aguardando decisão.',action:"openDashboardProjectFilter('analysis')"}:null,
-    projectCounts.adjustments?{icon:'fa-pen-ruler',eyebrow:'Projetos',title:`${projectCounts.adjustments} ${projectCounts.adjustments===1?'projeto com ajuste':'projetos com ajustes'}`,text:'Há Projeto Legado aguardando nova revisão.',action:"openDashboardProjectFilter('adjustments')"}:null
-  ].filter(Boolean);
+    volunteerAnalysis?{id:'volunteer-analysis',icon:'fa-clipboard-check',eyebrow:'Voluntariado',title:`${volunteerAnalysis} ${volunteerAnalysis===1?'perfil em análise':'perfis em análise'}`,text:'Há candidatura aguardando sua revisão.',action:"openDashboardVolunteerFilter('analysis')"}:null,
+    volunteerAdjustments?{id:'volunteer-adjustments',icon:'fa-rotate',eyebrow:'Voluntariado',title:`${volunteerAdjustments} ${volunteerAdjustments===1?'ajuste pendente':'ajustes pendentes'}`,text:'Há mudanças que precisam ser revisadas.',action:"openDashboardVolunteerFilter('adjustments')"}:null,
+    projectCounts.analysis?{id:'project-analysis',icon:'fa-seedling',eyebrow:'Projetos',title:`${projectCounts.analysis} ${projectCounts.analysis===1?'projeto em análise':'projetos em análise'}`,text:'Há Projeto Legado aguardando decisão.',action:"openDashboardProjectFilter('analysis')"}:null,
+    projectCounts.adjustments?{id:'project-adjustments',icon:'fa-pen-ruler',eyebrow:'Projetos',title:`${projectCounts.adjustments} ${projectCounts.adjustments===1?'projeto com ajuste':'projetos com ajustes'}`,text:'Há Projeto Legado aguardando nova revisão.',action:"openDashboardProjectFilter('adjustments')"}:null
+  ].filter(Boolean).filter(slide=>!_managerHomePendingDismissed.has(slide.id));
 }
 function managerHomePreviewPendingSlides(){
   if(window.OleiroProjects?.isPreview!==true)return [];
   return [
-    {icon:'fa-seedling',eyebrow:'Projetos',title:'1 projeto em análise',text:'Há Projeto Legado aguardando sua decisão.',action:"openDashboardProjectFilter('analysis')"},
-    {icon:'fa-rotate',eyebrow:'Voluntariado',title:'1 ajuste pendente',text:'Há uma alteração aguardando nova revisão.',action:"openDashboardVolunteerFilter('adjustments')"},
-    {icon:'fa-pen-ruler',eyebrow:'Projetos',title:'1 projeto com ajuste',text:'Há Projeto Legado aguardando nova revisão.',action:"openDashboardProjectFilter('adjustments')"}
-  ];
+    {id:'preview-project-analysis',icon:'fa-seedling',eyebrow:'Projetos',title:'1 projeto em análise',text:'Há Projeto Legado aguardando sua decisão.',action:"openDashboardProjectFilter('analysis')"},
+    {id:'preview-volunteer-adjustments',icon:'fa-rotate',eyebrow:'Voluntariado',title:'1 ajuste pendente',text:'Há uma alteração aguardando nova revisão.',action:"openDashboardVolunteerFilter('adjustments')"},
+    {id:'preview-project-adjustments',icon:'fa-pen-ruler',eyebrow:'Projetos',title:'1 projeto com ajuste',text:'Há Projeto Legado aguardando nova revisão.',action:"openDashboardProjectFilter('adjustments')"}
+  ].filter(slide=>!_managerHomePendingDismissed.has(slide.id));
 }
 function managerHomePendingSlidesVisible(volunteerAnalysis,volunteerAdjustments,projectCounts){
   const real=managerHomePendingSlides(volunteerAnalysis,volunteerAdjustments,projectCounts);
   return real.length?real:managerHomePreviewPendingSlides();
 }
+function managerHomePendingPagerHtml(total,index){
+  if(total<=1)return '';
+  const first=index===0,last=index===total-1;
+  return `<div class="manager-home-update-pager" aria-label="Navegação das pendências">
+    <strong class="manager-home-update-counter">${index+1}/${total}</strong>
+    <div class="manager-home-update-nav ${first?'is-forward':last?'is-backward':'is-middle'}">
+      ${first?'':`<button type="button" class="manager-home-update-arrow" onclick="shiftManagerHomePending(-1,event)" aria-label="Pendência anterior"><i class="fa-solid fa-arrow-left"></i></button>`}
+      ${last?'':`<button type="button" class="manager-home-update-arrow" onclick="shiftManagerHomePending(1,event)" aria-label="Próxima pendência"><i class="fa-solid fa-arrow-right"></i></button>`}
+      <span class="manager-home-update-travel" aria-hidden="true"></span>
+    </div>
+  </div>`;
+}
 function managerHomePendingCard(slides){
   if(!slides.length)return '';
   if(_managerHomePendingIndex>=slides.length)_managerHomePendingIndex=0;
-  const slide=slides[_managerHomePendingIndex],total=slides.length,index=_managerHomePendingIndex+1;
-  return `<section class="manager-home-pending-carousel" aria-label="Pendências">
-    <div class="manager-home-pending-accent"></div>
-    <div class="manager-home-pending-icon"><i class="fa-solid ${slide.icon}"></i></div>
-    <div class="manager-home-pending-copy">
-      <span class="eyebrow">${escapeHtml(slide.eyebrow)} · precisa de atenção</span>
-      <h2>${escapeHtml(slide.title)}</h2>
-      <p>${escapeHtml(slide.text)}</p>
-    </div>
-    <div class="manager-home-pending-nav">
-      <span>${index}/${total}</span>
-      <div>
-        ${total>1&&index>1?'<button type="button" aria-label="Pendência anterior" onclick="shiftManagerHomePending(-1)"><i class="fa-solid fa-arrow-left"></i></button>':''}
-        ${total>1&&index<total?'<button type="button" aria-label="Próxima pendência" onclick="shiftManagerHomePending(1)"><i class="fa-solid fa-arrow-right"></i></button>':''}
+  const slide=slides[_managerHomePendingIndex],total=slides.length;
+  return `<section class="manager-home-update-card" aria-label="Pendências" data-manager-home-pending>
+    <div class="manager-home-update-top">
+      <span class="manager-home-update-icon"><i class="fa-solid ${slide.icon}"></i></span>
+      <div class="manager-home-update-copy">
+        <div class="manager-home-update-meta"><span>${escapeHtml(slide.eyebrow)} · precisa de atenção</span></div>
+        <strong>${escapeHtml(slide.title)}</strong>
+        <p>${escapeHtml(slide.text)}</p>
       </div>
+      ${managerHomePendingPagerHtml(total,_managerHomePendingIndex)}
     </div>
-    <button class="btn btn-primary manager-home-pending-cta" type="button" onclick="${slide.action}">Ver pendência</button>
+    <div class="manager-home-update-actions">
+      <button class="btn btn-outline" type="button" onclick="dismissManagerHomePending(event)">Agora não</button>
+      <button class="btn btn-primary" type="button" onclick="${slide.action}">Ver pendência</button>
+    </div>
   </section>`;
 }
-function shiftManagerHomePending(delta){
+function dismissManagerHomePending(event){
+  event?.preventDefault?.();
+  event?.stopPropagation?.();
+  const projectCounts=dashboardProjectCounts();
+  const slides=managerHomePendingSlidesVisible(dashboardCount('analysis'),dashboardCount('adjustments'),projectCounts);
+  const slide=slides[_managerHomePendingIndex];
+  if(slide?.id)_managerHomePendingDismissed.add(slide.id);
+  const remaining=managerHomePendingSlidesVisible(dashboardCount('analysis'),dashboardCount('adjustments'),dashboardProjectCounts());
+  _managerHomePendingIndex=Math.min(_managerHomePendingIndex,Math.max(0,remaining.length-1));
+  if(state.managerPage==='home')render();
+}
+function shiftManagerHomePending(delta,event){
+  event?.preventDefault?.();
+  event?.stopPropagation?.();
   const projectCounts=dashboardProjectCounts(),slides=managerHomePendingSlidesVisible(dashboardCount('analysis'),dashboardCount('adjustments'),projectCounts);
   if(!slides.length)return;
   _managerHomePendingIndex=Math.max(0,Math.min(slides.length-1,_managerHomePendingIndex+Number(delta||0)));
@@ -120,26 +144,37 @@ function managerHome(){
     .manager-home-hero{margin:0;min-width:0}.manager-home-hero h1{letter-spacing:-.035em}.manager-home-today-list{display:grid;gap:10px;min-height:0}.manager-home-today-list>.empty{min-height:100px;display:grid;place-items:center}.manager-home-movements .card{box-shadow:none}
     .manager-home-today-item{cursor:pointer}
     .manager-home-top.single{grid-template-columns:1fr!important}
-    .manager-home-pending-carousel{position:relative;overflow:hidden;background:var(--surface);border:1px solid color-mix(in srgb,var(--primary) 18%,var(--border));border-radius:26px;padding:22px;box-shadow:var(--shadow);display:grid;grid-template-columns:48px minmax(0,1fr) auto;grid-template-areas:"icon copy nav" "icon cta cta";gap:10px 14px;align-items:start;min-width:0}
-    .manager-home-pending-accent{position:absolute;right:-54px;top:-62px;width:170px;height:170px;border-radius:50%;background:color-mix(in srgb,var(--primary-soft) 62%,transparent);pointer-events:none}
-    .manager-home-pending-icon{grid-area:icon;position:relative;z-index:1;width:48px;height:48px;border-radius:15px;background:var(--primary);color:#fff;display:grid;place-items:center;font-size:.9rem}
-    .manager-home-pending-copy{grid-area:copy;position:relative;z-index:1;min-width:0}
-    .manager-home-pending-copy .eyebrow{display:block;color:var(--primary);font-size:.57rem;margin-bottom:4px}
-    .manager-home-pending-copy h2{margin:0;font-size:.96rem;line-height:1.25;color:var(--text)}
-    .manager-home-pending-copy p{margin:5px 0 0;color:var(--muted);font-size:.63rem;line-height:1.45}
-    .manager-home-pending-nav{grid-area:nav;position:relative;z-index:1;display:grid;justify-items:end;gap:5px;min-width:58px}
-    .manager-home-pending-nav>span{color:var(--primary);font-size:.58rem;font-weight:700}
-    .manager-home-pending-nav>div{display:flex;align-items:center;gap:4px}
-    .manager-home-pending-nav button{width:28px;height:28px;border:0;border-radius:999px;background:transparent;color:var(--primary);display:grid;place-items:center;font-size:.56rem}
-    .manager-home-pending-cta{grid-area:cta;position:relative;z-index:1;justify-self:start;min-height:40px;margin-top:3px;padding:9px 14px}
-    @media(max-width:1023px){.manager-home-pending-carousel{border-radius:22px;padding:18px}}
-    @media(max-width:560px){
-      .manager-home-pending-carousel{grid-template-columns:44px minmax(0,1fr) auto;grid-template-areas:"icon copy nav" "cta cta cta";gap:9px 11px;padding:16px}
-      .manager-home-pending-icon{width:44px;height:44px;border-radius:14px}
-      .manager-home-pending-copy h2{font-size:.83rem}
-      .manager-home-pending-copy p{font-size:.59rem}
-      .manager-home-pending-cta{width:100%;justify-content:center;margin-top:5px}
+    .manager-home-update-card{position:relative;overflow:hidden;display:grid;gap:14px;margin:0;padding:16px;border:1px solid color-mix(in srgb,var(--primary) 24%,var(--border));border-radius:18px;background:linear-gradient(145deg,color-mix(in srgb,var(--primary-soft) 86%,var(--surface)),var(--surface));box-shadow:0 8px 24px rgba(31,78,57,.06);animation:managerHomeUpdateIn .28s ease both;align-self:stretch}
+    .manager-home-update-card::after{content:"";position:absolute;width:150px;height:150px;border-radius:50%;right:-72px;top:-78px;background:color-mix(in srgb,var(--primary) 10%,transparent);pointer-events:none}
+    @keyframes managerHomeUpdateIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+    .manager-home-update-top{display:grid;grid-template-columns:46px minmax(0,1fr) auto;gap:12px;align-items:start;position:relative;z-index:1}
+    .manager-home-update-icon{width:46px;height:46px;border-radius:14px;background:var(--primary);color:#fff;display:grid;place-items:center;font-size:.92rem;box-shadow:0 7px 18px color-mix(in srgb,var(--primary) 22%,transparent)}
+    .manager-home-update-copy{min-width:0}
+    .manager-home-update-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:3px}
+    .manager-home-update-meta>span{font-size:.56rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--primary)}
+    .manager-home-update-copy>strong{display:block;font-size:.86rem;line-height:1.25;color:var(--text)}
+    .manager-home-update-copy>p{margin:4px 0 0;color:var(--muted);font-size:.66rem;line-height:1.45}
+    .manager-home-update-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;position:relative;z-index:1}
+    .manager-home-update-actions .btn{width:100%;min-height:42px}
+    .manager-home-update-pager{position:relative;z-index:2;min-width:50px;display:grid;justify-items:end;align-content:start;gap:5px;padding-top:1px}
+    .manager-home-update-counter{display:block;color:var(--primary);font-size:.6rem;font-weight:700;line-height:1;letter-spacing:.02em}
+    .manager-home-update-nav{position:relative;display:flex;align-items:center;justify-content:flex-end;gap:2px;min-width:42px;min-height:22px;padding-bottom:4px}
+    .manager-home-update-arrow{position:relative;z-index:2;width:22px;height:22px;padding:0;border:0;border-radius:8px;background:transparent;color:color-mix(in srgb,var(--primary) 78%,var(--muted));display:grid;place-items:center;cursor:pointer;font:inherit;font-size:.58rem;transition:background .18s ease,color .18s ease,transform .18s ease}
+    .manager-home-update-arrow:active{transform:scale(.92)}
+    .manager-home-update-travel{position:absolute;left:2px;right:2px;bottom:0;height:2px;overflow:hidden;border-radius:999px;background:color-mix(in srgb,var(--primary) 7%,transparent);pointer-events:none}
+    .manager-home-update-travel::after{content:"";position:absolute;top:0;width:18px;height:2px;border-radius:999px;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--primary) 60%,transparent),rgba(255,255,255,.78),transparent);filter:drop-shadow(0 0 3px color-mix(in srgb,var(--primary) 25%,transparent))}
+    .manager-home-update-nav.is-forward .manager-home-update-travel::after,.manager-home-update-nav.is-middle .manager-home-update-travel::after{left:-18px;animation:managerHomePendingTravelForward 2.2s ease-in-out infinite}
+    .manager-home-update-nav.is-backward .manager-home-update-travel::after{right:-18px;animation:managerHomePendingTravelBackward 2.2s ease-in-out infinite}
+    @keyframes managerHomePendingTravelForward{0%{transform:translateX(0);opacity:0}16%{opacity:.8}84%{opacity:.8}100%{transform:translateX(58px);opacity:0}}
+    @keyframes managerHomePendingTravelBackward{0%{transform:translateX(0);opacity:0}16%{opacity:.8}84%{opacity:.8}100%{transform:translateX(-58px);opacity:0}}
+    @media(max-width:760px){
+      .manager-home-update-card{padding:14px}
+      .manager-home-update-top{grid-template-columns:42px minmax(0,1fr) auto;gap:10px}
+      .manager-home-update-icon{width:42px;height:42px}
+      .manager-home-update-copy>strong{font-size:.82rem}
+      .manager-home-update-copy>p{font-size:.65rem}
     }
+    @media(max-width:360px){.manager-home-update-actions{grid-template-columns:1fr}}
     @media(min-width:1024px){
       .manager-home-grid{grid-template-columns:minmax(0,1.18fr) minmax(380px,.92fr)}
       .manager-home-hero{min-height:238px;padding:28px 34px;display:flex;flex-direction:column;justify-content:center;border-radius:26px}.manager-home-hero h1{font-size:clamp(2.2rem,2.8vw,3.35rem);line-height:1.04;margin:8px 0 10px}.manager-home-hero p{font-size:.88rem;max-width:720px;margin:0}.manager-home-hero .hero-actions{margin-top:20px}.manager-home-hero .btn{min-height:44px;padding:10px 16px;font-size:.75rem}
