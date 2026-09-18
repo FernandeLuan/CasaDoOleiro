@@ -52,27 +52,20 @@
       ['fa-people-group','project.idea.community.title','project.idea.community.body'],
       ['fa-laptop-code','project.idea.technology.title','project.idea.technology.body']
     ];
-    return `<section class="section legacy-page legacy-empty-v2">
-      <div class="legacy-empty-hero">
-        <span class="eyebrow">${esc(tx('project.name'))}</span>
+    return `<section class="section legacy-page legacy-empty-v3">
+      <section class="legacy-empty-home-hero">
+        <span class="legacy-empty-home-kicker">${esc(tx('project.name'))}</span>
         <h1>${esc(tx('project.empty.heroTitle'))}</h1>
         <p>${esc(tx('project.empty.heroBody'))}</p>
-      </div>
-
-      <section class="legacy-empty-cta">
-        <span class="legacy-empty-cta-icon"><i class="fa-regular fa-lightbulb"></i></span>
-        <div class="legacy-empty-cta-copy">
-          <span class="eyebrow">${esc(tx('project.empty.ctaEyebrow'))}</span>
-          <h2>${esc(tx('project.empty.ctaTitle'))}</h2>
-          <p>${esc(tx('project.empty.ctaBody'))}</p>
-        </div>
-        <button class="btn btn-primary legacy-empty-create" type="button" onclick="openLegacyProjectForm()"><i class="fa-solid fa-plus"></i>${esc(tx('project.empty.create'))}</button>
+        <button class="legacy-empty-home-action" type="button" onclick="openLegacyProjectForm()"><i class="fa-solid fa-plus"></i>${esc(tx('project.empty.create'))}</button>
       </section>
 
       <section class="legacy-empty-inspiration">
         <div class="legacy-empty-inspiration-head">
-          <span class="eyebrow">${esc(tx('project.empty.inspirationEyebrow'))}</span>
-          <h2>${esc(tx('project.empty.inspirationTitle'))}</h2>
+          <div>
+            <span class="eyebrow">${esc(tx('project.empty.inspirationEyebrow'))}</span>
+            <h2>${esc(tx('project.empty.inspirationTitle'))}</h2>
+          </div>
         </div>
         <div class="legacy-empty-idea-grid">
           ${ideas.map(([icon,titleKey,bodyKey])=>ideaCard(icon,tx(titleKey),tx(bodyKey))).join('')}
