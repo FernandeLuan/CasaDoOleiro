@@ -5,18 +5,26 @@
 
   const UNIT_KEY='oleiro.admin.home-occupancy-unit.v1';
   const allowedUnits=['rodeio','indaial'];
+  function visibleUnits(){
+    const scope=window.OleiroServices?.accessScope;
+    if(scope?.isActivityAssistant?.()){
+      const unit=String(scope.unitId?.()||'rodeio').toLowerCase();
+      return [allowedUnits.includes(unit)?unit:'rodeio'];
+    }
+    return allowedUnits;
+  }
   let requestSerial=0;
   let swipeStart=null;
 
   function storedUnit(){
     try{
       const value=String(localStorage.getItem(UNIT_KEY)||'').toLowerCase();
-      return allowedUnits.includes(value)?value:'rodeio';
-    }catch{return 'rodeio'}
+      const units=visibleUnits();return units.includes(value)?value:units[0];
+    }catch{return visibleUnits()[0]}
   }
   function ensureState(){
     if(!window.state)return;
-    if(!allowedUnits.includes(String(state.homeOccupancyUnit||'').toLowerCase()))state.homeOccupancyUnit=storedUnit();
+    const units=visibleUnits();if(!units.includes(String(state.homeOccupancyUnit||'').toLowerCase()))state.homeOccupancyUnit=storedUnit();
     if(!/^\d{4}-\d{2}$/.test(String(state.homeOccupancyMonth||'')))state.homeOccupancyMonth=String(_oleiroToday).slice(0,7);
     if(!Array.isArray(state.homeOccupancyRows))state.homeOccupancyRows=[];
     if(typeof state.homeOccupancyLoading!=='boolean')state.homeOccupancyLoading=true;
@@ -95,12 +103,9 @@
     return '<div class="home-occ-loading"><span>Não foi possível carregar a ocupação.</span><button class="btn btn-soft" type="button" onclick="hydrateManagerHomeOccupancy({force:true})">Tentar novamente</button></div>';
   }
   function controls(){
-    const unit=String(state.homeOccupancyUnit||'rodeio');
+    const unit=String(state.homeOccupancyUnit||visibleUnits()[0]),unitButtons=visibleUnits().map(id=>`<button type="button" class="${unit===id?'active':''}" aria-pressed="${unit===id}" onclick="setHomeOccupancyUnit('${id}')">${id.charAt(0).toUpperCase()+id.slice(1)}</button>`).join('');
     return `<div class="home-occ-controls">
-      <div class="home-occ-units" role="group" aria-label="Unidade">
-        <button type="button" class="${unit==='rodeio'?'active':''}" aria-pressed="${unit==='rodeio'}" onclick="setHomeOccupancyUnit('rodeio')">Rodeio</button>
-        <button type="button" class="${unit==='indaial'?'active':''}" aria-pressed="${unit==='indaial'}" onclick="setHomeOccupancyUnit('indaial')">Indaial</button>
-      </div>
+      <div class="home-occ-units" role="group" aria-label="Unidade">${unitButtons}</div>
       <label class="home-occ-month" aria-label="Mês da ocupação">
         <span class="home-occ-month-label" aria-hidden="true">${monthLabel(state.homeOccupancyMonth)}</span>
         <select onchange="setHomeOccupancyMonth(this.value)" aria-label="Selecionar mês">${monthOptions()}</select>
@@ -150,7 +155,7 @@
   window.setHomeOccupancyUnit=function(unit){
     ensureState();
     const normalized=String(unit||'').toLowerCase();
-    if(!allowedUnits.includes(normalized)||normalized===state.homeOccupancyUnit)return;
+    if(!visibleUnits().includes(normalized)||normalized===state.homeOccupancyUnit)return;
     state.homeOccupancyUnit=normalized;state.homeOccupancyLoadedKey='';state.homeOccupancyRows=[];state.homeOccupancyError='';
     try{localStorage.setItem(UNIT_KEY,normalized)}catch{}
     window.hydrateManagerHomeOccupancy({force:true});
