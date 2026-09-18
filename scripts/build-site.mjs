@@ -59,6 +59,8 @@ async function auditRuntimeSources(siteRoot){
     }
   }
   for(const dir of runtimeDirs)await walk(dir);
+  const legacyRounds=runtime.filter(file=>/^round\d/i.test(path.basename(file)));
+  if(legacyRounds.length)throw new Error('Módulos runtime com nome legado round*: '+legacyRounds.join(', '));
   const orphaned=runtime.filter(file=>!referenced.has(file));
   if(orphaned.length)throw new Error('Módulos JS sem entrypoint: '+orphaned.join(', '));
   return {modules:runtime.length,referenced:referenced.size};
