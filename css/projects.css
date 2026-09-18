@@ -2608,3 +2608,143 @@
     display:none!important;
   }
 }
+
+
+/* Projeto · padrão compartilhado com Voluntariado/Candidatos v15 */
+/* Não reinventa card: usa os mesmos componentes base .list-item/.avatar/.item-main/.item-meta/.badge. */
+.project-ui-row{
+  width:100%;
+  font:inherit;
+  color:var(--text);
+  text-align:left;
+  cursor:pointer;
+}
+button.project-ui-row{
+  appearance:none;
+}
+.project-ui-avatar{
+  font-size:.76rem;
+}
+.project-ui-chevron{
+  flex:0 0 auto;
+  color:var(--muted);
+  font-size:.7rem;
+  margin-top:11px;
+}
+.project-ui-list{
+  gap:12px;
+}
+.project-ui-list-row .item-main h3,
+.project-ui-summary .item-main h3,
+.project-ui-pending .item-main h3{
+  font-size:.82rem;
+  margin-bottom:3px;
+}
+.project-ui-list-row .item-main p,
+.project-ui-summary .item-main p,
+.project-ui-pending .item-main p{
+  font-size:.68rem;
+  color:var(--muted);
+  line-height:1.45;
+}
+
+/* Card expansível do projeto: o resumo segue exatamente a linha de candidato. */
+.project-ui-expandable{
+  border:1px solid var(--border);
+  border-radius:16px;
+  background:var(--surface);
+  box-shadow:0 3px 16px rgba(0,0,0,.035);
+  overflow:hidden;
+}
+.project-ui-expandable>summary{
+  list-style:none;
+}
+.project-ui-expandable>summary::-webkit-details-marker{
+  display:none;
+}
+.project-ui-expandable>.project-ui-summary{
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+}
+.project-ui-expandable[open]>.project-ui-summary{
+  border-bottom:1px solid var(--border);
+}
+.project-ui-expand-chevron{
+  transition:transform .18s ease;
+}
+.project-ui-expandable[open] .project-ui-expand-chevron{
+  transform:rotate(180deg);
+}
+
+/* Pendência na Home: mesma linha, só acrescenta pager e "Agora não". */
+.manager-home-project-pending-wrap{
+  margin:0;
+}
+.project-ui-pending{
+  align-items:flex-start;
+}
+.project-ui-pending-side{
+  flex:0 0 auto;
+  display:grid;
+  justify-items:end;
+  gap:6px;
+  padding-top:1px;
+}
+.project-ui-pager{
+  display:grid;
+  justify-items:end;
+  gap:4px;
+}
+.project-ui-pager>strong{
+  color:var(--primary);
+  font-size:.6rem;
+  line-height:1;
+}
+.project-ui-pager>div{
+  display:flex;
+  align-items:center;
+  gap:2px;
+}
+.project-ui-pager button{
+  width:24px;
+  height:24px;
+  padding:0;
+  border:0;
+  border-radius:8px;
+  background:transparent;
+  color:var(--primary);
+  display:grid;
+  place-items:center;
+  font:inherit;
+  font-size:.58rem;
+  cursor:pointer;
+}
+.project-ui-dismiss{
+  padding:0;
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  font:inherit;
+  font-size:.54rem;
+  cursor:pointer;
+}
+.project-ui-dismiss:hover{
+  color:var(--text);
+}
+
+/* O padrão antigo de cards de Projetos deixa de mandar na lista. */
+.legacy-admin-card-v2,
+.legacy-admin-card-status,
+.legacy-admin-card-chevron{
+  /* mantidos apenas para compatibilidade com markup legado que ainda possa existir */
+}
+
+@media(max-width:390px){
+  .project-ui-pending{
+    gap:10px;
+  }
+  .project-ui-pending-side{
+    gap:4px;
+  }
+}
