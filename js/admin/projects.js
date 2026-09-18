@@ -197,7 +197,7 @@
           ?''
           :'Informações do projeto.';
     openModal(p.title||'Projeto de legado',modalSubtitle,body,footer);
-    modalRoot.querySelector('.modal')?.classList.add('legacy-admin-modal');
+    modalRoot.querySelector('.modal')?.classList.add('modal-wide');
   };
   window.approveLegacyProject=function(id){window.OleiroProjects.update(id,{status:'approved',reviewNote:'',approvedAt:new Date().toISOString()});closeModal();render();showToast('Projeto aprovado.')};
   window.openLegacyAdjustment=function(id){
