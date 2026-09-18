@@ -942,7 +942,8 @@
   display:grid;
   gap:16px;
   padding-top:8px;
-  padding-bottom:104px;
+  padding-bottom:12px;
+  margin-bottom:0;
 }
 .legacy-status-hero-v5{
   position:relative;
@@ -2569,5 +2570,17 @@ button.project-ui-row{appearance:none}
   }
   .legacy-status-project-expandable>.legacy-status-hero-expanded{
     border-radius:0 0 22px 22px;
+  }
+}
+
+
+/* Projeto Portal · fim da página sem espaço duplicado da navegação */
+@media(max-width:760px){
+  .legacy-status-v5{
+    padding-bottom:8px;
+    margin-bottom:0;
+  }
+  .legacy-status-v5>.legacy-how-link{
+    margin-bottom:0;
   }
 }
