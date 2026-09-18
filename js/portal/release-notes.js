@@ -265,7 +265,7 @@
   function releaseCardHtml(){
     const slide=homeSlide();
     if(!slide)return '';
-    return `<section class="notice-carousel-card release-announcement-card ${slide.tone?'is-'+esc(slide.tone):''}" data-release-announcement data-release-slide="${homeSlideIndex}">
+    return `<section class="notice-carousel-card release-announcement-card" data-notice-carousel="portal-home" data-release-announcement data-release-slide="${homeSlideIndex}">
       <div class="notice-carousel-top release-announcement-top">
         <span class="notice-carousel-icon release-announcement-spark" data-release-slide-icon><i class="fa-solid ${esc(slide.icon||'fa-wand-magic-sparkles')}"></i></span>
         <div class="notice-carousel-copy release-announcement-copy">
@@ -287,12 +287,11 @@
     const slide=homeSlide();
     if(!slide){card.remove();return}
     card.dataset.releaseSlide=String(homeSlideIndex);
-    card.classList.remove('is-slide-next','is-slide-prev','is-warning');
-    if(slide.tone)card.classList.add('is-'+slide.tone);
+    card.classList.remove('is-slide-next','is-slide-prev');
     void card.offsetWidth;
     card.classList.add(direction==='prev'?'is-slide-prev':'is-slide-next');
-    const title=card.querySelector('[data-notice-title data-release-slide-title]');
-    const summary=card.querySelector('[data-notice-summary data-release-slide-summary]');
+    const title=card.querySelector('[data-release-slide-title]');
+    const summary=card.querySelector('[data-release-slide-summary]');
     const eyebrow=card.querySelector('[data-release-slide-eyebrow]');
     const icon=card.querySelector('[data-release-slide-icon] i');
     const cta=card.querySelector('[data-release-slide-cta]');
