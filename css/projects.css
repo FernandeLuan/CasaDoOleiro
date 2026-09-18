@@ -1872,3 +1872,242 @@
     white-space:normal;
   }
 }
+
+
+/* Admin Projetos · visual detail v7 */
+.legacy-admin-modal{
+  width:min(590px,100%)!important;
+  max-width:590px!important;
+}
+.legacy-admin-modal .modal-head h2{
+  font-size:1.08rem!important;
+  line-height:1.2!important;
+  letter-spacing:-.02em;
+}
+.legacy-admin-modal .modal-head p{
+  font-size:.66rem!important;
+  line-height:1.35!important;
+}
+.legacy-admin-modal .modal-head p:empty{
+  display:none!important;
+}
+.legacy-admin-modal .modal-body{
+  padding:16px 18px 18px!important;
+}
+.legacy-admin-detail-v4{
+  gap:22px;
+}
+
+/* Resumo visual do projeto/voluntário. */
+.legacy-admin-project-meta{
+  padding:14px;
+  border:1px solid color-mix(in srgb,var(--primary) 14%,var(--border));
+  border-radius:18px;
+  background:
+    radial-gradient(circle at 100% 0,color-mix(in srgb,var(--primary) 10%,transparent),transparent 42%),
+    color-mix(in srgb,var(--primary-soft) 58%,var(--surface));
+}
+.legacy-admin-project-meta-main{
+  grid-template-columns:46px minmax(0,1fr);
+  gap:12px;
+}
+.legacy-admin-project-meta-icon{
+  width:46px;
+  height:46px;
+  border-radius:15px;
+  background:var(--primary);
+  color:#fff;
+  font-size:.9rem;
+  box-shadow:0 8px 18px color-mix(in srgb,var(--primary) 18%,transparent);
+}
+.legacy-admin-project-meta-main strong{
+  font-size:.8rem;
+  line-height:1.25;
+}
+.legacy-admin-project-meta-main small{
+  margin-top:4px;
+  font-size:.62rem;
+  line-height:1.3;
+}
+.legacy-admin-context-status .badge{
+  padding:8px 11px!important;
+  font-size:.58rem!important;
+  font-weight:700!important;
+}
+
+/* O andamento é o protagonista: título maior, poucos textos e ícones fortes. */
+.legacy-admin-detail-v4 .legacy-admin-tracking{
+  gap:15px;
+}
+.legacy-admin-detail-v4 .legacy-admin-tracking-head{
+  align-items:center;
+}
+.legacy-admin-detail-v4 .legacy-admin-tracking-head h3{
+  font-size:.94rem;
+  line-height:1.15;
+  letter-spacing:-.01em;
+}
+.legacy-admin-tracking-count{
+  padding:6px 9px;
+  border-radius:999px;
+  background:var(--primary-soft);
+  color:var(--primary);
+  font-size:.56rem;
+  font-weight:700;
+}
+.legacy-admin-detail-v4 .legacy-admin-timeline::before{
+  left:20px;
+  top:21px;
+  bottom:21px;
+  width:2px;
+  background:color-mix(in srgb,var(--primary) 15%,var(--border));
+}
+.legacy-admin-detail-v4 .legacy-admin-timeline-item{
+  grid-template-columns:42px minmax(0,1fr)!important;
+  gap:12px!important;
+  padding:0 0 18px!important;
+}
+.legacy-admin-detail-v4 .legacy-admin-timeline-item>span{
+  width:42px;
+  height:42px;
+  border-radius:14px;
+  background:var(--primary-soft);
+  color:var(--primary);
+  font-size:.78rem;
+  box-shadow:0 0 0 5px var(--surface);
+}
+.legacy-admin-detail-v4 .legacy-admin-timeline-item.progress>span{
+  background:var(--primary);
+  color:#fff;
+}
+.legacy-admin-detail-v4 .legacy-admin-timeline-meta{
+  align-items:center;
+  gap:10px;
+}
+.legacy-admin-detail-v4 .legacy-admin-timeline-meta strong{
+  font-size:.72rem;
+  line-height:1.25;
+}
+.legacy-admin-detail-v4 .legacy-admin-timeline-meta time{
+  padding:4px 7px;
+  border-radius:999px;
+  background:var(--surface-2);
+  color:var(--muted);
+  font-size:.52rem;
+  font-weight:600;
+}
+.legacy-admin-detail-v4 .legacy-admin-timeline-item p{
+  margin-top:5px!important;
+  font-size:.7rem!important;
+  line-height:1.48!important;
+}
+
+/* Projeto original + Drive ficam como atalhos visuais, não como blocos de texto. */
+.legacy-admin-secondary-links{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  border:0;
+}
+.legacy-admin-detail-v4 .legacy-admin-original,
+.legacy-admin-secondary-link{
+  border:1px solid var(--border);
+  border-radius:16px;
+  background:var(--surface);
+  overflow:hidden;
+}
+.legacy-admin-detail-v4 .legacy-admin-original[open]{
+  grid-column:1/-1;
+}
+.legacy-admin-detail-v4 .legacy-admin-original>summary,
+.legacy-admin-secondary-link{
+  min-height:78px;
+  grid-template-columns:44px minmax(0,1fr) auto;
+  gap:11px;
+  padding:12px;
+}
+.legacy-admin-detail-v4 .legacy-admin-original>summary>span,
+.legacy-admin-secondary-link>span{
+  width:44px;
+  height:44px;
+  border-radius:14px;
+  font-size:.82rem;
+  background:var(--primary-soft);
+}
+.legacy-admin-detail-v4 .legacy-admin-original>summary strong,
+.legacy-admin-secondary-link strong{
+  font-size:.69rem;
+  line-height:1.25;
+}
+.legacy-admin-detail-v4 .legacy-admin-original>summary small,
+.legacy-admin-secondary-link small{
+  margin-top:4px;
+  font-size:.55rem;
+  line-height:1.25;
+}
+.legacy-admin-detail-v4 .legacy-admin-original>summary>i,
+.legacy-admin-secondary-link>i{
+  font-size:.64rem;
+}
+.legacy-admin-detail-v4 .legacy-admin-original-body{
+  padding:4px 14px 12px;
+}
+.legacy-admin-detail-v4 .legacy-admin-original-body .legacy-admin-project-section small{
+  font-size:.56rem!important;
+}
+.legacy-admin-detail-v4 .legacy-admin-original-body .legacy-admin-project-section p{
+  font-size:.68rem!important;
+  line-height:1.48!important;
+}
+
+@media(max-width:390px){
+  .legacy-admin-modal .modal-body{
+    padding:14px!important;
+  }
+  .legacy-admin-detail-v4{
+    gap:18px;
+  }
+  .legacy-admin-project-meta{
+    padding:12px;
+  }
+  .legacy-admin-project-meta-main{
+    grid-template-columns:42px minmax(0,1fr);
+    gap:10px;
+  }
+  .legacy-admin-project-meta-icon{
+    width:42px;
+    height:42px;
+    border-radius:13px;
+  }
+  .legacy-admin-project-meta-main strong{
+    font-size:.76rem;
+  }
+  .legacy-admin-project-meta-main small{
+    font-size:.59rem;
+  }
+  .legacy-admin-detail-v4 .legacy-admin-timeline-meta{
+    display:flex;
+    flex-wrap:wrap;
+  }
+  .legacy-admin-detail-v4 .legacy-admin-timeline-meta time{
+    white-space:nowrap;
+  }
+  .legacy-admin-secondary-links{
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+  .legacy-admin-detail-v4 .legacy-admin-original>summary,
+  .legacy-admin-secondary-link{
+    min-height:72px;
+    grid-template-columns:40px minmax(0,1fr);
+    padding:10px;
+  }
+  .legacy-admin-detail-v4 .legacy-admin-original>summary>span,
+  .legacy-admin-secondary-link>span{
+    width:40px;
+    height:40px;
+  }
+  .legacy-admin-detail-v4 .legacy-admin-original>summary>i,
+  .legacy-admin-secondary-link>i{
+    display:none;
+  }
+}
