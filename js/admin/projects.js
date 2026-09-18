@@ -120,17 +120,13 @@
   }
   window.managerProjects=function(){
     state.projectFilter=normalizeProjectFilter(state.projectFilter);
-    const list=rows(),all=window.OleiroProjects?.list?.()||[],activeFilter=state.projectFilter!=='all';
-    const activeLabel=PROJECT_STATUS_OPTIONS.find(([id])=>id===state.projectFilter)?.[1]||'Todos os status';
-    return `<section class="section legacy-admin-page compact-page-top">
-      <header class="admin-page-title"><span class="eyebrow">Legados</span><h1>Projetos</h1><p>Acompanhe as contribuições que os voluntários estão deixando para a comunidade.</p></header>
+    const list=rows(),activeFilter=state.projectFilter!=='all';
+    return `<section class="section legacy-admin-page legacy-admin-page-clean compact-page-top">
       <div class="candidate-tools candidate-tools-compact legacy-project-tools">
         <div class="filter-search candidate-search"><i class="fa-solid fa-magnifying-glass"></i><input id="projectSearch" class="input" type="search" value="${esc(state.projectSearch||'')}" placeholder="Buscar projeto ou voluntário" oninput="updateLegacyProjectSearch(this.value)"></div>
         <button class="candidate-filter-button ${activeFilter?'active':''}" type="button" onclick="openLegacyProjectFilters()" aria-label="Filtros"><i class="fa-solid fa-sliders"></i>${activeFilter?'<span class="filter-dot"></span>':''}</button>
       </div>
-      <div class="legacy-project-list-head"><span>${list.length} ${list.length===1?'projeto':'projetos'}</span>${activeFilter?`<button type="button" onclick="clearLegacyProjectFilters()">${esc(activeLabel)} <i class="fa-solid fa-xmark"></i></button>`:''}</div>
-      <div class="legacy-admin-list">${list.length?list.map(projectCard).join(''):'<div class="empty"><i class="fa-solid fa-seedling"></i>Nenhum projeto encontrado.</div>'}</div>
-      ${all.length?'<div class="legacy-preview-caption"><i class="fa-solid fa-flask"></i><span>Ambiente de homologação</span></div>':''}
+      <div class="legacy-admin-list legacy-admin-list-clean">${list.length?list.map(projectCard).join(''):'<div class="empty"><i class="fa-solid fa-seedling"></i>Nenhum projeto encontrado.</div>'}</div>
     </section>`;
   };
   window.updateLegacyProjectSearch=function(value){state.projectSearch=String(value||'');render();afterNavigation?.()};
