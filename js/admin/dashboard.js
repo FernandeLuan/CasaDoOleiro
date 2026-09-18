@@ -36,19 +36,19 @@ let _managerHomePendingIndex=0;
 const _managerHomePendingDismissed=new Set();
 function managerHomePendingSlides(volunteerAnalysis,volunteerAdjustments,projectCounts){
   return [
-    volunteerAnalysis?{id:'volunteer-analysis',icon:'fa-users',area:'Voluntariado',title:`${volunteerAnalysis} ${volunteerAnalysis===1?'perfil em análise':'perfis em análise'}`,text:'Aguardando sua revisão.',statusLabel:'Em análise',tone:'info',action:"openDashboardVolunteerFilter('analysis')"}:null,
-    volunteerAdjustments?{id:'volunteer-adjustments',icon:'fa-users',area:'Voluntariado',title:`${volunteerAdjustments} ${volunteerAdjustments===1?'ajuste pendente':'ajustes pendentes'}`,text:'Mudanças aguardando nova revisão.',statusLabel:'Ajustes',tone:'warning',action:"openDashboardVolunteerFilter('adjustments')"}:null,
-    projectCounts.analysis?{id:'project-analysis',icon:'fa-seedling',area:'Projetos',title:`${projectCounts.analysis} ${projectCounts.analysis===1?'projeto em análise':'projetos em análise'}`,text:'Projeto Legado aguardando sua decisão.',statusLabel:'Em análise',tone:'info',action:"openDashboardProjectFilter('analysis')"}:null,
-    projectCounts.adjustments?{id:'project-adjustments',icon:'fa-seedling',area:'Projetos',title:`${projectCounts.adjustments} ${projectCounts.adjustments===1?'projeto com ajuste':'projetos com ajustes'}`,text:'Projeto Legado aguardando nova revisão.',statusLabel:'Ajustes',tone:'warning',action:"openDashboardProjectFilter('adjustments')"}:null
+    volunteerAnalysis?{id:'volunteer-analysis',icon:'fa-users',area:'Voluntariado',title:`${volunteerAnalysis} ${volunteerAnalysis===1?'perfil em análise':'perfis em análise'}`,text:'Aguardando sua revisão.',statusLabel:'Em análise',tone:'',action:"openDashboardVolunteerFilter('analysis')"}:null,
+    volunteerAdjustments?{id:'volunteer-adjustments',icon:'fa-users',area:'Voluntariado',title:`${volunteerAdjustments} ${volunteerAdjustments===1?'ajuste pendente':'ajustes pendentes'}`,text:'Mudanças aguardando nova revisão.',statusLabel:'Ajustes',tone:'',action:"openDashboardVolunteerFilter('adjustments')"}:null,
+    projectCounts.analysis?{id:'project-analysis',icon:'fa-seedling',area:'Projetos',title:`${projectCounts.analysis} ${projectCounts.analysis===1?'projeto em análise':'projetos em análise'}`,text:'Projeto Legado aguardando sua decisão.',statusLabel:'Em análise',tone:'',action:"openDashboardProjectFilter('analysis')"}:null,
+    projectCounts.adjustments?{id:'project-adjustments',icon:'fa-seedling',area:'Projetos',title:`${projectCounts.adjustments} ${projectCounts.adjustments===1?'projeto com ajuste':'projetos com ajustes'}`,text:'Projeto Legado aguardando nova revisão.',statusLabel:'Ajustes',tone:'',action:"openDashboardProjectFilter('adjustments')"}:null
   ].filter(Boolean).filter(slide=>!_managerHomePendingDismissed.has(slide.id));
 }
 function managerHomePreviewPendingSlides(){
   if(window.OleiroProjects?.isPreview!==true)return [];
   return [
-    {id:'preview-volunteer-analysis',icon:'fa-users',area:'Voluntariado',title:'2 candidaturas em análise',text:'Perfis aguardando sua revisão.',statusLabel:'Em análise',tone:'info',action:"openDashboardVolunteerFilter('analysis')",preview:true},
-    {id:'preview-volunteer-adjustments',icon:'fa-users',area:'Voluntariado',title:'1 ajuste pendente',text:'Mudança aguardando nova revisão.',statusLabel:'Ajustes',tone:'warning',action:"openDashboardVolunteerFilter('adjustments')",preview:true},
-    {id:'preview-project-analysis',icon:'fa-seedling',area:'Projetos',title:'1 projeto em análise',text:'Projeto Legado aguardando sua decisão.',statusLabel:'Em análise',tone:'info',action:"openDashboardProjectFilter('analysis')",preview:true},
-    {id:'preview-project-adjustments',icon:'fa-seedling',area:'Projetos',title:'1 projeto com ajuste',text:'Projeto Legado aguardando nova revisão.',statusLabel:'Ajustes',tone:'warning',action:"openDashboardProjectFilter('adjustments')",preview:true}
+    {id:'preview-volunteer-analysis',icon:'fa-users',area:'Voluntariado',title:'2 candidaturas em análise',text:'Perfis aguardando sua revisão.',statusLabel:'Em análise',tone:'',action:"openDashboardVolunteerFilter('analysis')",preview:true},
+    {id:'preview-volunteer-adjustments',icon:'fa-users',area:'Voluntariado',title:'1 ajuste pendente',text:'Mudança aguardando nova revisão.',statusLabel:'Ajustes',tone:'',action:"openDashboardVolunteerFilter('adjustments')",preview:true},
+    {id:'preview-project-analysis',icon:'fa-seedling',area:'Projetos',title:'1 projeto em análise',text:'Projeto Legado aguardando sua decisão.',statusLabel:'Em análise',tone:'',action:"openDashboardProjectFilter('analysis')",preview:true},
+    {id:'preview-project-adjustments',icon:'fa-seedling',area:'Projetos',title:'1 projeto com ajuste',text:'Projeto Legado aguardando nova revisão.',statusLabel:'Ajustes',tone:'',action:"openDashboardProjectFilter('adjustments')",preview:true}
   ].filter(slide=>!_managerHomePendingDismissed.has(slide.id));
 }
 function managerHomePendingSlidesVisible(volunteerAnalysis,volunteerAdjustments,projectCounts){
@@ -76,7 +76,7 @@ function managerHomePendingCard(slides){
   if(!slides.length)return '';
   if(_managerHomePendingIndex>=slides.length)_managerHomePendingIndex=0;
   const slide=slides[_managerHomePendingIndex],total=slides.length;
-  return `<section class="notice-carousel-card ${slide.tone?'is-'+slide.tone:''}" aria-label="Pendências" data-manager-home-pending>
+  return `<section class="notice-carousel-card" aria-label="Pendências" data-manager-home-pending>
     <div class="notice-carousel-top">
       <span class="notice-carousel-icon"><i class="fa-solid ${slide.icon}"></i></span>
       <div class="notice-carousel-copy">
