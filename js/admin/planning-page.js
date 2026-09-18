@@ -68,15 +68,14 @@
   function adminPlanningShareAllowed(p){return !!p&&p.status!=='rejected'&&!p.inactive}
   function adminPlanningShareStatus(p){const map={pending:'portal.profile.preparing',analysis:'portal.profile.analysis',adjustments:'portal.profile.adjustments',meeting:'portal.meeting.planApproved',plan_approved:'portal.meeting.planApproved',approved:'portal.profile.approved',rejected:'portal.profile.rejected'};return typeof t==='function'?t(map[String(p?.status||'')]||'portal.profile.preparing'):(statusMeta(p?.status||'')[0]||'')}
   function adminPlanningShareHeading(p){if(String(p?.status||'')==='approved')return typeof t==='function'?t('planning.share.confirmedHeading'):'Planejamento confirmado';if(['meeting','plan_approved'].includes(String(p?.status||'')))return typeof t==='function'?t('planning.share.approvedHeading'):'Planejamento aprovado';return typeof t==='function'?t('planning.share.heading'):'Planejamento'}
-  function adminPlanningOverflowButton(p){if(!adminPlanningShareAllowed(p))return '';const aria=typeof t==='function'?t('planning.share.moreAria'):'Mais opções do planejamento';return `<button class="planning-overflow-button" type="button" onclick="openAdminPlanningMenu('${encodeURIComponent(String(p.id))}')" aria-label="${escapeHtml(aria)}" title="${escapeHtml(aria)}"><i class="fa-solid fa-ellipsis-vertical"></i></button>`}
-  window.openAdminPlanningMenu=function(encodedId){
-    const id=decodeURIComponent(String(encodedId||'')),p=candidateById(id);if(!adminPlanningShareAllowed(p))return;
-    const title=typeof t==='function'?t('planning.share.menuTitle'):'Opções do planejamento',subtitle=typeof t==='function'?t('planning.share.menuSubtitle'):'Escolha uma ação.',action=typeof t==='function'?t('planning.share.whatsapp'):'Compartilhar no WhatsApp',hint=typeof t==='function'?t('planning.share.whatsappHint'):'Envia um resumo do planejamento atual.';
-    openModal(title,subtitle,`<div class="menu-list planning-share-menu"><button class="menu-link" type="button" onclick="shareAdminPlanningWhatsApp('${encodeURIComponent(String(p.id))}')"><i class="fa-brands fa-whatsapp"></i><span><strong>${escapeHtml(action)}</strong><small>${escapeHtml(hint)}</small></span><i class="fa-solid fa-chevron-right"></i></button></div>`);
-  };
+  function adminPlanningShareBar(p){
+    if(!adminPlanningShareAllowed(p)||String(state.managerPlanningTab||'plan')!=='plan')return '';
+    const action=typeof t==='function'?t('planning.share.whatsapp'):'Compartilhar no WhatsApp';
+    return `<div class="planning-share-bar admin-planning-share-bar"><button class="planning-share-action" type="button" data-application-id="${escapeHtml(String(p.id))}" onclick="shareAdminPlanningWhatsApp('${encodeURIComponent(String(p.id))}')"><i class="fa-brands fa-whatsapp"></i><span>${escapeHtml(action)}</span></button></div>`;
+  }
   window.shareAdminPlanningWhatsApp=async function(encodedId){
     const id=decodeURIComponent(String(encodedId||'')),p=candidateById(id);if(!adminPlanningShareAllowed(p))return;
-    const popup=window.OleiroPlanningShare?.reservePopup?.()||null,button=modalRoot.querySelector('.planning-share-menu .menu-link');
+    const popup=window.OleiroPlanningShare?.reservePopup?.()||null,button=document.querySelector(`.admin-planning-share-bar .planning-share-action[data-application-id="${CSS.escape(String(id))}"]`);
     if(button){button.disabled=true;button.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i><span><strong>Preparando...</strong><small>Carregando o planejamento completo.</small></span>'}
     try{
       const start=p.from||p.stayStart||'',end=p.to||p.stayEnd||'';
@@ -85,10 +84,10 @@
       if(!rows.length){window.OleiroPlanningShare?.closePopup?.(popup);showToast(typeof t==='function'?t('planning.share.none'):'Não há planejamento para compartilhar.');return}
       const labels={status:typeof t==='function'?t('planning.share.status'):'Status',unit:typeof t==='function'?t('planning.share.unit'):'Unidade',period:typeof t==='function'?t('planning.share.period'):'Período',observation:typeof t==='function'?t('planning.share.observation'):'Obs.'};
       const text=window.OleiroPlanningShare.buildText({heading:adminPlanningShareHeading(p),name:p.name||'Voluntário',statusLabel:adminPlanningShareStatus(p),unit:p.unit||p.unitName||'',start,end,sessions:rows,labels});
-      closeModal();window.OleiroPlanningShare.openWhatsApp(text,{popup});
+      window.OleiroPlanningShare.openWhatsApp(text,{popup});
     }catch(error){
       console.error('Falha ao preparar compartilhamento do planejamento:',error);window.OleiroPlanningShare?.closePopup?.(popup);showToast(typeof t==='function'?t('planning.share.error'):'Não foi possível preparar o compartilhamento.');
-      if(button?.isConnected){button.disabled=false;button.innerHTML='<i class="fa-brands fa-whatsapp"></i><span><strong>Compartilhar no WhatsApp</strong></span><i class="fa-solid fa-chevron-right"></i>'}
+      if(button?.isConnected){button.disabled=false;button.innerHTML='<i class="fa-brands fa-whatsapp"></i><span>Compartilhar no WhatsApp</span>'}
     }
   };
 
@@ -96,8 +95,8 @@
     const p=planningPerson();if(!p)return planningList();
     const loading=state.managerPlanningLoading&&!state.managerPlanningBody;
     return `<section class="section planning-detail-page compact-page-top" data-person-id="${escapeHtml(String(p.id))}">
-      <header class="planning-profile-head"><div class="planning-profile-heading"><div class="planning-profile-copy"><div class="planning-profile-title-line"><h1>${escapeHtml(p.name||'Voluntário')}</h1></div><div class="planning-profile-meta"><span>${escapeHtml(p.country||'—')}</span><b>•</b><span>${escapeHtml(p.unit||p.unitName||'—')}</span><b>•</b><span class="planning-profile-period-status"><span>${escapeHtml(personDates(p))}</span><b>•</b>${personBadge(p)}</span></div></div></div><div class="planning-profile-actions">${adminPlanningOverflowButton(p)}<button class="planning-close-button" type="button" onclick="closePlanningDetail()" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button></div>${profileTabs(p)}</header>
-      <div class="planning-page-content">${planningReviewToolbar(p)}${loading?'<div class="empty compact-loading planning-page-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando planejamento...</div>':state.managerPlanningBody||'<div class="empty compact-loading planning-page-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando dados...</div>'}</div>
+      <header class="planning-profile-head"><div class="planning-profile-heading"><div class="planning-profile-copy"><div class="planning-profile-title-line"><h1>${escapeHtml(p.name||'Voluntário')}</h1></div><div class="planning-profile-meta"><span>${escapeHtml(p.country||'—')}</span><b>•</b><span>${escapeHtml(p.unit||p.unitName||'—')}</span><b>•</b><span class="planning-profile-period-status"><span>${escapeHtml(personDates(p))}</span><b>•</b>${personBadge(p)}</span></div></div></div><div class="planning-profile-actions"><button class="planning-close-button" type="button" onclick="closePlanningDetail()" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button></div>${profileTabs(p)}</header>
+      <div class="planning-page-content">${planningReviewToolbar(p)}${loading?'<div class="empty compact-loading planning-page-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando planejamento...</div>':state.managerPlanningBody||'<div class="empty compact-loading planning-page-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando dados...</div>'}${!loading&&state.managerPlanningBody?adminPlanningShareBar(p):''}</div>
     </section>`;
   }
 
