@@ -175,7 +175,7 @@
     const p=project(),done=p?.status==='completed';
     if(done)return '';
     const label=p?'Continuar':'Conhecer';
-    return `<section class="legacy-home-callout legacy-home-callout-glow"><span class="legacy-home-callout-icon"><i class="fa-solid fa-seedling"></i></span><div class="legacy-home-callout-copy"><strong>Projeto de legado</strong><p>${p?'Seu projeto ainda faz parte da sua jornada.':'Descubra como sua passagem pode deixar algo útil para a comunidade.'}</p></div><div class="legacy-home-callout-actions"><button class="btn btn-outline" type="button" onclick="skipLegacyProjectPrompt()">Agora não</button><button class="btn btn-soft" type="button" onclick="navigateVolunteer('project')">${label}</button></div></section>`;
+    return `<section class="legacy-home-callout legacy-home-callout-glow"><span class="legacy-home-callout-icon"><i class="fa-solid fa-seedling"></i></span><div class="legacy-home-callout-copy"><strong>Projeto de legado</strong><p>${p?'Seu projeto ainda faz parte da sua jornada.':'Descubra como sua passagem pode deixar algo útil para a comunidade.'}</p></div><div class="legacy-home-callout-actions"><button class="btn btn-outline" type="button" onclick="skipLegacyProjectPrompt()">Agora não</button><button class="btn btn-primary" type="button" onclick="navigateVolunteer('project')">${label}</button></div></section>`;
   };
 
   let legacyProjectSwipeStart=null;
