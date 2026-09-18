@@ -168,7 +168,14 @@
     </div>`;
     let footer='';
     if(p.status==='analysis')footer='<button class="btn btn-outline" onclick="openLegacyAdjustment(\''+esc(p.id)+'\')">Pedir ajuste</button><button class="btn btn-primary" onclick="approveLegacyProject(\''+esc(p.id)+'\')">Aprovar projeto</button>';
-    openModal('Projeto de legado','Analise a proposta e ajude o voluntário a transformar a ideia em algo possível.',body,footer);
+    const modalSubtitle=p.status==='analysis'
+      ?'Analise a proposta e decida se ela pode seguir para execução.'
+      :p.status==='in_progress'
+        ?'Acompanhe os comentários e o andamento registrado pelo voluntário.'
+        :p.status==='completed'
+          ?'Consulte o resultado e o histórico completo deste legado.'
+          :'Consulte as informações deste projeto.';
+    openModal('Projeto de legado',modalSubtitle,body,footer);
     modalRoot.querySelector('.modal')?.classList.add('legacy-admin-modal');
   };
   window.approveLegacyProject=function(id){window.OleiroProjects.update(id,{status:'approved',reviewNote:'',approvedAt:new Date().toISOString()});closeModal();render();showToast('Projeto aprovado.')};
