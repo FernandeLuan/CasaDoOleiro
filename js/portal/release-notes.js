@@ -1,21 +1,22 @@
-/* Card de novidades do portal.
-   Para publicar uma nova comunicação:
-   1) altere ANNOUNCEMENT.id;
-   2) atualize título, resumo, itens e CTA.
-   O card aparece uma única vez por anúncio para cada usuário/dispositivo.
-   O número técnico do deploy continua vindo de /release.json. */
+/* Destaques e novidades do Portal.
+   Prioridade da Home:
+   1) Projeto Legado, enquanto o usuário ainda não interagiu com o convite;
+   2) atualização vigente, enquanto ainda não foi vista/dispensada.
+   Para divulgar uma nova versão, altere ANNOUNCEMENT.id e o conteúdo abaixo.
+   Deploys técnicos sozinhos NÃO reexibem o card. */
 (function portalReleaseNotes(){
   if(!/\/portal\//.test(location.pathname))return;
   if(window.__OLEIRO_PORTAL_RELEASE_NOTES__)return;
   window.__OLEIRO_PORTAL_RELEASE_NOTES__=true;
 
+  const PROJECT_PROMPT_ID='2026-09-projeto-legado-intro-v1';
   const ANNOUNCEMENT={
-    id:'2026-09-portal-legado-conta',
+    id:'2026-09-portal-projeto-legado-v2',
     eyebrow:'Nova atualização',
     title:'Tem novidade por aqui ✨',
     summary:'Deixamos o portal mais simples e adicionamos novas formas de acompanhar sua experiência.',
     items:[
-      {icon:'fa-seedling',title:'Projeto de legado',text:'Conheça a proposta e acesse a nova área Projeto pelo menu.'},
+      {icon:'fa-seedling',title:'Projeto Legado',text:'Conheça a proposta e acesse a nova área Projeto pelo menu.'},
       {icon:'fa-user',title:'Conta mais organizada',text:'Idioma, aparência e contato de emergência ficaram reunidos em um só lugar.'},
       {icon:'fa-compass',title:'Navegação mais simples',text:'Projeto, Conta e Informações da Casa agora estão mais fáceis de encontrar.'}
     ],
@@ -27,16 +28,14 @@
   let releaseMeta=null;
   let metaPromise=null;
 
-  function userKey(){
-    const uid=String(state?.currentSession?.uid||'anon');
-    return `oleiro.portal.release-notes.seen.v1:${uid}`;
-  }
-  function seen(){
-    try{return localStorage.getItem(userKey())===ANNOUNCEMENT.id}catch{return false}
-  }
-  function markSeen(){
-    try{localStorage.setItem(userKey(),ANNOUNCEMENT.id)}catch{}
-  }
+  function uid(){return String(state?.currentSession?.uid||'anon')}
+  function releaseSeenKey(){return `oleiro.portal.release-notes.seen.v1:${uid()}`}
+  function projectSeenKey(){return `oleiro.portal.project-highlight.seen.v1:${uid()}`}
+  function releaseSeen(){try{return localStorage.getItem(releaseSeenKey())===ANNOUNCEMENT.id}catch{return false}}
+  function projectSeen(){try{return localStorage.getItem(projectSeenKey())===PROJECT_PROMPT_ID}catch{return false}}
+  function markReleaseSeen(){try{localStorage.setItem(releaseSeenKey(),ANNOUNCEMENT.id)}catch{}}
+  function markProjectSeen(){try{localStorage.setItem(projectSeenKey(),PROJECT_PROMPT_ID)}catch{}}
+
   function metaLabel(){
     const build=String(releaseMeta?.build||'').trim();
     return build?`Versão ${build}`:'';
@@ -62,8 +61,8 @@
   function itemHtml(item){
     return `<div class="release-note-item"><span><i class="fa-solid ${esc(item.icon)}"></i></span><div><strong>${esc(item.title)}</strong><p>${esc(item.text)}</p></div></div>`;
   }
-  function cardHtml(){
-    if(seen())return '';
+  function releaseCardHtml(){
+    if(releaseSeen())return '';
     return `<section class="release-announcement-card" data-release-announcement>
       <div class="release-announcement-top">
         <span class="release-announcement-spark"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
@@ -79,9 +78,40 @@
       </div>
     </section>`;
   }
+  function stripProjectHighlight(html){
+    return String(html||'').replace(/<section(?=[^>]*data-project-highlight="1")[^>]*>[\s\S]*?<\/section>/,'');
+  }
+  function insertAfterHero(html,card){
+    if(!card)return html;
+    const heroEnd=html.indexOf('</section>');
+    return heroEnd>=0?html.slice(0,heroEnd+10)+card+html.slice(heroEnd+10):card+html;
+  }
+  function showNextHighlightAfterProject(card){
+    const next=releaseCardHtml();
+    if(!card)return;
+    card.classList.add('is-leaving');
+    setTimeout(()=>{
+      if(!card.isConnected)return;
+      if(next){
+        card.outerHTML=next;
+        updateMetaLabels();
+      }else card.remove();
+    },210);
+  }
+
+  window.dismissPortalProjectHighlight=function(){
+    markProjectSeen();
+    showNextHighlightAfterProject(document.querySelector('[data-project-highlight="1"]'));
+  };
+  window.openPortalProjectHighlight=function(){
+    markProjectSeen();
+    const card=document.querySelector('[data-project-highlight="1"]');
+    if(card)card.classList.add('is-leaving');
+    setTimeout(()=>navigateVolunteer('project'),card?150:0);
+  };
 
   window.dismissPortalReleaseAnnouncement=function(){
-    markSeen();
+    markReleaseSeen();
     const card=document.querySelector('[data-release-announcement]');
     if(card){
       card.classList.add('is-leaving');
@@ -90,8 +120,12 @@
   };
 
   window.openPortalReleaseNotes=function(){
-    markSeen();
-    document.querySelector('[data-release-announcement]')?.remove();
+    markReleaseSeen();
+    const card=document.querySelector('[data-release-announcement]');
+    if(card){
+      card.classList.add('is-leaving');
+      setTimeout(()=>card.remove(),180);
+    }
     const body=`<div class="release-notes-modal">
       <div class="release-notes-modal-intro">
         <span class="release-notes-modal-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
@@ -105,14 +139,37 @@
     updateMetaLabels();
   };
 
+  const baseNavigateVolunteer=typeof window.navigateVolunteer==='function'?window.navigateVolunteer:null;
+  if(baseNavigateVolunteer){
+    window.navigateVolunteer=navigateVolunteer=function(page){
+      if(String(page)==='project')markProjectSeen();
+      return baseNavigateVolunteer(page);
+    };
+  }
+
   const baseVolunteerHome=typeof window.volunteerHome==='function'?window.volunteerHome:null;
   if(baseVolunteerHome){
     window.volunteerHome=volunteerHome=function(){
       let html=baseVolunteerHome();
-      const card=cardHtml();
+      const hasProject=html.includes('data-project-highlight="1"');
+      if(hasProject&&!projectSeen())return html;
+      if(hasProject)html=stripProjectHighlight(html);
+      const card=releaseCardHtml();
       if(!card||html.includes('data-release-announcement'))return html;
-      const heroEnd=html.indexOf('</section>');
-      return heroEnd>=0?html.slice(0,heroEnd+10)+card+html.slice(heroEnd+10):card+html;
+      return insertAfterHero(html,card);
+    };
+  }
+
+  const baseVolunteerInfo=typeof window.volunteerInfo==='function'?window.volunteerInfo:null;
+  if(baseVolunteerInfo){
+    window.volunteerInfo=volunteerInfo=function(){
+      const html=baseVolunteerInfo();
+      if(html.includes('release-history-card'))return html;
+      const card=`<div class="card release-history-card">
+        <div class="release-history-copy"><span class="release-history-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span><div><small>Novidades da versão</small><strong>${esc(ANNOUNCEMENT.title)}</strong><p>Veja novamente o que mudou nesta atualização.</p><span data-release-meta hidden></span></div></div>
+        <button class="btn btn-soft" type="button" onclick="openPortalReleaseNotes()">Ver novidades</button>
+      </div>`;
+      return html.replace(/<\/section>\s*$/,`${card}</section>`);
     };
   }
 

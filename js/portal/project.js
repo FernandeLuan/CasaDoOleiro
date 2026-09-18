@@ -85,7 +85,7 @@
 
   function candidatePreviewPage(){
     return `<section class="section legacy-page">
-      <div class="legacy-page-title"><span class="eyebrow">Projeto de legado</span><h1>Conheça agora. Crie quando sua candidatura for aprovada.</h1><p>Você já pode entender a proposta, observar necessidades da comunidade e guardar ideias. A criação e o envio do projeto ficam disponíveis quando sua estadia for confirmada.</p></div>
+      <div class="legacy-page-title"><span class="eyebrow">Projeto Legado</span><h1>Conheça agora. Crie quando sua candidatura for aprovada.</h1><p>Você já pode entender a proposta, observar necessidades da comunidade e guardar ideias. A criação e o envio do projeto ficam disponíveis quando sua estadia for confirmada.</p></div>
       <div class="notice"><i class="fa-solid fa-lock"></i><div><strong>Criação liberada após a aprovação</strong><br>Enquanto isso, use esta área para conhecer exemplos e pensar no que combina com suas habilidades.</div></div>
       <div class="section-head legacy-inspire-head"><div><h2>Ideias para observar</h2><p>O projeto pode ser simples, útil e possível de continuar depois.</p></div></div>
       <div class="legacy-idea-grid">
@@ -162,6 +162,7 @@
     window.OleiroProjects.saveOwn({status:'completed',result,driveUrl,completedAt:new Date().toISOString()});closeModal();render();showToast('Seu legado foi concluído. Obrigado por deixar algo para a comunidade.');
   };
   window.skipLegacyProjectPrompt=function(){
+    window.dismissPortalProjectHighlight?.();
     openModal(
       'Você pode conhecer depois',
       '',
@@ -175,7 +176,7 @@
     const p=project(),done=p?.status==='completed';
     if(done)return '';
     const label=p?'Continuar':'Conhecer';
-    return `<section class="legacy-home-callout legacy-home-callout-glow"><span class="legacy-home-callout-icon"><i class="fa-solid fa-seedling"></i></span><div class="legacy-home-callout-copy"><strong>Projeto de legado</strong><p>${p?'Seu projeto ainda faz parte da sua jornada.':'Descubra como sua passagem pode deixar algo útil para a comunidade.'}</p></div><div class="legacy-home-callout-actions"><button class="btn btn-outline" type="button" onclick="skipLegacyProjectPrompt()">Agora não</button><button class="btn btn-primary" type="button" onclick="navigateVolunteer('project')">${label}</button></div></section>`;
+    return `<section class="legacy-home-callout legacy-home-callout-glow" data-project-highlight="1"><span class="legacy-home-callout-icon"><i class="fa-solid fa-seedling"></i></span><div class="legacy-home-callout-copy"><strong>Projeto Legado</strong><p>${p?'Seu projeto ainda faz parte da sua jornada.':'Descubra como sua passagem pode deixar algo útil para a comunidade.'}</p></div><div class="legacy-home-callout-actions"><button class="btn btn-outline" type="button" onclick="skipLegacyProjectPrompt()">Agora não</button><button class="btn btn-primary" type="button" onclick="openPortalProjectHighlight()">${label}</button></div></section>`;
   };
 
   let legacyProjectSwipeStart=null;
