@@ -133,7 +133,7 @@
 .legacy-empty-home-action{position:relative;z-index:1;margin-top:17px;width:100%;min-height:44px;border:0;border-radius:14px;background:#fff;color:var(--primary);display:flex;align-items:center;justify-content:center;gap:9px;padding:0 26px;font:inherit;font-size:.72rem;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(17,45,31,.12)}
 .legacy-empty-home-action:active{transform:scale(.985)}
 
-.legacy-empty-inspiration{display:grid;gap:11px;margin-top:4px}
+.legacy-empty-inspiration{display:grid;gap:11px;margin-top:16px}
 .legacy-empty-inspiration-head{display:block;padding:0 2px}
 .legacy-empty-inspiration-head h2{margin:0;font-size:.76rem;line-height:1.2;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--primary)}
 .legacy-empty-idea-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
@@ -151,7 +151,7 @@
   .legacy-empty-home-hero h1{font-size:1.28rem}
   .legacy-empty-home-hero p{font-size:.72rem}
   .legacy-empty-home-action{width:100%;min-height:43px}
-  .legacy-empty-inspiration{margin-top:7px}
+  .legacy-empty-inspiration{margin-top:20px}
   .legacy-empty-inspiration-head h2{font-size:.72rem}
   .legacy-empty-idea-grid{gap:8px}
   .legacy-empty-idea-grid .legacy-idea-card{grid-template-columns:34px minmax(0,1fr);grid-template-rows:auto auto;column-gap:9px;row-gap:8px;min-height:118px;padding:12px}
