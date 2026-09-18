@@ -23,6 +23,24 @@ function dashboardProjectCounts(){
 function dashboardStatusPill(value,label,tone=''){
   return `<span class="manager-home-focus-pill ${tone}"><strong>${Number(value)||0}</strong><small>${escapeHtml(label)}</small></span>`;
 }
+function openDashboardVolunteerFilter(status){
+  state.candidateFilter=String(status||'all');
+  state.candidateUnit='all';
+  state.candidateSearch='';
+  navigateManager('volunteer');
+}
+function openDashboardProjectFilter(status){
+  state.projectFilter=String(status||'all');
+  state.projectSearch='';
+  navigateManager('projects');
+}
+function dashboardQuickAction({icon,title,count,label,action,tone=''}) {
+  return `<button class="manager-home-quick-action ${tone}" type="button" onclick="${action}">
+    <span class="manager-home-quick-icon"><i class="fa-solid ${icon}"></i></span>
+    <span class="manager-home-quick-copy"><strong>${escapeHtml(title)}</strong><small><b>${Number(count)||0}</b> ${escapeHtml(label)}</small></span>
+    <i class="fa-solid fa-chevron-right"></i>
+  </button>`;
+}
 function movementDaysLabel(iso){if(!iso)return '';const diff=Math.ceil((new Date(iso+'T12:00:00')-new Date(_oleiroToday+'T12:00:00'))/86400000);return diff===0?'hoje':diff===1?'amanhã':diff>1?`em ${diff} dias`:diff===-1?'ontem':`${Math.abs(diff)} dias atrás`}
 function nextMovements(field,limit=20){const rows=field==='from'?(state.dashboardArrivals||[]):(state.dashboardDepartures||[]);return rows.slice(0,limit)}
 function movementList(rows,field){return rows.length?rows.map(p=>miniMove(p.name,fmtDate(p[field],true),movementDaysLabel(p[field]))).join(''):'<div class="empty">Nenhuma movimentação prevista.</div>'}
@@ -35,6 +53,15 @@ function managerHome(){
   const todayRows=Array.isArray(state.managerTodaySessions)?state.managerTodaySessions:[],todaySessions=todayRows.filter(row=>String(row.date||'')===String(_oleiroToday)).map(session=>{const activity=session.activity||{};return {activity:{...activity,name:session.activityName||activity.name||'Atividade',owner:session.ownerName||activity.ownerName||activity.owner||'Voluntário',duration:Number(session.duration||activity.duration||60)},group:session.groupId||'A definir',status:session.status||'proposed',raw:session}}),arrivals=nextMovements('from'),departures=nextMovements('to');
   const todayLoading=state.managerTodayLoaded!==true,dashboardLoading=state.managerDashboardLoaded!==true;
   const projectCounts=dashboardProjectCounts(),volunteerAnalysis=dashboardCount('analysis'),volunteerAdjustments=dashboardCount('adjustments');
+  const attentionActions=[
+    volunteerAnalysis?dashboardQuickAction({icon:'fa-clipboard-check',title:'Voluntariado',count:volunteerAnalysis,label:'em análise',action:"openDashboardVolunteerFilter('analysis')",tone:'warning'}):'',
+    volunteerAdjustments?dashboardQuickAction({icon:'fa-rotate',title:'Voluntariado',count:volunteerAdjustments,label:'com ajustes',action:"openDashboardVolunteerFilter('adjustments')",tone:'warning'}):'',
+    projectCounts.analysis?dashboardQuickAction({icon:'fa-seedling',title:'Projetos',count:projectCounts.analysis,label:'em análise',action:"openDashboardProjectFilter('analysis')",tone:'warning'}):'',
+    projectCounts.adjustments?dashboardQuickAction({icon:'fa-pen-ruler',title:'Projetos',count:projectCounts.adjustments,label:'com ajustes',action:"openDashboardProjectFilter('adjustments')",tone:'warning'}):''
+  ].filter(Boolean).join('');
+  const followupActions=[
+    projectCounts.in_progress?dashboardQuickAction({icon:'fa-chart-line',title:'Projetos',count:projectCounts.in_progress,label:'em execução',action:"openDashboardProjectFilter('in_progress')",tone:'success'}):''
+  ].filter(Boolean).join('');
   const todayHtml=todayLoading?'<div class="empty compact-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando atividades...</div>':todaySessions.length?todaySessions.map(s=>agendaItem(s.activity.name,s.activity.owner,s.group,s.status,activityPeriodValue(s.raw||{},s.activity),s.activity.duration)).join(''):'<div class="empty">Nenhuma atividade prevista para hoje.</div>';
   const movementsLoading='<div class="empty compact-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando movimentações...</div>';
   return `<style id="managerHomeStyles">
@@ -50,24 +77,29 @@ function managerHome(){
     .manager-home-card .section-head{align-items:flex-start;margin-bottom:16px}.manager-home-card .section-head h2{margin:0 0 4px;font-size:1.12rem;line-height:1.25;color:var(--text)}.manager-home-card .section-head p{margin:0;color:var(--muted);font-size:.76rem}
     .manager-home-hero{margin:0;min-width:0}.manager-home-hero h1{letter-spacing:-.035em}.manager-home-today-list{display:grid;gap:10px;min-height:0}.manager-home-today-list>.empty{min-height:100px;display:grid;place-items:center}.manager-home-movements .card{box-shadow:none}
     .manager-home-today-item{cursor:pointer}
-    .manager-home-focus-list{display:grid;gap:10px}
-    .manager-home-focus-row{width:100%;border:1px solid var(--border);background:var(--surface);border-radius:18px;padding:12px;display:grid;grid-template-columns:42px minmax(0,1fr) 16px;gap:11px;align-items:center;text-align:left;color:var(--text);font:inherit;cursor:pointer;box-shadow:none}
-    .manager-home-focus-row:active{transform:scale(.995)}
-    .manager-home-focus-icon{width:42px;height:42px;border-radius:13px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;font-size:.82rem}
-    .manager-home-focus-copy{min-width:0}
-    .manager-home-focus-copy>strong{display:block;font-size:.77rem;line-height:1.25;margin:0 0 7px}
-    .manager-home-focus-pills{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-    .manager-home-focus-pill{display:inline-flex;align-items:center;gap:4px;min-height:25px;padding:4px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);font-size:.51rem;line-height:1;white-space:nowrap}
-    .manager-home-focus-pill strong{font-size:.58rem;color:var(--text)}
-    .manager-home-focus-pill small{font-size:.51rem;color:inherit}
-    .manager-home-focus-pill.warning{background:#fff3d5;color:#97630d}.manager-home-focus-pill.warning strong{color:#97630d}
-    .manager-home-focus-pill.success{background:var(--success-soft);color:var(--success)}.manager-home-focus-pill.success strong{color:var(--success)}
-    .manager-home-focus-pill.info{background:#e9f2f8;color:#3d6982}.manager-home-focus-pill.info strong{color:#3d6982}
-    .manager-home-focus-row>i{justify-self:end;color:var(--muted);font-size:.7rem}
+    .manager-home-operational{display:grid;gap:14px}
+    .manager-home-operational-group{display:grid;gap:8px}
+    .manager-home-operational-label{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 2px}
+    .manager-home-operational-label strong{font-size:.68rem;line-height:1.25;color:var(--text)}
+    .manager-home-operational-label span{font-size:.54rem;color:var(--muted)}
+    .manager-home-quick-list{display:grid;gap:8px}
+    .manager-home-quick-action{width:100%;border:1px solid var(--border);background:var(--surface);border-radius:16px;padding:10px 11px;display:grid;grid-template-columns:38px minmax(0,1fr) 14px;gap:10px;align-items:center;text-align:left;color:var(--text);font:inherit;cursor:pointer;box-shadow:none}
+    .manager-home-quick-action:active{transform:scale(.995)}
+    .manager-home-quick-icon{width:38px;height:38px;border-radius:12px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;font-size:.74rem}
+    .manager-home-quick-copy{min-width:0}
+    .manager-home-quick-copy strong{display:block;font-size:.7rem;line-height:1.2;margin:0}
+    .manager-home-quick-copy small{display:block;margin-top:2px;color:var(--muted);font-size:.58rem;line-height:1.3}
+    .manager-home-quick-copy small b{color:var(--text);font-size:.64rem}
+    .manager-home-quick-action>i{justify-self:end;color:var(--muted);font-size:.62rem}
+    .manager-home-quick-action.warning .manager-home-quick-icon{background:#fff3d5;color:#97630d}
+    .manager-home-quick-action.success .manager-home-quick-icon{background:var(--success-soft);color:var(--success)}
+    .manager-home-all-clear{min-height:64px;border:1px dashed color-mix(in srgb,var(--success) 26%,var(--border));border-radius:16px;background:color-mix(in srgb,var(--success-soft) 50%,var(--surface));display:flex;align-items:center;gap:10px;padding:12px;color:var(--success)}
+    .manager-home-all-clear i{width:36px;height:36px;border-radius:12px;background:var(--success-soft);display:grid;place-items:center}
+    .manager-home-all-clear div strong{display:block;font-size:.68rem}.manager-home-all-clear div small{display:block;margin-top:2px;font-size:.55rem;color:var(--muted)}
     @media(min-width:1024px){
       .manager-home-grid{grid-template-columns:minmax(0,1.18fr) minmax(380px,.92fr)}
       .manager-home-hero{min-height:238px;padding:28px 34px;display:flex;flex-direction:column;justify-content:center;border-radius:26px}.manager-home-hero h1{font-size:clamp(2.2rem,2.8vw,3.35rem);line-height:1.04;margin:8px 0 10px}.manager-home-hero p{font-size:.88rem;max-width:720px;margin:0}.manager-home-hero .hero-actions{margin-top:20px}.manager-home-hero .btn{min-height:44px;padding:10px 16px;font-size:.75rem}
-      .manager-home-card{padding:22px 24px;min-height:0}.manager-home-pending{display:flex;flex-direction:column;justify-content:flex-start}.manager-home-pending .manager-home-focus-list{margin-top:auto;margin-bottom:auto}
+      .manager-home-card{padding:22px 24px;min-height:0}.manager-home-pending{display:flex;flex-direction:column;justify-content:flex-start}.manager-home-pending .manager-home-operational{margin-top:auto;margin-bottom:auto}
       .manager-home-today,.manager-home-movements-card{min-height:310px}.manager-home-today{display:flex;flex-direction:column}.manager-home-today-list{flex:1;align-content:start}.manager-home-today-list .list-item{min-height:0}.manager-home-moves{gap:12px}.manager-home-moves>.card{min-height:122px;border-radius:18px;padding:16px}
     }
     @media(min-width:1500px){.manager-home-grid{grid-template-columns:minmax(0,1.2fr) minmax(420px,.9fr)}.manager-home-hero{min-height:228px;padding:26px 34px}}
@@ -80,31 +112,18 @@ function managerHome(){
         <div class="hero-actions"><button class="btn btn-light" onclick="navigateManager('volunteer')"><i class="fa-solid fa-users"></i>Ver voluntariado</button><button class="btn btn-outline" style="border-color:rgba(255,255,255,.28);color:white" onclick="navigateManager('planning')"><i class="fa-regular fa-calendar-check"></i>Abrir planejamento</button></div>
       </section>
       <section class="manager-home-card manager-home-pending">
-        <div class="section-head"><div><h2>Atenção e acompanhamento</h2><p>Veja rapidamente o que precisa de revisão e o que está em andamento.</p></div></div>
-        <div class="manager-home-focus-list">
-          <button class="manager-home-focus-row" type="button" onclick="navigateManager('volunteer')">
-            <span class="manager-home-focus-icon"><i class="fa-solid fa-users"></i></span>
-            <span class="manager-home-focus-copy">
-              <strong>Voluntariado</strong>
-              <span class="manager-home-focus-pills">
-                ${dashboardStatusPill(volunteerAnalysis,'em análise',volunteerAnalysis?'warning':'')}
-                ${dashboardStatusPill(volunteerAdjustments,'ajustes',volunteerAdjustments?'warning':'')}
-              </span>
-            </span>
-            <i class="fa-solid fa-chevron-right"></i>
-          </button>
-          <button class="manager-home-focus-row" type="button" onclick="navigateManager('projects')">
-            <span class="manager-home-focus-icon"><i class="fa-solid fa-seedling"></i></span>
-            <span class="manager-home-focus-copy">
-              <strong>Projetos</strong>
-              <span class="manager-home-focus-pills">
-                ${dashboardStatusPill(projectCounts.analysis,'em análise',projectCounts.analysis?'warning':'')}
-                ${dashboardStatusPill(projectCounts.adjustments,'ajustes',projectCounts.adjustments?'warning':'')}
-                ${dashboardStatusPill(projectCounts.in_progress,'em execução',projectCounts.in_progress?'success':'')}
-              </span>
-            </span>
-            <i class="fa-solid fa-chevron-right"></i>
-          </button>
+        <div class="section-head"><div><h2>Visão operacional</h2><p>Atalhos diretos para o que precisa de atenção e acompanhamento.</p></div></div>
+        <div class="manager-home-operational">
+          <div class="manager-home-operational-group">
+            <div class="manager-home-operational-label"><strong>Precisa de atenção</strong></div>
+            <div class="manager-home-quick-list">
+              ${attentionActions||'<div class="manager-home-all-clear"><i class="fa-solid fa-circle-check"></i><div><strong>Tudo em dia</strong><small>Nenhuma análise ou ajuste pendente.</small></div></div>'}
+            </div>
+          </div>
+          ${followupActions?`<div class="manager-home-operational-group">
+            <div class="manager-home-operational-label"><strong>Em acompanhamento</strong></div>
+            <div class="manager-home-quick-list">${followupActions}</div>
+          </div>`:''}
         </div>
       </section>
     </div>
