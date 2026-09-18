@@ -46,18 +46,40 @@
     </section>`;
   }
   function emptyPage(){
-    return `<section class="section legacy-page">
-      <div class="legacy-page-title"><span class="eyebrow">Seu legado</span><h1>O que você vai deixar para a comunidade?</h1><p>Transforme uma ideia, habilidade ou necessidade da Casa em algo que continue fazendo diferença depois da sua estadia.</p></div>
-      <div class="legacy-start-card"><div><span class="legacy-start-icon"><i class="fa-solid fa-seedling"></i></span><h2>Comece observando ao seu redor</h2><p>Seu projeto pode nascer de uma necessidade simples. Ele deve ser possível de realizar, útil para a comunidade e deixar uma contribuição concreta ou reutilizável.</p></div><button class="btn btn-primary" type="button" onclick="openLegacyProjectForm()"><i class="fa-solid fa-plus"></i>Criar meu projeto</button></div>
-      <div class="section-head legacy-inspire-head"><div><h2>Inspire-se</h2><p>Algumas formas de deixar um legado.</p></div></div>
-      <div class="legacy-idea-grid">
-        ${ideaCard('fa-leaf','Sustentabilidade','Horta, composteira, plantio, reaproveitamento ou separação de resíduos.')}
-        ${ideaCard('fa-hammer','Melhorias','Organização de espaços, pequenos reparos, sinalização ou estrutura.')}
-        ${ideaCard('fa-people-group','Comunidade','Oficinas, esporte, cultura, dinâmicas ou atividades que possam continuar.')}
-        ${ideaCard('fa-book-open','Conhecimento','Manuais, materiais educativos, aulas ou processos documentados.')}
-        ${ideaCard('fa-laptop-code','Tecnologia','Planilhas, sistemas, automações ou soluções de comunicação.')}
+    const ideas=[
+      ['fa-leaf','project.idea.sustainability.title','project.idea.sustainability.body'],
+      ['fa-hammer','project.idea.improvements.title','project.idea.improvements.body'],
+      ['fa-people-group','project.idea.community.title','project.idea.community.body'],
+      ['fa-laptop-code','project.idea.technology.title','project.idea.technology.body']
+    ];
+    return `<section class="section legacy-page legacy-empty-v2">
+      <div class="legacy-empty-hero">
+        <span class="eyebrow">${esc(tx('project.name'))}</span>
+        <h1>${esc(tx('project.empty.heroTitle'))}</h1>
+        <p>${esc(tx('project.empty.heroBody'))}</p>
       </div>
-      <button class="legacy-how-link" type="button" onclick="replayProjectOnboarding()"><i class="fa-regular fa-circle-question"></i>Rever como funciona</button>
+
+      <section class="legacy-empty-cta">
+        <span class="legacy-empty-cta-icon"><i class="fa-regular fa-lightbulb"></i></span>
+        <div class="legacy-empty-cta-copy">
+          <span class="eyebrow">${esc(tx('project.empty.ctaEyebrow'))}</span>
+          <h2>${esc(tx('project.empty.ctaTitle'))}</h2>
+          <p>${esc(tx('project.empty.ctaBody'))}</p>
+        </div>
+        <button class="btn btn-primary legacy-empty-create" type="button" onclick="openLegacyProjectForm()"><i class="fa-solid fa-plus"></i>${esc(tx('project.empty.create'))}</button>
+      </section>
+
+      <section class="legacy-empty-inspiration">
+        <div class="legacy-empty-inspiration-head">
+          <span class="eyebrow">${esc(tx('project.empty.inspirationEyebrow'))}</span>
+          <h2>${esc(tx('project.empty.inspirationTitle'))}</h2>
+        </div>
+        <div class="legacy-empty-idea-grid">
+          ${ideas.map(([icon,titleKey,bodyKey])=>ideaCard(icon,tx(titleKey),tx(bodyKey))).join('')}
+        </div>
+      </section>
+
+      <button class="legacy-how-link legacy-empty-replay" type="button" onclick="replayProjectOnboarding()"><i class="fa-regular fa-circle-question"></i>${esc(tx('project.empty.replay'))}</button>
     </section>`;
   }
   function statusPage(p){
