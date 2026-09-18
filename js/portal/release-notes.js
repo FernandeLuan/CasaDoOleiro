@@ -10,7 +10,6 @@
   window.__OLEIRO_PORTAL_RELEASE_NOTES__=true;
 
   const ALWAYS_SHOW_HOME_NOTICES=true; // homologação: manter avisos sempre visíveis para teste
-  const PROJECT_PROMPT_ID='2026-09-projeto-legado-intro-v1';
   const ANNOUNCEMENT={
     id:'2026-09-portal-projeto-legado-v3',
     eyebrow:'Nova atualização',
@@ -40,11 +39,8 @@
 
   function uid(){return String(state?.currentSession?.uid||'anon')}
   function releaseSeenKey(){return `oleiro.portal.release-notes.seen.v1:${uid()}`}
-  function projectSeenKey(){return `oleiro.portal.project-highlight.seen.v1:${uid()}`}
   function releaseSeen(){if(ALWAYS_SHOW_HOME_NOTICES)return false;try{return localStorage.getItem(releaseSeenKey())===ANNOUNCEMENT.id}catch{return false}}
-  function projectSeen(){if(ALWAYS_SHOW_HOME_NOTICES)return false;try{return localStorage.getItem(projectSeenKey())===PROJECT_PROMPT_ID}catch{return false}}
   function markReleaseSeen(){if(ALWAYS_SHOW_HOME_NOTICES)return;try{localStorage.setItem(releaseSeenKey(),ANNOUNCEMENT.id)}catch{}}
-  function markProjectSeen(){if(ALWAYS_SHOW_HOME_NOTICES)return;try{localStorage.setItem(projectSeenKey(),PROJECT_PROMPT_ID)}catch{}}
 
   function metaLabel(){
     const build=String(releaseMeta?.build||'').trim();
@@ -249,6 +245,11 @@
     homeSlideIndex=Math.max(0,Math.min(homeSlideIndex,slides.length-1));
     return slides[homeSlideIndex]||slides[0];
   }
+  function insertAfterHero(html,card){
+    if(!card)return html;
+    const heroEnd=html.indexOf('</section>');
+    return heroEnd>=0?html.slice(0,heroEnd+10)+card+html.slice(heroEnd+10):card+html;
+  }
   function releaseCarouselNavHtml(){
     const slides=homeSlides(),total=slides.length;
     if(total<=1)return '';
@@ -390,51 +391,6 @@
     releaseSwipe=null;
     resetReleaseSwipe(swipe.card);
   },{passive:true});
-  function stripProjectHighlight(html){
-    return String(html||'')
-      .replace(/<section(?=[^>]*data-project-highlight="1")[^>]*>[\s\S]*?<\/section>/,'')
-      .replace(/<section(?=[^>]*data-project-adjustment-update="1")[^>]*>[\s\S]*?<\/section>/,'');
-  }
-  function insertAfterHero(html,card){
-    if(!card)return html;
-    const heroEnd=html.indexOf('</section>');
-    return heroEnd>=0?html.slice(0,heroEnd+10)+card+html.slice(heroEnd+10):card+html;
-  }
-  function insertAfterExistingNotice(html,card){
-    if(!card)return html;
-    for(const marker of ['data-project-adjustment-update="1"','data-project-highlight="1"']){
-      const markerAt=html.indexOf(marker);
-      if(markerAt<0)continue;
-      const sectionStart=html.lastIndexOf('<section',markerAt);
-      const sectionEnd=html.indexOf('</section>',markerAt);
-      if(sectionStart>=0&&sectionEnd>=0)return html.slice(0,sectionEnd+10)+card+html.slice(sectionEnd+10);
-    }
-    return insertAfterHero(html,card);
-  }
-  function showNextHighlightAfterProject(card){
-    const next=releaseCardHtml();
-    if(!card)return;
-    card.classList.add('is-leaving');
-    setTimeout(()=>{
-      if(!card.isConnected)return;
-      if(next){
-        card.outerHTML=next;
-        updateMetaLabels();
-      }else card.remove();
-    },210);
-  }
-
-  window.dismissPortalProjectHighlight=function(){
-    markProjectSeen();
-    showNextHighlightAfterProject(document.querySelector('[data-project-highlight="1"]'));
-  };
-  window.openPortalProjectHighlight=function(){
-    markProjectSeen();
-    const card=document.querySelector('[data-project-highlight="1"]');
-    if(card)card.classList.add('is-leaving');
-    setTimeout(()=>navigateVolunteer('project'),card?150:0);
-  };
-
   window.dismissPortalHomeNotice=function(){
     const slide=homeSlide();
     if(!slide)return;
@@ -521,7 +477,6 @@
   const baseNavigateVolunteer=typeof window.navigateVolunteer==='function'?window.navigateVolunteer:null;
   if(baseNavigateVolunteer){
     window.navigateVolunteer=navigateVolunteer=function(page){
-      if(String(page)==='project')markProjectSeen();
       const result=baseNavigateVolunteer(page);
       if(String(page)==='home')setTimeout(()=>refreshHomeNoticeData(),60);
       return result;
@@ -531,17 +486,8 @@
   const baseVolunteerHome=typeof window.volunteerHome==='function'?window.volunteerHome:null;
   if(baseVolunteerHome){
     window.volunteerHome=volunteerHome=function(){
-      let html=stripProjectHighlight(baseVolunteerHome());
+      let html=baseVolunteerHome();
       const card=releaseCardHtml();
-
-      /* Na homologação, os avisos continuam disponíveis para teste, mas todos entram
-         em um único carrossel para evitar vários cards concorrendo na Home. */
-      if(ALWAYS_SHOW_HOME_NOTICES){
-        if(card&&!html.includes('data-release-announcement'))html=insertAfterExistingNotice(html,card);
-        return html;
-      }
-
-      if(html.includes('data-project-adjustment-update="1"'))return html;
       if(!card||html.includes('data-release-announcement'))return html;
       return insertAfterHero(html,card);
     };
