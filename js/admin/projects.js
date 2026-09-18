@@ -193,7 +193,6 @@
         ${projectMetaExpandedHtml(p)}
       </details>
 
-      ${p.status==='completed'&&p.result?`<section class="legacy-admin-outcome"><span><i class="fa-solid fa-heart"></i></span><div><small>O que ficou para a comunidade</small><strong>${esc(p.result)}</strong></div></section>`:''}
       ${projectTimelineHtml(p)}
       ${p.status!=='completed'&&p.result?`<div class="legacy-admin-result legacy-admin-result-v2"><span><i class="fa-solid fa-circle-check"></i></span><div><small>Resultado final</small><p>${esc(p.result)}</p></div></div>`:''}
     </div>`;
