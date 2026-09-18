@@ -166,15 +166,15 @@
   }
   function legacyWizardSummary(){
     const draft=legacyProjectWizardDraft||{},continuity=draft.allowContinuation!==false?tx('project.wizard.continuity.yes'):tx('project.wizard.continuity.no');
-    const row=(icon,label,value)=>`<article class="legacy-wizard-summary-row"><span class="legacy-wizard-summary-icon"><i class="fa-solid ${icon}"></i></span><div><small>${esc(label)}</small><p>${esc(value||tx('project.wizard.review.empty'))}</p></div></article>`;
+    const row=(icon,label,value)=>`<article class="legacy-wizard-summary-row"><span class="legacy-wizard-summary-icon"><i class="${icon}"></i></span><div><small>${esc(label)}</small><p>${esc(value||tx('project.wizard.review.empty'))}</p></div></article>`;
     return `<div class="legacy-project-wizard legacy-wizard-review">${legacyWizardProgress()}<div class="legacy-wizard-copy"><h3>${esc(tx('project.wizard.review.title'))}</h3><p>${esc(tx('project.wizard.review.helper'))}</p></div><div class="legacy-wizard-summary">
-      ${row('fa-heading',tx('project.wizard.review.name'),draft.title)}
-      ${row('fa-layer-group',tx('project.wizard.review.category'),draft.category)}
-      ${row('fa-wand-magic-sparkles',tx('project.wizard.review.description'),draft.description)}
-      ${row('fa-heart',tx('project.wizard.review.why'),draft.why)}
-      ${row('fa-flag-checkered',tx('project.wizard.review.result'),draft.expectedResult)}
-      ${row('fa-toolbox',tx('project.wizard.review.materials'),draft.materials)}
-      ${row('fa-people-group',tx('project.wizard.review.continuity'),continuity)}
+      ${row('fa-solid fa-heading',tx('project.wizard.review.name'),draft.title)}
+      ${row('fa-solid fa-layer-group',tx('project.wizard.review.category'),draft.category)}
+      ${row('fa-solid fa-wand-magic-sparkles',tx('project.wizard.review.description'),draft.description)}
+      ${row('fa-solid fa-heart',tx('project.wizard.review.why'),draft.why)}
+      ${row('fa-solid fa-flag-checkered',tx('project.wizard.review.result'),draft.expectedResult)}
+      ${row('fa-solid fa-toolbox',tx('project.wizard.review.materials'),draft.materials)}
+      ${row('fa-solid fa-people-group',tx('project.wizard.review.continuity'),continuity)}
       ${row('fa-brands fa-google-drive',tx('project.wizard.review.drive'),draft.driveUrl)}
     </div></div>`;
   }
