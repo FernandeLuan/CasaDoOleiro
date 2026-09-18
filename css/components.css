@@ -74,17 +74,6 @@
   background:color-mix(in srgb,var(--primary) 10%,transparent);
   pointer-events:none;
 }
-.notice-carousel-card.is-warning{
-  border-color:color-mix(in srgb,var(--warning) 42%,var(--border));
-}
-.notice-carousel-card.is-warning .notice-carousel-icon{
-  background:var(--warning-soft);
-  color:var(--warning);
-  box-shadow:0 7px 18px color-mix(in srgb,var(--warning) 14%,transparent);
-}
-.notice-carousel-card.is-warning .notice-carousel-meta>span{
-  color:var(--warning);
-}
 .notice-carousel-card.is-leaving{
   opacity:0;
   transform:translateY(-6px);
