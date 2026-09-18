@@ -360,8 +360,7 @@ service cloud.firestore {
               && participantHistoryTypeAllowed(request.resource.data.type)
             )
           );
-        allow update: if false;
-        allow delete: if managerOfApplication(applicationId);
+        allow update, delete: if false;
       }
     }
 
