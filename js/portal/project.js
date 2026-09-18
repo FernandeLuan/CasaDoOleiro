@@ -19,6 +19,18 @@
     }[status]||['Rascunho',''];
   }
   function project(){return window.OleiroProjects?.getOwn?.()||null}
+  function projectAdjustmentToken(p){
+    return [p?.id||'',p?.reviewedAt||p?.updatedAt||'',p?.reviewNote||''].join('|');
+  }
+  function projectAdjustmentSeenKey(){
+    return `oleiro.portal.project-adjustment.seen.v1:${String(state.currentSession?.uid||'anon')}`;
+  }
+  function projectAdjustmentSeen(p){
+    try{return localStorage.getItem(projectAdjustmentSeenKey())===projectAdjustmentToken(p)}catch{return false}
+  }
+  function markProjectAdjustmentSeen(p){
+    try{localStorage.setItem(projectAdjustmentSeenKey(),projectAdjustmentToken(p))}catch{}
+  }
   function ownerName(){
     const p=state.currentSession?.profile||{},a=state.currentApplication||{};
     return p.name||p.fullName||(Array.isArray(a.participantNames)?a.participantNames[0]:null)||'Voluntário';
@@ -80,37 +92,38 @@
     const [label,tone]=statusMeta(p.status);
     const editable=['draft','adjustments'].includes(p.status);
     const canStart=p.status==='approved',canFinish=p.status==='in_progress';
-    const detail=(label,value)=>`<article class="legacy-status-mini"><small>${esc(label)}</small><p>${esc(value||'—')}</p></article>`;
-    return `<section class="section legacy-page legacy-status-v4">
-      <article class="legacy-status-card-v4">
-        <div class="legacy-status-card-head">
-          <div class="legacy-status-card-copy">
-            <div class="legacy-status-card-topline"><span class="eyebrow">Seu legado</span><span class="badge ${tone}">${esc(label)}</span></div>
-            <h1>${esc(p.title||'Meu projeto')}</h1>
-            <p>${esc(p.category||'Projeto da comunidade')}</p>
-          </div>
+    const row=(icon,labelText,value)=>`<article class="legacy-project-story-row"><span><i class="fa-solid ${icon}"></i></span><div><small>${esc(labelText)}</small><p>${esc(value||'—')}</p></div></article>`;
+    return `<section class="section legacy-page legacy-status-v5">
+      <section class="legacy-status-hero-v5">
+        <div class="legacy-status-hero-top">
+          <span class="legacy-status-kicker">Projeto Legado</span>
+          <span class="legacy-status-chip ${tone}">${esc(label)}</span>
         </div>
+        <h1>${esc(p.title||'Meu projeto')}</h1>
+        <p>${esc(p.category||'Projeto da comunidade')}</p>
+        ${p.status==='adjustments'&&p.reviewNote?`<button class="legacy-status-review-link" type="button" onclick="openLegacyProjectAdjustmentNotice()"><i class="fa-solid fa-message"></i>Ver orientação da equipe</button>`:''}
+      </section>
 
-        ${p.status==='adjustments'&&p.reviewNote?`<div class="legacy-adjustment-inline"><i class="fa-solid fa-pen-to-square"></i><div><strong>A equipe pediu um ajuste</strong><p>${esc(p.reviewNote)}</p></div></div>`:''}
-
-        <div class="legacy-status-grid-v4">
-          ${detail('O legado',p.description)}
-          ${detail('Por que importa',p.why)}
-          ${detail('Resultado esperado',p.expectedResult)}
-          ${p.materials?detail('Materiais / apoio',p.materials):''}
+      <section class="legacy-project-story">
+        <div class="legacy-project-story-head">
+          <span class="eyebrow">Seu projeto</span>
+          <h2>O que você está construindo</h2>
         </div>
-
-        ${p.driveUrl?`<a class="legacy-drive-inline-v4" href="${esc(p.driveUrl)}" target="_blank" rel="noopener noreferrer"><span><i class="fa-brands fa-google-drive"></i></span><div><strong>Google Drive</strong><small>Fotos, vídeos e documentos do projeto</small></div><i class="fa-solid fa-arrow-up-right-from-square"></i></a>`:''}
-
-        ${p.result?`<div class="legacy-result-inline-v4"><i class="fa-solid fa-heart"></i><div><small>O que ficou para a comunidade</small><p>${esc(p.result)}</p></div></div>`:''}
-
-        <div class="legacy-project-actions ${editable?'legacy-project-actions-pair':''}">
-          ${editable?`<button class="btn btn-outline" type="button" onclick="openLegacyProjectForm()"><i class="fa-solid fa-pen"></i>Editar</button><button class="btn btn-primary" type="button" onclick="submitLegacyProject()"><i class="fa-solid fa-paper-plane"></i>${p.status==='adjustments'?'Reenviar':'Enviar para análise'}</button>`:''}
-          ${canStart?'<button class="btn btn-primary" type="button" onclick="startLegacyProject()"><i class="fa-solid fa-play"></i>Começar execução</button>':''}
-          ${canFinish?'<button class="btn btn-primary" type="button" onclick="openLegacyCompletion()"><i class="fa-solid fa-flag-checkered"></i>Concluir meu legado</button>':''}
+        <div class="legacy-project-story-list">
+          ${row('fa-wand-magic-sparkles','O legado',p.description)}
+          ${row('fa-heart','Por que importa',p.why)}
+          ${row('fa-flag-checkered','Resultado esperado',p.expectedResult)}
+          ${p.materials?row('fa-toolbox','Materiais / apoio',p.materials):''}
         </div>
-      </article>
+        ${p.driveUrl?`<a class="legacy-project-drive-v5" href="${esc(p.driveUrl)}" target="_blank" rel="noopener noreferrer"><span><i class="fa-brands fa-google-drive"></i></span><div><strong>Google Drive</strong><small>Fotos, vídeos e documentos do projeto</small></div><i class="fa-solid fa-arrow-up-right-from-square"></i></a>`:''}
+        ${p.result?`<div class="legacy-project-result-v5"><i class="fa-solid fa-heart"></i><div><small>O que ficou para a comunidade</small><p>${esc(p.result)}</p></div></div>`:''}
+      </section>
 
+      <div class="legacy-project-actions ${editable?'legacy-project-actions-pair':''}">
+        ${editable?`<button class="btn btn-outline" type="button" onclick="openLegacyProjectForm()"><i class="fa-solid fa-pen"></i>Editar</button><button class="btn btn-primary" type="button" onclick="submitLegacyProject()"><i class="fa-solid fa-paper-plane"></i>${p.status==='adjustments'?'Reenviar':'Enviar para análise'}</button>`:''}
+        ${canStart?'<button class="btn btn-primary" type="button" onclick="startLegacyProject()"><i class="fa-solid fa-play"></i>Começar execução</button>':''}
+        ${canFinish?'<button class="btn btn-primary" type="button" onclick="openLegacyCompletion()"><i class="fa-solid fa-flag-checkered"></i>Concluir meu legado</button>':''}
+      </div>
       <button class="legacy-how-link legacy-status-how" type="button" onclick="replayProjectOnboarding()"><i class="fa-regular fa-circle-question"></i>Como funciona?</button>
     </section>`;
   }
@@ -415,10 +428,24 @@
     );
   };
 
+  window.openLegacyProjectAdjustmentNotice=function(){
+    const p=project();if(!p||p.status!=='adjustments')return;
+    markProjectAdjustmentSeen(p);
+    document.querySelector('[data-project-adjustment-update="1"]')?.classList.add('is-leaving');
+    setTimeout(()=>document.querySelector('[data-project-adjustment-update="1"]')?.remove(),180);
+    const body=`<div class="legacy-adjustment-modal"><span class="legacy-adjustment-modal-icon"><i class="fa-solid fa-pen-to-square"></i></span><div><small>${esc(tx('project.adjustment.modalEyebrow'))}</small><strong>${esc(tx('project.adjustment.modalTitle2'))}</strong><p>${esc(p.reviewNote||'Abra o projeto para conferir o que precisa ser revisto.')}</p></div></div>`;
+    const footer=`<div class="legacy-adjustment-modal-actions"><button class="btn btn-outline" type="button" onclick="closeModal()">${esc(tx('project.adjustment.close'))}</button><button class="btn btn-primary" type="button" onclick="closeModal();navigateVolunteer('project');setTimeout(()=>openLegacyProjectForm(),80)"><i class="fa-solid fa-pen"></i>${esc(tx('project.adjustment.edit'))}</button></div>`;
+    openModal(tx('project.adjustment.modalTitle'),'',body,footer);
+    modalRoot.querySelector('.modal')?.classList.add('legacy-adjustment-modal-shell');
+  };
+
   window.legacyProjectHomeNoticeHtml=function(){
     if(state.volunteerMode!=='approved')return '';
     const p=project(),done=p?.status==='completed';
     if(done)return '';
+    if(p?.status==='adjustments'&&p.reviewNote&&!projectAdjustmentSeen(p)){
+      return `<section class="legacy-project-update-card" data-project-adjustment-update="1"><span class="legacy-project-update-icon"><i class="fa-solid fa-pen-to-square"></i></span><div class="legacy-project-update-copy"><small>${esc(tx('project.adjustment.homeEyebrow'))}</small><strong>${esc(tx('project.adjustment.homeTitle'))}</strong><p>${esc(tx('project.adjustment.homeBody'))}</p></div><button class="btn btn-primary" type="button" onclick="openLegacyProjectAdjustmentNotice()">${esc(tx('project.adjustment.view'))}</button></section>`;
+    }
     const label=p?tx('project.home.continue'):tx('project.home.know');
     return `<section class="legacy-home-callout legacy-home-callout-glow" data-project-highlight="1"><span class="legacy-home-callout-icon"><i class="fa-solid fa-seedling"></i></span><div class="legacy-home-callout-copy"><strong>${esc(tx('project.name'))}</strong><p>${esc(p?tx('project.home.existingBody'):tx('project.home.newBody'))}</p></div><div class="legacy-home-callout-actions"><button class="btn btn-outline" type="button" onclick="skipLegacyProjectPrompt()">${esc(tx('project.home.notNow'))}</button><button class="btn btn-primary" type="button" onclick="openPortalProjectHighlight()">${esc(label)}</button></div></section>`;
   };
