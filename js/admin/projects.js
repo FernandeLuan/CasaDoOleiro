@@ -85,7 +85,7 @@
             <p>${esc(item.text)}</p>
             <time class="legacy-admin-timeline-time">${esc(fmtProjectDate(item.at))}</time>
           </div>
-        </div>`).join('')}
+        </article>`).join('')}
       </div>
     </section>`;
   }
