@@ -165,6 +165,7 @@
     const canStart=p.status==='approved';
     const inProgress=p.status==='in_progress';
     const completed=p.status==='completed';
+    const expandHero=inProgress||completed;
     const row=(icon,labelText,value)=>`<article class="legacy-project-story-row"><span><i class="fa-solid ${icon}"></i></span><div><small>${esc(labelText)}</small><p>${esc(value||'—')}</p></div></article>`;
     const storyRows=`<div class="legacy-project-story-list">
       ${row('fa-wand-magic-sparkles','O legado',p.description)}
@@ -181,42 +182,50 @@
         <p>Este é o resultado final registrado pelo voluntário.</p>
       </div>
     </section>`:'';
+
+    const heroSummary=`
+      <div class="legacy-status-hero-top">
+        <span class="legacy-status-kicker">Projeto Legado</span>
+        <span class="legacy-status-hero-summary-side">
+          <span class="legacy-status-chip ${tone}">${esc(label)}</span>
+          ${expandHero?'<i class="fa-solid fa-chevron-down legacy-status-hero-chevron" aria-hidden="true"></i>':''}
+        </span>
+      </div>
+      <h1>${esc(p.title||'Meu projeto')}</h1>
+      <p>${esc(p.category||'Projeto da comunidade')}</p>
+      ${p.status==='adjustments'&&p.reviewNote?`<button class="legacy-status-review-link" type="button" onclick="event.preventDefault();event.stopPropagation();openLegacyProjectAdjustmentNotice()"><i class="fa-solid fa-message"></i>Ver orientação da equipe</button>`:''}`;
+
+    const hero=expandHero
+      ?`<details class="legacy-status-hero-v5 legacy-status-hero-expandable">
+          <summary class="legacy-status-hero-summary">${heroSummary}</summary>
+          <div class="legacy-status-hero-expanded">
+            <div class="legacy-status-hero-expanded-head"><span>Projeto original</span></div>
+            ${storyRows}
+            ${drive}
+          </div>
+        </details>`
+      :`<section class="legacy-status-hero-v5">${heroSummary}</section>`;
+
     const currentStory=`<section class="legacy-project-story legacy-project-story-secondary">
       <div class="legacy-project-story-head">
-        <span class="eyebrow">${inProgress?'Base do projeto':'Seu projeto'}</span>
-        <h2>${inProgress?'O que orienta a execução':'O que você está construindo'}</h2>
+        <span class="eyebrow">Seu projeto</span>
+        <h2>O que você está construindo</h2>
       </div>
       ${storyRows}
-      ${!completed?drive:''}
+      ${drive}
     </section>`;
-    const originalProject=`<details class="legacy-project-original">
-      <summary>
-        <span><i class="fa-solid fa-seedling"></i></span>
-        <div><small>Projeto original</small><strong>Rever a proposta que deu origem ao legado</strong></div>
-        <i class="fa-solid fa-chevron-down"></i>
-      </summary>
-      <div class="legacy-project-original-body">${storyRows}</div>
-    </details>`;
 
     let content='';
     if(completed){
-      content=`${result}${legacyTrackingHtml(p)}${drive?`<section class="legacy-project-evidence"><div class="legacy-project-evidence-head"><span class="eyebrow">Registros</span><h2>Fotos e documentos</h2></div>${drive}</section>`:''}${originalProject}`;
+      content=`${result}${legacyTrackingHtml(p)}`;
     }else if(inProgress){
-      content=`${legacyTrackingHtml(p)}${currentStory}`;
+      content=legacyTrackingHtml(p);
     }else{
       content=currentStory;
     }
 
     return `<section class="section legacy-page legacy-status-v5 ${completed?'is-completed':inProgress?'is-in-progress':''}">
-      <section class="legacy-status-hero-v5">
-        <div class="legacy-status-hero-top">
-          <span class="legacy-status-kicker">Projeto Legado</span>
-          <span class="legacy-status-chip ${tone}">${esc(label)}</span>
-        </div>
-        <h1>${esc(p.title||'Meu projeto')}</h1>
-        <p>${esc(p.category||'Projeto da comunidade')}</p>
-        ${p.status==='adjustments'&&p.reviewNote?`<button class="legacy-status-review-link" type="button" onclick="openLegacyProjectAdjustmentNotice()"><i class="fa-solid fa-message"></i>Ver orientação da equipe</button>`:''}
-      </section>
+      ${hero}
 
       ${content}
 
