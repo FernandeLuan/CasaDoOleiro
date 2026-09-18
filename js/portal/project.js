@@ -91,8 +91,7 @@
         <p>Conheça possibilidades agora e crie seu projeto quando sua candidatura for aprovada.</p>
       </div>
 
-      <div class="legacy-candidate-flow">
-        <span class="eyebrow legacy-candidate-flow-label">Como funciona</span>
+      <div class="legacy-candidate-flow legacy-candidate-flow-minimal">
         <div class="legacy-candidate-steps">
           <article class="is-current"><span>1</span><small>Agora</small><strong>Conheça</strong></article>
           <article><span>2</span><small>Após aprovação</small><strong>Crie</strong></article>
@@ -100,16 +99,16 @@
         </div>
       </div>
 
-      <div class="legacy-candidate-ideas-panel">
-        <div class="legacy-candidate-ideas-title">
+      <div class="legacy-candidate-possibilities">
+        <div class="legacy-candidate-possibilities-head">
           <span class="eyebrow">Possibilidades</span>
-          <h2>Algumas formas de deixar sua marca</h2>
+          <h2>Seu legado pode nascer de diferentes áreas</h2>
         </div>
-        <div class="legacy-candidate-idea-grid-v3">
-          <article class="legacy-candidate-idea-v3"><span><i class="fa-solid fa-leaf"></i></span><strong>Sustentabilidade</strong><small>Horta, composteira e reaproveitamento</small></article>
-          <article class="legacy-candidate-idea-v3"><span><i class="fa-solid fa-hammer"></i></span><strong>Melhorias</strong><small>Organização, espaços e pequenos reparos</small></article>
-          <article class="legacy-candidate-idea-v3"><span><i class="fa-solid fa-people-group"></i></span><strong>Comunidade</strong><small>Oficinas, esporte e cultura</small></article>
-          <article class="legacy-candidate-idea-v3"><span><i class="fa-solid fa-laptop-code"></i></span><strong>Tecnologia</strong><small>Sistemas, materiais e automações</small></article>
+        <div class="legacy-candidate-possibility-list">
+          <div><span><i class="fa-solid fa-leaf"></i></span><strong>Sustentabilidade</strong></div>
+          <div><span><i class="fa-solid fa-hammer"></i></span><strong>Melhorias</strong></div>
+          <div><span><i class="fa-solid fa-people-group"></i></span><strong>Comunidade</strong></div>
+          <div><span><i class="fa-solid fa-laptop-code"></i></span><strong>Tecnologia</strong></div>
         </div>
       </div>
 
