@@ -220,9 +220,9 @@ async function bootManager(){
   }
   if(state.managerPage==='home')render();
   const initial=await Promise.allSettled([
-    hydrateManagerSchedule(_oleiroToday,_oleiroToday,{force:true}),
-    hydrateManagerDashboardData({force:true}),
-    typeof window.hydrateManagerHomeOccupancy==='function'?window.hydrateManagerHomeOccupancy({force:true}):Promise.resolve([])
+    restored.schedule?Promise.resolve(state.managerTodaySessions):hydrateManagerSchedule(_oleiroToday,_oleiroToday,{force:false}),
+    restored.dashboard?Promise.resolve({counts:state.dashboardCounts,arrivals:state.dashboardArrivals,departures:state.dashboardDepartures}):hydrateManagerDashboardData({force:false}),
+    typeof window.hydrateManagerHomeOccupancy==='function'?window.hydrateManagerHomeOccupancy({force:false}):Promise.resolve([])
   ]);
   if(initial[0].status==='rejected')console.warn('Agenda de hoje indisponível no carregamento inicial:',initial[0].reason);
   if(initial[1].status==='rejected')console.warn('Resumo do painel indisponível no carregamento inicial:',initial[1].reason);
