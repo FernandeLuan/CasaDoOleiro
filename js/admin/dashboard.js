@@ -20,9 +20,7 @@ function dashboardProjectCounts(){
     return acc;
   },{analysis:0,adjustments:0,approved:0,in_progress:0,completed:0});
 }
-function dashboardStatusPill(value,label,tone=''){
-  return `<span class="manager-home-focus-pill ${tone}"><strong>${Number(value)||0}</strong><small>${escapeHtml(label)}</small></span>`;
-}
+
 function openDashboardVolunteerFilter(status){
   state.candidateFilter=String(status||'all');
   state.candidateUnit='all';
@@ -34,7 +32,7 @@ function openDashboardProjectFilter(status){
   state.projectSearch='';
   navigateManager('projects');
 }
-function dashboardQuickAction({icon,title,count,label,action,tone=''}) {
+) {
   return `<button class="manager-home-quick-action ${tone}" type="button" onclick="${action}">
     <span class="manager-home-quick-icon"><i class="fa-solid ${icon}"></i></span>
     <span class="manager-home-quick-copy"><strong>${escapeHtml(title)}</strong><small><b>${Number(count)||0}</b> ${escapeHtml(label)}</small></span>
@@ -140,8 +138,8 @@ function managerHome(){
     .manager-home{width:100%;display:grid;gap:16px}.manager-home-grid{display:grid;gap:16px;align-items:stretch}
     .manager-home-card{background:var(--surface);border:1px solid var(--border);border-radius:26px;padding:22px;box-shadow:var(--shadow);margin:0;min-width:0}
     .manager-home-card .section-head{align-items:flex-start;margin-bottom:16px}.manager-home-card .section-head h2{margin:0 0 4px;font-size:1.12rem;line-height:1.25;color:var(--text)}.manager-home-card .section-head p{margin:0;color:var(--muted);font-size:.76rem}
-    .manager-home-hero{margin:0;min-width:0}.manager-home-hero h1{letter-spacing:-.035em}.manager-home-hero .manager-home-hero-secondary{border-color:rgba(255,255,255,.28);color:#fff}.manager-home-today-list{display:grid;gap:10px;min-height:0}.manager-home-today-list>.empty{min-height:100px;display:grid;place-items:center}.manager-home-movements .card{box-shadow:none}
-    .manager-home-today-item{cursor:pointer}
+    .manager-home-hero{margin:0;min-width:0}.manager-home-hero h1{letter-spacing:-.035em}.manager-home-hero-eyebrow{color:#d9eadf}.manager-home-hero .manager-home-hero-secondary{border-color:rgba(255,255,255,.28);color:#fff}.manager-home-today-list{display:grid;gap:10px;min-height:0}.manager-home-today-list>.empty{min-height:100px;display:grid;place-items:center}.manager-home-movements .card{box-shadow:none}
+    .manager-home-today-item{cursor:pointer}.manager-home-movement-list{margin-top:10px}.manager-home-movement-row{padding:8px 0;border-bottom:1px solid var(--border)}.manager-home-movement-row:last-child{border-bottom:0}.manager-home-movement-row strong{font-size:.7rem}.manager-home-movement-row div{font-size:.61rem;color:var(--muted)}
     .manager-home-top.single{grid-template-columns:1fr!important}
     @media(min-width:1024px){
       .manager-home-grid{grid-template-columns:minmax(0,1.18fr) minmax(380px,.92fr)}
@@ -155,21 +153,20 @@ function managerHome(){
   <div class="manager-home">
     <div class="manager-home-grid manager-home-top single">
       <section class="hero manager-home-hero">
-        <div class="eyebrow" style="color:#d9eadf">Casa do Oleiro • Gestão</div><h1>${managerGreeting()}</h1><p class="muted">Veja o que precisa da sua atenção e o que acontece hoje na Casa.</p>
-        <div class="hero-actions"><button class="btn btn-light" onclick="navigateManager('volunteer')"><i class="fa-solid fa-users"></i>Ver voluntariado</button><button class="btn btn-outline" class="manager-home-hero-secondary" onclick="navigateManager('planning')"><i class="fa-regular fa-calendar-check"></i>Abrir planejamento</button></div>
+        <div class="eyebrow manager-home-hero-eyebrow">Casa do Oleiro • Gestão</div><h1>${managerGreeting()}</h1><p class="muted">Veja o que precisa da sua atenção e o que acontece hoje na Casa.</p>
+        <div class="hero-actions"><button class="btn btn-light" onclick="navigateManager('volunteer')"><i class="fa-solid fa-users"></i>Ver voluntariado</button><button class="btn btn-outline manager-home-hero-secondary" onclick="navigateManager('planning')"><i class="fa-regular fa-calendar-check"></i>Abrir planejamento</button></div>
       </section>
     </div>
     ${pendingCardHtml}
     <div class="manager-home-grid manager-home-bottom">
       <section class="manager-home-card manager-home-today"><div class="section-head"><div><h2>Hoje na Casa</h2><p>${longDate(_oleiroToday)}</p></div></div><div class="list manager-home-today-list">${todayHtml}</div></section>
-      <section class="manager-home-card manager-home-movements-card"><div class="section-head"><div><h2>Próximas movimentações</h2><p>Chegadas e saídas confirmadas nos próximos 15 dias.</p></div></div><div class="grid-2 manager-home-moves"><div class="card"><span class="eyebrow"><i class="fa-solid fa-arrow-right-to-bracket"></i> Chegadas</span><div style="margin-top:10px" class="list">${dashboardLoading?movementsLoading:movementList(arrivals,'from')}</div></div><div class="card"><span class="eyebrow"><i class="fa-solid fa-arrow-right-from-bracket"></i> Saídas</span><div style="margin-top:10px" class="list">${dashboardLoading?movementsLoading:movementList(departures,'to')}</div></div></div></section>
+      <section class="manager-home-card manager-home-movements-card"><div class="section-head"><div><h2>Próximas movimentações</h2><p>Chegadas e saídas confirmadas nos próximos 15 dias.</p></div></div><div class="grid-2 manager-home-moves"><div class="card"><span class="eyebrow"><i class="fa-solid fa-arrow-right-to-bracket"></i> Chegadas</span><div class="list manager-home-movement-list">${dashboardLoading?movementsLoading:movementList(arrivals,'from')}</div></div><div class="card"><span class="eyebrow"><i class="fa-solid fa-arrow-right-from-bracket"></i> Saídas</span><div class="list manager-home-movement-list">${dashboardLoading?movementsLoading:movementList(departures,'to')}</div></div></div></section>
     </div>
     ${typeof window.managerHomeOccupancyHtml==='function'?window.managerHomeOccupancyHtml():''}
   </div>`;
 }
-function metric(n,icon,label,action){return `<button class="card metric" style="border:1px solid var(--border);color:var(--text)" onclick="${action}"><div class="metric-icon"><i class="fa-solid ${icon}"></i></div><div><strong>${n} &rsaquo; ${label}</strong></div></button>`}
 function agendaItem(name,person,group,status,period='Sem preferência',duration=0){const [l,t]=statusMeta(status);return `<div class="list-item manager-home-today-item" role="button" tabindex="0" onclick="openTodayAgenda()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTodayAgenda()}"><div class="item-main"><h3 data-no-i18n>${escapeHtml(name||'Atividade')}</h3><p>${Number(duration)||0} min • ${escapeHtml(period)} • ${escapeHtml(person||'Voluntário')} • ${escapeHtml(group||'A definir')}</p><div class="item-meta">${badge(l,t)}</div></div></div>`}
-function miniMove(name,date,label){return `<div style="padding:8px 0;border-bottom:1px solid var(--border)"><strong style="font-size:.7rem">${escapeHtml(name||'Voluntário')}</strong><div style="font-size:.61rem;color:var(--muted)">${date} • ${label}</div></div>`}
+function miniMove(name,date,label){return `<div class="manager-home-movement-row"><strong>${escapeHtml(name||'Voluntário')}</strong><div>${date} • ${label}</div></div>`}
 
 // Mantém uma referência estável da Home aprovada para a homologação. Scripts legados carregados depois podem redefinir managerHome, mas não esta referência.
 window.managerHomeDashboard=managerHome;
