@@ -108,6 +108,30 @@
     </details>`;
   }
   function statusBadge(value){const [label,tone]=status[value]||['Rascunho',''];return `<span class="badge ${tone}">${esc(label)}</span>`}
+  function projectMetaExpandedHtml(p){
+    return `<div class="legacy-admin-meta-expanded">
+      <div class="legacy-admin-meta-expanded-head">
+        <span>Projeto original</span>
+      </div>
+      <div class="legacy-admin-project-content legacy-admin-meta-expanded-content">
+        <article class="legacy-admin-project-section">
+          <span class="legacy-admin-section-icon"><i class="fa-solid fa-seedling"></i></span>
+          <div><small>O legado</small><p>${esc(p.description||'—')}</p></div>
+        </article>
+        <article class="legacy-admin-project-section">
+          <span class="legacy-admin-section-icon"><i class="fa-solid fa-heart"></i></span>
+          <div><small>Por que importa</small><p>${esc(p.why||'—')}</p></div>
+        </article>
+        <article class="legacy-admin-project-section">
+          <span class="legacy-admin-section-icon"><i class="fa-solid fa-bullseye"></i></span>
+          <div><small>Resultado esperado</small><p>${esc(p.expectedResult||'—')}</p></div>
+        </article>
+        ${p.materials?`<article class="legacy-admin-project-section"><span class="legacy-admin-section-icon"><i class="fa-solid fa-box-open"></i></span><div><small>Materiais / apoio</small><p>${esc(p.materials)}</p></div></article>`:''}
+      </div>
+      ${p.driveUrl?`<a class="legacy-admin-meta-drive" href="${esc(p.driveUrl)}" target="_blank" rel="noopener noreferrer"><span><i class="fa-brands fa-google-drive"></i></span><div><strong>Drive</strong><small>Fotos e arquivos do projeto</small></div><i class="fa-solid fa-arrow-up-right-from-square"></i></a>`:''}
+    </div>`;
+  }
+
   function projectCard(p){
     const [label,tone]=status[p.status]||['Rascunho',''];
     return `<button class="legacy-admin-card legacy-admin-card-v2" type="button" onclick="openLegacyProjectAdmin('${esc(p.id)}')">
@@ -147,23 +171,23 @@
     const p=(window.OleiroProjects?.list?.()||[]).find(x=>String(x.id)===String(id));if(!p)return;
     const tracking=['in_progress','completed'].includes(p.status);
     const body=`<div class="legacy-admin-detail legacy-admin-detail-v4 ${tracking?'has-tracking':''}">
-      <div class="legacy-admin-project-meta">
-        <div class="legacy-admin-project-meta-main">
-          <span class="legacy-admin-project-meta-icon"><i class="fa-solid fa-seedling"></i></span>
-          <div>
-            <strong>${esc(p.ownerName||'Voluntário')}</strong>
-            <small>${esc(p.unitName||p.unitId||'Unidade')}${p.category?` · ${esc(p.category)}`:''}</small>
+      <details class="legacy-admin-project-meta legacy-admin-project-meta-expandable">
+        <summary class="legacy-admin-project-meta-summary">
+          <div class="legacy-admin-project-meta-main">
+            <span class="legacy-admin-project-meta-icon"><i class="fa-solid fa-seedling"></i></span>
+            <div>
+              <strong>${esc(p.ownerName||'Voluntário')}</strong>
+              <small>${esc(p.unitName||p.unitId||'Unidade')}${p.category?` · ${esc(p.category)}`:''}</small>
+            </div>
           </div>
-        </div>
-        <div class="legacy-admin-context-status">${statusBadge(p.status)}</div>
-      </div>
+          <div class="legacy-admin-context-status">${statusBadge(p.status)}</div>
+          <i class="fa-solid fa-chevron-down legacy-admin-project-meta-chevron" aria-hidden="true"></i>
+        </summary>
+        ${projectMetaExpandedHtml(p)}
+      </details>
 
       ${p.status==='completed'&&p.result?`<section class="legacy-admin-outcome"><span><i class="fa-solid fa-heart"></i></span><div><small>O que ficou para a comunidade</small><strong>${esc(p.result)}</strong></div></section>`:''}
       ${projectTimelineHtml(p)}
-      <div class="legacy-admin-secondary-links">
-        ${projectOriginalHtml(p)}
-        ${p.driveUrl?`<a class="legacy-admin-secondary-link" href="${esc(p.driveUrl)}" target="_blank" rel="noopener noreferrer"><span><i class="fa-brands fa-google-drive"></i></span><div><strong>Drive</strong><small>Fotos e arquivos</small></div><i class="fa-solid fa-arrow-up-right-from-square"></i></a>`:''}
-      </div>
       ${p.status!=='completed'&&p.result?`<div class="legacy-admin-result legacy-admin-result-v2"><span><i class="fa-solid fa-circle-check"></i></span><div><small>Resultado final</small><p>${esc(p.result)}</p></div></div>`:''}
     </div>`;
     let footer='';
