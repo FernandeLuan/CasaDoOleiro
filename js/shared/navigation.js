@@ -32,6 +32,7 @@ function navigateManager(page){
   if(page==='home'){
     if(typeof hydrateManagerDashboardData==='function')hydrateManagerDashboardData({force:false}).catch(console.error);
     if(typeof hydrateManagerSchedule==='function')hydrateManagerSchedule(_oleiroToday,_oleiroToday,{force:false}).then(()=>{state.managerTodayLoading=false;if(state.managerPage==='home')render()}).catch(error=>{state.managerTodayLoading=false;console.error(error);if(state.managerPage==='home')render()});
+    if(typeof window.hydrateManagerHomeOccupancy==='function')window.hydrateManagerHomeOccupancy({force:false}).catch(console.error);
   }
 }
 function navigateVolunteer(page){page=String(page||'home');if(String(state.volunteerPage||'home')===page)return;state.volunteerPage=page;render();afterNavigation()}
