@@ -102,7 +102,8 @@
         <button type="button" class="${unit==='indaial'?'active':''}" aria-pressed="${unit==='indaial'}" onclick="setHomeOccupancyUnit('indaial')">Indaial</button>
       </div>
       <label class="home-occ-month" aria-label="Mês da ocupação">
-        <select onchange="setHomeOccupancyMonth(this.value)">${monthOptions()}</select>
+        <span class="home-occ-month-label" aria-hidden="true">${monthLabel(state.homeOccupancyMonth)}</span>
+        <select onchange="setHomeOccupancyMonth(this.value)" aria-label="Selecionar mês">${monthOptions()}</select>
         <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
       </label>
     </div>`;
