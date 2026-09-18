@@ -381,6 +381,8 @@
 .project-adjustment-announcement .release-announcement-spark{background:#fff0c8;color:#a36d12}
 .project-adjustment-announcement .release-announcement-meta>span{color:#a36d12}
 .project-adjustment-announcement{border-color:color-mix(in srgb,#d9b45d 48%,var(--border))}
+.project-adjustment-announcement.legacy-home-callout-glow::before{border-radius:19px;animation-duration:3.1s}
+@media(prefers-reduced-motion:reduce){.project-adjustment-announcement.legacy-home-callout-glow::before{animation:none;background-position:center}}
 .legacy-adjustment-modal-shell{max-width:520px}
 .legacy-adjustment-modal{display:grid;grid-template-columns:46px minmax(0,1fr);gap:12px;align-items:start}
 .legacy-adjustment-modal-icon{width:46px;height:46px;border-radius:14px;background:#fff0c8;color:#a36d12;display:grid;place-items:center}
