@@ -1608,3 +1608,267 @@
     gap:9px;
   }
 }
+
+
+/* Admin Projetos · detail refinement v6 */
+.legacy-admin-detail-v4{
+  display:grid;
+  gap:18px;
+}
+.legacy-admin-project-meta{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:0 0 12px;
+  border-bottom:1px solid color-mix(in srgb,var(--border) 88%,transparent);
+}
+.legacy-admin-project-meta-main{
+  display:grid;
+  grid-template-columns:34px minmax(0,1fr);
+  gap:9px;
+  align-items:center;
+  min-width:0;
+}
+.legacy-admin-project-meta-icon{
+  width:34px;
+  height:34px;
+  border-radius:11px;
+  display:grid;
+  place-items:center;
+  background:var(--primary-soft);
+  color:var(--primary);
+  font-size:.66rem;
+}
+.legacy-admin-project-meta-main>div{
+  min-width:0;
+}
+.legacy-admin-project-meta-main strong{
+  display:block;
+  font-size:.66rem;
+  line-height:1.25;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.legacy-admin-project-meta-main small{
+  display:block;
+  margin-top:2px;
+  color:var(--muted);
+  font-size:.52rem;
+  line-height:1.3;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+/* Andamento sem card externo e sem excesso de divisórias. */
+.legacy-admin-detail-v4 .legacy-admin-tracking{
+  display:grid;
+  gap:12px;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+}
+.legacy-admin-detail-v4 .legacy-admin-tracking-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:12px;
+  padding:0;
+}
+.legacy-admin-detail-v4 .legacy-admin-tracking-head h3{
+  margin:0;
+  font-size:.82rem;
+  line-height:1.25;
+}
+.legacy-admin-detail-v4 .legacy-admin-tracking-head p{
+  margin:3px 0 0;
+  color:var(--muted);
+  font-size:.54rem;
+  line-height:1.4;
+}
+.legacy-admin-tracking-count{
+  flex:0 0 auto;
+  color:var(--muted);
+  font-size:.5rem;
+  line-height:1;
+  padding-bottom:2px;
+}
+.legacy-admin-detail-v4 .legacy-admin-timeline{
+  position:relative;
+  display:grid;
+  gap:0;
+  border:0;
+}
+.legacy-admin-detail-v4 .legacy-admin-timeline::before{
+  content:"";
+  position:absolute;
+  left:15px;
+  top:16px;
+  bottom:16px;
+  width:1px;
+  background:color-mix(in srgb,var(--primary) 18%,var(--border));
+}
+.legacy-admin-detail-v4 .legacy-admin-timeline-item{
+  position:relative;
+  z-index:1;
+  display:grid!important;
+  grid-template-columns:31px minmax(0,1fr);
+  gap:10px;
+  align-items:start;
+  margin:0!important;
+  padding:0 0 16px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.legacy-admin-detail-v4 .legacy-admin-timeline-item:last-child{
+  padding-bottom:0!important;
+}
+.legacy-admin-detail-v4 .legacy-admin-timeline-item + .legacy-admin-timeline-item{
+  border:0!important;
+}
+.legacy-admin-detail-v4 .legacy-admin-timeline-item>span{
+  width:31px;
+  height:31px;
+  border-radius:10px;
+  display:grid;
+  place-items:center;
+  background:var(--primary-soft);
+  border:0;
+  color:var(--primary);
+  font-size:.56rem;
+}
+.legacy-admin-detail-v4 .legacy-admin-timeline-item.complete>span{
+  background:var(--success-soft);
+  color:var(--success);
+}
+.legacy-admin-detail-v4 .legacy-admin-timeline-meta{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:10px;
+}
+.legacy-admin-detail-v4 .legacy-admin-timeline-meta strong{
+  font-size:.61rem;
+  line-height:1.3;
+}
+.legacy-admin-detail-v4 .legacy-admin-timeline-meta time{
+  flex:0 0 auto;
+  color:var(--muted);
+  font-size:.46rem;
+  white-space:nowrap;
+}
+.legacy-admin-detail-v4 .legacy-admin-timeline-item p{
+  margin:3px 0 0!important;
+  color:var(--text)!important;
+  font-size:.59rem!important;
+  line-height:1.45!important;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+
+/* Links secundários viram uma única lista simples. */
+.legacy-admin-secondary-links{
+  display:grid;
+  border-top:1px solid color-mix(in srgb,var(--border) 88%,transparent);
+  border-bottom:1px solid color-mix(in srgb,var(--border) 88%,transparent);
+}
+.legacy-admin-detail-v4 .legacy-admin-original{
+  border:0;
+  border-radius:0;
+  background:transparent;
+  overflow:visible;
+}
+.legacy-admin-detail-v4 .legacy-admin-original>summary,
+.legacy-admin-secondary-link{
+  min-height:58px;
+  display:grid;
+  grid-template-columns:32px minmax(0,1fr) auto;
+  gap:10px;
+  align-items:center;
+  padding:10px 0;
+  text-decoration:none;
+  color:inherit;
+}
+.legacy-admin-secondary-link{
+  border-top:1px solid color-mix(in srgb,var(--border) 82%,transparent);
+}
+.legacy-admin-detail-v4 .legacy-admin-original>summary>span,
+.legacy-admin-secondary-link>span{
+  width:32px;
+  height:32px;
+  border-radius:10px;
+  display:grid;
+  place-items:center;
+  background:var(--primary-soft);
+  color:var(--primary);
+  font-size:.64rem;
+}
+.legacy-admin-detail-v4 .legacy-admin-original>summary strong,
+.legacy-admin-secondary-link strong{
+  display:block;
+  margin:0;
+  font-size:.6rem;
+  line-height:1.3;
+}
+.legacy-admin-detail-v4 .legacy-admin-original>summary small,
+.legacy-admin-secondary-link small{
+  display:block;
+  margin-top:2px;
+  color:var(--muted);
+  font-size:.49rem;
+  line-height:1.3;
+  letter-spacing:0;
+  text-transform:none;
+}
+.legacy-admin-detail-v4 .legacy-admin-original>summary>i,
+.legacy-admin-secondary-link>i{
+  color:var(--muted);
+  font-size:.56rem;
+}
+.legacy-admin-detail-v4 .legacy-admin-original-body{
+  padding:4px 0 8px;
+  border-top:1px solid color-mix(in srgb,var(--border) 80%,transparent);
+  border-bottom:0;
+}
+.legacy-admin-detail-v4 .legacy-admin-original-body .legacy-admin-project-section{
+  padding:10px 0!important;
+}
+.legacy-admin-detail-v4 .legacy-admin-original-body .legacy-admin-project-section:first-child{
+  padding-top:10px!important;
+}
+
+/* Cabeçalho mais leve e com menos espaço vertical. */
+.legacy-admin-modal .modal-head{
+  padding:15px 16px 12px!important;
+}
+.legacy-admin-modal .modal-head h2{
+  font-size:.94rem!important;
+}
+.legacy-admin-modal .modal-head p{
+  margin-top:3px!important;
+  font-size:.57rem!important;
+}
+.legacy-admin-modal .modal-body{
+  padding:12px 16px 16px!important;
+}
+
+@media(max-width:390px){
+  .legacy-admin-detail-v4{
+    gap:16px;
+  }
+  .legacy-admin-project-meta{
+    gap:8px;
+  }
+  .legacy-admin-detail-v4 .legacy-admin-timeline-meta{
+    display:grid;
+    gap:2px;
+  }
+  .legacy-admin-detail-v4 .legacy-admin-timeline-meta time{
+    white-space:normal;
+  }
+}
