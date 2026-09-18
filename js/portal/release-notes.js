@@ -173,7 +173,7 @@
     };
   }
 
-  loadReleaseMeta();
-
-  if(state?.role==='volunteer'&&typeof render==='function')render();
+  const loadMetaWhenIdle=()=>loadReleaseMeta();
+  if(typeof requestIdleCallback==='function')requestIdleCallback(loadMetaWhenIdle,{timeout:1800});
+  else setTimeout(loadMetaWhenIdle,900);
 })();
