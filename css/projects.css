@@ -340,3 +340,69 @@
 @media(max-width:350px){
   .legacy-status-grid-v4{grid-template-columns:1fr}
 }
+
+
+/* Projeto Legado — leitura do projeto como história, sem pilha de cards */
+.legacy-status-v5{display:grid;gap:16px;padding-top:8px;padding-bottom:104px}
+.legacy-status-hero-v5{position:relative;overflow:hidden;padding:20px;border-radius:24px;background:linear-gradient(145deg,color-mix(in srgb,var(--primary) 96%,#173d2c),var(--primary));color:#fff;box-shadow:0 14px 32px rgba(31,78,57,.12)}
+.legacy-status-hero-v5::after{content:"";position:absolute;width:210px;height:210px;border-radius:50%;right:-96px;top:-105px;border:1px solid rgba(255,255,255,.12);box-shadow:0 0 0 38px rgba(255,255,255,.028);pointer-events:none}
+.legacy-status-hero-top{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.legacy-status-kicker{font-size:.58rem;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:rgba(255,255,255,.72)}
+.legacy-status-chip{font-size:.54rem;font-weight:700;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.18);white-space:nowrap}
+.legacy-status-chip.warning{background:#fff0c8;color:#98640f;border-color:#efcf88}
+.legacy-status-chip.success{background:#e5f5e8;color:#237044;border-color:#b9dfc3}
+.legacy-status-chip.info{background:#e7f0f8;color:#315f7b;border-color:#c5d8e7}
+.legacy-status-hero-v5 h1{position:relative;z-index:1;margin:0;max-width:620px;color:#fff;font-size:1.28rem;line-height:1.15;letter-spacing:-.025em;overflow-wrap:anywhere}
+.legacy-status-hero-v5>p{position:relative;z-index:1;margin:7px 0 0;color:rgba(255,255,255,.75);font-size:.68rem}
+.legacy-status-review-link{position:relative;z-index:1;margin-top:15px;border:0;border-radius:13px;background:#fff;color:var(--primary);min-height:42px;padding:0 14px;display:inline-flex;align-items:center;gap:8px;font:inherit;font-size:.64rem;font-weight:700;cursor:pointer}
+
+.legacy-project-story{display:grid;gap:12px}
+.legacy-project-story-head{padding:0 2px}
+.legacy-project-story-head .eyebrow{display:block;margin-bottom:3px}
+.legacy-project-story-head h2{margin:0;font-size:.9rem;line-height:1.25;color:var(--text)}
+.legacy-project-story-list{display:grid}
+.legacy-project-story-row{display:grid;grid-template-columns:38px minmax(0,1fr);gap:11px;align-items:start;padding:14px 2px;border-bottom:1px solid color-mix(in srgb,var(--border) 86%,transparent)}
+.legacy-project-story-row:first-child{padding-top:4px}
+.legacy-project-story-row>span{width:38px;height:38px;border-radius:12px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;font-size:.72rem}
+.legacy-project-story-row small{display:block;margin:0 0 3px;color:var(--primary);font-size:.52rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.legacy-project-story-row p{margin:0;color:var(--text);font-size:.64rem;line-height:1.48;overflow-wrap:anywhere}
+
+.legacy-project-drive-v5{display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:11px;align-items:center;text-decoration:none;color:inherit;padding:11px 12px;border:1px solid var(--border);border-radius:15px;background:var(--surface)}
+.legacy-project-drive-v5>span{width:38px;height:38px;border-radius:12px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center}
+.legacy-project-drive-v5 strong{display:block;font-size:.65rem}
+.legacy-project-drive-v5 small{display:block;margin-top:1px;color:var(--muted);font-size:.54rem}
+.legacy-project-drive-v5>i{color:var(--muted);font-size:.68rem}
+.legacy-project-result-v5{display:grid;grid-template-columns:30px minmax(0,1fr);gap:9px;padding:11px 12px;border-radius:14px;background:var(--success-soft);color:var(--success)}
+.legacy-project-result-v5 small{display:block;font-size:.51rem;font-weight:700;text-transform:uppercase}
+.legacy-project-result-v5 p{margin:2px 0 0;color:var(--text);font-size:.61rem;line-height:1.42}
+.legacy-status-v5>.legacy-project-actions{margin-top:0}
+.legacy-status-v5>.legacy-how-link{margin-top:-2px}
+
+.legacy-project-update-card{display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:11px;align-items:center;margin-top:12px;padding:14px;border:1px solid #e8c876;border-radius:18px;background:linear-gradient(145deg,#fff7df,#fffdf7);box-shadow:0 8px 22px rgba(156,104,18,.06);transition:.2s ease}
+.legacy-project-update-card.is-leaving{opacity:0;transform:translateY(-5px)}
+.legacy-project-update-icon{width:42px;height:42px;border-radius:13px;background:#fff0c8;color:#a36d12;display:grid;place-items:center}
+.legacy-project-update-copy{min-width:0}
+.legacy-project-update-copy small{display:block;color:#a36d12;font-size:.52rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase}
+.legacy-project-update-copy strong{display:block;margin-top:2px;color:var(--text);font-size:.72rem}
+.legacy-project-update-copy p{margin:2px 0 0;color:var(--muted);font-size:.58rem;line-height:1.35}
+.legacy-project-update-card .btn{min-height:40px;white-space:nowrap}
+
+.legacy-adjustment-modal-shell{max-width:520px}
+.legacy-adjustment-modal{display:grid;grid-template-columns:46px minmax(0,1fr);gap:12px;align-items:start}
+.legacy-adjustment-modal-icon{width:46px;height:46px;border-radius:14px;background:#fff0c8;color:#a36d12;display:grid;place-items:center}
+.legacy-adjustment-modal small{display:block;color:#a36d12;font-size:.54rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-bottom:2px}
+.legacy-adjustment-modal strong{display:block;font-size:.8rem}
+.legacy-adjustment-modal p{margin:5px 0 0;color:var(--muted);font-size:.64rem;line-height:1.5;white-space:pre-wrap}
+.legacy-adjustment-modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
+
+@media(max-width:760px){
+  .legacy-status-v5{gap:14px;padding-top:6px}
+  .legacy-status-hero-v5{padding:18px 16px;border-radius:22px}
+  .legacy-status-hero-v5 h1{font-size:1.18rem}
+  .legacy-status-review-link{width:100%;justify-content:center}
+  .legacy-project-story-row{grid-template-columns:36px minmax(0,1fr);padding:12px 2px}
+  .legacy-project-story-row>span{width:36px;height:36px}
+  .legacy-project-update-card{grid-template-columns:40px minmax(0,1fr);padding:13px}
+  .legacy-project-update-icon{width:40px;height:40px}
+  .legacy-project-update-card .btn{grid-column:1/-1;width:100%}
+}
