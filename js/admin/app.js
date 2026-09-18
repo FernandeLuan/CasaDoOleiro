@@ -168,7 +168,7 @@ function scheduleManagerBackgroundWarmup(){
     hydrateManagerSchedule(_oleiroToday,_oleiroToday,{force:false}).then(()=>{if(state.managerPage==='home')render()}).catch(error=>console.warn('Agenda de hoje indisponível:',error));
     hydrateManagerPendingChanges({force:false}).catch(error=>console.warn('Pendências indisponíveis:',error));
     if(typeof window.hydrateManagerHomeOccupancy==='function')window.hydrateManagerHomeOccupancy({force:false}).catch(error=>console.warn('Ocupação indisponível:',error));
-    setTimeout(()=>processExpiredCandidatesOnStartup?.().catch(error=>console.error('Falha ao processar prazos:',error)),1200);
+    setTimeout(()=>processExpiredCandidatesOnStartup?.().catch(error=>console.error('Falha ao processar prazos:',error)),6000);
   };
   if(typeof requestIdleCallback==='function')requestIdleCallback(run,{timeout:1200});else setTimeout(run,700);
 }
