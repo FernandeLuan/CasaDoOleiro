@@ -31,15 +31,37 @@
   window.setLegacyProjectFilter=function(value){state.projectFilter=String(value||'all');render();afterNavigation?.()};
   window.openLegacyProjectAdmin=function(id){
     const p=(window.OleiroProjects?.list?.()||[]).find(x=>String(x.id)===String(id));if(!p)return;
-    const body=`<div class="legacy-admin-detail">
-      <div class="legacy-admin-person"><span><i class="fa-solid fa-user"></i></span><div><strong>${esc(p.ownerName||'Voluntário')}</strong><small>${esc(p.unitName||p.unitId||'Unidade')}</small></div>${statusBadge(p.status)}</div>
-      <div class="legacy-admin-detail-grid"><article><small>Projeto</small><strong>${esc(p.title||'—')}</strong></article><article><small>Categoria</small><strong>${esc(p.category||'—')}</strong></article></div>
-      <article><small>O legado</small><p>${esc(p.description||'—')}</p></article>
-      <article><small>Por que importa</small><p>${esc(p.why||'—')}</p></article>
-      <article><small>Resultado esperado</small><p>${esc(p.expectedResult||'—')}</p></article>
-      ${p.materials?`<article><small>Materiais / apoio</small><p>${esc(p.materials)}</p></article>`:''}
-      ${p.result?`<article class="legacy-admin-result"><small>Resultado final</small><p>${esc(p.result)}</p></article>`:''}
-      ${p.driveUrl?`<a class="legacy-drive-card" href="${esc(p.driveUrl)}" target="_blank" rel="noopener noreferrer"><span><i class="fa-brands fa-google-drive"></i></span><div><strong>Abrir registros no Drive</strong><small>Fotos, vídeos e documentos</small></div><i class="fa-solid fa-arrow-up-right-from-square"></i></a>`:''}
+    const body=`<div class="legacy-admin-detail legacy-admin-detail-v2">
+      <div class="legacy-admin-person legacy-admin-person-v2">
+        <span class="legacy-admin-avatar"><i class="fa-solid fa-user"></i></span>
+        <div class="legacy-admin-identity"><strong>${esc(p.ownerName||'Voluntário')}</strong><small>${esc(p.unitName||p.unitId||'Unidade')}</small></div>
+        <div class="legacy-admin-person-status">${statusBadge(p.status)}</div>
+      </div>
+
+      <section class="legacy-admin-project-overview">
+        <span class="legacy-admin-overview-label">Projeto</span>
+        <strong class="legacy-admin-overview-title">${esc(p.title||'Projeto sem título')}</strong>
+        <span class="legacy-admin-category"><i class="fa-solid fa-tag"></i>${esc(p.category||'Sem categoria')}</span>
+      </section>
+
+      <section class="legacy-admin-project-content">
+        <article class="legacy-admin-project-section">
+          <span class="legacy-admin-section-icon"><i class="fa-solid fa-seedling"></i></span>
+          <div><small>O legado</small><p>${esc(p.description||'—')}</p></div>
+        </article>
+        <article class="legacy-admin-project-section">
+          <span class="legacy-admin-section-icon"><i class="fa-solid fa-heart"></i></span>
+          <div><small>Por que importa</small><p>${esc(p.why||'—')}</p></div>
+        </article>
+        <article class="legacy-admin-project-section">
+          <span class="legacy-admin-section-icon"><i class="fa-solid fa-bullseye"></i></span>
+          <div><small>Resultado esperado</small><p>${esc(p.expectedResult||'—')}</p></div>
+        </article>
+        ${p.materials?`<article class="legacy-admin-project-section"><span class="legacy-admin-section-icon"><i class="fa-solid fa-box-open"></i></span><div><small>Materiais / apoio</small><p>${esc(p.materials)}</p></div></article>`:''}
+      </section>
+
+      ${p.result?`<div class="legacy-admin-result legacy-admin-result-v2"><span><i class="fa-solid fa-circle-check"></i></span><div><small>Resultado final</small><p>${esc(p.result)}</p></div></div>`:''}
+      ${p.driveUrl?`<a class="legacy-drive-card legacy-admin-drive-v2" href="${esc(p.driveUrl)}" target="_blank" rel="noopener noreferrer"><span><i class="fa-brands fa-google-drive"></i></span><div><strong>Abrir registros no Drive</strong><small>Fotos, vídeos e documentos</small></div><i class="fa-solid fa-arrow-up-right-from-square"></i></a>`:''}
     </div>`;
     let footer='<button class="btn btn-outline" onclick="closeModal()">Fechar</button>';
     if(p.status==='analysis')footer='<button class="btn btn-outline" onclick="openLegacyAdjustment(\''+esc(p.id)+'\')">Pedir ajuste</button><button class="btn btn-primary" onclick="approveLegacyProject(\''+esc(p.id)+'\')">Aprovar projeto</button>';
