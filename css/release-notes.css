@@ -286,19 +286,8 @@
   display:block;
 }
 
-.release-announcement-copy{
-  transform:translate3d(var(--release-content-drag-x,0px),0,0);
-  transition:transform .18s ease;
-  will-change:transform;
-}
 .release-announcement-card.is-dragging{
   cursor:grabbing;
-}
-.release-announcement-card.is-dragging .release-announcement-copy{
-  transition:none;
-}
-.release-announcement-card:not(.is-dragging){
-  --release-content-drag-x:0px;
 }
 
 @media(prefers-reduced-motion:reduce){
