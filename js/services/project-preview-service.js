@@ -27,6 +27,7 @@
   function saveOwn(patch={}){
     const id=ownId();if(!id)throw new Error('Sessão do voluntário indisponível.');
     const rows=readStore(),existing=rows[id]||{};
+    if(existing.status==='completed')return {...existing,id};
     const session=window.state?.currentSession||{},application=window.state?.currentApplication||{},profile=session.profile||{};
     const ownerName=profile.name||profile.fullName||(Array.isArray(application.participantNames)?application.participantNames[0]:'')||session.email||'Voluntário';
     const next={
