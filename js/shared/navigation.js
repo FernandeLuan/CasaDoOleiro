@@ -8,8 +8,8 @@ async function goHome(){
   if((state.role==='manager'&&state.managerPage==='home')||(state.role==='volunteer'&&state.volunteerPage==='home'))return;
   if(state.role==='manager')state.managerPage='home';else if(state.role==='volunteer')state.volunteerPage='home';render();afterNavigation();
   if(state.role==='manager'){
-    if(typeof refreshManagerApplications==='function')refreshManagerApplications().catch(console.error);
-    if(typeof hydrateManagerSchedule==='function')hydrateManagerSchedule(_oleiroToday,_oleiroToday,{force:true}).then(()=>{if(state.managerPage==='home')render()}).catch(console.error);
+    if(typeof hydrateManagerSchedule==='function')hydrateManagerSchedule(_oleiroToday,_oleiroToday,{force:false}).then(()=>{if(state.managerPage==='home')render()}).catch(console.error);
+    if(typeof hydrateManagerDashboardData==='function')hydrateManagerDashboardData({force:false}).catch(console.error);
     if(typeof window.hydrateManagerHomeOccupancy==='function')window.hydrateManagerHomeOccupancy({force:false}).catch(console.error);
   }
 }
