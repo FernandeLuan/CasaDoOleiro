@@ -143,24 +143,6 @@
       <div class="legacy-project-timeline">${legacyTimelineRowsHtml(p)}</div>
     </section>`;
   }
-  function legacyCompletedHistoryHtml(p){
-    const count=legacyTimeline(p).length;
-    return `<details class="legacy-completed-history">
-      <summary>
-        <span class="legacy-completed-history-icon"><i class="fa-solid fa-clock-rotate-left"></i></span>
-        <span class="legacy-completed-history-copy">
-          <small>Sua história</small>
-          <strong>Relembre sua jornada</strong>
-          <span>${count} ${count===1?'momento registrado':'momentos registrados'}</span>
-        </span>
-        <i class="fa-solid fa-chevron-down project-ui-expand-chevron" aria-hidden="true"></i>
-      </summary>
-      <div class="legacy-completed-history-body">
-        <div class="legacy-project-timeline">${legacyTimelineRowsHtml(p)}</div>
-      </div>
-    </details>`;
-  }
-
   function legacyCompletionIso(value){
     if(!value)return '';
     if(typeof value==='string')return value.slice(0,10);
@@ -186,67 +168,102 @@
     const session=state.currentSession||{},profile=session.profile||{},application=state.currentApplication||{};
     return profile.name||profile.fullName||(Array.isArray(application.participantNames)?application.participantNames[0]:'')||'';
   }
-  function legacyCompletionVisual(){
-    return `<div class="legacy-visual legacy-visual-farewell">
-      <span class="legacy-farewell-sprout"><i class="fa-solid fa-seedling"></i></span>
-      <span class="legacy-farewell-heart"><i class="fa-solid fa-heart"></i></span>
-      <span class="legacy-farewell-stars"><i class="fa-solid fa-sparkles"></i></span>
-      <span class="legacy-farewell-path"></span>
+  function legacyCompletionIllustration(step){
+    if(step===0)return `<div class="legacy-visual legacy-completion-visual legacy-completion-visual-arrival">
+      <span class="legacy-completion-house"><i class="fa-solid fa-house-chimney"></i></span>
+      <span class="legacy-completion-calendar"><i class="fa-regular fa-calendar-check"></i></span>
+      <span class="legacy-completion-path"></span>
+    </div>`;
+    if(step===1)return `<div class="legacy-visual legacy-completion-visual legacy-completion-visual-journey">
+      <span><i class="fa-solid fa-person-walking"></i></span>
+      <span><i class="fa-solid fa-message"></i></span>
+      <span><i class="fa-solid fa-heart"></i></span>
+      <span><i class="fa-solid fa-seedling"></i></span>
+    </div>`;
+    if(step===2)return `<div class="legacy-visual legacy-completion-visual legacy-completion-visual-legacy">
+      <span class="legacy-completion-sprout"><i class="fa-solid fa-seedling"></i></span>
+      <span class="legacy-completion-project-heart"><i class="fa-solid fa-heart"></i></span>
+      <span class="legacy-completion-project-star"><i class="fa-solid fa-star"></i></span>
+    </div>`;
+    return `<div class="legacy-visual legacy-completion-visual legacy-completion-visual-thanks">
+      <span class="legacy-completion-thanks-heart"><i class="fa-solid fa-heart"></i></span>
+      <span class="legacy-completion-thanks-hand left"><i class="fa-solid fa-hand-holding-heart"></i></span>
+      <span class="legacy-completion-thanks-hand right"><i class="fa-solid fa-hands-clapping"></i></span>
+      <span class="legacy-completion-thanks-stars"><i class="fa-solid fa-sparkles"></i></span>
     </div>`;
   }
-  function legacyCompletionPage(p){
+  function legacyCompletionSlides(p){
     const application=state.currentApplication||{};
     const fullName=legacyCompletionVolunteerName(),firstName=String(fullName||'').trim().split(/\s+/)[0]||'';
     const start=application.stayStart||application.from||'';
     const end=application.stayEnd||application.to||p.completedAt||'';
-    const startLabel=legacyCompletionDate(start);
-    const endLabel=legacyCompletionDate(end);
+    const startLabel=legacyCompletionDate(start),endLabel=legacyCompletionDate(end);
     const days=legacyCompletionDays(start,end);
     const unit=application.unitName||p.unitName||String(application.unitId||p.unitId||'').replace(/^./,c=>c.toUpperCase());
     const progressCount=legacyProgressEntries(p).length;
     const resultText=String(p.result||p.expectedResult||p.description||'').trim();
-    const title=firstName?`Foi muito bom ter você conosco, ${esc(firstName)} 💚`:'Foi muito bom ter você conosco 💚';
+    const projectTitle=String(p.title||'Projeto Legado').trim();
 
-    const staySentence=startLabel
-      ?`Você chegou em <strong>${esc(startLabel)}</strong>${days?` e permaneceu <strong>${days} ${days===1?'dia':'dias'}</strong> conosco`:''}${unit?` em <strong>${esc(unit)}</strong>`:''}.`
-      :'Obrigado por fazer parte dessa experiência com a Casa do Oleiro.';
+    const arrivalText=startLabel
+      ?`Sua história com a Casa começou em <strong>${esc(startLabel)}</strong>${days?`. Foram <strong>${days} ${days===1?'dia':'dias'}</strong> conosco`:''}${unit?` em <strong>${esc(unit)}</strong>`:''}${endLabel?`, até ${esc(endLabel)}`:''}.`
+      :'Sua história com a Casa foi feita de presença, troca e muitos momentos que agora fazem parte da nossa memória.';
 
-    const journeySentence=progressCount
-      ?`Ao longo dessa jornada, acompanhamos <strong>${progressCount} ${progressCount===1?'atualização':'atualizações'}</strong> do seu legado até ele ganhar forma.`
-      :'Ao longo dessa jornada, vimos seu legado ganhar forma e deixar uma marca na comunidade.';
+    const journeyText=progressCount
+      ?`Ao longo dessa experiência, acompanhamos <strong>${progressCount} ${progressCount===1?'momento':'momentos'}</strong> do seu projeto ganhando forma. Cada etapa ajudou a construir o legado que ficou por aqui.`
+      :'Ao longo dessa experiência, vimos ideias ganharem forma, encontros acontecerem e o seu legado encontrar espaço na comunidade.';
 
-    return `<section class="section legacy-page legacy-completion-page">
-      <div class="legacy-completion-onboarding">
-        <div class="legacy-onboarding-body legacy-completion-body">
-          ${legacyCompletionVisual()}
-          <span class="eyebrow">Jornada concluída</span>
-          <h1>${title}</h1>
-          <p>${staySentence} ${journeySentence}</p>
+    const legacyText=resultText
+      ?`Você deixou o projeto <strong>${esc(projectTitle)}</strong>. O resultado final foi: <strong>${esc(resultText)}</strong>.`
+      :`Você deixou o projeto <strong>${esc(projectTitle)}</strong>, uma parte concreta da sua passagem pela Casa do Oleiro.`;
 
-          <div class="legacy-completion-facts">
-            ${startLabel?`<div><small>Chegada</small><strong>${esc(startLabel)}</strong></div>`:''}
-            ${days?`<div><small>Tempo conosco</small><strong>${days} ${days===1?'dia':'dias'}</strong></div>`:''}
-            ${endLabel?`<div><small>Até</small><strong>${esc(endLabel)}</strong></div>`:''}
-          </div>
+    const thankTitle=firstName?`Muito obrigado pela sua participação, ${esc(firstName)}!`:'Muito obrigado pela sua participação!';
+    const thankText='Foi muito bom ter você conosco. Esperamos que leve um pouco da Casa do Oleiro com você — porque uma parte da sua história também ficou por aqui. 💚';
 
-          <div class="legacy-completion-project">
-            <span class="legacy-completion-project-icon"><i class="fa-solid fa-seedling"></i></span>
-            <div>
-              <small>O legado que você deixou</small>
-              <h2>${esc(p.title||'Projeto Legado')}</h2>
-              ${resultText?`<p>${esc(resultText)}</p>`:''}
-            </div>
-          </div>
-
-          ${p.completedAt?`<span class="legacy-completion-finished"><i class="fa-solid fa-circle-check"></i> Legado concluído em ${esc(legacyCompletionDate(p.completedAt))}</span>`:''}
-        </div>
-
-        <div class="legacy-completion-recap">
-          ${legacyCompletedHistoryHtml(p)}
-        </div>
+    return [
+      {eyebrow:'Sua jornada',title:'Foi aqui que tudo começou',text:arrivalText},
+      {eyebrow:'Relembre',title:'Olha quanta coisa aconteceu',text:journeyText},
+      {eyebrow:'Seu legado',title:'Você deixou uma marca por aqui',text:legacyText},
+      {eyebrow:'Com carinho',title:thankTitle,text:thankText}
+    ];
+  }
+  function legacyCompletionPage(p){
+    const slides=legacyCompletionSlides(p);
+    const step=Math.max(0,Math.min(slides.length-1,Number(state.projectCompletionStep)||0));
+    const slide=slides[step];
+    const last=step===slides.length-1;
+    return `<section class="legacy-onboarding legacy-completion-onboarding" data-completion-onboarding="1">
+      <div class="legacy-onboarding-body legacy-completion-slide">
+        ${legacyCompletionIllustration(step)}
+        <span class="eyebrow">${esc(slide.eyebrow)}</span>
+        <h1>${slide.title}</h1>
+        <p>${slide.text}</p>
+      </div>
+      <div class="legacy-onboarding-footer legacy-completion-footer">
+        <span>${last?'Sua jornada sempre fica aqui para você rever.':'Deslize para relembrar sua jornada'}</span>
+        <div class="legacy-dots">${slides.map((_,index)=>`<i class="${index===step?'active':''}"></i>`).join('')}</div>
+        <button class="btn btn-primary btn-block legacy-next" type="button" onclick="${last?'projectCompletionRestart()':'projectCompletionNext()'}">${last?'Rever minha jornada':'Continuar'}</button>
       </div>
     </section>`;
   }
+  window.projectCompletionNext=function(){
+    const p=project();if(!p||p.status!=='completed')return;
+    const total=legacyCompletionSlides(p).length;
+    const step=Math.max(0,Number(state.projectCompletionStep)||0);
+    if(step>=total-1)return;
+    state.projectCompletionStep=step+1;
+    render();
+  };
+  window.projectCompletionBack=function(){
+    const p=project();if(!p||p.status!=='completed')return;
+    const step=Math.max(0,Number(state.projectCompletionStep)||0);
+    if(step<=0)return;
+    state.projectCompletionStep=step-1;
+    render();
+  };
+  window.projectCompletionRestart=function(){
+    state.projectCompletionStep=0;
+    render();
+  };
 
   function statusPage(p){
     if(p?.status==='completed')return legacyCompletionPage(p);
@@ -254,8 +271,7 @@
     const editable=['draft','adjustments'].includes(p.status);
     const canStart=p.status==='approved';
     const inProgress=p.status==='in_progress';
-    const completed=false;
-    const expandHero=inProgress||completed;
+    const expandHero=inProgress;
     const row=(icon,labelText,value)=>`<article class="legacy-project-story-row"><span><i class="fa-solid ${icon}"></i></span><div><small>${esc(labelText)}</small><p>${esc(value||'—')}</p></div></article>`;
     const storyRows=`<div class="legacy-project-story-list">
       ${row('fa-wand-magic-sparkles','O legado',p.description)}
@@ -264,15 +280,6 @@
       ${p.materials?row('fa-toolbox','Materiais / apoio',p.materials):''}
     </div>`;
     const drive=p.driveUrl?`<a class="legacy-project-drive-v5" href="${esc(p.driveUrl)}" target="_blank" rel="noopener noreferrer"><span><i class="fa-brands fa-google-drive"></i></span><div><strong>Google Drive</strong><small>Fotos, vídeos e documentos do projeto</small></div><i class="fa-solid fa-arrow-up-right-from-square"></i></a>`:'';
-    const result=p.result?`<section class="legacy-project-outcome-v6">
-      <span class="legacy-project-outcome-icon"><i class="fa-solid fa-heart"></i></span>
-      <div>
-        <small>O que ficou para a comunidade</small>
-        <h2>${esc(p.result)}</h2>
-        <p>Este é o resultado final registrado pelo voluntário.</p>
-        ${p.completedAt?`<span class="legacy-project-outcome-date"><i class="fa-solid fa-circle-check"></i>Concluído em ${esc(legacyProgressDate(p.completedAt))}</span>`:''}
-      </div>
-    </section>`:'';
 
     const heroSummary=`
       <div class="legacy-status-hero-top">
@@ -307,25 +314,23 @@
     </section>`;
 
     let content='';
-    if(completed){
-      content=`${result}${legacyCompletedHistoryHtml(p)}`;
-    }else if(inProgress){
+    if(inProgress){
       content=legacyTrackingHtml(p);
     }else{
       content=currentStory;
     }
 
-    return `<section class="section legacy-page legacy-status-v5 ${completed?'is-completed':inProgress?'is-in-progress':''}">
+    return `<section class="section legacy-page legacy-status-v5 ${inProgress?'is-in-progress':''}">
       ${hero}
 
       ${content}
 
-      ${completed?'':`<div class="legacy-project-actions ${editable?'legacy-project-actions-pair':''} ${inProgress?'legacy-project-actions-execution':''}">
+      <div class="legacy-project-actions ${editable?'legacy-project-actions-pair':''} ${inProgress?'legacy-project-actions-execution':''}">
         ${editable?`<button class="btn btn-outline" type="button" onclick="openLegacyProjectForm()"><i class="fa-solid fa-pen"></i>Editar</button><button class="btn btn-primary" type="button" onclick="submitLegacyProject()"><i class="fa-solid fa-paper-plane"></i>${p.status==='adjustments'?'Reenviar':'Enviar para análise'}</button>`:''}
         ${canStart?'<button class="btn btn-primary" type="button" onclick="startLegacyProject()"><i class="fa-solid fa-play"></i>Começar execução</button>':''}
         ${inProgress?'<button class="btn btn-outline" type="button" onclick="openLegacyProgressUpdate()"><i class="fa-solid fa-message"></i>Comentar andamento</button><button class="btn btn-primary" type="button" onclick="openLegacyCompletion()"><i class="fa-solid fa-flag-checkered"></i>Concluir legado</button>':''}
       </div>
-      <button class="legacy-how-link legacy-status-how" type="button" onclick="replayProjectOnboarding()"><i class="fa-regular fa-circle-question"></i>Como funciona?</button>`}
+      <button class="legacy-how-link legacy-status-how" type="button" onclick="replayProjectOnboarding()"><i class="fa-regular fa-circle-question"></i>Como funciona?</button>
     </section>`;
   }
   function candidatePreviewPage(){
@@ -676,15 +681,24 @@
   };
 
   let legacyProjectSwipeStart=null;
+  let legacyProjectSwipeMode='onboarding';
   document.addEventListener('touchstart',event=>{
-    if(!event.target.closest?.('.legacy-onboarding'))return;
+    const onboarding=event.target.closest?.('.legacy-onboarding');
+    if(!onboarding)return;
+    legacyProjectSwipeMode=onboarding.matches('[data-completion-onboarding]')?'completion':'onboarding';
     legacyProjectSwipeStart=event.changedTouches?.[0]?.clientX??null;
   },{passive:true});
   document.addEventListener('touchend',event=>{
     if(legacyProjectSwipeStart==null||!event.target.closest?.('.legacy-onboarding')){legacyProjectSwipeStart=null;return}
     const end=event.changedTouches?.[0]?.clientX??legacyProjectSwipeStart,diff=end-legacyProjectSwipeStart;
+    const mode=legacyProjectSwipeMode;
     legacyProjectSwipeStart=null;
+    legacyProjectSwipeMode='onboarding';
     if(Math.abs(diff)<55)return;
+    if(mode==='completion'){
+      if(diff<0)window.projectCompletionNext?.();else window.projectCompletionBack?.();
+      return;
+    }
     if(diff<0)window.projectOnboardingNext?.();else window.projectOnboardingBack?.();
   },{passive:true});
 })();
