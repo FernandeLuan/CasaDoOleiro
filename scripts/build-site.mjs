@@ -19,6 +19,21 @@ async function rewrite(relative,transform){
 }
 
 
+async function auditArchitectureInvariants(siteRoot){
+  const selection=await readFile(path.join(siteRoot,'js/admin/selection-flow.js'),'utf8');
+  const detail=await readFile(path.join(siteRoot,'js/admin/candidate-detail-data.js'),'utf8');
+  const planning=await readFile(path.join(siteRoot,'js/services/planning-service.js'),'utf8');
+  const board=await readFile(path.join(siteRoot,'js/admin/planning-board.js'),'utf8');
+
+  if(!selection.includes('window.selectionAccountCard=selectionAccountCard')||!detail.includes('window.selectionAccountCard')){
+    throw new Error('Arquitetura inválida: fluxo de reunião não está conectado ao renderizador canônico da Conta.');
+  }
+  if(!planning.includes('async listScheduleRange(')||!board.includes('planning.listScheduleRange({from,to})')||board.includes('mapLimited(relevant')){
+    throw new Error('Arquitetura inválida: quadro de planejamento voltou ao padrão N+1 de consultas.');
+  }
+  return {meetingFlow:true,planningRangeQuery:true};
+}
+
 async function auditRuntimeSources(siteRoot){
   const entryFiles=['index.html','admin/index.html','portal/index.html'];
   const referenced=new Set();
@@ -131,6 +146,7 @@ async function bundleAdminAssets(){
 // Fail before deleting the previous build or publishing a broken entry point.
 await checkSiteAssets(root);
 const runtimeAudit=await auditRuntimeSources(root);
+const architectureAudit=await auditArchitectureInvariants(root);
 await rm(out,{recursive:true,force:true});
 await mkdir(out,{recursive:true});
 for(const dir of ['admin','portal','css','js','icons']){
@@ -160,6 +176,7 @@ await writeFile(path.join(out,'release.json'),JSON.stringify({environment,build:
 console.log(`Canonical site build ready: ${out}`);
 console.log(`Environment: ${environment}`);
 console.log(`Runtime source audit: ${runtimeAudit.modules} JS modules, no orphaned files.`);
+console.log('Architecture invariants: meeting flow + single-range planning query OK.');
 console.log(`Portal bundles: ${portalBundle.js} scripts -> 3 requests; ${portalBundle.css} stylesheets -> 1 request.`);
 console.log(`Admin bundles: ${adminBundle.js} scripts -> 3 requests; ${adminBundle.css} stylesheets -> 1 request.`);
 console.log('Source modules remain separated for maintenance; runtime bundles preserve classic-script execution order.');
