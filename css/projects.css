@@ -245,3 +245,11 @@
   .legacy-wizard-summary-row{grid-template-columns:32px minmax(0,1fr);padding:9px 10px}
   .legacy-wizard-summary-icon{width:32px;height:32px}
 }
+
+/* Projeto salvo: ações principais lado a lado */
+.legacy-project-actions-pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px}
+.legacy-project-actions-pair .btn{width:100%;min-width:0;white-space:normal;text-align:center;justify-content:center}
+@media(max-width:760px){
+  .legacy-project-actions.legacy-project-actions-pair{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+  .legacy-project-actions.legacy-project-actions-pair .btn{width:100%;min-height:46px;padding-left:8px;padding-right:8px;font-size:.64rem}
+}
