@@ -12,10 +12,15 @@
   const ALWAYS_SHOW_HOME_NOTICES=true; // homologação: manter avisos sempre visíveis para teste
   const PROJECT_PROMPT_ID='2026-09-projeto-legado-intro-v1';
   const ANNOUNCEMENT={
-    id:'2026-09-portal-projeto-legado-v2',
+    id:'2026-09-portal-projeto-legado-v3',
     eyebrow:'Nova atualização',
     title:'Tem novidade por aqui ✨',
     summary:'Deixamos o portal mais simples e adicionamos novas formas de acompanhar sua experiência.',
+    homeSlides:[
+      {title:'Tem novidade por aqui ✨',summary:'Deixamos o portal mais simples e adicionamos novas formas de acompanhar sua experiência.'},
+      {title:'Projeto Legado',summary:'Conheça a proposta e acesse a nova área Projeto pelo menu.'},
+      {title:'Tudo mais simples de encontrar',summary:'Conta, Projeto e Informações da Casa ficaram mais organizados e fáceis de acessar.'}
+    ],
     items:[
       {icon:'fa-seedling',title:'Projeto Legado',text:'Conheça a proposta e acesse a nova área Projeto pelo menu.'},
       {icon:'fa-user',title:'Conta mais organizada',text:'Idioma, aparência e contato de emergência ficaram reunidos em um só lugar.'},
@@ -28,6 +33,7 @@
   const esc=value=>typeof escapeHtml==='function'?escapeHtml(value):String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   let releaseMeta=null;
   let metaPromise=null;
+  let homeSlideIndex=0;
 
   function uid(){return String(state?.currentSession?.uid||'anon')}
   function releaseSeenKey(){return `oleiro.portal.release-notes.seen.v1:${uid()}`}
@@ -62,16 +68,40 @@
   function itemHtml(item){
     return `<div class="release-note-item"><span><i class="fa-solid ${esc(item.icon)}"></i></span><div><strong>${esc(item.title)}</strong><p>${esc(item.text)}</p></div></div>`;
   }
+  function homeSlides(){
+    const slides=Array.isArray(ANNOUNCEMENT.homeSlides)?ANNOUNCEMENT.homeSlides.filter(Boolean):[];
+    return slides.length?slides:[{title:ANNOUNCEMENT.title,summary:ANNOUNCEMENT.summary}];
+  }
+  function homeSlide(){
+    const slides=homeSlides();
+    homeSlideIndex=Math.max(0,Math.min(homeSlideIndex,slides.length-1));
+    return slides[homeSlideIndex]||slides[0];
+  }
+  function releaseCarouselNavHtml(){
+    const slides=homeSlides(),total=slides.length;
+    if(total<=1)return '';
+    const first=homeSlideIndex===0,last=homeSlideIndex===total-1;
+    return `<div class="release-announcement-pager" aria-label="Navegação das novidades">
+      <strong class="release-announcement-counter">${homeSlideIndex+1}/${total}</strong>
+      <div class="release-announcement-nav ${first?'is-forward':last?'is-backward':'is-middle'}">
+        ${first?'':`<button type="button" class="release-announcement-arrow" onclick="portalReleasePrev(event)" aria-label="Novidade anterior"><i class="fa-solid fa-arrow-left"></i></button>`}
+        ${last?'':`<button type="button" class="release-announcement-arrow" onclick="portalReleaseNext(event)" aria-label="Próxima novidade"><i class="fa-solid fa-arrow-right"></i></button>`}
+        <span class="release-announcement-travel" aria-hidden="true"></span>
+      </div>
+    </div>`;
+  }
   function releaseCardHtml(){
     if(releaseSeen())return '';
-    return `<section class="release-announcement-card" data-release-announcement>
+    const slide=homeSlide();
+    return `<section class="release-announcement-card" data-release-announcement data-release-slide="${homeSlideIndex}">
       <div class="release-announcement-top">
         <span class="release-announcement-spark"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
         <div class="release-announcement-copy">
           <div class="release-announcement-meta"><span>${esc(ANNOUNCEMENT.eyebrow)}</span><small data-release-meta hidden></small></div>
-          <strong>${esc(ANNOUNCEMENT.title)}</strong>
-          <p>${esc(ANNOUNCEMENT.summary)}</p>
+          <strong data-release-slide-title>${esc(slide.title)}</strong>
+          <p data-release-slide-summary>${esc(slide.summary)}</p>
         </div>
+        ${releaseCarouselNavHtml()}
       </div>
       <div class="release-announcement-actions">
         <button class="btn btn-outline" type="button" onclick="dismissPortalReleaseAnnouncement()">Agora não</button>
@@ -79,6 +109,40 @@
       </div>
     </section>`;
   }
+  function renderReleaseSlide(direction){
+    const card=document.querySelector('[data-release-announcement]');
+    if(!card)return;
+    const slide=homeSlide();
+    card.dataset.releaseSlide=String(homeSlideIndex);
+    card.classList.remove('is-slide-next','is-slide-prev');
+    void card.offsetWidth;
+    card.classList.add(direction==='prev'?'is-slide-prev':'is-slide-next');
+    const title=card.querySelector('[data-release-slide-title]');
+    const summary=card.querySelector('[data-release-slide-summary]');
+    const pager=card.querySelector('.release-announcement-pager');
+    if(title)title.textContent=slide.title;
+    if(summary)summary.textContent=slide.summary;
+    if(pager)pager.outerHTML=releaseCarouselNavHtml();
+    else{
+      const top=card.querySelector('.release-announcement-top');
+      if(top)top.insertAdjacentHTML('beforeend',releaseCarouselNavHtml());
+    }
+    updateMetaLabels();
+  }
+  window.portalReleasePrev=function(event){
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if(homeSlideIndex<=0)return;
+    homeSlideIndex-=1;
+    renderReleaseSlide('prev');
+  };
+  window.portalReleaseNext=function(event){
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if(homeSlideIndex>=homeSlides().length-1)return;
+    homeSlideIndex+=1;
+    renderReleaseSlide('next');
+  };
   function stripProjectHighlight(html){
     return String(html||'').replace(/<section(?=[^>]*data-project-highlight="1")[^>]*>[\s\S]*?<\/section>/,'');
   }
@@ -162,7 +226,7 @@
   const baseVolunteerHome=typeof window.volunteerHome==='function'?window.volunteerHome:null;
   if(baseVolunteerHome){
     window.volunteerHome=volunteerHome=function(){
-      let html=baseVolunteerHome();
+      let html=stripProjectHighlight(baseVolunteerHome());
       const card=releaseCardHtml();
 
       /* Durante a homologação mostramos simultaneamente todos os avisos relevantes.
@@ -174,9 +238,6 @@
       }
 
       if(html.includes('data-project-adjustment-update="1"'))return html;
-      const hasProject=html.includes('data-project-highlight="1"');
-      if(hasProject&&!projectSeen())return html;
-      if(hasProject)html=stripProjectHighlight(html);
       if(!card||html.includes('data-release-announcement'))return html;
       return insertAfterHero(html,card);
     };
