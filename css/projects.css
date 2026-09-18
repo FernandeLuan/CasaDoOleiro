@@ -1016,19 +1016,19 @@
   white-space:nowrap;
 }
 .legacy-status-chip.warning{
-  background:#fff0c8;
-  color:#98640f;
-  border-color:#efcf88;
+  background:var(--warning-soft);
+  color:var(--warning);
+  border-color:color-mix(in srgb,var(--warning) 30%,transparent);
 }
 .legacy-status-chip.success{
-  background:#e5f5e8;
-  color:#237044;
-  border-color:#b9dfc3;
+  background:var(--success-soft);
+  color:var(--success);
+  border-color:color-mix(in srgb,var(--success) 28%,transparent);
 }
 .legacy-status-chip.info{
-  background:#e7f0f8;
-  color:#315f7b;
-  border-color:#c5d8e7;
+  background:var(--info-soft);
+  color:var(--info);
+  border-color:color-mix(in srgb,var(--info) 28%,transparent);
 }
 .legacy-status-hero-v5 h1{
   position:relative;
@@ -1174,14 +1174,14 @@
   width:46px;
   height:46px;
   border-radius:14px;
-  background:#fff0c8;
-  color:#a36d12;
+  background:var(--warning-soft);
+  color:var(--warning);
   display:grid;
   place-items:center;
 }
 .legacy-adjustment-modal small{
   display:block;
-  color:#a36d12;
+  color:var(--warning);
   font-size:.54rem;
   font-weight:700;
   letter-spacing:.07em;
