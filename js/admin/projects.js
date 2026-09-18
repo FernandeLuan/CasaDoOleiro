@@ -133,15 +133,14 @@
   }
 
   function projectCard(p){
-    const [label,tone]=status[p.status]||['Rascunho',''];
-    return `<button class="legacy-admin-card legacy-admin-card-v2" type="button" onclick="openLegacyProjectAdmin('${esc(p.id)}')">
-      <span class="legacy-admin-card-icon"><i class="fa-solid fa-seedling"></i></span>
-      <div class="legacy-admin-card-main">
-        <strong>${esc(p.title||'Projeto sem título')}</strong>
-        <p>${esc(p.ownerName||'Voluntário')} · ${esc(p.unitName||p.unitId||'Unidade')}${p.category?` · ${esc(p.category)}`:''}</p>
+    return `<button class="list-item clickable project-ui-row project-ui-list-row" type="button" onclick="openLegacyProjectAdmin('${esc(p.id)}')">
+      <span class="avatar project-ui-avatar"><i class="fa-solid fa-seedling"></i></span>
+      <div class="item-main">
+        <h3>${esc(p.title||'Projeto sem título')}</h3>
+        <p>${esc(p.ownerName||'Voluntário')} • ${esc(p.unitName||p.unitId||'Unidade')}${p.category?` • ${esc(p.category)}`:''}</p>
+        <div class="item-meta">${statusBadge(p.status)}</div>
       </div>
-      <span class="legacy-admin-card-status ${esc(tone)}">${esc(label)}</span>
-      <i class="fa-solid fa-chevron-right legacy-admin-card-chevron"></i>
+      <i class="fa-solid fa-chevron-right project-ui-chevron"></i>
     </button>`;
   }
   window.managerProjects=function(){
@@ -152,7 +151,7 @@
         <div class="filter-search candidate-search"><i class="fa-solid fa-magnifying-glass"></i><input id="projectSearch" class="input" type="search" value="${esc(state.projectSearch||'')}" placeholder="Buscar projeto ou voluntário" oninput="updateLegacyProjectSearch(this.value)"></div>
         <button class="candidate-filter-button ${activeFilter?'active':''}" type="button" onclick="openLegacyProjectFilters()" aria-label="Filtros"><i class="fa-solid fa-sliders"></i>${activeFilter?'<span class="filter-dot"></span>':''}</button>
       </div>
-      <div class="legacy-admin-list legacy-admin-list-clean">${list.length?list.map(projectCard).join(''):'<div class="empty"><i class="fa-solid fa-seedling"></i>Nenhum projeto encontrado.</div>'}</div>
+      <div class="list project-ui-list">${list.length?list.map(projectCard).join(''):'<div class="empty"><i class="fa-solid fa-seedling"></i>Nenhum projeto encontrado.</div>'}</div>
     </section>`;
   };
   window.updateLegacyProjectSearch=function(value){state.projectSearch=String(value||'');render();afterNavigation?.()};
@@ -171,17 +170,15 @@
     const p=(window.OleiroProjects?.list?.()||[]).find(x=>String(x.id)===String(id));if(!p)return;
     const tracking=['in_progress','completed'].includes(p.status);
     const body=`<div class="legacy-admin-detail legacy-admin-detail-v4 ${tracking?'has-tracking':''}">
-      <details class="legacy-admin-project-meta legacy-admin-project-meta-expandable">
-        <summary class="legacy-admin-project-meta-summary">
-          <div class="legacy-admin-project-meta-main">
-            <span class="legacy-admin-project-meta-icon"><i class="fa-solid fa-seedling"></i></span>
-            <div>
-              <strong>${esc(p.ownerName||'Voluntário')}</strong>
-              <small>${esc(p.unitName||p.unitId||'Unidade')}${p.category?` · ${esc(p.category)}`:''}</small>
-            </div>
+      <details class="project-ui-expandable">
+        <summary class="list-item project-ui-row project-ui-summary">
+          <span class="avatar project-ui-avatar"><i class="fa-solid fa-seedling"></i></span>
+          <div class="item-main">
+            <h3>${esc(p.ownerName||'Voluntário')}</h3>
+            <p>${esc(p.unitName||p.unitId||'Unidade')}${p.category?` • ${esc(p.category)}`:''}</p>
+            <div class="item-meta">${statusBadge(p.status)}</div>
           </div>
-          <div class="legacy-admin-context-status">${statusBadge(p.status)}</div>
-          <i class="fa-solid fa-chevron-down legacy-admin-project-meta-chevron" aria-hidden="true"></i>
+          <i class="fa-solid fa-chevron-down project-ui-chevron project-ui-expand-chevron" aria-hidden="true"></i>
         </summary>
         ${projectMetaExpandedHtml(p)}
       </details>
