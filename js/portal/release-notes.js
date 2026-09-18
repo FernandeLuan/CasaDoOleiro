@@ -9,6 +9,7 @@
   if(window.__OLEIRO_PORTAL_RELEASE_NOTES__)return;
   window.__OLEIRO_PORTAL_RELEASE_NOTES__=true;
 
+  const ALWAYS_SHOW_HOME_NOTICES=true; // homologação: manter avisos sempre visíveis para teste
   const PROJECT_PROMPT_ID='2026-09-projeto-legado-intro-v1';
   const ANNOUNCEMENT={
     id:'2026-09-portal-projeto-legado-v2',
@@ -31,10 +32,10 @@
   function uid(){return String(state?.currentSession?.uid||'anon')}
   function releaseSeenKey(){return `oleiro.portal.release-notes.seen.v1:${uid()}`}
   function projectSeenKey(){return `oleiro.portal.project-highlight.seen.v1:${uid()}`}
-  function releaseSeen(){try{return localStorage.getItem(releaseSeenKey())===ANNOUNCEMENT.id}catch{return false}}
-  function projectSeen(){try{return localStorage.getItem(projectSeenKey())===PROJECT_PROMPT_ID}catch{return false}}
-  function markReleaseSeen(){try{localStorage.setItem(releaseSeenKey(),ANNOUNCEMENT.id)}catch{}}
-  function markProjectSeen(){try{localStorage.setItem(projectSeenKey(),PROJECT_PROMPT_ID)}catch{}}
+  function releaseSeen(){if(ALWAYS_SHOW_HOME_NOTICES)return false;try{return localStorage.getItem(releaseSeenKey())===ANNOUNCEMENT.id}catch{return false}}
+  function projectSeen(){if(ALWAYS_SHOW_HOME_NOTICES)return false;try{return localStorage.getItem(projectSeenKey())===PROJECT_PROMPT_ID}catch{return false}}
+  function markReleaseSeen(){if(ALWAYS_SHOW_HOME_NOTICES)return;try{localStorage.setItem(releaseSeenKey(),ANNOUNCEMENT.id)}catch{}}
+  function markProjectSeen(){if(ALWAYS_SHOW_HOME_NOTICES)return;try{localStorage.setItem(projectSeenKey(),PROJECT_PROMPT_ID)}catch{}}
 
   function metaLabel(){
     const build=String(releaseMeta?.build||'').trim();
@@ -85,6 +86,17 @@
     if(!card)return html;
     const heroEnd=html.indexOf('</section>');
     return heroEnd>=0?html.slice(0,heroEnd+10)+card+html.slice(heroEnd+10):card+html;
+  }
+  function insertAfterExistingNotice(html,card){
+    if(!card)return html;
+    for(const marker of ['data-project-adjustment-update="1"','data-project-highlight="1"']){
+      const markerAt=html.indexOf(marker);
+      if(markerAt<0)continue;
+      const sectionStart=html.lastIndexOf('<section',markerAt);
+      const sectionEnd=html.indexOf('</section>',markerAt);
+      if(sectionStart>=0&&sectionEnd>=0)return html.slice(0,sectionEnd+10)+card+html.slice(sectionEnd+10);
+    }
+    return insertAfterHero(html,card);
   }
   function showNextHighlightAfterProject(card){
     const next=releaseCardHtml();
@@ -151,11 +163,20 @@
   if(baseVolunteerHome){
     window.volunteerHome=volunteerHome=function(){
       let html=baseVolunteerHome();
+      const card=releaseCardHtml();
+
+      /* Durante a homologação mostramos simultaneamente todos os avisos relevantes.
+         Assim o ajuste do projeto, o convite do Projeto Legado e a novidade da versão
+         podem ser revisados repetidamente sem limpar localStorage. */
+      if(ALWAYS_SHOW_HOME_NOTICES){
+        if(card&&!html.includes('data-release-announcement'))html=insertAfterExistingNotice(html,card);
+        return html;
+      }
+
       if(html.includes('data-project-adjustment-update="1"'))return html;
       const hasProject=html.includes('data-project-highlight="1"');
       if(hasProject&&!projectSeen())return html;
       if(hasProject)html=stripProjectHighlight(html);
-      const card=releaseCardHtml();
       if(!card||html.includes('data-release-announcement'))return html;
       return insertAfterHero(html,card);
     };
