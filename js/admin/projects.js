@@ -35,9 +35,12 @@
     try{
       const date=new Date(value);
       if(Number.isNaN(date.getTime()))return '';
-      return new Intl.DateTimeFormat('pt-BR',{
-        day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'
-      }).format(date).replace('.', '');
+      const d=String(date.getDate()).padStart(2,'0');
+      const m=String(date.getMonth()+1).padStart(2,'0');
+      const y=date.getFullYear();
+      const h=String(date.getHours()).padStart(2,'0');
+      const min=String(date.getMinutes()).padStart(2,'0');
+      return `${d}/${m}/${y} - ${h}:${min}`;
     }catch{return ''}
   }
   function projectProgressEntries(p){
@@ -67,14 +70,14 @@
     return `<section class="legacy-admin-tracking">
       <div class="legacy-admin-tracking-head">
         <h3>${p.status==='completed'?'Histórico':'Andamento'}</h3>
-        <span class="legacy-admin-tracking-count">${rows.length} ${rows.length===1?'registro':'registros'}</span>
       </div>
       <div class="legacy-admin-timeline">
         ${rows.map(item=>`<article class="legacy-admin-timeline-item ${esc(item.type)}">
           <span><i class="fa-solid ${icon(item.type)}"></i></span>
-          <div>
-            <div class="legacy-admin-timeline-meta"><strong>${esc(item.title)}</strong><time>${esc(fmtProjectDate(item.at))}</time></div>
+          <div class="legacy-admin-timeline-content">
+            <strong class="legacy-admin-timeline-title">${esc(item.title)}</strong>
             <p>${esc(item.text)}</p>
+            <time class="legacy-admin-timeline-time">${esc(fmtProjectDate(item.at))}</time>
           </div>
         </article>`).join('')}
       </div>
