@@ -470,8 +470,8 @@
       legacyWizardBody(),
       footer
     );
-    const modal=modalRoot.querySelector('.modal');modal?.classList.add('legacy-project-wizard-modal');
-    if(reviewing)modal?.classList.add('legacy-project-wizard-review-modal');
+    const modal=modalRoot.querySelector('.modal');modal?.classList.add('modal-wide');
+    
     bindLegacyWizardViewport();
     requestAnimationFrame(()=>{
       const target=modalRoot.querySelector('.legacy-wizard-input,.legacy-wizard-textarea');
@@ -601,7 +601,7 @@
     const body=`<div class="legacy-adjustment-modal"><span class="legacy-adjustment-modal-icon"><i class="fa-solid fa-pen-to-square"></i></span><div><small>${esc(tx('project.adjustment.modalEyebrow'))}</small><strong>${esc(tx('project.adjustment.modalTitle2'))}</strong><p>${esc(p.reviewNote||'Abra o projeto para conferir o que precisa ser revisto.')}</p></div></div>`;
     const footer=`<div class="legacy-adjustment-modal-actions"><button class="btn btn-outline" type="button" onclick="closeModal()">${esc(tx('project.adjustment.close'))}</button><button class="btn btn-primary" type="button" onclick="closeModal();navigateVolunteer('project');setTimeout(()=>openLegacyProjectForm(),80)"><i class="fa-solid fa-pen"></i>${esc(tx('project.adjustment.edit'))}</button></div>`;
     openModal(tx('project.adjustment.modalTitle'),'',body,footer);
-    modalRoot.querySelector('.modal')?.classList.add('legacy-adjustment-modal-shell');
+    modalRoot.querySelector('.modal')?.classList.add('modal-compact');
   };
 
   window.legacyProjectHomeNoticeHtml=function(){
