@@ -230,8 +230,8 @@ test('Candidate creates, edits, moves and deletes own proposed activity',async({
 });
 
 for(const locale of [
-  {lang:'en',infoNav:'Information',arrival:'How to get here',software:'Software version',planning:'Planning',add:'Add activity',namePlaceholder:'E.g. English conversation',descriptionPlaceholder:'How does the activity work?',profileNav:'Profile',emergencyTitle:'Emergency contact',emergencyAdd:'Add contact'},
-  {lang:'es',infoNav:'Información',arrival:'Cómo llegar',software:'Versión del software',planning:'Planificación',add:'Agregar actividad',namePlaceholder:'Ej.: Conversación en inglés',descriptionPlaceholder:'¿Cómo funciona la actividad?',profileNav:'Perfil',emergencyTitle:'Contacto de emergencia',emergencyAdd:'Agregar contacto'}
+  {lang:'en',infoNav:'Information',arrival:'How to get here',software:'Software version',planning:'Planning',add:'Add activity',namePlaceholder:'E.g. English conversation',descriptionPlaceholder:'How does the activity work?',profileNav:'Account',emergencyTitle:'Emergency contact',emergencyAdd:'Add contact'},
+  {lang:'es',infoNav:'Información',arrival:'Cómo llegar',software:'Versión del software',planning:'Planificación',add:'Agregar actividad',namePlaceholder:'Ej.: Conversación en inglés',descriptionPlaceholder:'¿Cómo funciona la actividad?',profileNav:'Cuenta',emergencyTitle:'Contacto de emergencia',emergencyAdd:'Agregar contacto'}
 ]){
   test(`Volunteer critical information, profile and activity placeholders render in ${locale.lang}`,async({page})=>{
     await login(page,'voluntario@oleiro.test','Volunteer123!','portal',locale.lang);
