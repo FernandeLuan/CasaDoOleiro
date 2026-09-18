@@ -48,7 +48,7 @@
   }
   function projectTimelineRows(p){
     const rows=[];
-    if(p?.startedAt)rows.push({type:'start',at:p.startedAt,title:'Execução iniciada',text:'Projeto iniciado.'});
+    if(p?.startedAt)rows.push({type:'start',at:p.startedAt,title:'Iniciado',text:'Projeto iniciado.'});
     projectProgressEntries(p).forEach(item=>rows.push({
       type:'progress',
       at:item.at||item.createdAt||p.updatedAt,
@@ -58,10 +58,10 @@
     if(p?.completedAt)rows.push({
       type:'complete',
       at:p.completedAt,
-      title:'Legado concluído',
+      title:'Concluído',
       text:p.result?String(p.result):'O projeto foi concluído.'
     });
-    return rows.sort((a,b)=>new Date(b.at||0)-new Date(a.at||0));
+    return rows.sort((a,b)=>new Date(a.at||0)-new Date(b.at||0));
   }
   function projectTimelineHtml(p){
     const rows=projectTimelineRows(p);
