@@ -63,13 +63,13 @@ function managerHomePendingSlidesVisible(volunteerAnalysis,volunteerAdjustments,
   return [...real,...preview.filter(slide=>!realKeys.has(slide.id))];
 }
 function managerHomePendingPagerHtml(total,index){
-  if(total<=1)return '';
+  if(!total)return '';
   const first=index===0,last=index===total-1;
   return `<div class="notice-carousel-pager" aria-label="Navegação das pendências">
     <strong class="notice-carousel-counter">${index+1}/${total}</strong>
     <div class="notice-carousel-nav">
-      ${first?'':`<button type="button" class="notice-carousel-arrow" onclick="shiftManagerHomePending(-1,event)" aria-label="Pendência anterior"><i class="fa-solid fa-arrow-left"></i></button>`}
-      ${last?'':`<button type="button" class="notice-carousel-arrow" onclick="shiftManagerHomePending(1,event)" aria-label="Próxima pendência"><i class="fa-solid fa-arrow-right"></i></button>`}
+      <button type="button" class="notice-carousel-arrow ${first?'is-disabled':''}" onclick="shiftManagerHomePending(-1,event)" aria-label="Pendência anterior" ${first?'disabled aria-disabled="true"':''}><i class="fa-solid fa-arrow-left"></i></button>
+      <button type="button" class="notice-carousel-arrow ${last?'is-disabled':''}" onclick="shiftManagerHomePending(1,event)" aria-label="Próxima pendência" ${last?'disabled aria-disabled="true"':''}><i class="fa-solid fa-arrow-right"></i></button>
     </div>
   </div>`;
 }
