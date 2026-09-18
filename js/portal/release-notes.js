@@ -417,6 +417,8 @@
     const slide=homeSlide();
     if(!slide)return;
     if(slide.type==='project_adjustment'){
+      hiddenHomeNoticeIds.add(slide.id);
+      renderReleaseSlide('next');
       return window.openLegacyProjectAdjustmentNotice?.();
     }
     if(slide.type==='day_adjustment'){
