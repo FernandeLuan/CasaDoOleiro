@@ -35,7 +35,7 @@ function candidatePlanningDays(p){
   applyCandidatePlanningCache(p.id,cache);const byDate=new Map();(state.sessions||[]).forEach(session=>{if(!session.date)return;const list=byDate.get(session.date)||[];list.push({...session,activity:planningActivityForSession(session)});byDate.set(session.date,list)});
   return [...byDate.entries()].sort(([a],[b])=>a.localeCompare(b)).map(([date,sessions])=>({date,sessions:sessions.sort(activityScheduleCompare)}));
 }
-function candidateDayAdjustment(p,date){return p.dayAdjustments&&p.dayAdjustments[date]?p.dayAdjustments[date]:null}
+function candidateDayAdjustment(p,date){if(p?.status!=='adjustments')return null;return p.dayAdjustments&&p.dayAdjustments[date]?p.dayAdjustments[date]:null}
 function adminPlanningDayCard(p,day){
   const adjustment=candidateDayAdjustment(p,day.date);const canAdjust=['analysis','adjustments'].includes(p.status);const id=candidateActionArg(p.id);const dateArg=encodeURIComponent(day.date);
   return `<div class="card planning-day-card"><div class="planning-day-head"><div><strong>${fmtDate(day.date,true)} <small>${dayName(day.date)}</small></strong>${adjustment?`<span class="badge warning">Reajustar</span>`:''}</div>${canAdjust?`<button class="btn btn-soft btn-xs" type="button" onclick="requestDayAdjust(decodeURIComponent('${id}'),decodeURIComponent('${dateArg}'))"><i class="fa-solid fa-pen"></i>Ajuste</button>`:''}</div>${adjustment?`<div class="day-adjustment-note"><i class="fa-solid fa-circle-info"></i><span>${escapeHtml(adjustment.note||'Ajuste solicitado pela equipe.')}</span></div>`:''}<div class="planning-day-sessions">${day.sessions.map(session=>{const a=session.activity||{};const note=session.notes||a.notes||'';const group=session.groupId&&session.groupId!=='A definir'?` • Grupo ${escapeHtml(session.groupId)}`:'';return `<div class="planning-session-row"><div><strong>${escapeHtml(a.name||session.activityName||'Atividade')}</strong><span>${Number(session.duration||a.duration)||0} min • ${escapeHtml(activityPeriodValue(session,a))} • 1 sessão${group}</span>${note?`<p>${escapeHtml(note)}</p>`:''}</div></div>`}).join('')}</div></div>`;
@@ -64,7 +64,22 @@ function exportCandidatePlanning(id){
 }
 
 function requestDayAdjust(id,date){const p=candidateById(id);if(!p)return;const existing=candidateDayAdjustment(p,date)?.note||'';openModal(`Ajuste em ${fmtDate(date,true)}`,'Explique somente o que precisa ser revisto neste dia.',`<div class="field"><label for="dayAdjustNote">Orientação ao voluntário</label><textarea id="dayAdjustNote" class="textarea" placeholder="Ex.: ajustar o período e reduzir a duração estimada.">${escapeHtml(existing)}</textarea></div>`,`<button class="btn btn-primary btn-block" type="button" onclick="saveDayAdjustment(${JSON.stringify(String(id))},${JSON.stringify(date)})">Solicitar ajuste</button>`)}
-async function saveDayAdjustment(id,date){const p=candidateById(id);const note=document.getElementById('dayAdjustNote')?.value.trim()||'';if(!p||!note)return showToast('Informe o ajuste solicitado.');try{await window.OleiroServices.applications.requestDayAdjustment(p.id,date,note);p.status='adjustments';p.dayAdjustments=p.dayAdjustments||{};p.dayAdjustments[date]={note,status:'requested'};p.pendingUntil=candidateDeadlineFrom(new Date(),7);p.needsAdminAttention=false;deriveAdminNotifications?.();renderPersonModal(p,'plan');showToast('Ajuste solicitado para este dia.')}catch(error){console.error(error);showToast(error?.message||'Não foi possível solicitar o ajuste.')}}
+async function saveDayAdjustment(id,date){
+  const p=candidateById(id),note=document.getElementById('dayAdjustNote')?.value.trim()||'',button=document.getElementById('r4DayAdjustSave');
+  if(!p||!note)return showToast('Informe o ajuste solicitado.');
+  if(button){button.disabled=true;button.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i>Salvando...'}
+  const newCycle=p.status==='analysis',nextAdjustments=newCycle?{}:{...(p.dayAdjustments||{})};
+  nextAdjustments[date]={note,status:'requested',requestedAt:new Date()};
+  const deadline=new Date();deadline.setDate(deadline.getDate()+7);
+  try{
+    await window.OleiroServices.applications.update(p.id,{dayAdjustments:nextAdjustments,status:'adjustments',active:true,planningDeadlineAt:deadline});
+    p.status='adjustments';p.dayAdjustments=nextAdjustments;p.pendingUntil=deadline.toISOString();
+    renderPersonModal(p,'plan');showToast('Ajuste solicitado para este dia.');
+  }catch(error){
+    console.error(error);showToast(error?.message||'Não foi possível solicitar o ajuste.');
+    if(button?.isConnected){button.disabled=false;button.textContent='Solicitar ajuste'}
+  }
+}
 
 function personTabContent(p,tab){
   const [l]=statusMeta(p.status);const arg=candidateActionArg(p.id);
