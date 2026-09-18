@@ -131,7 +131,7 @@
       type:'complete',
       at:p.completedAt,
       title:'Legado concluído',
-      text:String(p.result||'O projeto foi concluído e registrado.').trim()
+      text:'Resultado final registrado e legado concluído.'
     });
     return rows.sort((a,b)=>new Date(b.at||0)-new Date(a.at||0));
   }
@@ -167,9 +167,51 @@
     const [label,tone]=statusMeta(p.status);
     const editable=['draft','adjustments'].includes(p.status);
     const canStart=p.status==='approved';
-    const tracking=['in_progress','completed'].includes(p.status);
+    const inProgress=p.status==='in_progress';
+    const completed=p.status==='completed';
     const row=(icon,labelText,value)=>`<article class="legacy-project-story-row"><span><i class="fa-solid ${icon}"></i></span><div><small>${esc(labelText)}</small><p>${esc(value||'—')}</p></div></article>`;
-    return `<section class="section legacy-page legacy-status-v5">
+    const storyRows=`<div class="legacy-project-story-list">
+      ${row('fa-wand-magic-sparkles','O legado',p.description)}
+      ${row('fa-heart','Por que importa',p.why)}
+      ${row('fa-flag-checkered','Resultado esperado',p.expectedResult)}
+      ${p.materials?row('fa-toolbox','Materiais / apoio',p.materials):''}
+    </div>`;
+    const drive=p.driveUrl?`<a class="legacy-project-drive-v5" href="${esc(p.driveUrl)}" target="_blank" rel="noopener noreferrer"><span><i class="fa-brands fa-google-drive"></i></span><div><strong>Google Drive</strong><small>Fotos, vídeos e documentos do projeto</small></div><i class="fa-solid fa-arrow-up-right-from-square"></i></a>`:'';
+    const result=p.result?`<section class="legacy-project-outcome-v6">
+      <span class="legacy-project-outcome-icon"><i class="fa-solid fa-heart"></i></span>
+      <div>
+        <small>O que ficou para a comunidade</small>
+        <h2>${esc(p.result)}</h2>
+        <p>Este é o resultado final registrado pelo voluntário.</p>
+      </div>
+    </section>`:'';
+    const currentStory=`<section class="legacy-project-story legacy-project-story-secondary">
+      <div class="legacy-project-story-head">
+        <span class="eyebrow">${inProgress?'Base do projeto':'Seu projeto'}</span>
+        <h2>${inProgress?'O que orienta a execução':'O que você está construindo'}</h2>
+      </div>
+      ${storyRows}
+      ${!completed?drive:''}
+    </section>`;
+    const originalProject=`<details class="legacy-project-original">
+      <summary>
+        <span><i class="fa-solid fa-seedling"></i></span>
+        <div><small>Projeto original</small><strong>Rever a proposta que deu origem ao legado</strong></div>
+        <i class="fa-solid fa-chevron-down"></i>
+      </summary>
+      <div class="legacy-project-original-body">${storyRows}</div>
+    </details>`;
+
+    let content='';
+    if(completed){
+      content=`${result}${legacyTrackingHtml(p)}${drive?`<section class="legacy-project-evidence"><div class="legacy-project-evidence-head"><span class="eyebrow">Registros</span><h2>Fotos e documentos</h2></div>${drive}</section>`:''}${originalProject}`;
+    }else if(inProgress){
+      content=`${legacyTrackingHtml(p)}${currentStory}`;
+    }else{
+      content=currentStory;
+    }
+
+    return `<section class="section legacy-page legacy-status-v5 ${completed?'is-completed':inProgress?'is-in-progress':''}">
       <section class="legacy-status-hero-v5">
         <div class="legacy-status-hero-top">
           <span class="legacy-status-kicker">Projeto Legado</span>
@@ -180,22 +222,7 @@
         ${p.status==='adjustments'&&p.reviewNote?`<button class="legacy-status-review-link" type="button" onclick="openLegacyProjectAdjustmentNotice()"><i class="fa-solid fa-message"></i>Ver orientação da equipe</button>`:''}
       </section>
 
-      <section class="legacy-project-story">
-        <div class="legacy-project-story-head">
-          <span class="eyebrow">Seu projeto</span>
-          <h2>O que você está construindo</h2>
-        </div>
-        <div class="legacy-project-story-list">
-          ${row('fa-wand-magic-sparkles','O legado',p.description)}
-          ${row('fa-heart','Por que importa',p.why)}
-          ${row('fa-flag-checkered','Resultado esperado',p.expectedResult)}
-          ${p.materials?row('fa-toolbox','Materiais / apoio',p.materials):''}
-        </div>
-        ${p.driveUrl?`<a class="legacy-project-drive-v5" href="${esc(p.driveUrl)}" target="_blank" rel="noopener noreferrer"><span><i class="fa-brands fa-google-drive"></i></span><div><strong>Google Drive</strong><small>Fotos, vídeos e documentos do projeto</small></div><i class="fa-solid fa-arrow-up-right-from-square"></i></a>`:''}
-        ${p.result?`<div class="legacy-project-result-v5"><i class="fa-solid fa-heart"></i><div><small>O que ficou para a comunidade</small><p>${esc(p.result)}</p></div></div>`:''}
-      </section>
-
-      ${tracking?legacyTrackingHtml(p):''}
+      ${content}
 
       <div class="legacy-project-actions ${editable?'legacy-project-actions-pair':''}">
         ${editable?`<button class="btn btn-outline" type="button" onclick="openLegacyProjectForm()"><i class="fa-solid fa-pen"></i>Editar</button><button class="btn btn-primary" type="button" onclick="submitLegacyProject()"><i class="fa-solid fa-paper-plane"></i>${p.status==='adjustments'?'Reenviar':'Enviar para análise'}</button>`:''}
