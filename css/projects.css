@@ -170,17 +170,17 @@
 .legacy-project-wizard-modal .modal-head{padding-bottom:12px!important}
 .legacy-project-wizard-modal .modal-head h2{font-size:.88rem!important}
 .legacy-project-wizard-modal .modal-head p{font-size:.6rem!important}
-.legacy-project-wizard-modal .modal-body{padding:18px 18px 20px!important;overflow-y:auto}
+.legacy-project-wizard-modal .modal-body{padding:18px 18px 20px!important;overflow-y:auto;scroll-padding:14px 0 18px}
 .legacy-project-wizard-modal .modal-footer{padding:12px 18px max(14px,env(safe-area-inset-bottom))!important}
-.legacy-project-wizard{display:flex;flex-direction:column;min-height:270px}
-.legacy-wizard-progress{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:5px;margin-bottom:22px}
+.legacy-project-wizard{display:grid;grid-template-rows:auto auto auto;min-height:0}
+.legacy-wizard-progress{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:5px;margin-bottom:18px}
 .legacy-wizard-progress i{height:4px;border-radius:999px;background:var(--surface-2);transition:.18s ease}
 .legacy-wizard-progress i.active{background:var(--primary)}
-.legacy-wizard-copy{margin-bottom:18px}
+.legacy-wizard-copy{margin-bottom:14px}
 .legacy-wizard-copy h3{margin:0;font-size:1.05rem;line-height:1.28;color:var(--text);letter-spacing:-.015em}
 .legacy-wizard-copy p{margin:7px 0 0;font-size:.67rem;line-height:1.5;color:var(--muted)}
-.legacy-wizard-control{display:grid;gap:10px;margin-top:auto}
-.legacy-wizard-input,.legacy-wizard-textarea{width:100%!important;border-radius:14px!important;font-size:.76rem!important}
+.legacy-wizard-control{display:grid;gap:10px;margin-top:0}
+.legacy-wizard-input,.legacy-wizard-textarea{width:100%!important;border-radius:14px!important;font-size:.76rem!important;scroll-margin-top:120px;scroll-margin-bottom:18px}
 .legacy-wizard-input{min-height:50px!important}
 .legacy-wizard-textarea{min-height:128px!important;max-height:210px!important;resize:vertical}
 .legacy-wizard-category-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
@@ -203,7 +203,6 @@
 @media(max-width:390px){
   .legacy-project-wizard-modal .modal-body{padding:16px 14px 18px!important}
   .legacy-project-wizard-modal .modal-footer{padding-left:14px!important;padding-right:14px!important}
-  .legacy-project-wizard{min-height:250px}
   .legacy-wizard-copy h3{font-size:.98rem}
   .legacy-wizard-category-grid{grid-template-columns:1fr 1fr}
 }
