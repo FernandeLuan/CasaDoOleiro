@@ -240,4 +240,5 @@ document.addEventListener('visibilitychange',()=>{
   if(state.managerPage==='agenda')hydrateManagerSchedule(state.agendaFrom||_oleiroToday,state.agendaTo||_oleiroToday,{force:false}).then(()=>render()).catch(console.error);
 });
 
-bootManager();
+function startManagerBoot(){void bootManager()}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',startManagerBoot,{once:true});else startManagerBoot();
