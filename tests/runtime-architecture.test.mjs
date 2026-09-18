@@ -90,7 +90,7 @@ test('delete confirmation uses only the canonical Cloud Shell flow',()=>{
 });
 
 test('analysis copy never says editing is blocked',()=>{
-  const home=readFileSync('js/portal/round5-ui.js','utf8');
+  const home=readFileSync('js/portal/experience-summary.js','utf8');
   assert.ok(!home.includes('edição fica bloqueada'));
   assert.ok(home.includes('continuar adicionando e ajustando atividades'));
 });
