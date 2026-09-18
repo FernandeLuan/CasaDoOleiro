@@ -729,3 +729,149 @@
     font-size:.61rem!important;
   }
 }
+
+
+/* Projeto Legado · acompanhamento da execução */
+.legacy-project-tracking{
+  display:grid;
+  gap:13px;
+  padding:16px;
+  border:1px solid color-mix(in srgb,var(--primary) 16%,var(--border));
+  border-radius:20px;
+  background:linear-gradient(145deg,color-mix(in srgb,var(--primary-soft) 60%,var(--surface)),var(--surface));
+}
+.legacy-project-tracking-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+}
+.legacy-project-tracking-head .eyebrow{
+  display:block;
+  margin-bottom:3px;
+}
+.legacy-project-tracking-head h2{
+  margin:0;
+  font-size:.9rem;
+  line-height:1.25;
+}
+.legacy-project-tracking-head p{
+  margin:4px 0 0;
+  color:var(--muted);
+  font-size:.6rem;
+  line-height:1.45;
+}
+.legacy-project-tracking-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+.legacy-project-tracking-actions .btn{
+  width:100%;
+  min-height:43px;
+}
+.legacy-project-timeline{
+  position:relative;
+  display:grid;
+  gap:0;
+}
+.legacy-project-timeline::before{
+  content:"";
+  position:absolute;
+  left:17px;
+  top:18px;
+  bottom:18px;
+  width:1px;
+  background:color-mix(in srgb,var(--primary) 18%,var(--border));
+}
+.legacy-project-timeline-item{
+  position:relative;
+  z-index:1;
+  display:grid;
+  grid-template-columns:36px minmax(0,1fr);
+  gap:10px;
+  align-items:start;
+  padding:10px 0;
+}
+.legacy-project-timeline-item + .legacy-project-timeline-item{
+  border-top:1px solid color-mix(in srgb,var(--border) 82%,transparent);
+}
+.legacy-project-timeline-icon{
+  width:36px;
+  height:36px;
+  border-radius:12px;
+  display:grid;
+  place-items:center;
+  background:var(--surface);
+  color:var(--primary);
+  border:1px solid color-mix(in srgb,var(--primary) 16%,var(--border));
+  font-size:.66rem;
+}
+.legacy-project-timeline-item.complete .legacy-project-timeline-icon{
+  background:var(--success-soft);
+  color:var(--success);
+  border-color:color-mix(in srgb,var(--success) 20%,var(--border));
+}
+.legacy-project-timeline-content{
+  min-width:0;
+  padding-top:1px;
+}
+.legacy-project-timeline-meta{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:10px;
+}
+.legacy-project-timeline-meta strong{
+  font-size:.64rem;
+  line-height:1.3;
+}
+.legacy-project-timeline-meta time{
+  flex:0 0 auto;
+  color:var(--muted);
+  font-size:.49rem;
+  line-height:1.3;
+  white-space:nowrap;
+}
+.legacy-project-timeline-content p{
+  margin:4px 0 0;
+  color:var(--text);
+  font-size:.61rem;
+  line-height:1.48;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+.legacy-project-timeline-empty{
+  min-height:72px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  color:var(--muted);
+  font-size:.59rem;
+  text-align:center;
+}
+.legacy-progress-modal .field small{
+  display:block;
+  margin-top:6px;
+  color:var(--muted);
+  font-size:.56rem;
+  line-height:1.4;
+}
+
+@media(max-width:760px){
+  .legacy-project-tracking{
+    padding:14px;
+    border-radius:18px;
+  }
+  .legacy-project-tracking-actions{
+    grid-template-columns:1fr;
+  }
+  .legacy-project-timeline-meta{
+    display:grid;
+    gap:2px;
+  }
+  .legacy-project-timeline-meta time{
+    white-space:normal;
+  }
+}
