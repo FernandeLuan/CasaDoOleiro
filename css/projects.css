@@ -2458,3 +2458,88 @@
     font-size:.64rem;
   }
 }
+
+
+/* Projeto Legado · hero expansível com projeto original v13 */
+.legacy-status-hero-expandable{
+  padding:0!important;
+}
+.legacy-status-hero-summary{
+  position:relative;
+  z-index:2;
+  list-style:none;
+  display:block;
+  padding:20px;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.legacy-status-hero-summary::-webkit-details-marker{
+  display:none;
+}
+.legacy-status-hero-summary::marker{
+  content:"";
+}
+.legacy-status-hero-summary>p{
+  position:relative;
+  z-index:1;
+  margin:7px 0 0;
+  color:rgba(255,255,255,.75);
+  font-size:.68rem;
+}
+.legacy-status-hero-summary-side{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+}
+.legacy-status-hero-chevron{
+  color:rgba(255,255,255,.72);
+  font-size:.62rem;
+  transition:transform .18s ease;
+}
+.legacy-status-hero-expandable[open] .legacy-status-hero-chevron{
+  transform:rotate(180deg);
+}
+.legacy-status-hero-expanded{
+  position:relative;
+  z-index:2;
+  display:grid;
+  gap:2px;
+  margin:0;
+  padding:14px 20px 18px;
+  background:var(--surface);
+  color:var(--text);
+  border-top:1px solid color-mix(in srgb,var(--primary) 16%,var(--border));
+}
+.legacy-status-hero-expanded-head{
+  padding:0 2px 3px;
+}
+.legacy-status-hero-expanded-head span{
+  color:var(--primary);
+  font-size:.54rem;
+  font-weight:700;
+  letter-spacing:.07em;
+  text-transform:uppercase;
+}
+.legacy-status-hero-expanded .legacy-project-story-list{
+  margin-top:0;
+}
+.legacy-status-hero-expanded .legacy-project-story-row{
+  padding:12px 2px;
+}
+.legacy-status-hero-expanded .legacy-project-story-row:first-child{
+  padding-top:8px;
+}
+.legacy-status-hero-expanded .legacy-project-drive-v5{
+  margin-top:10px;
+}
+.legacy-status-hero-expandable[open]::after{
+  opacity:.7;
+}
+@media(max-width:760px){
+  .legacy-status-hero-summary{
+    padding:18px 16px;
+  }
+  .legacy-status-hero-expanded{
+    padding:12px 16px 16px;
+  }
+}
