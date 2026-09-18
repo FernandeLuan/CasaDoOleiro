@@ -46,11 +46,6 @@
     let html=baseVolunteerHome(),application=state.currentApplication||{},unit=application.unitName||String(application.unitId||'Rodeio').replace(/^./,c=>c.toUpperCase()),support=supportCard(unit),approved=state.volunteerMode==='approved';
     const unitInArrival=`<span style="font-size:.62rem;color:var(--muted)">${safeHtml(unit)}</span>`;
     html=html.replace(unitInArrival,`<span style="font-size:.62rem;color:var(--muted)">${safeHtml(t('portal.home.noActivityDay'))}</span>`);
-    if(!html.includes('legacy-home-callout')){
-      let projectCallout=typeof window.legacyProjectHomeNoticeHtml==='function'?window.legacyProjectHomeNoticeHtml():'';
-      if(!projectCallout&&!approved)projectCallout=`<section class="legacy-home-callout legacy-home-callout-glow portal-project-teaser" data-project-highlight="1"><span class="legacy-home-callout-icon"><i class="fa-solid fa-seedling"></i></span><div class="legacy-home-callout-copy"><strong>${safeHtml(t('project.name'))}</strong><p>${safeHtml(t('project.home.newBody'))}</p></div><div class="legacy-home-callout-actions"><button class="btn btn-outline" type="button" onclick="skipLegacyProjectPrompt()">${safeHtml(t('project.home.notNow'))}</button><button class="btn btn-primary" type="button" onclick="openPortalProjectHighlight()">${safeHtml(t('project.home.know'))}</button></div></section>`;
-      if(projectCallout){const heroEnd=html.indexOf('</section>');html=heroEnd>=0?html.slice(0,heroEnd+10)+projectCallout+html.slice(heroEnd+10):projectCallout+html}
-    }
     if(!html.includes('home-unit-support'))html+=support;
     if(!approved&&(state.volunteerPlanStatus||'draft')==='draft'){const days=deadlineDays();if(days!==null)html=html.replace(t('portal.home.proposedPeriod'),`${t('portal.profile.preparing')} · ${days===1?t('portal.profile.remainingOne'):t('portal.profile.remainingMany',{days})}`)}
     return html;
