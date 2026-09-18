@@ -127,6 +127,7 @@
           ${sidebarItem(state.managerPage==='home','fa-house','Início',"navigateManager('home')")}
           ${sidebarItem(state.managerPage==='volunteer','fa-users','Voluntariado',"navigateManager('volunteer')")}
           ${sidebarItem(state.managerPage==='planning','fa-calendar-check','Planejamento',"navigateManager('planning')")}
+          ${sidebarItem(state.managerPage==='projects','fa-seedling','Projetos',"navigateManager('projects')")}
           ${sidebarItem(state.managerPage==='occupancy','fa-bed','Ocupação','openManagerOccupancy()')}
           ${sidebarItem(menuActive,'fa-bars','Menu',"navigateManager('menu')")}
         </nav>
@@ -338,6 +339,7 @@
         volunteer:()=>managerVolunteers(),
         agenda:()=>managerAgenda(),
         groups:()=>managerGroups(),
+        projects:()=>typeof window.managerProjects==='function'?window.managerProjects():'<section class="section"><div class="empty">Módulo de projetos indisponível.</div></section>',
         menu:()=>managerMenu()
       };
       const page=pages[state.managerPage]||pages.home;
