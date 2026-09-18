@@ -7,7 +7,7 @@
 .home-occ-units button{height:36px;border:0;border-radius:9px;background:transparent;color:var(--muted);font-size:.64rem;font-weight:700;min-width:0}
 .home-occ-units button.active{background:var(--surface);color:var(--primary);box-shadow:0 2px 8px rgba(20,43,31,.08)}
 .home-occ-month{position:relative;display:block;min-width:0}
-.home-occ-month select{width:100%;height:44px;appearance:none;-webkit-appearance:none;border:1px solid var(--border);border-radius:12px;background:var(--surface);color:var(--text);font:700 .64rem var(--font-body);padding:0 34px 0 12px;white-space:nowrap;text-overflow:ellipsis}
+.home-occ-month select{width:100%;height:44px;appearance:none;-webkit-appearance:none;border:1px solid var(--border);border-radius:12px;background:var(--surface);color:var(--text);font-family:var(--font-body);font-size:16px;font-weight:700;line-height:1;padding:0 30px 0 10px;white-space:nowrap;text-align:center;text-align-last:center;cursor:pointer}
 .home-occ-month>i{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:.58rem;color:var(--muted);pointer-events:none}
 .home-occ-weekdays,.home-occ-calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
 .home-occ-weekdays{margin-bottom:6px}
@@ -24,7 +24,6 @@ button.home-occ-day:hover{border-color:color-mix(in srgb,var(--primary) 36%,var(
 .home-occ-markers small{font-size:.46rem;color:var(--muted);font-weight:700;margin-left:1px}
 .home-occ-dot{display:block;width:6px;height:6px;border-radius:999px;background:var(--primary)}
 .home-occ-dot.female{background:#9a6f7f}.home-occ-dot.couple{width:11px;border-radius:4px;background:#9b7c4e}
-.home-occ-count{position:absolute;right:7px;bottom:6px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;background:var(--primary);color:#fff;font-size:.47rem;font-weight:800;display:grid;place-items:center}
 .home-occ-loading{grid-column:1/-1;min-height:250px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--muted);font-size:.62rem}
 .home-occ-loading i{color:var(--primary);font-size:1rem}
 .home-occ-people{display:grid;gap:8px}
@@ -47,18 +46,17 @@ button.home-occ-day:hover{border-color:color-mix(in srgb,var(--primary) 36%,var(
   .home-occ-head h2{font-size:.94rem}
   .home-occ-controls{grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr);gap:7px;min-width:0;width:100%}
   .home-occ-units button{height:38px;font-size:.6rem}
-  .home-occ-month select{height:44px;font-size:.59rem;padding-left:9px;padding-right:27px}
+  .home-occ-month select{height:44px;font-size:16px;padding-left:8px;padding-right:27px}
   .home-occ-month>i{right:9px}
   .home-occ-weekdays,.home-occ-calendar{gap:4px}
   .home-occ-weekdays span{font-size:.47rem}
   .home-occ-calendar{min-height:296px}
   .home-occ-day{min-height:48px;border-radius:9px;padding:6px}
   .home-occ-day-number{font-size:.58rem}
-  .home-occ-count{right:5px;bottom:5px;min-width:15px;height:15px;font-size:.43rem}
   .home-occ-dot{width:5px;height:5px}.home-occ-dot.couple{width:9px}
 }
 @media(max-width:360px){
   .home-occ-controls{grid-template-columns:minmax(0,1fr) minmax(0,.9fr)}
-  .home-occ-units button,.home-occ-month select{font-size:.54rem}
+  .home-occ-units button{font-size:.54rem}\n  .home-occ-month select{font-size:16px}
   .home-occ-day{min-height:45px}
 }

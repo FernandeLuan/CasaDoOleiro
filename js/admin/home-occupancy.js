@@ -34,7 +34,7 @@
   }
   function monthLabel(value){
     const {year,monthIndex}=monthParts(value),locale=typeof currentLocale==='function'?currentLocale():'pt-BR';
-    const text=new Intl.DateTimeFormat(locale,{month:'long',year:'numeric'}).format(new Date(year,monthIndex,1,12));
+    const month=new Intl.DateTimeFormat(locale,{month:'long'}).format(new Date(year,monthIndex,1,12));\n    const text=`${month} ${year}`;
     return text.charAt(0).toUpperCase()+text.slice(1);
   }
   function monthOptions(){
@@ -83,7 +83,6 @@
       cells.push(`<button class="home-occ-day ${iso===_oleiroToday?'today':''} ${count?'occupied':''}" type="button" onclick="openHomeOccupancyDay('${iso}')" aria-label="${count} ${count===1?'pessoa':'pessoas'} em ${iso}">
         <span class="home-occ-day-number">${day}</span>
         <span class="home-occ-markers">${count?markers(people):''}</span>
-        ${count?`<span class="home-occ-count">${count}</span>`:''}
       </button>`);
     }
     return cells.join('');
