@@ -66,9 +66,11 @@
     const icon=type=>type==='start'?'fa-play':type==='complete'?'fa-flag-checkered':'fa-message';
     return `<section class="legacy-admin-tracking">
       <div class="legacy-admin-tracking-head">
-        <span class="eyebrow">Acompanhamento</span>
-        <h3>${p.status==='completed'?'Histórico do legado':'Execução do projeto'}</h3>
-        <p>${p.status==='completed'?'Veja como o voluntário desenvolveu e concluiu o legado.':'Comentários e avanços registrados pelo voluntário.'}</p>
+        <div>
+          <h3>${p.status==='completed'?'Histórico':'Andamento'}</h3>
+          <p>${p.status==='completed'?'Do início até a conclusão do legado.':'Atualizações registradas pelo voluntário.'}</p>
+        </div>
+        <span class="legacy-admin-tracking-count">${rows.length} ${rows.length===1?'registro':'registros'}</span>
       </div>
       <div class="legacy-admin-timeline">
         ${rows.map(item=>`<article class="legacy-admin-timeline-item ${esc(item.type)}">
@@ -85,7 +87,7 @@
     return `<details class="legacy-admin-original" ${['analysis','adjustments','approved'].includes(p.status)?'open':''}>
       <summary>
         <span><i class="fa-solid fa-seedling"></i></span>
-        <div><small>Projeto original</small><strong>Ver proposta e informações</strong></div>
+        <div><strong>Projeto original</strong><small>Ver proposta e informações</small></div>
         <i class="fa-solid fa-chevron-down"></i>
       </summary>
       <div class="legacy-admin-project-content legacy-admin-original-body">
@@ -144,30 +146,35 @@
   window.openLegacyProjectAdmin=function(id){
     const p=(window.OleiroProjects?.list?.()||[]).find(x=>String(x.id)===String(id));if(!p)return;
     const tracking=['in_progress','completed'].includes(p.status);
-    const body=`<div class="legacy-admin-detail legacy-admin-detail-v3 ${tracking?'has-tracking':''}">
-      <div class="legacy-admin-context-row">
-        <div class="legacy-admin-context-person">
-          <span><i class="fa-solid fa-user"></i></span>
-          <div><strong>${esc(p.ownerName||'Voluntário')}</strong><small>${esc(p.unitName||p.unitId||'Unidade')}${p.category?` · ${esc(p.category)}`:''}</small></div>
+    const body=`<div class="legacy-admin-detail legacy-admin-detail-v4 ${tracking?'has-tracking':''}">
+      <div class="legacy-admin-project-meta">
+        <div class="legacy-admin-project-meta-main">
+          <span class="legacy-admin-project-meta-icon"><i class="fa-solid fa-seedling"></i></span>
+          <div>
+            <strong>${esc(p.ownerName||'Voluntário')}</strong>
+            <small>${esc(p.unitName||p.unitId||'Unidade')}${p.category?` · ${esc(p.category)}`:''}</small>
+          </div>
         </div>
         <div class="legacy-admin-context-status">${statusBadge(p.status)}</div>
       </div>
 
       ${p.status==='completed'&&p.result?`<section class="legacy-admin-outcome"><span><i class="fa-solid fa-heart"></i></span><div><small>O que ficou para a comunidade</small><strong>${esc(p.result)}</strong></div></section>`:''}
       ${projectTimelineHtml(p)}
-      ${projectOriginalHtml(p)}
+      <div class="legacy-admin-secondary-links">
+        ${projectOriginalHtml(p)}
+        ${p.driveUrl?`<a class="legacy-admin-secondary-link" href="${esc(p.driveUrl)}" target="_blank" rel="noopener noreferrer"><span><i class="fa-brands fa-google-drive"></i></span><div><strong>Registros no Drive</strong><small>Fotos, vídeos e documentos</small></div><i class="fa-solid fa-arrow-up-right-from-square"></i></a>`:''}
+      </div>
       ${p.status!=='completed'&&p.result?`<div class="legacy-admin-result legacy-admin-result-v2"><span><i class="fa-solid fa-circle-check"></i></span><div><small>Resultado final</small><p>${esc(p.result)}</p></div></div>`:''}
-      ${p.driveUrl?`<a class="legacy-drive-card legacy-admin-drive-v2" href="${esc(p.driveUrl)}" target="_blank" rel="noopener noreferrer"><span><i class="fa-brands fa-google-drive"></i></span><div><strong>Abrir registros no Drive</strong><small>Fotos, vídeos e documentos</small></div><i class="fa-solid fa-arrow-up-right-from-square"></i></a>`:''}
     </div>`;
     let footer='';
     if(p.status==='analysis')footer='<button class="btn btn-outline" onclick="openLegacyAdjustment(\''+esc(p.id)+'\')">Pedir ajuste</button><button class="btn btn-primary" onclick="approveLegacyProject(\''+esc(p.id)+'\')">Aprovar projeto</button>';
     const modalSubtitle=p.status==='analysis'
       ?'Revise a proposta enviada pelo voluntário.'
       :p.status==='in_progress'
-        ?'Acompanhe o andamento e os comentários da execução.'
+        ?'Luan está executando este legado.'
         :p.status==='completed'
           ?'Resultado, histórico e registros do legado.'
-          :'Informações e histórico do projeto.';
+          :'Informações do projeto.';
     openModal(p.title||'Projeto de legado',modalSubtitle,body,footer);
     modalRoot.querySelector('.modal')?.classList.add('legacy-admin-modal');
   };
