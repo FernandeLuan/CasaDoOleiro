@@ -4,6 +4,7 @@
 (function initLegacyProjectService(){
   const STORE='oleiro.legacy-projects.preview.v1';
   const ONBOARD='oleiro.legacy-project-onboarding.preview.v1';
+  const REOPEN_TEST='oleiro.legacy-projects.preview.reopen-composteira-v1';
 
   function readStore(){
     try{return JSON.parse(localStorage.getItem(STORE)||'{}')||{}}catch{return {}}
@@ -15,6 +16,30 @@
   function uid(){return String(window.state?.currentSession?.uid||'')}
   function applicationId(){return String(window.state?.currentApplication?.id||'')}
   function ownId(){return [applicationId(),uid()].filter(Boolean).join('__')}
+
+  function reopenCompletedProjectForTest(){
+    try{
+      if(localStorage.getItem(REOPEN_TEST)==='1')return;
+      const rows=readStore();
+      let changed=false;
+      Object.keys(rows).forEach(id=>{
+        const row=rows[id];
+        if(!row||row.status!=='completed'||String(row.title||'').trim()!=='Composteira Orgânica')return;
+        rows[id]={
+          ...row,
+          status:'in_progress',
+          completedAt:null,
+          result:'',
+          updatedAt:now()
+        };
+        changed=true;
+      });
+      if(changed)writeStore(rows);
+      localStorage.setItem(REOPEN_TEST,'1');
+    }catch{}
+  }
+
+  reopenCompletedProjectForTest();
 
   function getOwn(){
     const id=ownId();if(!id)return null;
