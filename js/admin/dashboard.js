@@ -78,19 +78,57 @@ function managerHomePendingCard(slides){
   const slide=slides[_managerHomePendingIndex],total=slides.length;
   return `<section class="notice-carousel-card" aria-label="Pendências" data-notice-carousel="admin-home" data-manager-home-pending>
     <div class="notice-carousel-top">
-      <span class="notice-carousel-icon"><i class="fa-solid ${slide.icon}"></i></span>
+      <span class="notice-carousel-icon" data-manager-pending-icon><i class="fa-solid ${slide.icon}"></i></span>
       <div class="notice-carousel-copy">
-        <div class="notice-carousel-meta"><span>${escapeHtml(slide.preview?'Simulação · '+slide.area:slide.area+' · precisa de atenção')}</span></div>
-        <strong data-notice-title>${escapeHtml(slide.title)}</strong>
-        <p data-notice-summary>${escapeHtml(slide.text)}</p>
+        <div class="notice-carousel-meta"><span data-manager-pending-meta>${escapeHtml(slide.preview?'Simulação · '+slide.area:slide.area+' · precisa de atenção')}</span></div>
+        <strong data-notice-title data-manager-pending-title>${escapeHtml(slide.title)}</strong>
+        <p data-notice-summary data-manager-pending-summary>${escapeHtml(slide.text)}</p>
       </div>
       ${managerHomePendingPagerHtml(total,_managerHomePendingIndex)}
     </div>
     <div class="notice-carousel-actions">
       <button class="btn btn-outline" type="button" onclick="dismissManagerHomePending(event)">Agora não</button>
-      <button class="btn btn-primary" type="button" onclick="${slide.action}">Ver pendência</button>
+      <button class="btn btn-primary" type="button" data-manager-pending-cta onclick="${slide.action}">Ver pendência</button>
     </div>
   </section>`;
+}
+function renderManagerHomePendingSlide(direction='next'){
+  const card=document.querySelector('[data-manager-home-pending]');
+  if(!card)return;
+  const projectCounts=dashboardProjectCounts();
+  const slides=managerHomePendingSlidesVisible(dashboardCount('analysis'),dashboardCount('adjustments'),projectCounts);
+  if(!slides.length){
+    card.classList.add('is-leaving');
+    setTimeout(()=>card.remove(),220);
+    return;
+  }
+  _managerHomePendingIndex=Math.max(0,Math.min(_managerHomePendingIndex,slides.length-1));
+  const slide=slides[_managerHomePendingIndex];
+
+  card.classList.remove('is-slide-next','is-slide-prev');
+  void card.offsetWidth;
+  card.classList.add(direction==='prev'?'is-slide-prev':'is-slide-next');
+
+  const title=card.querySelector('[data-manager-pending-title]');
+  const summary=card.querySelector('[data-manager-pending-summary]');
+  const meta=card.querySelector('[data-manager-pending-meta]');
+  const icon=card.querySelector('[data-manager-pending-icon] i');
+  const cta=card.querySelector('[data-manager-pending-cta]');
+  const pager=card.querySelector('.notice-carousel-pager');
+
+  if(title)title.textContent=slide.title||'';
+  if(summary)summary.textContent=slide.text||'';
+  if(meta)meta.textContent=slide.preview?'Simulação · '+slide.area:slide.area+' · precisa de atenção';
+  if(icon)icon.className='fa-solid '+(slide.icon||'fa-circle-info');
+  if(cta)cta.setAttribute('onclick',slide.action||'');
+
+  const nextPager=managerHomePendingPagerHtml(slides.length,_managerHomePendingIndex);
+  if(pager){
+    if(nextPager)pager.outerHTML=nextPager;
+    else pager.remove();
+  }else if(nextPager){
+    card.querySelector('.notice-carousel-top')?.insertAdjacentHTML('beforeend',nextPager);
+  }
 }
 document.addEventListener('oleiro:notice-swipe',event=>{
   if(event.detail?.source!=='admin-home')return;
@@ -103,17 +141,27 @@ function dismissManagerHomePending(event){
   const slides=managerHomePendingSlidesVisible(dashboardCount('analysis'),dashboardCount('adjustments'),projectCounts);
   const slide=slides[_managerHomePendingIndex];
   if(slide?.id)_managerHomePendingDismissed.add(slide.id);
+
   const remaining=managerHomePendingSlidesVisible(dashboardCount('analysis'),dashboardCount('adjustments'),dashboardProjectCounts());
-  _managerHomePendingIndex=Math.min(_managerHomePendingIndex,Math.max(0,remaining.length-1));
-  if(state.managerPage==='home')render();
+  if(!remaining.length){
+    const card=document.querySelector('[data-manager-home-pending]');
+    if(card){card.classList.add('is-leaving');setTimeout(()=>card.remove(),220)}
+    return;
+  }
+  _managerHomePendingIndex=Math.min(_managerHomePendingIndex,remaining.length-1);
+  renderManagerHomePendingSlide('next');
 }
 function shiftManagerHomePending(delta,event){
   event?.preventDefault?.();
   event?.stopPropagation?.();
-  const projectCounts=dashboardProjectCounts(),slides=managerHomePendingSlidesVisible(dashboardCount('analysis'),dashboardCount('adjustments'),projectCounts);
+  const projectCounts=dashboardProjectCounts();
+  const slides=managerHomePendingSlidesVisible(dashboardCount('analysis'),dashboardCount('adjustments'),projectCounts);
   if(!slides.length)return;
-  _managerHomePendingIndex=Math.max(0,Math.min(slides.length-1,_managerHomePendingIndex+Number(delta||0)));
-  if(state.managerPage==='home')render();
+  const next=Math.max(0,Math.min(slides.length-1,_managerHomePendingIndex+Number(delta||0)));
+  if(next===_managerHomePendingIndex)return;
+  const direction=next<_managerHomePendingIndex?'prev':'next';
+  _managerHomePendingIndex=next;
+  renderManagerHomePendingSlide(direction);
 }
 function movementDaysLabel(iso){if(!iso)return '';const diff=Math.ceil((new Date(iso+'T12:00:00')-new Date(_oleiroToday+'T12:00:00'))/86400000);return diff===0?'hoje':diff===1?'amanhã':diff>1?`em ${diff} dias`:diff===-1?'ontem':`${Math.abs(diff)} dias atrás`}
 function nextMovements(field,limit=20){const rows=field==='from'?(state.dashboardArrivals||[]):(state.dashboardDepartures||[]);return rows.slice(0,limit)}
