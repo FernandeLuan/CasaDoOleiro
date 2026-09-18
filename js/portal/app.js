@@ -52,4 +52,5 @@ async function hydrateVolunteerPlanning(application,{force=false}={}){
 async function bootVolunteer(){
   const session=await window.OleiroAuthGuard?.requireRole('volunteer');if(!session)return;state.role='volunteer';state.currentSession=session;state.currentApplication=session.application||null;state.volunteerMode=session.mode||'candidate';state.volunteerPlanStatus=planStatusFromApplication(session.application?.status);state.volunteerPage='home';state.activities=[];state.sessions=[];state.volunteerPlanningLoadedFor=null;state.volunteerPlanningFailedFor=null;state.projectOnboardingStep=0;render();hydrateVolunteerPlanning(session.application).then(()=>render()).catch(error=>console.error('Falha ao carregar planejamento:',error));
 }
-bootVolunteer();
+function startVolunteerBoot(){void bootVolunteer()}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',startVolunteerBoot,{once:true});else startVolunteerBoot();
