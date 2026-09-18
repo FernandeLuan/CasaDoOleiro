@@ -86,7 +86,6 @@
       <div class="release-announcement-nav ${first?'is-forward':last?'is-backward':'is-middle'}">
         ${first?'':`<button type="button" class="release-announcement-arrow" onclick="portalReleasePrev(event)" aria-label="Novidade anterior"><i class="fa-solid fa-arrow-left"></i></button>`}
         ${last?'':`<button type="button" class="release-announcement-arrow" onclick="portalReleaseNext(event)" aria-label="Próxima novidade"><i class="fa-solid fa-arrow-right"></i></button>`}
-        <span class="release-announcement-travel" aria-hidden="true"></span>
       </div>
     </div>`;
   }
@@ -143,6 +142,72 @@
     homeSlideIndex+=1;
     renderReleaseSlide('next');
   };
+
+  let releaseSwipe=null;
+  function resetReleaseSwipe(card){
+    if(!card)return;
+    card.classList.remove('is-dragging');
+    card.style.removeProperty('--release-drag-x');
+  }
+  document.addEventListener('pointerdown',event=>{
+    const card=event.target.closest?.('[data-release-announcement]');
+    if(!card||event.button!==0||event.target.closest?.('button,a'))return;
+    releaseSwipe={
+      card,
+      pointerId:event.pointerId,
+      startX:event.clientX,
+      startY:event.clientY,
+      lastX:event.clientX,
+      horizontal:false
+    };
+    try{card.setPointerCapture?.(event.pointerId)}catch{}
+  },{passive:true});
+  document.addEventListener('pointermove',event=>{
+    const swipe=releaseSwipe;
+    if(!swipe||swipe.pointerId!==event.pointerId||!swipe.card?.isConnected)return;
+    const dx=event.clientX-swipe.startX;
+    const dy=event.clientY-swipe.startY;
+    swipe.lastX=event.clientX;
+    if(!swipe.horizontal){
+      if(Math.abs(dx)<7)return;
+      if(Math.abs(dy)>Math.abs(dx)*.9){
+        resetReleaseSwipe(swipe.card);
+        releaseSwipe=null;
+        return;
+      }
+      swipe.horizontal=true;
+      swipe.card.classList.add('is-dragging');
+    }
+    if(event.cancelable)event.preventDefault();
+    const first=homeSlideIndex===0,last=homeSlideIndex===homeSlides().length-1;
+    const blocked=(first&&dx>0)||(last&&dx<0);
+    const distance=Math.max(-62,Math.min(62,blocked?dx*.28:dx*.72));
+    swipe.card.style.setProperty('--release-drag-x',distance+'px');
+  },{passive:false});
+  function finishReleaseSwipe(event){
+    const swipe=releaseSwipe;
+    if(!swipe||swipe.pointerId!==event.pointerId)return;
+    releaseSwipe=null;
+    const card=swipe.card;
+    const dx=(swipe.lastX??event.clientX)-swipe.startX;
+    const dy=event.clientY-swipe.startY;
+    resetReleaseSwipe(card);
+    if(!swipe.horizontal||Math.abs(dx)<42||Math.abs(dx)<=Math.abs(dy)*1.05)return;
+    if(dx<0&&homeSlideIndex<homeSlides().length-1){
+      homeSlideIndex+=1;
+      renderReleaseSlide('next');
+    }else if(dx>0&&homeSlideIndex>0){
+      homeSlideIndex-=1;
+      renderReleaseSlide('prev');
+    }
+  }
+  document.addEventListener('pointerup',finishReleaseSwipe,{passive:true});
+  document.addEventListener('pointercancel',event=>{
+    const swipe=releaseSwipe;
+    if(!swipe||swipe.pointerId!==event.pointerId)return;
+    releaseSwipe=null;
+    resetReleaseSwipe(swipe.card);
+  },{passive:true});
   function stripProjectHighlight(html){
     return String(html||'').replace(/<section(?=[^>]*data-project-highlight="1")[^>]*>[\s\S]*?<\/section>/,'');
   }
