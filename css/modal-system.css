@@ -94,3 +94,6 @@
 @media(min-width:760px){
   .modal{max-height:min(82vh,720px)!important}
 }
+
+.modal.modal-wide{max-width:560px!important}
+.modal.modal-compact{max-width:390px!important}
