@@ -2,9 +2,7 @@ name: Deploy Firestore rules
 
 on:
   push:
-    branches:
-      - main
-      - test/homologacao-clean-ui
+    branches: [main]
     paths:
       - firestore.rules
       - .github/workflows/deploy-firestore-rules.yml
