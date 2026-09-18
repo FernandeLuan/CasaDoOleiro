@@ -158,14 +158,29 @@
 
   function legacyWizardValue(value){return String(value??'')}
   function legacyWizardProgress(){
-    const total=8,current=legacyProjectWizardStep+1;
-    return `<div class="legacy-wizard-progress" aria-label="${esc(tx('project.wizard.progress',{current,total}))}">${Array.from({length:total},(_,index)=>`<i class="${index<=legacyProjectWizardStep?'active':''}"></i>`).join('')}</div>`;
+    const total=8,current=Math.min(total,legacyProjectWizardStep+1),activeStep=Math.min(total-1,legacyProjectWizardStep);
+    return `<div class="legacy-wizard-progress" aria-label="${esc(tx('project.wizard.progress',{current,total}))}">${Array.from({length:total},(_,index)=>`<i class="${index<=activeStep?'active':''}"></i>`).join('')}</div>`;
   }
   function legacyWizardQuestion(title,helper,content){
     return `<div class="legacy-project-wizard">${legacyWizardProgress()}<div class="legacy-wizard-copy"><h3>${esc(title)}</h3>${helper?`<p>${esc(helper)}</p>`:''}</div><div class="legacy-wizard-control">${content}</div></div>`;
   }
+  function legacyWizardSummary(){
+    const draft=legacyProjectWizardDraft||{},continuity=draft.allowContinuation!==false?tx('project.wizard.continuity.yes'):tx('project.wizard.continuity.no');
+    const row=(icon,label,value)=>`<article class="legacy-wizard-summary-row"><span class="legacy-wizard-summary-icon"><i class="fa-solid ${icon}"></i></span><div><small>${esc(label)}</small><p>${esc(value||tx('project.wizard.review.empty'))}</p></div></article>`;
+    return `<div class="legacy-project-wizard legacy-wizard-review">${legacyWizardProgress()}<div class="legacy-wizard-copy"><h3>${esc(tx('project.wizard.review.title'))}</h3><p>${esc(tx('project.wizard.review.helper'))}</p></div><div class="legacy-wizard-summary">
+      ${row('fa-heading',tx('project.wizard.review.name'),draft.title)}
+      ${row('fa-layer-group',tx('project.wizard.review.category'),draft.category)}
+      ${row('fa-wand-magic-sparkles',tx('project.wizard.review.description'),draft.description)}
+      ${row('fa-heart',tx('project.wizard.review.why'),draft.why)}
+      ${row('fa-flag-checkered',tx('project.wizard.review.result'),draft.expectedResult)}
+      ${row('fa-toolbox',tx('project.wizard.review.materials'),draft.materials)}
+      ${row('fa-people-group',tx('project.wizard.review.continuity'),continuity)}
+      ${row('fa-brands fa-google-drive',tx('project.wizard.review.drive'),draft.driveUrl)}
+    </div></div>`;
+  }
   function legacyWizardBody(){
     const draft=legacyProjectWizardDraft||{};
+    if(legacyProjectWizardStep===8)return legacyWizardSummary();
     if(legacyProjectWizardStep===0)return legacyWizardQuestion(
       tx('project.wizard.name.question'),
       tx('project.wizard.name.helper'),
@@ -292,19 +307,20 @@
   }
   function renderLegacyProjectWizard(){
     legacyProjectWizardViewportCleanup?.();
-    const editing=!!project()?.id,total=8,current=legacyProjectWizardStep+1;
-    const footer=`<div class="legacy-wizard-actions">${legacyProjectWizardStep>0?`<button class="btn btn-outline" type="button" onclick="legacyProjectWizardBack()"><i class="fa-solid fa-arrow-left"></i>${esc(tx('project.wizard.back'))}</button>`:`<button class="btn btn-outline" type="button" onclick="closeModal()">${esc(tx('common.cancel'))}</button>`}<button class="btn btn-primary" type="button" onclick="legacyProjectWizardNext()">${esc(legacyProjectWizardStep===total-1?tx('project.wizard.save'):tx('project.wizard.next'))}${legacyProjectWizardStep===total-1?'<i class="fa-solid fa-check"></i>':'<i class="fa-solid fa-arrow-right"></i>'}</button></div>`;
+    const editing=!!project()?.id,total=8,current=Math.min(total,legacyProjectWizardStep+1),reviewing=legacyProjectWizardStep===8;
+    const footer=`<div class="legacy-wizard-actions">${legacyProjectWizardStep>0?`<button class="btn btn-outline" type="button" onclick="legacyProjectWizardBack()"><i class="fa-solid fa-arrow-left"></i>${esc(tx('project.wizard.back'))}</button>`:`<button class="btn btn-outline" type="button" onclick="closeModal()">${esc(tx('common.cancel'))}</button>`}<button class="btn btn-primary" type="button" onclick="legacyProjectWizardNext()">${esc(reviewing?tx('project.wizard.save'):tx('project.wizard.next'))}${reviewing?'<i class="fa-solid fa-check"></i>':'<i class="fa-solid fa-arrow-right"></i>'}</button></div>`;
     openModal(
       esc(tx(editing?'project.wizard.editTitle':'project.wizard.createTitle')),
-      esc(tx('project.wizard.progress',{current,total})),
+      esc(reviewing?tx('project.wizard.review.subtitle'):tx('project.wizard.progress',{current,total})),
       legacyWizardBody(),
       footer
     );
     const modal=modalRoot.querySelector('.modal');modal?.classList.add('legacy-project-wizard-modal');
+    if(reviewing)modal?.classList.add('legacy-project-wizard-review-modal');
     bindLegacyWizardViewport();
     requestAnimationFrame(()=>{
       const target=modalRoot.querySelector('.legacy-wizard-input,.legacy-wizard-textarea');
-      if(target&&legacyProjectWizardStep!==7){
+      if(target&&legacyProjectWizardStep!==7&&legacyProjectWizardStep!==8){
         target.focus({preventScroll:true});
         keepLegacyWizardFieldVisible(target);
       }
@@ -341,9 +357,10 @@
     legacyProjectWizardStep-=1;renderLegacyProjectWizard();
   };
   window.legacyProjectWizardNext=function(){
+    if(legacyProjectWizardStep===8){window.saveLegacyProjectDraft();return}
     if(!validateLegacyWizardStep())return;
     if(legacyProjectWizardStep<7){legacyProjectWizardStep+=1;renderLegacyProjectWizard();return}
-    window.saveLegacyProjectDraft();
+    legacyProjectWizardStep=8;renderLegacyProjectWizard();
   };
 
   function validDrive(url){if(!url)return true;try{const host=new URL(url).hostname.toLowerCase();return host==='drive.google.com'||host.endsWith('.drive.google.com')||host==='docs.google.com'}catch{return false}}
