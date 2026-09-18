@@ -153,4 +153,17 @@
     const label=p?'Continuar meu projeto':'Criar meu projeto';
     return `<section class="legacy-home-callout"><span class="legacy-home-callout-icon"><i class="fa-solid fa-seedling"></i></span><div><strong>Seu legado na Casa</strong><p>${p?'Seu projeto ainda faz parte da sua jornada.':'Todo voluntário deixa uma contribuição para a comunidade.'}</p></div><button class="btn btn-soft" onclick="navigateVolunteer('project')">${label}</button></section>`;
   };
+
+  let legacyProjectSwipeStart=null;
+  document.addEventListener('touchstart',event=>{
+    if(!event.target.closest?.('.legacy-onboarding'))return;
+    legacyProjectSwipeStart=event.changedTouches?.[0]?.clientX??null;
+  },{passive:true});
+  document.addEventListener('touchend',event=>{
+    if(legacyProjectSwipeStart==null||!event.target.closest?.('.legacy-onboarding')){legacyProjectSwipeStart=null;return}
+    const end=event.changedTouches?.[0]?.clientX??legacyProjectSwipeStart,diff=end-legacyProjectSwipeStart;
+    legacyProjectSwipeStart=null;
+    if(Math.abs(diff)<55)return;
+    if(diff<0)window.projectOnboardingNext?.();else window.projectOnboardingBack?.();
+  },{passive:true});
 })();
