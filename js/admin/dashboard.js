@@ -34,6 +34,7 @@ function openDashboardProjectFilter(status){
   navigateManager('projects');
 }
 let _managerHomePendingIndex=0;
+let _managerHomePendingActiveId='';
 const _managerHomePendingDismissed=new Set();
 function managerHomePendingSlides(volunteerAnalysis,volunteerAdjustments,projectCounts){
   return [
@@ -74,9 +75,14 @@ function managerHomePendingPagerHtml(total,index){
   </div>`;
 }
 function managerHomePendingCard(slides){
-  if(!slides.length)return '';
+  if(!slides.length){_managerHomePendingActiveId='';return ''}
+  if(_managerHomePendingActiveId){
+    const stableIndex=slides.findIndex(slide=>slide.id===_managerHomePendingActiveId);
+    if(stableIndex>=0)_managerHomePendingIndex=stableIndex;
+  }
   if(_managerHomePendingIndex>=slides.length)_managerHomePendingIndex=0;
   const slide=slides[_managerHomePendingIndex],total=slides.length;
+  _managerHomePendingActiveId=slide?.id||'';
   return `<section class="notice-carousel-card" aria-label="Pendências" data-notice-carousel="admin-home" data-manager-home-pending>
     <div class="notice-carousel-top">
       <span class="notice-carousel-icon" data-manager-pending-icon><i class="fa-solid ${slide.icon}"></i></span>
@@ -105,6 +111,7 @@ function renderManagerHomePendingSlide(direction='next'){
   }
   _managerHomePendingIndex=Math.max(0,Math.min(_managerHomePendingIndex,slides.length-1));
   const slide=slides[_managerHomePendingIndex];
+  _managerHomePendingActiveId=slide?.id||'';
 
   card.classList.remove('is-slide-next','is-slide-prev');
   void card.offsetWidth;
@@ -142,6 +149,7 @@ function dismissManagerHomePending(event){
   const slides=managerHomePendingSlidesVisible(dashboardCount('analysis'),dashboardCount('adjustments'),projectCounts);
   const slide=slides[_managerHomePendingIndex];
   if(slide?.id)_managerHomePendingDismissed.add(slide.id);
+  _managerHomePendingActiveId='';
 
   const remaining=managerHomePendingSlidesVisible(dashboardCount('analysis'),dashboardCount('adjustments'),dashboardProjectCounts());
   if(!remaining.length){
@@ -162,6 +170,7 @@ function shiftManagerHomePending(delta,event){
   if(next===_managerHomePendingIndex)return;
   const direction=next<_managerHomePendingIndex?'prev':'next';
   _managerHomePendingIndex=next;
+  _managerHomePendingActiveId=slides[next]?.id||'';
   renderManagerHomePendingSlide(direction);
 }
 function movementDaysLabel(iso){if(!iso)return '';const diff=Math.ceil((new Date(iso+'T12:00:00')-new Date(_oleiroToday+'T12:00:00'))/86400000);return diff===0?'hoje':diff===1?'amanhã':diff>1?`em ${diff} dias`:diff===-1?'ontem':`${Math.abs(diff)} dias atrás`}
