@@ -253,28 +253,28 @@
     const slides=homeSlides(),total=slides.length;
     if(total<=1)return '';
     const first=homeSlideIndex===0,last=homeSlideIndex===total-1;
-    return `<div class="release-announcement-pager" aria-label="Navegação das novidades">
-      <strong class="release-announcement-counter">${homeSlideIndex+1}/${total}</strong>
-      <div class="release-announcement-nav ${first?'is-forward':last?'is-backward':'is-middle'}">
-        ${first?'':`<button type="button" class="release-announcement-arrow" onclick="portalReleasePrev(event)" aria-label="Novidade anterior"><i class="fa-solid fa-arrow-left"></i></button>`}
-        ${last?'':`<button type="button" class="release-announcement-arrow" onclick="portalReleaseNext(event)" aria-label="Próxima novidade"><i class="fa-solid fa-arrow-right"></i></button>`}
+    return `<div class="notice-carousel-pager release-announcement-pager" aria-label="Navegação das novidades">
+      <strong class="notice-carousel-counter release-announcement-counter">${homeSlideIndex+1}/${total}</strong>
+      <div class="notice-carousel-nav release-announcement-nav ${first?'is-forward':last?'is-backward':'is-middle'}">
+        ${first?'':`<button type="button" class="notice-carousel-arrow release-announcement-arrow" onclick="portalReleasePrev(event)" aria-label="Novidade anterior"><i class="fa-solid fa-arrow-left"></i></button>`}
+        ${last?'':`<button type="button" class="notice-carousel-arrow release-announcement-arrow" onclick="portalReleaseNext(event)" aria-label="Próxima novidade"><i class="fa-solid fa-arrow-right"></i></button>`}
       </div>
     </div>`;
   }
   function releaseCardHtml(){
     const slide=homeSlide();
     if(!slide)return '';
-    return `<section class="release-announcement-card ${slide.tone?'is-'+esc(slide.tone):''}" data-release-announcement data-release-slide="${homeSlideIndex}">
-      <div class="release-announcement-top">
-        <span class="release-announcement-spark" data-release-slide-icon><i class="fa-solid ${esc(slide.icon||'fa-wand-magic-sparkles')}"></i></span>
-        <div class="release-announcement-copy">
-          <div class="release-announcement-meta"><span data-release-slide-eyebrow>${esc(slide.eyebrow||ANNOUNCEMENT.eyebrow)}</span><small data-release-meta data-release-meta-enabled="${slide.showMeta?'1':'0'}" ${slide.showMeta?'':'hidden'}></small></div>
-          <strong data-release-slide-title>${esc(slide.title||'')}</strong>
-          <p data-release-slide-summary>${esc(slide.summary||'')}</p>
+    return `<section class="notice-carousel-card release-announcement-card ${slide.tone?'is-'+esc(slide.tone):''}" data-release-announcement data-release-slide="${homeSlideIndex}">
+      <div class="notice-carousel-top release-announcement-top">
+        <span class="notice-carousel-icon release-announcement-spark" data-release-slide-icon><i class="fa-solid ${esc(slide.icon||'fa-wand-magic-sparkles')}"></i></span>
+        <div class="notice-carousel-copy release-announcement-copy">
+          <div class="notice-carousel-meta release-announcement-meta"><span data-release-slide-eyebrow>${esc(slide.eyebrow||ANNOUNCEMENT.eyebrow)}</span><small data-release-meta data-release-meta-enabled="${slide.showMeta?'1':'0'}" ${slide.showMeta?'':'hidden'}></small></div>
+          <strong data-notice-title data-release-slide-title>${esc(slide.title||'')}</strong>
+          <p data-notice-summary data-release-slide-summary>${esc(slide.summary||'')}</p>
         </div>
         ${releaseCarouselNavHtml()}
       </div>
-      <div class="release-announcement-actions">
+      <div class="notice-carousel-actions release-announcement-actions">
         <button class="btn btn-outline" type="button" onclick="dismissPortalHomeNotice()">Agora não</button>
         <button class="btn btn-primary" type="button" data-release-slide-cta onclick="openPortalHomeNotice()">${esc(slide.ctaLabel||'Ver novidades')}</button>
       </div>
@@ -290,8 +290,8 @@
     if(slide.tone)card.classList.add('is-'+slide.tone);
     void card.offsetWidth;
     card.classList.add(direction==='prev'?'is-slide-prev':'is-slide-next');
-    const title=card.querySelector('[data-release-slide-title]');
-    const summary=card.querySelector('[data-release-slide-summary]');
+    const title=card.querySelector('[data-notice-title data-release-slide-title]');
+    const summary=card.querySelector('[data-notice-summary data-release-slide-summary]');
     const eyebrow=card.querySelector('[data-release-slide-eyebrow]');
     const icon=card.querySelector('[data-release-slide-icon] i');
     const cta=card.querySelector('[data-release-slide-cta]');
