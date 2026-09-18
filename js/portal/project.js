@@ -242,7 +242,9 @@
     backdrop.style.top=offsetTop+'px';
     backdrop.style.bottom='auto';
     if(keyboardOpen){
-      backdrop.style.setProperty('align-items','flex-start','important');
+      /* No iOS o teclado reduz o visualViewport. Ancorar o wizard no limite
+         inferior desse viewport evita o "buraco" entre o modal e o teclado. */
+      backdrop.style.setProperty('align-items','flex-end','important');
       backdrop.style.setProperty('padding-top','6px','important');
       backdrop.style.setProperty('padding-bottom','6px','important');
     }else{
