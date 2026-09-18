@@ -399,3 +399,333 @@
   .legacy-project-story-row{grid-template-columns:36px minmax(0,1fr);padding:12px 2px}
   .legacy-project-story-row>span{width:36px;height:36px}
 }
+
+
+/* Admin · revisão de Projeto Legado — layout v2 */
+.legacy-admin-modal{
+  width:min(560px,100%)!important;
+  max-width:560px!important;
+  max-height:min(88dvh,780px)!important;
+}
+.legacy-admin-modal .modal-head{
+  padding:17px 18px 14px!important;
+}
+.legacy-admin-modal .modal-head h2{
+  font-size:1rem!important;
+  letter-spacing:-.015em;
+}
+.legacy-admin-modal .modal-head p{
+  max-width:430px;
+  font-size:.63rem!important;
+}
+.legacy-admin-modal .modal-body{
+  padding:0 18px 18px;
+}
+.legacy-admin-modal .modal-footer{
+  display:grid;
+  grid-template-columns:minmax(0,.9fr) minmax(0,1.18fr);
+  gap:8px;
+  padding:10px 18px max(14px,env(safe-area-inset-bottom));
+  box-shadow:0 -10px 28px rgba(23,54,39,.055);
+}
+.legacy-admin-modal .modal-footer .btn{
+  width:100%;
+  min-width:0;
+  min-height:46px;
+  margin:0;
+  border-radius:13px;
+  justify-content:center;
+  white-space:normal;
+}
+
+.legacy-admin-detail-v2{
+  display:grid;
+  gap:12px;
+}
+.legacy-admin-person-v2{
+  grid-template-columns:42px minmax(0,1fr) auto;
+  gap:11px;
+  align-items:center;
+  margin:0;
+  padding:14px 0 2px;
+  border:0;
+}
+.legacy-admin-person-v2 .legacy-admin-avatar{
+  width:42px;
+  height:42px;
+  border-radius:14px;
+  background:var(--primary-soft);
+  color:var(--primary);
+  display:grid;
+  place-items:center;
+  flex:0 0 42px;
+}
+.legacy-admin-identity{
+  min-width:0;
+}
+.legacy-admin-identity strong{
+  display:block;
+  font-size:.74rem;
+  line-height:1.25;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.legacy-admin-identity small{
+  display:block;
+  margin-top:3px;
+  color:var(--muted);
+  font-size:.58rem;
+  line-height:1.2;
+}
+.legacy-admin-person-status{
+  min-width:0;
+  justify-self:end;
+}
+.legacy-admin-person-status .badge{
+  display:inline-flex!important;
+  align-items:center;
+  justify-content:center;
+  width:auto!important;
+  max-width:100%;
+  min-width:0;
+  padding:6px 9px!important;
+  border-radius:999px!important;
+  font-size:.54rem!important;
+  line-height:1!important;
+  white-space:nowrap;
+}
+
+.legacy-admin-project-overview{
+  position:relative;
+  display:grid;
+  gap:5px;
+  padding:15px 16px 14px;
+  overflow:hidden;
+  border:1px solid color-mix(in srgb,var(--primary) 13%,var(--border));
+  border-radius:17px;
+  background:linear-gradient(145deg,color-mix(in srgb,var(--primary-soft) 72%,var(--surface)),var(--surface));
+}
+.legacy-admin-project-overview::after{
+  content:"";
+  position:absolute;
+  width:120px;
+  height:120px;
+  right:-55px;
+  top:-70px;
+  border-radius:50%;
+  border:1px solid color-mix(in srgb,var(--primary) 10%,transparent);
+  box-shadow:0 0 0 28px color-mix(in srgb,var(--primary) 3%,transparent);
+  pointer-events:none;
+}
+.legacy-admin-overview-label{
+  position:relative;
+  z-index:1;
+  color:var(--muted);
+  font-size:.51rem;
+  font-weight:700;
+  letter-spacing:.09em;
+  text-transform:uppercase;
+}
+.legacy-admin-overview-title{
+  position:relative;
+  z-index:1;
+  display:block;
+  padding-right:8px;
+  color:var(--text);
+  font-size:.85rem;
+  line-height:1.28;
+  overflow-wrap:anywhere;
+}
+.legacy-admin-category{
+  position:relative;
+  z-index:1;
+  display:inline-flex;
+  width:max-content;
+  max-width:100%;
+  align-items:center;
+  gap:6px;
+  margin-top:3px;
+  padding:5px 8px;
+  border-radius:999px;
+  background:var(--surface);
+  color:var(--primary);
+  font-size:.56rem;
+  font-weight:600;
+  line-height:1.2;
+}
+.legacy-admin-category i{
+  flex:0 0 auto;
+  font-size:.5rem;
+}
+
+.legacy-admin-project-content{
+  overflow:hidden;
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+}
+.legacy-admin-project-section{
+  display:grid!important;
+  grid-template-columns:34px minmax(0,1fr);
+  gap:10px;
+  align-items:start;
+  margin:0!important;
+  padding:13px 2px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.legacy-admin-project-section + .legacy-admin-project-section{
+  border-top:1px solid color-mix(in srgb,var(--border) 86%,transparent)!important;
+}
+.legacy-admin-section-icon{
+  width:34px;
+  height:34px;
+  border-radius:11px;
+  display:grid;
+  place-items:center;
+  background:var(--primary-soft);
+  color:var(--primary);
+  font-size:.64rem;
+}
+.legacy-admin-project-section>div{
+  min-width:0;
+}
+.legacy-admin-project-section small{
+  display:block;
+  margin:0 0 3px!important;
+  color:var(--muted)!important;
+  font-size:.5rem!important;
+  font-weight:700;
+  letter-spacing:.07em!important;
+  text-transform:uppercase;
+}
+.legacy-admin-project-section p{
+  margin:0!important;
+  color:var(--text)!important;
+  font-size:.64rem!important;
+  line-height:1.48!important;
+  overflow-wrap:anywhere;
+}
+
+.legacy-admin-result-v2{
+  display:grid!important;
+  grid-template-columns:34px minmax(0,1fr);
+  gap:10px;
+  align-items:start;
+  padding:12px 13px!important;
+  border:0!important;
+  border-radius:14px!important;
+  background:var(--success-soft)!important;
+}
+.legacy-admin-result-v2>span{
+  width:34px;
+  height:34px;
+  border-radius:11px;
+  display:grid;
+  place-items:center;
+  background:color-mix(in srgb,var(--success) 12%,var(--surface));
+  color:var(--success);
+}
+.legacy-admin-result-v2 small{
+  display:block;
+  margin-bottom:3px;
+  color:var(--success)!important;
+  font-size:.5rem!important;
+  font-weight:700;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.legacy-admin-result-v2 p{
+  margin:0!important;
+  color:var(--text)!important;
+  font-size:.62rem!important;
+  line-height:1.45!important;
+}
+
+.legacy-admin-drive-v2{
+  margin-top:0;
+  grid-template-columns:36px minmax(0,1fr) auto;
+  padding:10px 12px;
+  border-radius:14px;
+}
+.legacy-admin-drive-v2>span{
+  width:36px;
+  height:36px;
+  border-radius:11px;
+}
+.legacy-admin-drive-v2 strong{
+  font-size:.63rem;
+}
+.legacy-admin-drive-v2 small{
+  font-size:.53rem;
+}
+
+@media(max-width:390px){
+  .legacy-admin-modal{
+    width:100%!important;
+    max-height:88dvh!important;
+    border-radius:22px!important;
+  }
+  .legacy-admin-modal .modal-head{
+    padding:15px 14px 12px!important;
+  }
+  .legacy-admin-modal .modal-head h2{
+    font-size:.92rem!important;
+  }
+  .legacy-admin-modal .modal-head p{
+    font-size:.59rem!important;
+    line-height:1.4!important;
+  }
+  .legacy-admin-modal .modal-body{
+    padding:0 14px 14px;
+  }
+  .legacy-admin-modal .modal-footer{
+    grid-template-columns:minmax(0,.9fr) minmax(0,1.15fr);
+    gap:7px;
+    padding-left:14px;
+    padding-right:14px;
+  }
+  .legacy-admin-modal .modal-footer .btn{
+    min-height:44px;
+    padding-left:8px;
+    padding-right:8px;
+    font-size:.62rem;
+  }
+  .legacy-admin-person-v2{
+    grid-template-columns:40px minmax(0,1fr) auto;
+    gap:9px;
+    padding-top:12px;
+  }
+  .legacy-admin-person-v2 .legacy-admin-avatar{
+    width:40px;
+    height:40px;
+  }
+  .legacy-admin-identity strong{
+    font-size:.7rem;
+  }
+  .legacy-admin-person-status .badge{
+    padding:5px 7px!important;
+    font-size:.5rem!important;
+  }
+  .legacy-admin-project-overview{
+    padding:13px 14px;
+  }
+  .legacy-admin-overview-title{
+    font-size:.8rem;
+  }
+  .legacy-admin-project-section{
+    grid-template-columns:32px minmax(0,1fr);
+    gap:9px;
+    padding:12px 1px!important;
+  }
+  .legacy-admin-section-icon{
+    width:32px;
+    height:32px;
+    border-radius:10px;
+  }
+  .legacy-admin-project-section p{
+    font-size:.61rem!important;
+  }
+}
