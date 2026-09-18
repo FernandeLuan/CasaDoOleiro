@@ -284,65 +284,25 @@
 }
 .release-announcement-arrow i{
   display:block;
-  will-change:transform,filter,opacity;
-}
-.release-announcement-arrow .fa-arrow-right{
-  animation:releaseArrowForward 1.9s ease-in-out infinite;
-}
-.release-announcement-arrow .fa-arrow-left{
-  animation:releaseArrowBackward 1.9s ease-in-out infinite;
-}
-.release-announcement-nav.is-middle .release-announcement-arrow:last-child i{
-  animation-delay:.28s;
-}
-@keyframes releaseArrowForward{
-  0%,18%,100%{
-    transform:translateX(0);
-    opacity:.62;
-    filter:drop-shadow(0 0 0 transparent);
-  }
-  48%{
-    transform:translateX(3px);
-    opacity:1;
-    filter:drop-shadow(-3px 0 3px color-mix(in srgb,var(--primary) 45%,transparent));
-  }
-  72%{
-    transform:translateX(1px);
-    opacity:.82;
-    filter:drop-shadow(-1px 0 2px color-mix(in srgb,var(--primary) 20%,transparent));
-  }
-}
-@keyframes releaseArrowBackward{
-  0%,18%,100%{
-    transform:translateX(0);
-    opacity:.62;
-    filter:drop-shadow(0 0 0 transparent);
-  }
-  48%{
-    transform:translateX(-3px);
-    opacity:1;
-    filter:drop-shadow(3px 0 3px color-mix(in srgb,var(--primary) 45%,transparent));
-  }
-  72%{
-    transform:translateX(-1px);
-    opacity:.82;
-    filter:drop-shadow(1px 0 2px color-mix(in srgb,var(--primary) 20%,transparent));
-  }
 }
 
+.release-announcement-copy{
+  transform:translate3d(var(--release-content-drag-x,0px),0,0);
+  transition:transform .18s ease;
+  will-change:transform;
+}
 .release-announcement-card.is-dragging{
-  animation:none!important;
-  transition:none!important;
-  transform:translate3d(var(--release-drag-x,0),0,0)!important;
   cursor:grabbing;
 }
+.release-announcement-card.is-dragging .release-announcement-copy{
+  transition:none;
+}
 .release-announcement-card:not(.is-dragging){
-  --release-drag-x:0px;
+  --release-content-drag-x:0px;
 }
 
 @media(prefers-reduced-motion:reduce){
-  .release-announcement-card::before,
-  .release-announcement-arrow i{
+  .release-announcement-card::before{
     animation:none!important;
   }
 }
