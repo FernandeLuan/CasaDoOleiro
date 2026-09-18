@@ -136,10 +136,13 @@
   async function ensureAccountData(p,{force=false}={}){
     if(!p?.id)return;const key=String(p.id),freshEnough=!force&&Date.now()-(state.adminAccountReadAt[key]||0)<ACCOUNT_CACHE_MS;
     if(freshEnough&&accessCache(p))return;
-    const tasks=[];
-    if(window.OleiroServices?.applications?.getById)tasks.push(window.OleiroServices.applications.getById(p.id,{enrichProfiles:false}).then(fresh=>{if(!fresh)return;const index=(state.candidates||[]).findIndex(row=>String(row.id)===key);if(index>=0)state.candidates[index]=fresh;Object.assign(p,fresh)}));
-    if(window.OleiroServices?.users?.getByIds&&Array.isArray(p.participantUids)&&p.participantUids.length)tasks.push(window.OleiroServices.users.getByIds(p.participantUids).then(rows=>{const map={};(rows||[]).forEach(row=>map[String(row.id)]=row);state.participantAccessCache[key]=map}));
-    await Promise.allSettled(tasks);state.adminAccountReadAt[key]=Date.now();
+    /* A lista de candidaturas já traz o documento completo da application. Ao abrir Conta,
+       consulte somente o que não existe nela: o status de acesso dos participantes. */
+    if(window.OleiroServices?.users?.getByIds&&Array.isArray(p.participantUids)&&p.participantUids.length){
+      const rows=await window.OleiroServices.users.getByIds(p.participantUids),map={};
+      (rows||[]).forEach(row=>map[String(row.id)]=row);state.participantAccessCache[key]=map;
+    }
+    state.adminAccountReadAt[key]=Date.now();
   }
   openPerson=async function(id,tab='plan'){
     let p=candidateById(id);if(!p)return;tab=tab==='plan'?'plan':'account';renderPersonModal(p,tab);
