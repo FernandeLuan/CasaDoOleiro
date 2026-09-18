@@ -18,6 +18,19 @@ async function rewrite(relative,transform){
   if(next!==source)await writeFile(file,next,'utf8');
 }
 
+
+async function writeClassicScriptBundle(entryFile,matches,target){
+  const modules=[];
+  for(const match of matches){
+    const sourcePath=path.resolve(path.dirname(entryFile),match[2]);
+    modules.push({path:match[2],code:await readFile(sourcePath,'utf8')});
+  }
+  // Execute each original classic script as its own script element. This preserves the
+  // browser's per-script lexical environment while still reducing network requests.
+  const payload=`(function(){const modules=${JSON.stringify(modules)};for(const module of modules){const script=document.createElement('script');script.type='text/javascript';script.dataset.oleiroBundleSource=module.path;script.text=module.code+"\\n//# sourceURL="+module.path;document.head.appendChild(script);script.remove();}})();\n`;
+  await writeFile(path.join(out,target),payload,'utf8');
+}
+
 async function bundlePortalAssets(){
   const portalFile=path.join(out,'portal/index.html');
   let html=await readFile(portalFile,'utf8');
@@ -44,17 +57,8 @@ async function bundlePortalAssets(){
   const post=scriptMatches.slice(configIndex+1);
   if(!pre.length||!post.length)throw new Error('Ordem de scripts do Portal inválida para bundle.');
 
-  async function writeScriptBundle(matches,target){
-    const parts=[];
-    for(const match of matches){
-      const sourcePath=path.resolve(path.dirname(portalFile),match[2]);
-      parts.push(`/* ${match[2]} */\n${await readFile(sourcePath,'utf8')}\n;\n`);
-    }
-    await writeFile(path.join(out,target),parts.join('\n'),'utf8');
-  }
-
-  await writeScriptBundle(pre,'js/portal-pre.bundle.js');
-  await writeScriptBundle(post,'js/portal.bundle.js');
+  await writeClassicScriptBundle(portalFile,pre,'js/portal-pre.bundle.js');
+  await writeClassicScriptBundle(portalFile,post,'js/portal.bundle.js');
 
   for(const match of scriptMatches)html=html.replace(match[0],'');
   const scripts=`<script src="../js/portal-pre.bundle.js"></script>${config[0]}<script data-clean-ui-portal="1" src="../js/portal.bundle.js"></script>`;
@@ -86,16 +90,8 @@ async function bundleAdminAssets(){
   if(configIndex<0)throw new Error('firebase-config.js não encontrado no Admin.');
 
   const pre=scriptMatches.slice(0,configIndex),config=scriptMatches[configIndex],post=scriptMatches.slice(configIndex+1);
-  async function writeScriptBundle(matches,target){
-    const parts=[];
-    for(const match of matches){
-      const sourcePath=path.resolve(path.dirname(adminFile),match[2]);
-      parts.push(`/* ${match[2]} */\n${await readFile(sourcePath,'utf8')}\n;\n`);
-    }
-    await writeFile(path.join(out,target),parts.join('\n'),'utf8');
-  }
-  await writeScriptBundle(pre,'js/admin-pre.bundle.js');
-  await writeScriptBundle(post,'js/admin.bundle.js');
+  await writeClassicScriptBundle(adminFile,pre,'js/admin-pre.bundle.js');
+  await writeClassicScriptBundle(adminFile,post,'js/admin.bundle.js');
   for(const match of scriptMatches)html=html.replace(match[0],'');
   html=html.replace('</body>',`<script src="../js/admin-pre.bundle.js"></script>${config[0]}<script data-clean-ui-admin="1" src="../js/admin.bundle.js"></script></body>`);
   await writeFile(adminFile,html,'utf8');
@@ -134,4 +130,4 @@ console.log(`Canonical site build ready: ${out}`);
 console.log(`Environment: ${environment}`);
 console.log(`Portal bundles: ${portalBundle.js} scripts -> 3 requests; ${portalBundle.css} stylesheets -> 1 request.`);
 console.log(`Admin bundles: ${adminBundle.js} scripts -> 3 requests; ${adminBundle.css} stylesheets -> 1 request.`);
-console.log('Source modules remain separated for maintenance; production is bundled in build order.');
+console.log('Source modules remain separated for maintenance; runtime bundles preserve classic-script execution order.');
