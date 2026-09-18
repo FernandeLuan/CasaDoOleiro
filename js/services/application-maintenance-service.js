@@ -35,13 +35,13 @@
       const context=await services.firebase(),{firestore}=context.modules;
       const applicationRef=firestore.doc(context.db,'applications',id);
       const applicationSnapshot=await firestore.getDoc(applicationRef);
-      if(!applicationSnapshot.exists())return {applicationId:id,alreadyDeleted:true,participants:0,activities:0,sessions:0,history:0};
+      if(!applicationSnapshot.exists())return {applicationId:id,alreadyDeleted:true,participants:0,activities:0,sessions:0};
 
       const application=applicationSnapshot.data()||{};
       const uids=[...new Set((application.participantUids||[]).map(String).filter(Boolean))];
 
-      /* Primeiro bloqueia novas alterações do voluntário. Se a limpeza for interrompida,
-         o cadastro permanece recuperável pelo Admin e a operação pode ser repetida. */
+      /* Bloqueia o planejamento antes de iniciar a limpeza. Se a conexão cair,
+         o Admin pode repetir a operação com segurança. */
       await firestore.updateDoc(applicationRef,{
         active:false,
         deleting:true,
@@ -49,7 +49,7 @@
       });
 
       const started=Date.now();
-      const [activitiesSnapshot,sessionsSnapshot,historySnapshot]=await Promise.all([
+      const [activitiesSnapshot,sessionsSnapshot]=await Promise.all([
         firestore.getDocs(firestore.query(
           firestore.collection(context.db,'activities'),
           firestore.where('applicationId','==',id)
@@ -57,14 +57,12 @@
         firestore.getDocs(firestore.query(
           firestore.collection(context.db,'activity_sessions'),
           firestore.where('applicationId','==',id)
-        )),
-        firestore.getDocs(firestore.collection(applicationRef,'history'))
+        ))
       ]);
-      services.recordQuery?.('applications/purge-related',started,activitiesSnapshot.size+sessionsSnapshot.size+historySnapshot.size,{
+      services.recordQuery?.('applications/purge-related',started,activitiesSnapshot.size+sessionsSnapshot.size,{
         applicationId:id,
         activities:activitiesSnapshot.size,
-        sessions:sessionsSnapshot.size,
-        history:historySnapshot.size
+        sessions:sessionsSnapshot.size
       });
 
       async function deleteRefs(refs){
@@ -76,9 +74,6 @@
         }
       }
 
-      /* Histórico precisa sair enquanto o documento da candidatura ainda existe,
-         pois a regra de segurança valida a unidade através da application. */
-      await deleteRefs(historySnapshot.docs.map(doc=>doc.ref));
       await deleteRefs([
         ...activitiesSnapshot.docs.map(doc=>doc.ref),
         ...sessionsSnapshot.docs.map(doc=>doc.ref),
@@ -86,13 +81,15 @@
         ...uids.map(uid=>firestore.doc(context.db,'users',uid))
       ]);
 
+      /* O histórico interno é mantido como trilha de auditoria. Sem o documento pai,
+         ele deixa de ser acessível pelo aplicativo e não contém credenciais de acesso. */
       await firestore.deleteDoc(applicationRef);
       return {
         applicationId:id,
         participants:uids.length,
         activities:activitiesSnapshot.size,
         sessions:sessionsSnapshot.size,
-        history:historySnapshot.size
+        auditHistoryRetained:true
       };
     },{loading:false,monitor:{area:'admin',action:'purge_volunteer_application'}});
   };
