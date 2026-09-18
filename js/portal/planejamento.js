@@ -4,6 +4,39 @@ function candidatePlanningEditable(status=state.volunteerPlanStatus||'draft'){
 function activeCandidateSessions(){
   return (state.sessions||[]).filter(row=>row.status!=='rejected'&&row.reviewStatus!=='rejected');
 }
+function portalPlanningShareAllowed(){const application=state.currentApplication||{};return application.status!=='rejected'&&!application.inactive}
+function portalPlanningShareStatus(){
+  const application=state.currentApplication||{},status=String(application.status||''),plan=String(state.volunteerPlanStatus||'draft');
+  if(state.volunteerMode==='approved'||status==='approved')return t('portal.profile.approved');
+  if(status==='meeting'||status==='plan_approved')return t('portal.meeting.planApproved');
+  if(plan==='submitted'||status==='analysis')return t('portal.profile.analysis');
+  if(plan==='adjustments'||status==='adjustments')return t('portal.profile.adjustments');
+  return t('portal.profile.preparing');
+}
+function portalPlanningShareHeading(){
+  const status=String(state.currentApplication?.status||'');
+  if(state.volunteerMode==='approved'||status==='approved')return t('planning.share.confirmedHeading');
+  if(status==='meeting'||status==='plan_approved')return t('planning.share.approvedHeading');
+  return t('planning.share.heading');
+}
+function portalPlanningShareButton(){
+  if(!portalPlanningShareAllowed())return '';
+  return `<button class="planning-overflow-button" type="button" onclick="openPortalPlanningMenu()" aria-label="${escapeHtml(t('planning.share.moreAria'))}" title="${escapeHtml(t('planning.share.moreAria'))}"><i class="fa-solid fa-ellipsis-vertical"></i></button>`;
+}
+window.openPortalPlanningMenu=function(){
+  if(!portalPlanningShareAllowed())return;
+  openModal(t('planning.share.menuTitle'),t('planning.share.menuSubtitle'),`<div class="menu-list planning-share-menu"><button class="menu-link" type="button" onclick="sharePortalPlanningWhatsApp()"><i class="fa-brands fa-whatsapp"></i><span><strong>${escapeHtml(t('planning.share.whatsapp'))}</strong><small>${escapeHtml(t('planning.share.whatsappHint'))}</small></span><i class="fa-solid fa-chevron-right"></i></button></div>`);
+};
+window.sharePortalPlanningWhatsApp=function(){
+  const sessions=(state.sessions||[]).filter(row=>row.status!=='rejected'&&row.reviewStatus!=='rejected');
+  if(!sessions.length)return showToast(t('planning.share.none'));
+  const application=state.currentApplication||{},profile=state.currentSession?.profile||{},name=typeof volunteerProfileName==='function'?volunteerProfileName():(profile.name||state.currentSession?.email||t('role.volunteer'));
+  const unit=application.unitName||String(application.unitId||'').replace(/^./,c=>c.toUpperCase());
+  const text=window.OleiroPlanningShare?.buildText({heading:portalPlanningShareHeading(),name,statusLabel:portalPlanningShareStatus(),unit,start:application.stayStart,end:application.stayEnd,sessions,labels:{status:t('planning.share.status'),unit:t('planning.share.unit'),period:t('planning.share.period'),observation:t('planning.share.observation')}})||'';
+  if(!text)return showToast(t('planning.share.none'));
+  closeModal();window.OleiroPlanningShare.openWhatsApp(text);
+};
+
 function volunteerPlan(){
   const acts=volunteerActivities(),status=state.volunteerPlanStatus||'draft',approved=state.volunteerMode==='approved',editable=!approved&&candidatePlanningEditable(status);
   const dates=volunteerStayDates(),periodLabel=dates.length?`${fmtDate(dates[0],true)}–${fmtDate(dates[dates.length-1],true)}`:t('portal.home.periodConfirm');
@@ -19,12 +52,12 @@ function volunteerPlan(){
     }else if(status!=='rejected'){
       submitButton=`<button class="btn btn-soft btn-block candidate-plan-submit" type="button" disabled><i class="fa-solid fa-circle-info"></i>${escapeHtml(t('portal.plan.addBeforeSend'))}</button>`;
     }
-    return `<section class="section candidate-plan-refactor compact-page-top"><div class="candidate-plan-content">${volunteerAgendaContent(editable)}</div>${submitButton}</section>`;
+    return `<section class="section candidate-plan-refactor compact-page-top"><div class="portal-plan-toolbar">${portalPlanningShareButton()}</div><div class="candidate-plan-content">${volunteerAgendaContent(editable)}</div>${submitButton}</section>`;
   }
 
   const notice=t('portal.plan.approvedNotice');
   const submitButton=`<button class="btn btn-soft btn-block" style="margin-top:12px" disabled><i class="fa-solid fa-circle-check"></i>${escapeHtml(t('portal.plan.approvedButton'))}</button>`;
-  return `<section class="section volunteer-plan-page"><div class="plan-title-row"><div><h2>${escapeHtml(t('portal.plan.title'))}</h2><p>${escapeHtml(t('portal.plan.subtitle'))}</p></div><strong>${periodLabel}</strong></div><div class="notice"><i class="fa-solid fa-circle-info"></i><div>${escapeHtml(notice)}</div></div><div style="margin-top:14px">${volunteerAgendaContent(false)}</div><div class="card plan-summary" style="margin-top:14px"><span class="eyebrow">${escapeHtml(t('portal.plan.summary'))}</span><div class="stat-row"><span class="stat-pill">${escapeHtml(t('portal.home.activitiesCount',{count:acts.length}))}</span><span class="stat-pill">${escapeHtml(t('portal.home.sessionsCount',{count:(state.sessions||[]).length}))}</span><span class="stat-pill">${escapeHtml(t('portal.plan.hoursPlanned',{hours}))}</span></div>${submitButton}</div></section>`;
+  return `<section class="section volunteer-plan-page"><div class="plan-title-row"><div><h2>${escapeHtml(t('portal.plan.title'))}</h2><p>${escapeHtml(t('portal.plan.subtitle'))}</p></div><div class="plan-title-actions"><strong>${periodLabel}</strong>${portalPlanningShareButton()}</div></div><div class="notice"><i class="fa-solid fa-circle-info"></i><div>${escapeHtml(notice)}</div></div><div style="margin-top:14px">${volunteerAgendaContent(false)}</div><div class="card plan-summary" style="margin-top:14px"><span class="eyebrow">${escapeHtml(t('portal.plan.summary'))}</span><div class="stat-row"><span class="stat-pill">${escapeHtml(t('portal.home.activitiesCount',{count:acts.length}))}</span><span class="stat-pill">${escapeHtml(t('portal.home.sessionsCount',{count:(state.sessions||[]).length}))}</span><span class="stat-pill">${escapeHtml(t('portal.plan.hoursPlanned',{hours}))}</span></div>${submitButton}</div></section>`;
 }
 function calendarMonthLabel(date){const locale=typeof currentLocale==='function'?currentLocale():'pt-BR';return new Intl.DateTimeFormat(locale,{month:'short'}).format(new Date(date+'T12:00:00')).replace('.','').toUpperCase()}
 function volunteerDayAdjustment(date){const rows=state.currentApplication?.dayAdjustments;return rows&&typeof rows==='object'?rows[date]||null:null}
