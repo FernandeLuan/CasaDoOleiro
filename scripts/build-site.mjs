@@ -1,4 +1,4 @@
-import { access, cp, copyFile, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { access, cp, copyFile, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { checkSiteAssets } from './check-site-assets.mjs';
 
@@ -18,6 +18,36 @@ async function rewrite(relative,transform){
   if(next!==source)await writeFile(file,next,'utf8');
 }
 
+
+async function auditRuntimeSources(siteRoot){
+  const entryFiles=['index.html','admin/index.html','portal/index.html'];
+  const referenced=new Set();
+  for(const entry of entryFiles){
+    const source=await readFile(path.join(siteRoot,entry),'utf8');
+    const local=[...source.matchAll(/<script[^>]+src=["']((?:\.\.\/)?js\/[^"'?]+)(?:\?[^"']*)?["'][^>]*><\/script>/g)]
+      .map(match=>path.normalize(path.join(path.dirname(entry),match[1])).replaceAll('\\','/').replace(/^\.\.\//,''));
+    const seen=new Set();
+    for(const file of local){
+      if(seen.has(file))throw new Error(`${entry}: script duplicado: ${file}`);
+      seen.add(file);referenced.add(file);
+    }
+  }
+
+  const runtimeDirs=['js/admin','js/portal','js/shared','js/services','js/firebase'];
+  const runtime=[];
+  async function walk(dir){
+    const absolute=path.join(siteRoot,dir);
+    for(const item of await readdir(absolute,{withFileTypes:true})){
+      const relative=`${dir}/${item.name}`;
+      if(item.isDirectory()){if(item.name!=='demo')await walk(relative)}
+      else if(item.isFile()&&item.name.endsWith('.js'))runtime.push(relative.replaceAll('\\','/'));
+    }
+  }
+  for(const dir of runtimeDirs)await walk(dir);
+  const orphaned=runtime.filter(file=>!referenced.has(file));
+  if(orphaned.length)throw new Error('Módulos JS sem entrypoint: '+orphaned.join(', '));
+  return {modules:runtime.length,referenced:referenced.size};
+}
 
 async function writeClassicScriptBundle(entryFile,matches,target){
   const modules=[];
@@ -100,6 +130,7 @@ async function bundleAdminAssets(){
 
 // Fail before deleting the previous build or publishing a broken entry point.
 await checkSiteAssets(root);
+const runtimeAudit=await auditRuntimeSources(root);
 await rm(out,{recursive:true,force:true});
 await mkdir(out,{recursive:true});
 for(const dir of ['admin','portal','css','js','icons']){
@@ -128,6 +159,7 @@ await checkSiteAssets(out);
 await writeFile(path.join(out,'release.json'),JSON.stringify({environment,build:buildId,commit,publishedAt:new Date().toISOString()})+'\n','utf8');
 console.log(`Canonical site build ready: ${out}`);
 console.log(`Environment: ${environment}`);
+console.log(`Runtime source audit: ${runtimeAudit.modules} JS modules, no orphaned files.`);
 console.log(`Portal bundles: ${portalBundle.js} scripts -> 3 requests; ${portalBundle.css} stylesheets -> 1 request.`);
 console.log(`Admin bundles: ${adminBundle.js} scripts -> 3 requests; ${adminBundle.css} stylesheets -> 1 request.`);
 console.log('Source modules remain separated for maintenance; runtime bundles preserve classic-script execution order.');
