@@ -80,26 +80,37 @@
     const [label,tone]=statusMeta(p.status);
     const editable=['draft','adjustments'].includes(p.status);
     const canStart=p.status==='approved',canFinish=p.status==='in_progress';
-    return `<section class="section legacy-page">
-      <div class="legacy-project-head"><div><span class="eyebrow">Seu legado</span><h1>${esc(p.title||'Meu projeto')}</h1><p>${esc(p.category||'Projeto da comunidade')}</p></div><span class="badge ${tone}">${esc(label)}</span></div>
-      ${p.status==='adjustments'&&p.reviewNote?`<div class="notice warning"><i class="fa-solid fa-pen-to-square"></i><div><strong>A equipe pediu um ajuste</strong><br>${esc(p.reviewNote)}</div></div>`:''}
-      <div class="legacy-project-summary">
-        <article><small>O legado</small><p>${esc(p.description||'—')}</p></article>
-        <article><small>Por que importa</small><p>${esc(p.why||'—')}</p></article>
-        <article><small>Resultado esperado</small><p>${esc(p.expectedResult||'—')}</p></article>
-        ${p.materials?`<article><small>Materiais / apoio</small><p>${esc(p.materials)}</p></article>`:''}
+    const detailRow=(label,value)=>`<article class="legacy-status-detail-row"><small>${esc(label)}</small><p>${esc(value||'—')}</p></article>`;
+    return `<section class="section legacy-page legacy-status-v2">
+      <div class="legacy-status-hero">
+        <div class="legacy-status-hero-copy">
+          <span class="eyebrow">Seu legado</span>
+          <h1>${esc(p.title||'Meu projeto')}</h1>
+          <p>${esc(p.category||'Projeto da comunidade')}</p>
+        </div>
+        <span class="badge ${tone} legacy-status-badge">${esc(label)}</span>
       </div>
-      ${p.driveUrl?`<a class="legacy-drive-card" href="${esc(p.driveUrl)}" target="_blank" rel="noopener noreferrer"><span><i class="fa-brands fa-google-drive"></i></span><div><strong>Registros no Google Drive</strong><small>Fotos, vídeos ou documentos do projeto</small></div><i class="fa-solid fa-arrow-up-right-from-square"></i></a>`:''}
+
+      ${p.status==='adjustments'&&p.reviewNote?`<div class="legacy-adjustment-card"><span><i class="fa-solid fa-pen-to-square"></i></span><div><strong>A equipe pediu um ajuste</strong><p>${esc(p.reviewNote)}</p></div></div>`:''}
+
+      <div class="legacy-status-details">
+        ${detailRow('O legado',p.description)}
+        ${detailRow('Por que importa',p.why)}
+        ${detailRow('Resultado esperado',p.expectedResult)}
+        ${p.materials?detailRow('Materiais / apoio',p.materials):''}
+      </div>
+
+      ${p.driveUrl?`<a class="legacy-drive-card legacy-status-drive" href="${esc(p.driveUrl)}" target="_blank" rel="noopener noreferrer"><span><i class="fa-brands fa-google-drive"></i></span><div><strong>Registros no Google Drive</strong><small>Fotos, vídeos ou documentos do projeto</small></div><i class="fa-solid fa-arrow-up-right-from-square"></i></a>`:''}
       ${p.result?`<div class="legacy-result-card"><span><i class="fa-solid fa-heart"></i></span><div><small>O que ficou para a comunidade</small><p>${esc(p.result)}</p></div></div>`:''}
+
       <div class="legacy-project-actions ${editable?'legacy-project-actions-pair':''}">
         ${editable?`<button class="btn btn-outline" type="button" onclick="openLegacyProjectForm()"><i class="fa-solid fa-pen"></i>Editar</button><button class="btn btn-primary" type="button" onclick="submitLegacyProject()"><i class="fa-solid fa-paper-plane"></i>${p.status==='adjustments'?'Reenviar':'Enviar para análise'}</button>`:''}
         ${canStart?'<button class="btn btn-primary" type="button" onclick="startLegacyProject()"><i class="fa-solid fa-play"></i>Começar execução</button>':''}
         ${canFinish?'<button class="btn btn-primary" type="button" onclick="openLegacyCompletion()"><i class="fa-solid fa-flag-checkered"></i>Concluir meu legado</button>':''}
       </div>
-      <button class="legacy-how-link" type="button" onclick="replayProjectOnboarding()"><i class="fa-regular fa-circle-question"></i>Como funciona?</button>
+      <button class="legacy-how-link legacy-status-how" type="button" onclick="replayProjectOnboarding()"><i class="fa-regular fa-circle-question"></i>Como funciona?</button>
     </section>`;
   }
-
   function candidatePreviewPage(){
     const ideas=[
       ['fa-leaf','project.idea.sustainability.title','project.idea.sustainability.body'],
