@@ -200,6 +200,23 @@
   background:color-mix(in srgb,var(--primary-soft) 72%,transparent);
   color:var(--primary);
 }
+.notice-carousel-arrow:disabled,
+.notice-carousel-arrow.is-disabled{
+  opacity:.24;
+  color:var(--muted);
+  cursor:default;
+  pointer-events:none;
+  filter:saturate(.45);
+}
+.notice-carousel-arrow:disabled:hover,
+.notice-carousel-arrow.is-disabled:hover{
+  background:transparent;
+  color:var(--muted);
+}
+.notice-carousel-arrow:disabled:active,
+.notice-carousel-arrow.is-disabled:active{
+  transform:none;
+}
 .notice-carousel-arrow i{
   width:1em;
   height:1em;
