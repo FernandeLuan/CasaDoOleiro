@@ -174,9 +174,11 @@
         <summary class="list-item project-ui-row project-ui-summary">
           <span class="avatar project-ui-avatar"><i class="fa-solid fa-seedling"></i></span>
           <div class="item-main">
-            <h3>${esc(p.ownerName||'Voluntário')}</h3>
+            <div class="project-ui-summary-name-row">
+              <h3>${esc(p.ownerName||'Voluntário')}</h3>
+              ${statusBadge(p.status)}
+            </div>
             <p>${esc(p.unitName||p.unitId||'Unidade')}${p.category?` • ${esc(p.category)}`:''}</p>
-            <div class="item-meta">${statusBadge(p.status)}</div>
           </div>
           <i class="fa-solid fa-chevron-down project-ui-chevron project-ui-expand-chevron" aria-hidden="true"></i>
         </summary>
