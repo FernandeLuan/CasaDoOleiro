@@ -48,33 +48,33 @@
 .legacy-candidate-flow-minimal{padding:18px 14px 15px}
 .legacy-candidate-steps{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .legacy-candidate-steps::before{content:"";position:absolute;left:16.5%;right:16.5%;top:15px;height:4px;border-radius:999px;background:var(--surface-2);z-index:0}
-.legacy-candidate-steps::after{content:"";position:absolute;left:16.5%;top:15px;width:62px;height:4px;margin-left:-31px;border-radius:999px;background:linear-gradient(90deg,transparent 0%,color-mix(in srgb,var(--primary) 18%,transparent) 18%,var(--primary) 58%,rgba(255,255,255,.96) 72%,transparent 100%);z-index:0;filter:drop-shadow(0 0 5px color-mix(in srgb,var(--primary) 48%,transparent));animation:legacyStepTravel 9s ease-in-out infinite}
+.legacy-candidate-steps::after{content:"";position:absolute;left:16.5%;top:15px;width:54px;height:3px;margin-left:-27px;border-radius:999px;background:linear-gradient(90deg,transparent 0%,color-mix(in srgb,var(--primary) 12%,transparent) 20%,color-mix(in srgb,var(--primary) 62%,transparent) 58%,rgba(255,255,255,.7) 72%,transparent 100%);z-index:0;filter:drop-shadow(0 0 3px color-mix(in srgb,var(--primary) 28%,transparent));animation:legacyStepTravel 11s ease-in-out infinite}
 @keyframes legacyStepTravel{
   0%{left:16.5%;opacity:0}
-  5%{left:16.5%;opacity:1}
-  31%{left:50%;opacity:1}
-  47%{left:50%;opacity:.28}
-  52%{left:50%;opacity:1}
-  77%{left:83.5%;opacity:1}
-  93%{left:83.5%;opacity:.28}
+  6%{left:16.5%;opacity:.72}
+  30%{left:50%;opacity:.72}
+  47%{left:50%;opacity:.18}
+  52%{left:50%;opacity:.72}
+  76%{left:83.5%;opacity:.72}
+  92%{left:83.5%;opacity:.18}
   97%{left:83.5%;opacity:0}
   100%{left:16.5%;opacity:0}
 }
 .legacy-candidate-steps article{position:relative;z-index:1;display:grid;justify-items:center;text-align:center;gap:3px;min-width:0}
 .legacy-candidate-steps article>span{position:relative;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);border:1px solid var(--border);color:var(--muted);font-size:.64rem;font-weight:700}
-.legacy-candidate-steps article>span::after{content:"";position:absolute;inset:-6px;border-radius:50%;padding:2px;background:conic-gradient(from 0deg,transparent 0 62%,color-mix(in srgb,var(--primary) 35%,transparent) 72%,var(--primary) 86%,rgba(255,255,255,.95) 92%,transparent 100%);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:0;pointer-events:none}
-.legacy-candidate-steps article:nth-child(2)>span::after{animation:legacyOrbitStep2 9s linear infinite}
-.legacy-candidate-steps article:nth-child(3)>span::after{animation:legacyOrbitStep3 9s linear infinite}
+.legacy-candidate-steps article>span::after{content:"";position:absolute;inset:-1px;border-radius:50%;padding:1.5px;background:conic-gradient(from 0deg,transparent 0 68%,color-mix(in srgb,var(--primary) 24%,transparent) 76%,color-mix(in srgb,var(--primary) 72%,transparent) 88%,rgba(255,255,255,.68) 93%,transparent 100%);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:0;pointer-events:none;filter:drop-shadow(0 0 2px color-mix(in srgb,var(--primary) 24%,transparent))}
+.legacy-candidate-steps article:nth-child(2)>span::after{animation:legacyOrbitStep2 11s linear infinite}
+.legacy-candidate-steps article:nth-child(3)>span::after{animation:legacyOrbitStep3 11s linear infinite}
 @keyframes legacyOrbitStep2{
-  0%,30%{opacity:0;transform:rotate(0deg)}
-  33%{opacity:1;transform:rotate(0deg)}
-  46%{opacity:1;transform:rotate(360deg)}
+  0%,29%{opacity:0;transform:rotate(0deg)}
+  32%{opacity:.62;transform:rotate(0deg)}
+  46%{opacity:.62;transform:rotate(360deg)}
   49%,100%{opacity:0;transform:rotate(390deg)}
 }
 @keyframes legacyOrbitStep3{
-  0%,76%{opacity:0;transform:rotate(0deg)}
-  79%{opacity:1;transform:rotate(0deg)}
-  92%{opacity:1;transform:rotate(360deg)}
+  0%,75%{opacity:0;transform:rotate(0deg)}
+  78%{opacity:.62;transform:rotate(0deg)}
+  92%{opacity:.62;transform:rotate(360deg)}
   95%,100%{opacity:0;transform:rotate(390deg)}
 }
 .legacy-candidate-steps article.is-current>span{background:var(--primary);border-color:var(--primary);color:#fff;box-shadow:0 5px 12px color-mix(in srgb,var(--primary) 22%,transparent)}
