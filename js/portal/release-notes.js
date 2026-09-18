@@ -252,13 +252,13 @@
   }
   function releaseCarouselNavHtml(){
     const slides=homeSlides(),total=slides.length;
-    if(total<=1)return '';
+    if(!total)return '';
     const first=homeSlideIndex===0,last=homeSlideIndex===total-1;
     return `<div class="notice-carousel-pager release-announcement-pager" aria-label="Navegação das novidades">
       <strong class="notice-carousel-counter release-announcement-counter">${homeSlideIndex+1}/${total}</strong>
-      <div class="notice-carousel-nav release-announcement-nav ${first?'is-forward':last?'is-backward':'is-middle'}">
-        ${first?'':`<button type="button" class="notice-carousel-arrow release-announcement-arrow" onclick="portalReleasePrev(event)" aria-label="Novidade anterior"><i class="fa-solid fa-arrow-left"></i></button>`}
-        ${last?'':`<button type="button" class="notice-carousel-arrow release-announcement-arrow" onclick="portalReleaseNext(event)" aria-label="Próxima novidade"><i class="fa-solid fa-arrow-right"></i></button>`}
+      <div class="notice-carousel-nav release-announcement-nav">
+        <button type="button" class="notice-carousel-arrow release-announcement-arrow ${first?'is-disabled':''}" onclick="portalReleasePrev(event)" aria-label="Novidade anterior" ${first?'disabled aria-disabled="true"':''}><i class="fa-solid fa-arrow-left"></i></button>
+        <button type="button" class="notice-carousel-arrow release-announcement-arrow ${last?'is-disabled':''}" onclick="portalReleaseNext(event)" aria-label="Próxima novidade" ${last?'disabled aria-disabled="true"':''}><i class="fa-solid fa-arrow-right"></i></button>
       </div>
     </div>`;
   }
