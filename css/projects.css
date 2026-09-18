@@ -1357,3 +1357,96 @@
     white-space:normal;
   }
 }
+
+
+/* Admin Projetos · hierarchy cleanup v4 */
+.legacy-admin-page-clean{
+  padding-top:0!important;
+}
+.legacy-admin-page-clean .legacy-project-tools{
+  margin:0 0 14px!important;
+}
+.legacy-admin-list-clean{
+  gap:10px;
+}
+.legacy-admin-page-clean .legacy-project-list-head,
+.legacy-admin-page-clean .legacy-preview-caption{
+  display:none!important;
+}
+
+/* No detalhe, o acompanhamento deixa de ser um card com outros cards dentro. */
+.legacy-admin-detail-v2.has-tracking .legacy-admin-tracking{
+  padding:2px 0 0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  gap:8px;
+}
+.legacy-admin-detail-v2.has-tracking .legacy-admin-tracking-head{
+  padding:0 2px 4px;
+}
+.legacy-admin-detail-v2.has-tracking .legacy-admin-tracking-head .eyebrow{
+  margin-bottom:2px;
+}
+.legacy-admin-detail-v2.has-tracking .legacy-admin-tracking-head h3{
+  font-size:.78rem;
+}
+.legacy-admin-detail-v2.has-tracking .legacy-admin-tracking-head p{
+  font-size:.55rem;
+}
+.legacy-admin-detail-v2.has-tracking .legacy-admin-timeline{
+  border-top:1px solid color-mix(in srgb,var(--border) 86%,transparent);
+  border-bottom:1px solid color-mix(in srgb,var(--border) 86%,transparent);
+}
+.legacy-admin-detail-v2.has-tracking .legacy-admin-timeline::before{
+  left:17px;
+}
+.legacy-admin-detail-v2.has-tracking .legacy-admin-timeline-item{
+  margin:0!important;
+  padding:12px 2px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.legacy-admin-detail-v2.has-tracking .legacy-admin-timeline-item + .legacy-admin-timeline-item{
+  border-top:1px solid color-mix(in srgb,var(--border) 84%,transparent)!important;
+}
+.legacy-admin-detail-v2.has-tracking .legacy-admin-timeline-item>span{
+  width:34px;
+  height:34px;
+  border-radius:11px;
+  background:var(--primary-soft);
+  border:0;
+}
+.legacy-admin-detail-v2.has-tracking .legacy-admin-timeline-item.complete>span{
+  background:var(--success-soft);
+}
+.legacy-admin-detail-v2.has-tracking .legacy-admin-timeline-item p{
+  margin-top:4px!important;
+}
+
+/* A proposta original continua secundária, sem parecer outro grande card concorrente. */
+.legacy-admin-detail-v2.has-tracking .legacy-admin-original{
+  border-left:0;
+  border-right:0;
+  border-radius:0;
+  background:transparent;
+}
+.legacy-admin-detail-v2.has-tracking .legacy-admin-original>summary{
+  padding-left:2px;
+  padding-right:2px;
+}
+.legacy-admin-detail-v2.has-tracking .legacy-admin-original-body{
+  padding-left:0;
+  padding-right:0;
+}
+
+@media(max-width:760px){
+  .legacy-admin-page-clean{
+    padding-top:0!important;
+  }
+  .legacy-admin-page-clean .legacy-project-tools{
+    margin-top:0!important;
+  }
+}
