@@ -609,16 +609,16 @@
     const p=project(),done=p?.status==='completed';
     if(done)return '';
     if(p?.status==='adjustments'&&p.reviewNote&&!projectAdjustmentSeen(p)){
-      return `<section class="release-announcement-card project-adjustment-announcement legacy-home-callout-glow" data-project-adjustment-update="1">
-        <div class="release-announcement-top">
-          <span class="release-announcement-spark"><i class="fa-solid fa-pen-to-square"></i></span>
-          <div class="release-announcement-copy">
-            <div class="release-announcement-meta"><span>${esc(tx('project.adjustment.homeEyebrow'))}</span></div>
+      return `<section class="notice-carousel-card is-warning" data-project-adjustment-update="1">
+        <div class="notice-carousel-top">
+          <span class="notice-carousel-icon"><i class="fa-solid fa-pen-to-square"></i></span>
+          <div class="notice-carousel-copy">
+            <div class="notice-carousel-meta"><span>${esc(tx('project.adjustment.homeEyebrow'))}</span></div>
             <strong>${esc(tx('project.adjustment.homeTitle'))}</strong>
             <p>${esc(tx('project.adjustment.homeBody'))}</p>
           </div>
         </div>
-        <div class="release-announcement-actions">
+        <div class="notice-carousel-actions">
           <button class="btn btn-outline" type="button" onclick="dismissLegacyProjectAdjustmentNotice()">${esc(tx('project.home.notNow'))}</button>
           <button class="btn btn-primary" type="button" onclick="openLegacyProjectAdjustmentNotice()">${esc(tx('project.adjustment.view'))}</button>
         </div>
