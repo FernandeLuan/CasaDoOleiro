@@ -45,11 +45,11 @@
   }
   function projectTimelineRows(p){
     const rows=[];
-    if(p?.startedAt)rows.push({type:'start',at:p.startedAt,title:'Execução iniciada',text:'O voluntário iniciou a execução do projeto.'});
+    if(p?.startedAt)rows.push({type:'start',at:p.startedAt,title:'Execução iniciada',text:'Projeto iniciado.'});
     projectProgressEntries(p).forEach(item=>rows.push({
       type:'progress',
       at:item.at||item.createdAt||p.updatedAt,
-      title:'Atualização de progresso',
+      title:'Progresso',
       text:String(item.text||'').trim()
     }));
     if(p?.completedAt)rows.push({
@@ -66,10 +66,7 @@
     const icon=type=>type==='start'?'fa-play':type==='complete'?'fa-flag-checkered':'fa-message';
     return `<section class="legacy-admin-tracking">
       <div class="legacy-admin-tracking-head">
-        <div>
-          <h3>${p.status==='completed'?'Histórico':'Andamento'}</h3>
-          <p>${p.status==='completed'?'Do início até a conclusão do legado.':'Atualizações registradas pelo voluntário.'}</p>
-        </div>
+        <h3>${p.status==='completed'?'Histórico':'Andamento'}</h3>
         <span class="legacy-admin-tracking-count">${rows.length} ${rows.length===1?'registro':'registros'}</span>
       </div>
       <div class="legacy-admin-timeline">
@@ -87,7 +84,7 @@
     return `<details class="legacy-admin-original" ${['analysis','adjustments','approved'].includes(p.status)?'open':''}>
       <summary>
         <span><i class="fa-solid fa-seedling"></i></span>
-        <div><strong>Projeto original</strong><small>Ver proposta e informações</small></div>
+        <div><strong>Projeto original</strong><small>Ver proposta</small></div>
         <i class="fa-solid fa-chevron-down"></i>
       </summary>
       <div class="legacy-admin-project-content legacy-admin-original-body">
@@ -162,7 +159,7 @@
       ${projectTimelineHtml(p)}
       <div class="legacy-admin-secondary-links">
         ${projectOriginalHtml(p)}
-        ${p.driveUrl?`<a class="legacy-admin-secondary-link" href="${esc(p.driveUrl)}" target="_blank" rel="noopener noreferrer"><span><i class="fa-brands fa-google-drive"></i></span><div><strong>Registros no Drive</strong><small>Fotos, vídeos e documentos</small></div><i class="fa-solid fa-arrow-up-right-from-square"></i></a>`:''}
+        ${p.driveUrl?`<a class="legacy-admin-secondary-link" href="${esc(p.driveUrl)}" target="_blank" rel="noopener noreferrer"><span><i class="fa-brands fa-google-drive"></i></span><div><strong>Drive</strong><small>Fotos e arquivos</small></div><i class="fa-solid fa-arrow-up-right-from-square"></i></a>`:''}
       </div>
       ${p.status!=='completed'&&p.result?`<div class="legacy-admin-result legacy-admin-result-v2"><span><i class="fa-solid fa-circle-check"></i></span><div><small>Resultado final</small><p>${esc(p.result)}</p></div></div>`:''}
     </div>`;
@@ -171,9 +168,9 @@
     const modalSubtitle=p.status==='analysis'
       ?'Revise a proposta enviada pelo voluntário.'
       :p.status==='in_progress'
-        ?`${esc(p.ownerName||'O voluntário')} está executando este legado.`
+        ?''
         :p.status==='completed'
-          ?'Resultado, histórico e registros do legado.'
+          ?''
           :'Informações do projeto.';
     openModal(p.title||'Projeto de legado',modalSubtitle,body,footer);
     modalRoot.querySelector('.modal')?.classList.add('legacy-admin-modal');
