@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, normalize } from 'node:path';
 
-const retiredNotLoaded=new Set(['js/portal/candidate-view.js']);
+const retiredNotLoaded=new Set();
 
 function localScripts(htmlPath){
   const html=readFileSync(htmlPath,'utf8');
@@ -33,7 +33,6 @@ test('candidate planning has one canonical page owner',()=>{
   const portalHtml=readFileSync('portal/index.html','utf8');
   const planning=readFileSync('js/portal/planejamento.js','utf8');
   const enhancements=readFileSync('js/portal/planning-enhancements.js','utf8');
-  const retired=readFileSync('js/portal/candidate-view.js','utf8');
   const rules=readFileSync('js/shared/domain-rules.js','utf8');
 
   assert.ok(!portalHtml.includes('../js/portal/candidate-view.js'),'candidate-view.js is retired and must not be loaded');
@@ -42,7 +41,7 @@ test('candidate planning has one canonical page owner',()=>{
   assert.match(planning,/candidate-plan-content/);
   assert.ok(!planning.includes('candidate-plan-compact-head'),'Planning must not reintroduce the duplicated period/status header');
   assert.ok(!/volunteerPlan\s*=\s*function/.test(enhancements),'planning-enhancements must not own the page renderer');
-  assert.ok(retired.includes('candidate-plan-compact-head'),'Retired module retained only as rollback evidence');
+  assert.ok(!existsSync('js/portal/candidate-view.js'),'candidate-view.js must stay removed after consolidation');
   assert.ok(rules.includes("'submitted'"),'Submitted/analysis must stay editable until approval');
 });
 
@@ -73,11 +72,9 @@ test('admin planning keeps request-adjustment in the contextual action rail',()=
   assert.ok(agenda.includes("['analysis','adjustments'].includes"));
 });
 
-test('retired candidate renderer is safe if an old cached page still loads it',()=>{
-  const retired=readFileSync('js/portal/candidate-view.js','utf8');
+test('retired candidate renderer stays removed and legacy compact header stays hidden',()=>{
   const css=readFileSync('css/product-current.css','utf8');
-  assert.ok(retired.includes("['draft','submitted','adjustments']"));
-  assert.ok(!retired.includes('${compactHeader()}'),'Retired renderer must not bring back duplicated period/status');
+  assert.ok(!existsSync('js/portal/candidate-view.js'),'candidate-view.js must remain removed from runtime sources');
   assert.ok(css.includes('.candidate-plan-compact-head{display:none!important}'));
 });
 
