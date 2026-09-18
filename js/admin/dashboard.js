@@ -41,6 +41,43 @@ function dashboardQuickAction({icon,title,count,label,action,tone=''}) {
     <i class="fa-solid fa-chevron-right"></i>
   </button>`;
 }
+let _managerHomePendingIndex=0;
+function managerHomePendingSlides(volunteerAnalysis,volunteerAdjustments,projectCounts){
+  return [
+    volunteerAnalysis?{icon:'fa-clipboard-check',eyebrow:'Voluntariado',title:`${volunteerAnalysis} ${volunteerAnalysis===1?'perfil em análise':'perfis em análise'}`,text:'Há candidatura aguardando sua revisão.',action:"openDashboardVolunteerFilter('analysis')"}:null,
+    volunteerAdjustments?{icon:'fa-rotate',eyebrow:'Voluntariado',title:`${volunteerAdjustments} ${volunteerAdjustments===1?'ajuste pendente':'ajustes pendentes'}`,text:'Há mudanças que precisam ser revisadas.',action:"openDashboardVolunteerFilter('adjustments')"}:null,
+    projectCounts.analysis?{icon:'fa-seedling',eyebrow:'Projetos',title:`${projectCounts.analysis} ${projectCounts.analysis===1?'projeto em análise':'projetos em análise'}`,text:'Há Projeto Legado aguardando decisão.',action:"openDashboardProjectFilter('analysis')"}:null,
+    projectCounts.adjustments?{icon:'fa-pen-ruler',eyebrow:'Projetos',title:`${projectCounts.adjustments} ${projectCounts.adjustments===1?'projeto com ajuste':'projetos com ajustes'}`,text:'Há Projeto Legado aguardando nova revisão.',action:"openDashboardProjectFilter('adjustments')"}:null
+  ].filter(Boolean);
+}
+function managerHomePendingCard(slides){
+  if(!slides.length)return '';
+  if(_managerHomePendingIndex>=slides.length)_managerHomePendingIndex=0;
+  const slide=slides[_managerHomePendingIndex],total=slides.length,index=_managerHomePendingIndex+1;
+  return `<section class="manager-home-pending-carousel" aria-label="Pendências">
+    <div class="manager-home-pending-accent"></div>
+    <div class="manager-home-pending-icon"><i class="fa-solid ${slide.icon}"></i></div>
+    <div class="manager-home-pending-copy">
+      <span class="eyebrow">${escapeHtml(slide.eyebrow)} · precisa de atenção</span>
+      <h2>${escapeHtml(slide.title)}</h2>
+      <p>${escapeHtml(slide.text)}</p>
+    </div>
+    <div class="manager-home-pending-nav">
+      <span>${index}/${total}</span>
+      <div>
+        ${total>1&&index>1?'<button type="button" aria-label="Pendência anterior" onclick="shiftManagerHomePending(-1)"><i class="fa-solid fa-arrow-left"></i></button>':''}
+        ${total>1&&index<total?'<button type="button" aria-label="Próxima pendência" onclick="shiftManagerHomePending(1)"><i class="fa-solid fa-arrow-right"></i></button>':''}
+      </div>
+    </div>
+    <button class="btn btn-primary manager-home-pending-cta" type="button" onclick="${slide.action}">Ver pendência</button>
+  </section>`;
+}
+function shiftManagerHomePending(delta){
+  const projectCounts=dashboardProjectCounts(),slides=managerHomePendingSlides(dashboardCount('analysis'),dashboardCount('adjustments'),projectCounts);
+  if(!slides.length)return;
+  _managerHomePendingIndex=Math.max(0,Math.min(slides.length-1,_managerHomePendingIndex+Number(delta||0)));
+  if(state.managerPage==='home')render();
+}
 function movementDaysLabel(iso){if(!iso)return '';const diff=Math.ceil((new Date(iso+'T12:00:00')-new Date(_oleiroToday+'T12:00:00'))/86400000);return diff===0?'hoje':diff===1?'amanhã':diff>1?`em ${diff} dias`:diff===-1?'ontem':`${Math.abs(diff)} dias atrás`}
 function nextMovements(field,limit=20){const rows=field==='from'?(state.dashboardArrivals||[]):(state.dashboardDepartures||[]);return rows.slice(0,limit)}
 function movementList(rows,field){return rows.length?rows.map(p=>miniMove(p.name,fmtDate(p[field],true),movementDaysLabel(p[field]))).join(''):'<div class="empty">Nenhuma movimentação prevista.</div>'}
@@ -53,15 +90,8 @@ function managerHome(){
   const todayRows=Array.isArray(state.managerTodaySessions)?state.managerTodaySessions:[],todaySessions=todayRows.filter(row=>String(row.date||'')===String(_oleiroToday)).map(session=>{const activity=session.activity||{};return {activity:{...activity,name:session.activityName||activity.name||'Atividade',owner:session.ownerName||activity.ownerName||activity.owner||'Voluntário',duration:Number(session.duration||activity.duration||60)},group:session.groupId||'A definir',status:session.status||'proposed',raw:session}}),arrivals=nextMovements('from'),departures=nextMovements('to');
   const todayLoading=state.managerTodayLoaded!==true,dashboardLoading=state.managerDashboardLoaded!==true;
   const projectCounts=dashboardProjectCounts(),volunteerAnalysis=dashboardCount('analysis'),volunteerAdjustments=dashboardCount('adjustments');
-  const attentionActions=[
-    volunteerAnalysis?dashboardQuickAction({icon:'fa-clipboard-check',title:'Voluntariado',count:volunteerAnalysis,label:'em análise',action:"openDashboardVolunteerFilter('analysis')",tone:'warning'}):'',
-    volunteerAdjustments?dashboardQuickAction({icon:'fa-rotate',title:'Voluntariado',count:volunteerAdjustments,label:'com ajustes',action:"openDashboardVolunteerFilter('adjustments')",tone:'warning'}):'',
-    projectCounts.analysis?dashboardQuickAction({icon:'fa-seedling',title:'Projetos',count:projectCounts.analysis,label:'em análise',action:"openDashboardProjectFilter('analysis')",tone:'warning'}):'',
-    projectCounts.adjustments?dashboardQuickAction({icon:'fa-pen-ruler',title:'Projetos',count:projectCounts.adjustments,label:'com ajustes',action:"openDashboardProjectFilter('adjustments')",tone:'warning'}):''
-  ].filter(Boolean).join('');
-  const followupActions=[
-    projectCounts.in_progress?dashboardQuickAction({icon:'fa-chart-line',title:'Projetos',count:projectCounts.in_progress,label:'em execução',action:"openDashboardProjectFilter('in_progress')",tone:'success'}):''
-  ].filter(Boolean).join('');
+  const pendingSlides=managerHomePendingSlides(volunteerAnalysis,volunteerAdjustments,projectCounts);
+  const pendingCardHtml=managerHomePendingCard(pendingSlides);
   const todayHtml=todayLoading?'<div class="empty compact-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando atividades...</div>':todaySessions.length?todaySessions.map(s=>agendaItem(s.activity.name,s.activity.owner,s.group,s.status,activityPeriodValue(s.raw||{},s.activity),s.activity.duration)).join(''):'<div class="empty">Nenhuma atividade prevista para hoje.</div>';
   const movementsLoading='<div class="empty compact-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando movimentações...</div>';
   return `<style id="managerHomeStyles">
@@ -77,55 +107,43 @@ function managerHome(){
     .manager-home-card .section-head{align-items:flex-start;margin-bottom:16px}.manager-home-card .section-head h2{margin:0 0 4px;font-size:1.12rem;line-height:1.25;color:var(--text)}.manager-home-card .section-head p{margin:0;color:var(--muted);font-size:.76rem}
     .manager-home-hero{margin:0;min-width:0}.manager-home-hero h1{letter-spacing:-.035em}.manager-home-today-list{display:grid;gap:10px;min-height:0}.manager-home-today-list>.empty{min-height:100px;display:grid;place-items:center}.manager-home-movements .card{box-shadow:none}
     .manager-home-today-item{cursor:pointer}
-    .manager-home-operational{display:grid;gap:14px}
-    .manager-home-operational-group{display:grid;gap:8px}
-    .manager-home-operational-label{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 2px}
-    .manager-home-operational-label strong{font-size:.68rem;line-height:1.25;color:var(--text)}
-    .manager-home-operational-label span{font-size:.54rem;color:var(--muted)}
-    .manager-home-quick-list{display:grid;gap:8px}
-    .manager-home-quick-action{width:100%;border:1px solid var(--border);background:var(--surface);border-radius:16px;padding:10px 11px;display:grid;grid-template-columns:38px minmax(0,1fr) 14px;gap:10px;align-items:center;text-align:left;color:var(--text);font:inherit;cursor:pointer;box-shadow:none}
-    .manager-home-quick-action:active{transform:scale(.995)}
-    .manager-home-quick-icon{width:38px;height:38px;border-radius:12px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;font-size:.74rem}
-    .manager-home-quick-copy{min-width:0}
-    .manager-home-quick-copy strong{display:block;font-size:.7rem;line-height:1.2;margin:0}
-    .manager-home-quick-copy small{display:block;margin-top:2px;color:var(--muted);font-size:.58rem;line-height:1.3}
-    .manager-home-quick-copy small b{color:var(--text);font-size:.64rem}
-    .manager-home-quick-action>i{justify-self:end;color:var(--muted);font-size:.62rem}
-    .manager-home-quick-action.warning .manager-home-quick-icon{background:#fff3d5;color:#97630d}
-    .manager-home-quick-action.success .manager-home-quick-icon{background:var(--success-soft);color:var(--success)}
-    .manager-home-all-clear{min-height:64px;border:1px dashed color-mix(in srgb,var(--success) 26%,var(--border));border-radius:16px;background:color-mix(in srgb,var(--success-soft) 50%,var(--surface));display:flex;align-items:center;gap:10px;padding:12px;color:var(--success)}
-    .manager-home-all-clear i{width:36px;height:36px;border-radius:12px;background:var(--success-soft);display:grid;place-items:center}
-    .manager-home-all-clear div strong{display:block;font-size:.68rem}.manager-home-all-clear div small{display:block;margin-top:2px;font-size:.55rem;color:var(--muted)}
+    .manager-home-top.single{grid-template-columns:1fr!important}
+    .manager-home-pending-carousel{position:relative;overflow:hidden;background:var(--surface);border:1px solid color-mix(in srgb,var(--primary) 18%,var(--border));border-radius:26px;padding:22px;box-shadow:var(--shadow);display:grid;grid-template-columns:48px minmax(0,1fr) auto;grid-template-areas:"icon copy nav" "icon cta cta";gap:10px 14px;align-items:start;min-width:0}
+    .manager-home-pending-accent{position:absolute;right:-54px;top:-62px;width:170px;height:170px;border-radius:50%;background:color-mix(in srgb,var(--primary-soft) 62%,transparent);pointer-events:none}
+    .manager-home-pending-icon{grid-area:icon;position:relative;z-index:1;width:48px;height:48px;border-radius:15px;background:var(--primary);color:#fff;display:grid;place-items:center;font-size:.9rem}
+    .manager-home-pending-copy{grid-area:copy;position:relative;z-index:1;min-width:0}
+    .manager-home-pending-copy .eyebrow{display:block;color:var(--primary);font-size:.57rem;margin-bottom:4px}
+    .manager-home-pending-copy h2{margin:0;font-size:.96rem;line-height:1.25;color:var(--text)}
+    .manager-home-pending-copy p{margin:5px 0 0;color:var(--muted);font-size:.63rem;line-height:1.45}
+    .manager-home-pending-nav{grid-area:nav;position:relative;z-index:1;display:grid;justify-items:end;gap:5px;min-width:58px}
+    .manager-home-pending-nav>span{color:var(--primary);font-size:.58rem;font-weight:700}
+    .manager-home-pending-nav>div{display:flex;align-items:center;gap:4px}
+    .manager-home-pending-nav button{width:28px;height:28px;border:0;border-radius:999px;background:transparent;color:var(--primary);display:grid;place-items:center;font-size:.56rem}
+    .manager-home-pending-cta{grid-area:cta;position:relative;z-index:1;justify-self:start;min-height:40px;margin-top:3px;padding:9px 14px}
+    @media(max-width:1023px){.manager-home-pending-carousel{border-radius:22px;padding:18px}}
+    @media(max-width:560px){
+      .manager-home-pending-carousel{grid-template-columns:44px minmax(0,1fr) auto;grid-template-areas:"icon copy nav" "cta cta cta";gap:9px 11px;padding:16px}
+      .manager-home-pending-icon{width:44px;height:44px;border-radius:14px}
+      .manager-home-pending-copy h2{font-size:.83rem}
+      .manager-home-pending-copy p{font-size:.59rem}
+      .manager-home-pending-cta{width:100%;justify-content:center;margin-top:5px}
+    }
     @media(min-width:1024px){
       .manager-home-grid{grid-template-columns:minmax(0,1.18fr) minmax(380px,.92fr)}
       .manager-home-hero{min-height:238px;padding:28px 34px;display:flex;flex-direction:column;justify-content:center;border-radius:26px}.manager-home-hero h1{font-size:clamp(2.2rem,2.8vw,3.35rem);line-height:1.04;margin:8px 0 10px}.manager-home-hero p{font-size:.88rem;max-width:720px;margin:0}.manager-home-hero .hero-actions{margin-top:20px}.manager-home-hero .btn{min-height:44px;padding:10px 16px;font-size:.75rem}
-      .manager-home-card{padding:22px 24px;min-height:0}.manager-home-pending{display:flex;flex-direction:column;justify-content:flex-start}.manager-home-pending .manager-home-operational{margin-top:auto;margin-bottom:auto}
+      .manager-home-card{padding:22px 24px;min-height:0}
       .manager-home-today,.manager-home-movements-card{min-height:310px}.manager-home-today{display:flex;flex-direction:column}.manager-home-today-list{flex:1;align-content:start}.manager-home-today-list .list-item{min-height:0}.manager-home-moves{gap:12px}.manager-home-moves>.card{min-height:122px;border-radius:18px;padding:16px}
     }
     @media(min-width:1500px){.manager-home-grid{grid-template-columns:minmax(0,1.2fr) minmax(420px,.9fr)}.manager-home-hero{min-height:228px;padding:26px 34px}}
     @media(max-width:1023px){.manager-home-grid{grid-template-columns:1fr}.manager-home-card{padding:20px}.manager-home-hero{padding:28px 24px;border-radius:24px}}
   </style>
   <div class="manager-home">
-    <div class="manager-home-grid manager-home-top">
+    <div class="manager-home-grid manager-home-top ${pendingCardHtml?'':'single'}">
       <section class="hero manager-home-hero">
         <div class="eyebrow" style="color:#d9eadf">Casa do Oleiro • Gestão</div><h1>${managerGreeting()}</h1><p class="muted">Veja o que precisa da sua atenção e o que acontece hoje na Casa.</p>
         <div class="hero-actions"><button class="btn btn-light" onclick="navigateManager('volunteer')"><i class="fa-solid fa-users"></i>Ver voluntariado</button><button class="btn btn-outline" style="border-color:rgba(255,255,255,.28);color:white" onclick="navigateManager('planning')"><i class="fa-regular fa-calendar-check"></i>Abrir planejamento</button></div>
       </section>
-      <section class="manager-home-card manager-home-pending">
-        <div class="section-head"><div><h2>Visão operacional</h2><p>Atalhos diretos para o que precisa de atenção e acompanhamento.</p></div></div>
-        <div class="manager-home-operational">
-          <div class="manager-home-operational-group">
-            <div class="manager-home-operational-label"><strong>Precisa de atenção</strong></div>
-            <div class="manager-home-quick-list">
-              ${attentionActions||'<div class="manager-home-all-clear"><i class="fa-solid fa-circle-check"></i><div><strong>Tudo em dia</strong><small>Nenhuma análise ou ajuste pendente.</small></div></div>'}
-            </div>
-          </div>
-          ${followupActions?`<div class="manager-home-operational-group">
-            <div class="manager-home-operational-label"><strong>Em acompanhamento</strong></div>
-            <div class="manager-home-quick-list">${followupActions}</div>
-          </div>`:''}
-        </div>
-      </section>
+      ${pendingCardHtml}
     </div>
     <div class="manager-home-grid manager-home-bottom">
       <section class="manager-home-card manager-home-today"><div class="section-head"><div><h2>Hoje na Casa</h2><p>${longDate(_oleiroToday)}</p></div></div><div class="list manager-home-today-list">${todayHtml}</div></section>
