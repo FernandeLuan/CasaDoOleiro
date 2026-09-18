@@ -46,7 +46,6 @@
   -webkit-user-select:none;
   user-select:none;
   transition:opacity .2s ease,transform .2s ease,max-height .22s ease,margin .22s ease,padding .22s ease;
-  animation:noticeCarouselIn .28s ease both;
 }
 .notice-carousel-card::before{
   content:"";
@@ -240,10 +239,6 @@
 .notice-carousel-card.is-slide-next .notice-carousel-copy>[data-notice-summary],
 .notice-carousel-card.is-slide-prev .notice-carousel-copy>[data-notice-summary]{
   animation-delay:.025s;
-}
-@keyframes noticeCarouselIn{
-  from{opacity:0;transform:translateY(7px)}
-  to{opacity:1;transform:translateY(0)}
 }
 @keyframes noticeCarouselBorderSweep{
   0%{background-position:180% 0}
