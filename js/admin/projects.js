@@ -17,14 +17,20 @@
     ['in_progress','Em execução'],
     ['completed','Concluídos']
   ];
+  const PROJECT_UNIT_OPTIONS=[['all','Todas as unidades'],['Rodeio','Rodeio'],['Indaial','Indaial']];
   function normalizeProjectFilter(value){
     return PROJECT_STATUS_OPTIONS.some(([id])=>id===String(value))?String(value):'all';
   }
+  function normalizeProjectUnit(value){
+    return PROJECT_UNIT_OPTIONS.some(([id])=>id===String(value))?String(value):'all';
+  }
   function projectSearchValue(){return String(state.projectSearch||'').trim().toLowerCase()}
   function rows(){
-    const all=window.OleiroProjects?.list?.()||[],filter=normalizeProjectFilter(state.projectFilter),search=projectSearchValue();
+    const all=window.OleiroProjects?.list?.()||[],filter=normalizeProjectFilter(state.projectFilter),unit=normalizeProjectUnit(state.projectUnit),search=projectSearchValue();
     return all.filter(p=>{
       if(filter!=='all'&&p.status!==filter)return false;
+      const projectUnit=String(p.unitName||p.unitId||'');
+      if(unit!=='all'&&projectUnit!==unit)return false;
       if(!search)return true;
       const haystack=[p.title,p.ownerName,p.unitName,p.unitId,p.category].map(v=>String(v||'').toLowerCase()).join(' ');
       return haystack.includes(search);
@@ -79,7 +85,7 @@
             <p>${esc(item.text)}</p>
             <time class="legacy-admin-timeline-time">${esc(fmtProjectDate(item.at))}</time>
           </div>
-        </article>`).join('')}
+        </div>`).join('')}
       </div>
     </section>`;
   }
@@ -91,19 +97,19 @@
         <i class="fa-solid fa-chevron-down"></i>
       </summary>
       <div class="legacy-admin-project-content legacy-admin-original-body">
-        <article class="legacy-admin-project-section">
+        <div class="legacy-admin-project-section">
           <span class="legacy-admin-section-icon"><i class="fa-solid fa-seedling"></i></span>
           <div><small>O legado</small><p>${esc(p.description||'—')}</p></div>
-        </article>
-        <article class="legacy-admin-project-section">
+        </div>
+        <div class="legacy-admin-project-section">
           <span class="legacy-admin-section-icon"><i class="fa-solid fa-heart"></i></span>
           <div><small>Por que importa</small><p>${esc(p.why||'—')}</p></div>
-        </article>
-        <article class="legacy-admin-project-section">
+        </div>
+        <div class="legacy-admin-project-section">
           <span class="legacy-admin-section-icon"><i class="fa-solid fa-bullseye"></i></span>
           <div><small>Resultado esperado</small><p>${esc(p.expectedResult||'—')}</p></div>
-        </article>
-        ${p.materials?`<article class="legacy-admin-project-section"><span class="legacy-admin-section-icon"><i class="fa-solid fa-box-open"></i></span><div><small>Materiais / apoio</small><p>${esc(p.materials)}</p></div></article>`:''}
+        </div>
+        ${p.materials?`<div class="legacy-admin-project-section"><span class="legacy-admin-section-icon"><i class="fa-solid fa-box-open"></i></span><div><small>Materiais / apoio</small><p>${esc(p.materials)}</p></div></div>`:''}
       </div>
     </details>`;
   }
@@ -114,19 +120,19 @@
         <span>Projeto original</span>
       </div>
       <div class="legacy-admin-project-content legacy-admin-meta-expanded-content">
-        <article class="legacy-admin-project-section">
+        <div class="legacy-admin-project-section">
           <span class="legacy-admin-section-icon"><i class="fa-solid fa-seedling"></i></span>
           <div><small>O legado</small><p>${esc(p.description||'—')}</p></div>
-        </article>
-        <article class="legacy-admin-project-section">
+        </div>
+        <div class="legacy-admin-project-section">
           <span class="legacy-admin-section-icon"><i class="fa-solid fa-heart"></i></span>
           <div><small>Por que importa</small><p>${esc(p.why||'—')}</p></div>
-        </article>
-        <article class="legacy-admin-project-section">
+        </div>
+        <div class="legacy-admin-project-section">
           <span class="legacy-admin-section-icon"><i class="fa-solid fa-bullseye"></i></span>
           <div><small>Resultado esperado</small><p>${esc(p.expectedResult||'—')}</p></div>
-        </article>
-        ${p.materials?`<article class="legacy-admin-project-section"><span class="legacy-admin-section-icon"><i class="fa-solid fa-box-open"></i></span><div><small>Materiais / apoio</small><p>${esc(p.materials)}</p></div></article>`:''}
+        </div>
+        ${p.materials?`<div class="legacy-admin-project-section"><span class="legacy-admin-section-icon"><i class="fa-solid fa-box-open"></i></span><div><small>Materiais / apoio</small><p>${esc(p.materials)}</p></div></div>`:''}
       </div>
       ${p.driveUrl?`<a class="legacy-admin-meta-drive" href="${esc(p.driveUrl)}" target="_blank" rel="noopener noreferrer"><span><i class="fa-brands fa-google-drive"></i></span><div><strong>Drive</strong><small>Fotos e arquivos do projeto</small></div><i class="fa-solid fa-arrow-up-right-from-square"></i></a>`:''}
     </div>`;
@@ -145,7 +151,8 @@
   }
   window.managerProjects=function(){
     state.projectFilter=normalizeProjectFilter(state.projectFilter);
-    const list=rows(),activeFilter=state.projectFilter!=='all';
+    state.projectUnit=normalizeProjectUnit(state.projectUnit);
+    const list=rows(),activeFilter=state.projectFilter!=='all'||state.projectUnit!=='all';
     return `<section class="section legacy-admin-page legacy-admin-page-clean compact-page-top">
       <div class="candidate-tools candidate-tools-compact legacy-project-tools">
         <div class="filter-search candidate-search"><i class="fa-solid fa-magnifying-glass"></i><input id="projectSearch" class="input" type="search" value="${esc(state.projectSearch||'')}" placeholder="Buscar projeto ou voluntário" oninput="updateLegacyProjectSearch(this.value)"></div>
@@ -156,15 +163,16 @@
   };
   window.updateLegacyProjectSearch=function(value){state.projectSearch=String(value||'');render();afterNavigation?.()};
   window.openLegacyProjectFilters=function(){
-    const filter=normalizeProjectFilter(state.projectFilter);
-    openModal('Filtros','Refine os projetos exibidos.',`<div class="filter-modal-content"><div class="field"><label>Status</label><select id="legacyProjectStatusFilter" class="select">${PROJECT_STATUS_OPTIONS.map(([id,label])=>`<option value="${id}" ${filter===id?'selected':''}>${label}</option>`).join('')}</select></div><div class="filter-modal-actions"><button class="btn btn-outline" type="button" onclick="clearLegacyProjectFilters()">Limpar filtros</button><button class="btn btn-primary" type="button" onclick="applyLegacyProjectFilters()">Aplicar</button></div></div>`);
+    const filter=normalizeProjectFilter(state.projectFilter),unit=normalizeProjectUnit(state.projectUnit);
+    openModal('Filtros','Refine os projetos exibidos.',`<div class="filter-modal-content"><div class="field"><label>Status</label><select id="legacyProjectStatusFilter" class="select">${PROJECT_STATUS_OPTIONS.map(([id,label])=>`<option value="${id}" ${filter===id?'selected':''}>${label}</option>`).join('')}</select></div><div class="field"><label>Unidade</label><select id="legacyProjectUnitFilter" class="select">${PROJECT_UNIT_OPTIONS.map(([id,label])=>`<option value="${id}" ${unit===id?'selected':''}>${label}</option>`).join('')}</select></div><div class="filter-modal-actions"><button class="btn btn-outline" type="button" onclick="clearLegacyProjectFilters()">Limpar filtros</button><button class="btn btn-primary" type="button" onclick="applyLegacyProjectFilters()">Aplicar</button></div></div>`);
     modalRoot.querySelector('.modal')?.classList.add('filter-modal');
   };
   window.applyLegacyProjectFilters=function(){
     state.projectFilter=normalizeProjectFilter(document.getElementById('legacyProjectStatusFilter')?.value);
+    state.projectUnit=normalizeProjectUnit(document.getElementById('legacyProjectUnitFilter')?.value);
     closeModal();render();afterNavigation?.();
   };
-  window.clearLegacyProjectFilters=function(){state.projectFilter='all';closeModal();render();afterNavigation?.()};
+  window.clearLegacyProjectFilters=function(){state.projectFilter='all';state.projectUnit='all';closeModal();render();afterNavigation?.()};
   window.setLegacyProjectFilter=function(value){state.projectFilter=normalizeProjectFilter(value);render();afterNavigation?.()};
   window.openLegacyProjectAdmin=function(id){
     const p=(window.OleiroProjects?.list?.()||[]).find(x=>String(x.id)===String(id));if(!p)return;
