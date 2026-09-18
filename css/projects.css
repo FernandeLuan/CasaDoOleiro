@@ -2429,3 +2429,32 @@
     padding:4px 12px 12px;
   }
 }
+
+
+/* Projeto Legado · ações em execução v12 */
+.legacy-project-actions-execution{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  gap:10px!important;
+  width:100%;
+  margin-top:16px;
+}
+.legacy-project-actions-execution .btn{
+  width:100%!important;
+  min-width:0!important;
+  min-height:48px;
+  justify-content:center;
+  padding-left:10px;
+  padding-right:10px;
+  white-space:normal;
+}
+@media(max-width:760px){
+  .legacy-project-actions-execution{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    gap:8px!important;
+  }
+  .legacy-project-actions-execution .btn{
+    min-height:46px;
+    font-size:.64rem;
+  }
+}
