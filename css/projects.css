@@ -230,3 +230,18 @@
 .legacy-project-wizard-modal.legacy-keyboard-open .legacy-wizard-binary{gap:6px}
 .legacy-project-wizard-modal.legacy-keyboard-open .legacy-wizard-binary-option{padding:8px}
 
+
+/* Resumo final do wizard de Projeto Legado */
+.legacy-project-wizard-review-modal .modal-body{padding-bottom:14px!important}
+.legacy-wizard-review{display:grid;grid-template-rows:auto auto minmax(0,1fr)}
+.legacy-wizard-summary{display:grid;gap:8px;max-height:46dvh;overflow:auto;overscroll-behavior:contain;padding-right:2px}
+.legacy-wizard-summary-row{display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;align-items:start;padding:10px 11px;border:1px solid var(--border);border-radius:13px;background:var(--surface)}
+.legacy-wizard-summary-icon{width:34px;height:34px;border-radius:10px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;font-size:.66rem}
+.legacy-wizard-summary-row small{display:block;margin:0 0 2px;color:var(--muted);font-size:.54rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.legacy-wizard-summary-row p{margin:0;color:var(--text);font-size:.63rem;line-height:1.4;overflow-wrap:anywhere}
+.legacy-wizard-review-modal .legacy-wizard-actions .btn-primary{background:var(--primary)}
+@media(max-width:390px){
+  .legacy-wizard-summary{max-height:43dvh;gap:7px}
+  .legacy-wizard-summary-row{grid-template-columns:32px minmax(0,1fr);padding:9px 10px}
+  .legacy-wizard-summary-icon{width:32px;height:32px}
+}
