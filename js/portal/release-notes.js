@@ -514,7 +514,7 @@
     </div>`;
     const footer=`<div class="release-notes-actions"><button class="btn btn-outline" type="button" onclick="closeModal()">Fechar</button><button class="btn btn-primary" type="button" onclick="closeModal();navigateVolunteer('${ANNOUNCEMENT.ctaPage}')"><i class="fa-solid fa-seedling"></i>${esc(ANNOUNCEMENT.ctaLabel)}</button></div>`;
     openModal('O que mudou?','',body,footer);
-    modalRoot.querySelector('.modal')?.classList.add('release-notes-modal-shell');
+    modalRoot.querySelector('.modal')?.classList.add('modal-wide');
     updateMetaLabels();
   };
 
