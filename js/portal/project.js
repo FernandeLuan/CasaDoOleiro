@@ -30,18 +30,16 @@
   function onboardingPage(){
     const step=Math.max(0,Math.min(3,Number(state.projectOnboardingStep)||0));
     const slides=[
-      ['Sua passagem pode deixar algo que continua.','Cada pessoa que chega à Casa traz experiências, habilidades e um jeito diferente de enxergar a comunidade. Queremos transformar um pouco disso em algo que permaneça depois da sua partida.'],
-      ['O que é deixar um legado?','Não precisa ser algo grande. Pode ser uma horta, uma composteira, uma árvore, uma oficina, uma melhoria em um espaço, um material ou uma ideia que outras pessoas possam continuar.'],
-      ['Encontre o seu projeto.','Observe a comunidade, converse com as pessoas e pense no que suas habilidades podem acrescentar. Uma necessidade simples pode se transformar em algo que faça diferença.'],
-      ['Qual será o seu legado?','Quando sua estadia terminar, seu projeto fica. O que você começar hoje pode continuar crescendo nas mãos de quem vier depois.']
+      ['Deixe algo que continua.','Sua experiência pode virar uma contribuição que permaneça na Casa depois da sua partida.'],
+      ['O que é deixar um legado?','Pode ser uma horta, oficina, melhoria, material ou ideia simples que outras pessoas possam continuar.'],
+      ['Encontre uma ideia.','Observe a Casa, converse com as pessoas e pense onde suas habilidades podem ajudar.'],
+      ['Qual será o seu legado?','Crie algo útil, possível e que possa continuar crescendo depois da sua estadia.']
     ];
     const [title,text]=slides[step];
     return `<section class="legacy-onboarding">
-      <div class="legacy-onboarding-head"><button class="legacy-back-link" type="button" onclick="projectOnboardingBack()">${step?'Voltar':'Agora não'}</button><strong>Seu legado</strong><span></span></div>
       <div class="legacy-onboarding-body">
         ${onboardingIllustration(step)}
         <h1>${esc(title)}</h1><p>${esc(text)}</p>
-        ${step===1?'<blockquote>“Você não precisa mudar tudo. Só precisa deixar algo um pouco melhor do que encontrou.”</blockquote>':''}
       </div>
       <div class="legacy-onboarding-footer"><span>Deslize para conhecer</span><div class="legacy-dots">${slides.map((_,i)=>`<i class="${i===step?'active':''}"></i>`).join('')}</div><button class="btn btn-primary btn-block legacy-next" type="button" onclick="projectOnboardingNext()">${step===3?'Quero criar meu projeto':'Próximo'}</button></div>
     </section>`;
