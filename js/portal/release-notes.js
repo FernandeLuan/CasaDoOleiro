@@ -34,6 +34,7 @@
   let releaseMeta=null;
   let metaPromise=null;
   let homeSlideIndex=0;
+  const hiddenHomeNoticeIds=new Set();
 
   function uid(){return String(state?.currentSession?.uid||'anon')}
   function releaseSeenKey(){return `oleiro.portal.release-notes.seen.v1:${uid()}`}
@@ -68,12 +69,112 @@
   function itemHtml(item){
     return `<div class="release-note-item"><span><i class="fa-solid ${esc(item.icon)}"></i></span><div><strong>${esc(item.title)}</strong><p>${esc(item.text)}</p></div></div>`;
   }
-  function homeSlides(){
+  function rawSession(value){return value?.raw||value||{}}
+  function fmtNoticeDate(value){
+    const date=String(value||'').slice(0,10);
+    if(!date)return '';
+    try{
+      if(typeof fmtDate==='function')return fmtDate(date,true);
+      return new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'2-digit'}).format(new Date(date+'T12:00:00'));
+    }catch{return date}
+  }
+  function currentProjectAdjustmentSlide(){
+    if(state.volunteerMode!=='approved')return null;
+    const project=window.OleiroProjects?.getOwn?.()||null;
+    if(!project||project.status!=='adjustments'||!String(project.reviewNote||'').trim())return null;
+    const token=[project.id||'',project.reviewedAt||project.updatedAt||'',project.reviewNote||''].join('|');
+    const id='project-adjustment:'+token;
+    if(hiddenHomeNoticeIds.has(id))return null;
+    return {
+      id,
+      type:'project_adjustment',
+      tone:'warning',
+      icon:'fa-pen-to-square',
+      eyebrow:'Novidade no seu projeto',
+      title:'A equipe pediu um ajuste',
+      summary:'Há uma nova orientação para o Projeto Legado.',
+      ctaLabel:'Ver atualização',
+      showMeta:false
+    };
+  }
+  function activityAdjustmentSlides(){
+    const slides=[],seen=new Set();
+    const page=state.volunteerMode==='approved'?'agenda':'plan';
+    const dayAdjustments=state.currentApplication?.dayAdjustments;
+    if(dayAdjustments&&typeof dayAdjustments==='object'){
+      Object.entries(dayAdjustments).forEach(([date,item])=>{
+        if(!item)return;
+        const note=String(item?.note||'').trim();
+        const id='day-adjustment:'+date+':'+note;
+        if(hiddenHomeNoticeIds.has(id))return;
+        seen.add(String(date));
+        slides.push({
+          id,
+          type:'day_adjustment',
+          tone:'warning',
+          icon:'fa-calendar-day',
+          eyebrow:'Ajuste em uma atividade',
+          title:'A equipe pediu um ajuste',
+          summary:note||('Há uma orientação nova para '+fmtNoticeDate(date)+'.'),
+          ctaLabel:'Ver ajuste',
+          page,
+          date:String(date),
+          showMeta:false
+        });
+      });
+    }
+    (state.sessions||[]).forEach(row=>{
+      const raw=rawSession(row);
+      if(raw.adminAdjustmentStatus!=='requested')return;
+      const date=String(row?.date||raw.date||'').slice(0,10);
+      if(date&&seen.has(date))return;
+      const activity=row?.activity||{};
+      const name=String(activity.name||raw.activityName||'atividade').trim();
+      const sessionId=String(row?.sessionId||raw.id||raw.sessionId||raw.activityId||name);
+      const id='activity-adjustment:'+sessionId+':'+date+':'+String(raw.adminAdjustmentRequestedAt||'');
+      if(hiddenHomeNoticeIds.has(id))return;
+      slides.push({
+        id,
+        type:'activity_adjustment',
+        tone:'warning',
+        icon:'fa-list-check',
+        eyebrow:'Ajuste em uma atividade',
+        title:'A equipe pediu um ajuste em '+name,
+        summary:date?'Confira a orientação referente a '+fmtNoticeDate(date)+'.':'Confira a orientação da equipe para esta atividade.',
+        ctaLabel:'Ver atividade',
+        page,
+        date,
+        showMeta:false
+      });
+    });
+    return slides;
+  }
+  function releaseSlides(){
     const slides=Array.isArray(ANNOUNCEMENT.homeSlides)?ANNOUNCEMENT.homeSlides.filter(Boolean):[];
-    return slides.length?slides:[{title:ANNOUNCEMENT.title,summary:ANNOUNCEMENT.summary}];
+    const source=slides.length?slides:[{title:ANNOUNCEMENT.title,summary:ANNOUNCEMENT.summary}];
+    return source.map((slide,index)=>({
+      id:'release:'+ANNOUNCEMENT.id+':'+index,
+      type:'release',
+      tone:'',
+      icon:'fa-wand-magic-sparkles',
+      eyebrow:ANNOUNCEMENT.eyebrow,
+      title:slide.title,
+      summary:slide.summary,
+      ctaLabel:'Ver novidades',
+      showMeta:true
+    }));
+  }
+  function homeSlides(){
+    const slides=[];
+    const projectSlide=currentProjectAdjustmentSlide();
+    if(projectSlide)slides.push(projectSlide);
+    slides.push(...activityAdjustmentSlides());
+    if(!releaseSeen())slides.push(...releaseSlides());
+    return slides;
   }
   function homeSlide(){
     const slides=homeSlides();
+    if(!slides.length)return null;
     homeSlideIndex=Math.max(0,Math.min(homeSlideIndex,slides.length-1));
     return slides[homeSlideIndex]||slides[0];
   }
@@ -90,21 +191,21 @@
     </div>`;
   }
   function releaseCardHtml(){
-    if(releaseSeen())return '';
     const slide=homeSlide();
-    return `<section class="release-announcement-card" data-release-announcement data-release-slide="${homeSlideIndex}">
+    if(!slide)return '';
+    return `<section class="release-announcement-card ${slide.tone?'is-'+esc(slide.tone):''}" data-release-announcement data-release-slide="${homeSlideIndex}">
       <div class="release-announcement-top">
-        <span class="release-announcement-spark"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+        <span class="release-announcement-spark" data-release-slide-icon><i class="fa-solid ${esc(slide.icon||'fa-wand-magic-sparkles')}"></i></span>
         <div class="release-announcement-copy">
-          <div class="release-announcement-meta"><span>${esc(ANNOUNCEMENT.eyebrow)}</span><small data-release-meta hidden></small></div>
-          <strong data-release-slide-title>${esc(slide.title)}</strong>
-          <p data-release-slide-summary>${esc(slide.summary)}</p>
+          <div class="release-announcement-meta"><span data-release-slide-eyebrow>${esc(slide.eyebrow||ANNOUNCEMENT.eyebrow)}</span><small data-release-meta ${slide.showMeta?'':'hidden'}></small></div>
+          <strong data-release-slide-title>${esc(slide.title||'')}</strong>
+          <p data-release-slide-summary>${esc(slide.summary||'')}</p>
         </div>
         ${releaseCarouselNavHtml()}
       </div>
       <div class="release-announcement-actions">
-        <button class="btn btn-outline" type="button" onclick="dismissPortalReleaseAnnouncement()">Agora não</button>
-        <button class="btn btn-primary" type="button" onclick="openPortalReleaseNotes()">Ver novidades</button>
+        <button class="btn btn-outline" type="button" onclick="dismissPortalHomeNotice()">Agora não</button>
+        <button class="btn btn-primary" type="button" data-release-slide-cta onclick="openPortalHomeNotice()">${esc(slide.ctaLabel||'Ver novidades')}</button>
       </div>
     </section>`;
   }
@@ -112,21 +213,33 @@
     const card=document.querySelector('[data-release-announcement]');
     if(!card)return;
     const slide=homeSlide();
+    if(!slide){card.remove();return}
     card.dataset.releaseSlide=String(homeSlideIndex);
-    card.classList.remove('is-slide-next','is-slide-prev');
+    card.classList.remove('is-slide-next','is-slide-prev','is-warning');
+    if(slide.tone)card.classList.add('is-'+slide.tone);
     void card.offsetWidth;
     card.classList.add(direction==='prev'?'is-slide-prev':'is-slide-next');
     const title=card.querySelector('[data-release-slide-title]');
     const summary=card.querySelector('[data-release-slide-summary]');
+    const eyebrow=card.querySelector('[data-release-slide-eyebrow]');
+    const icon=card.querySelector('[data-release-slide-icon] i');
+    const cta=card.querySelector('[data-release-slide-cta]');
+    const meta=card.querySelector('[data-release-meta]');
     const pager=card.querySelector('.release-announcement-pager');
-    if(title)title.textContent=slide.title;
-    if(summary)summary.textContent=slide.summary;
+    if(title)title.textContent=slide.title||'';
+    if(summary)summary.textContent=slide.summary||'';
+    if(eyebrow)eyebrow.textContent=slide.eyebrow||ANNOUNCEMENT.eyebrow;
+    if(icon)icon.className='fa-solid '+(slide.icon||'fa-wand-magic-sparkles');
+    if(cta)cta.textContent=slide.ctaLabel||'Ver novidades';
+    if(meta){
+      meta.hidden=!slide.showMeta;
+      if(slide.showMeta)updateMetaLabels();
+    }
     if(pager)pager.outerHTML=releaseCarouselNavHtml();
     else{
       const top=card.querySelector('.release-announcement-top');
       if(top)top.insertAdjacentHTML('beforeend',releaseCarouselNavHtml());
     }
-    updateMetaLabels();
   }
   window.portalReleasePrev=function(event){
     event?.preventDefault?.();
@@ -206,7 +319,9 @@
     resetReleaseSwipe(swipe.card);
   },{passive:true});
   function stripProjectHighlight(html){
-    return String(html||'').replace(/<section(?=[^>]*data-project-highlight="1")[^>]*>[\s\S]*?<\/section>/,'');
+    return String(html||'')
+      .replace(/<section(?=[^>]*data-project-highlight="1")[^>]*>[\s\S]*?<\/section>/,'')
+      .replace(/<section(?=[^>]*data-project-adjustment-update="1")[^>]*>[\s\S]*?<\/section>/,'');
   }
   function insertAfterHero(html,card){
     if(!card)return html;
@@ -246,6 +361,47 @@
     const card=document.querySelector('[data-project-highlight="1"]');
     if(card)card.classList.add('is-leaving');
     setTimeout(()=>navigateVolunteer('project'),card?150:0);
+  };
+
+  window.dismissPortalHomeNotice=function(){
+    const slide=homeSlide();
+    if(!slide)return;
+    if(slide.type==='project_adjustment'){
+      hiddenHomeNoticeIds.add(slide.id);
+      window.dismissLegacyProjectAdjustmentNotice?.();
+    }else if(slide.type==='day_adjustment'||slide.type==='activity_adjustment'){
+      hiddenHomeNoticeIds.add(slide.id);
+    }else{
+      markReleaseSeen();
+      releaseSlides().forEach(item=>hiddenHomeNoticeIds.add(item.id));
+    }
+    const slides=homeSlides();
+    if(!slides.length){
+      const card=document.querySelector('[data-release-announcement]');
+      if(card){card.classList.add('is-leaving');setTimeout(()=>card.remove(),220)}
+      return;
+    }
+    homeSlideIndex=Math.min(homeSlideIndex,slides.length-1);
+    renderReleaseSlide('next');
+  };
+
+  window.openPortalHomeNotice=function(){
+    const slide=homeSlide();
+    if(!slide)return;
+    if(slide.type==='project_adjustment'){
+      return window.openLegacyProjectAdjustmentNotice?.();
+    }
+    if(slide.type==='day_adjustment'){
+      navigateVolunteer(slide.page||'plan');
+      setTimeout(()=>window.openVolunteerDayAdjustment?.(slide.date),120);
+      return;
+    }
+    if(slide.type==='activity_adjustment'){
+      navigateVolunteer(slide.page||'plan');
+      if(slide.date)setTimeout(()=>window.scrollToVolunteerDay?.(slide.date),120);
+      return;
+    }
+    return window.openPortalReleaseNotes?.();
   };
 
   window.dismissPortalReleaseAnnouncement=function(){
