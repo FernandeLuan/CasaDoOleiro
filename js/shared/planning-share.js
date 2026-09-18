@@ -7,17 +7,12 @@
     const style=document.createElement('style');
     style.id='planningShareStyles';
     style.textContent=`
-      .portal-plan-toolbar{display:flex;justify-content:flex-end;min-height:40px;margin:0 0 8px}
-      .planning-share-section-head{align-items:flex-start}
-      .planning-overflow-button{width:40px;height:40px;flex:0 0 40px;border:1px solid var(--border);border-radius:13px;background:var(--surface);color:var(--muted);display:grid;place-items:center;font-size:.88rem;cursor:pointer;box-shadow:0 2px 10px rgba(30,48,38,.035)}
-      .planning-overflow-button:active{transform:scale(.97)}
-      .plan-title-actions{display:flex;align-items:center;gap:9px}
-      .planning-share-menu .menu-link{cursor:pointer}
-      .planning-share-menu .menu-link>span>strong{display:block;font-size:.73rem}
-      .planning-profile-actions{grid-column:2;grid-row:1;display:flex;align-items:flex-start;gap:8px;margin-left:auto}
-      .planning-profile-actions .planning-close-button{grid-column:auto;grid-row:auto;margin:0}
-      .planning-profile-actions .planning-overflow-button{width:48px;height:48px;flex:0 0 48px;border-radius:16px;color:var(--text);font-size:1rem;box-shadow:none}
-      @media(max-width:640px){.planning-profile-actions{gap:6px}.planning-profile-actions .planning-overflow-button,.planning-profile-actions .planning-close-button{width:44px;height:44px;flex-basis:44px;border-radius:14px}}
+      .planning-share-bar{width:100%;margin:14px 0 2px}
+      .planning-share-action{width:100%;min-height:54px;border:0;border-radius:16px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;gap:10px;padding:14px 18px;font:inherit;font-weight:800;font-size:.98rem;cursor:pointer;box-shadow:0 8px 20px rgba(35,77,57,.12);transition:transform .16s ease,opacity .16s ease}
+      .planning-share-action i{font-size:1.2rem}
+      .planning-share-action:active{transform:scale(.985)}
+      .planning-share-action:disabled{opacity:.58;cursor:wait}
+      .admin-planning-share-bar{margin-top:16px}
     `;
     document.head.appendChild(style);
   }
