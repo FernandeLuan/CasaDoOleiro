@@ -99,6 +99,7 @@
         sidebarButton(state.managerPage==='home','fa-house','Início',"navigateManager('home')"),
         sidebarButton(state.managerPage==='volunteer','fa-users','Voluntariado',"navigateManager('volunteer')"),
         sidebarButton(state.managerPage==='planning','fa-calendar-check','Planejamento',"navigateManager('planning')"),
+        sidebarButton(state.managerPage==='projects','fa-seedling','Projetos',"navigateManager('projects')"),
         sidebarButton(state.managerPage==='occupancy','fa-bed','Ocupação','openManagerOccupancy()'),
         sidebarButton(state.managerPage==='groups','fa-people-group','Grupos',"navigateManager('groups')"),
         sidebarButton(state.managerPage==='houseInfo','fa-circle-info','Informações da Casa','openHouseInfo()','admin-sidebar-item-info')
@@ -119,7 +120,7 @@
 
   function bottomNav(){
     const item=(icon,label,action,active)=>`<button class="nav-btn ${active?'active':''}" onclick="${action}"><i class="fa-solid ${icon}"></i><span>${label}</span></button>`;
-    return `<nav class="bottom-nav">${item('fa-house','Início',"navigateManager('home')",state.managerPage==='home')}${item('fa-users','Voluntariado',"navigateManager('volunteer')",state.managerPage==='volunteer')}${item('fa-calendar-check','Planejamento',"navigateManager('planning')",state.managerPage==='planning')}${item('fa-bed','Ocupação','openManagerOccupancy()',state.managerPage==='occupancy')}${item('fa-people-group','Grupos',"navigateManager('groups')",state.managerPage==='groups')}</nav>`;
+    return `<nav class="bottom-nav">${item('fa-house','Início',"navigateManager('home')",state.managerPage==='home')}${item('fa-users','Voluntariado',"navigateManager('volunteer')",state.managerPage==='volunteer')}${item('fa-calendar-check','Planejamento',"navigateManager('planning')",state.managerPage==='planning')}${item('fa-seedling','Projetos',"navigateManager('projects')",state.managerPage==='projects')}${item('fa-bed','Ocupação','openManagerOccupancy()',state.managerPage==='occupancy')}${item('fa-people-group','Grupos',"navigateManager('groups')",state.managerPage==='groups')}</nav>`;
   }
 
   function pageTitle(eyebrow,title,description){
