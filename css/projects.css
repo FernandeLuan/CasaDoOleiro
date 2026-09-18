@@ -206,3 +206,17 @@
   .legacy-wizard-copy h3{font-size:.98rem}
   .legacy-wizard-category-grid{grid-template-columns:1fr 1fr}
 }
+
+/* Ajuste específico para teclado móvel/iOS: usa o visual viewport real. */
+.legacy-project-wizard-modal{max-height:min(720px,calc(var(--legacy-vv-height,86dvh) - 14px))!important}
+.legacy-project-wizard-modal.legacy-keyboard-open .modal-head{padding-top:10px!important;padding-bottom:9px!important}
+.legacy-project-wizard-modal.legacy-keyboard-open .modal-head p{margin-top:2px!important;font-size:.56rem!important}
+.legacy-project-wizard-modal.legacy-keyboard-open .modal-body{padding-top:11px!important;padding-bottom:12px!important;scroll-padding-top:8px;scroll-padding-bottom:14px}
+.legacy-project-wizard-modal.legacy-keyboard-open .modal-footer{padding-top:9px!important;padding-bottom:9px!important}
+.legacy-project-wizard-modal.legacy-keyboard-open .legacy-wizard-progress{margin-bottom:12px}
+.legacy-project-wizard-modal.legacy-keyboard-open .legacy-wizard-copy{margin-bottom:10px}
+.legacy-project-wizard-modal.legacy-keyboard-open .legacy-wizard-copy h3{font-size:.94rem;line-height:1.22}
+.legacy-project-wizard-modal.legacy-keyboard-open .legacy-wizard-copy p{margin-top:5px;font-size:.61rem;line-height:1.38}
+.legacy-project-wizard-modal.legacy-keyboard-open .legacy-wizard-input{min-height:46px!important}
+.legacy-project-wizard-modal.legacy-keyboard-open .legacy-wizard-textarea{min-height:88px!important;max-height:104px!important;resize:none}
+.legacy-project-wizard-modal.legacy-keyboard-open .legacy-wizard-actions .btn{min-height:40px!important}
