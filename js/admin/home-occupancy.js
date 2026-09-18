@@ -34,7 +34,8 @@
   }
   function monthLabel(value){
     const {year,monthIndex}=monthParts(value),locale=typeof currentLocale==='function'?currentLocale():'pt-BR';
-    const month=new Intl.DateTimeFormat(locale,{month:'long'}).format(new Date(year,monthIndex,1,12));\n    const text=`${month} ${year}`;
+    const month=new Intl.DateTimeFormat(locale,{month:'long'}).format(new Date(year,monthIndex,1,12));
+    const text=`${month} ${year}`;
     return text.charAt(0).toUpperCase()+text.slice(1);
   }
   function monthOptions(){
