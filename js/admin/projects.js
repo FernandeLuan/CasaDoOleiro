@@ -143,18 +143,15 @@
   window.setLegacyProjectFilter=function(value){state.projectFilter=normalizeProjectFilter(value);render();afterNavigation?.()};
   window.openLegacyProjectAdmin=function(id){
     const p=(window.OleiroProjects?.list?.()||[]).find(x=>String(x.id)===String(id));if(!p)return;
-    const body=`<div class="legacy-admin-detail legacy-admin-detail-v2 ${['in_progress','completed'].includes(p.status)?'has-tracking':''}">
-      <div class="legacy-admin-person legacy-admin-person-v2">
-        <span class="legacy-admin-avatar"><i class="fa-solid fa-user"></i></span>
-        <div class="legacy-admin-identity"><strong>${esc(p.ownerName||'Voluntário')}</strong><small>${esc(p.unitName||p.unitId||'Unidade')}</small></div>
-        <div class="legacy-admin-person-status">${statusBadge(p.status)}</div>
+    const tracking=['in_progress','completed'].includes(p.status);
+    const body=`<div class="legacy-admin-detail legacy-admin-detail-v3 ${tracking?'has-tracking':''}">
+      <div class="legacy-admin-context-row">
+        <div class="legacy-admin-context-person">
+          <span><i class="fa-solid fa-user"></i></span>
+          <div><strong>${esc(p.ownerName||'Voluntário')}</strong><small>${esc(p.unitName||p.unitId||'Unidade')}${p.category?` · ${esc(p.category)}`:''}</small></div>
+        </div>
+        <div class="legacy-admin-context-status">${statusBadge(p.status)}</div>
       </div>
-
-      <section class="legacy-admin-project-overview">
-        <span class="legacy-admin-overview-label">Projeto</span>
-        <strong class="legacy-admin-overview-title">${esc(p.title||'Projeto sem título')}</strong>
-        <span class="legacy-admin-overview-sub">${esc(p.category||'Sem categoria')}</span>
-      </section>
 
       ${p.status==='completed'&&p.result?`<section class="legacy-admin-outcome"><span><i class="fa-solid fa-heart"></i></span><div><small>O que ficou para a comunidade</small><strong>${esc(p.result)}</strong></div></section>`:''}
       ${projectTimelineHtml(p)}
@@ -165,13 +162,13 @@
     let footer='';
     if(p.status==='analysis')footer='<button class="btn btn-outline" onclick="openLegacyAdjustment(\''+esc(p.id)+'\')">Pedir ajuste</button><button class="btn btn-primary" onclick="approveLegacyProject(\''+esc(p.id)+'\')">Aprovar projeto</button>';
     const modalSubtitle=p.status==='analysis'
-      ?'Analise a proposta e decida se ela pode seguir para execução.'
+      ?'Revise a proposta enviada pelo voluntário.'
       :p.status==='in_progress'
-        ?'Acompanhe os comentários e o andamento registrado pelo voluntário.'
+        ?'Acompanhe o andamento e os comentários da execução.'
         :p.status==='completed'
-          ?'Consulte o resultado e o histórico completo deste legado.'
-          :'Consulte as informações deste projeto.';
-    openModal('Projeto de legado',modalSubtitle,body,footer);
+          ?'Resultado, histórico e registros do legado.'
+          :'Informações e histórico do projeto.';
+    openModal(p.title||'Projeto de legado',modalSubtitle,body,footer);
     modalRoot.querySelector('.modal')?.classList.add('legacy-admin-modal');
   };
   window.approveLegacyProject=function(id){window.OleiroProjects.update(id,{status:'approved',reviewNote:'',approvedAt:new Date().toISOString()});closeModal();render();showToast('Projeto aprovado.')};
