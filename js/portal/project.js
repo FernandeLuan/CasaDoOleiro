@@ -120,28 +120,45 @@
     });
     return rows.sort((a,b)=>new Date(b.at||0)-new Date(a.at||0));
   }
-  function legacyTrackingHtml(p){
-    const active=p?.status==='in_progress';
+  function legacyTimelineRowsHtml(p){
     const rows=legacyTimeline(p);
     const icon=type=>type==='start'?'fa-play':type==='complete'?'fa-flag-checkered':'fa-message';
+    return rows.length?rows.map(item=>`<article class="legacy-project-timeline-item ${esc(item.type)}">
+      <span class="legacy-project-timeline-icon"><i class="fa-solid ${icon(item.type)}"></i></span>
+      <div class="legacy-project-timeline-content">
+        <div class="legacy-project-timeline-meta"><strong>${esc(item.title)}</strong><time>${esc(legacyProgressDate(item.at))}</time></div>
+        <p>${esc(item.text)}</p>
+      </div>
+    </article>`).join(''):`<div class="legacy-project-timeline-empty"><i class="fa-regular fa-clock"></i><span>As atualizações do projeto aparecerão aqui.</span></div>`;
+  }
+  function legacyTrackingHtml(p){
     return `<section class="legacy-project-tracking">
       <div class="legacy-project-tracking-head">
         <div>
           <span class="eyebrow">Acompanhamento</span>
-          <h2>${active?'Acompanhar execução':'Histórico do legado'}</h2>
-          <p>${active?'Registre os avanços do projeto enquanto ele acontece.':'Veja como o projeto avançou até a conclusão.'}</p>
+          <h2>Acompanhar execução</h2>
+          <p>Registre os avanços do projeto enquanto ele acontece.</p>
         </div>
       </div>
-      <div class="legacy-project-timeline">
-        ${rows.length?rows.map(item=>`<article class="legacy-project-timeline-item ${esc(item.type)}">
-          <span class="legacy-project-timeline-icon"><i class="fa-solid ${icon(item.type)}"></i></span>
-          <div class="legacy-project-timeline-content">
-            <div class="legacy-project-timeline-meta"><strong>${esc(item.title)}</strong><time>${esc(legacyProgressDate(item.at))}</time></div>
-            <p>${esc(item.text)}</p>
-          </div>
-        </article>`).join(''):`<div class="legacy-project-timeline-empty"><i class="fa-regular fa-clock"></i><span>As atualizações do projeto aparecerão aqui.</span></div>`}
-      </div>
+      <div class="legacy-project-timeline">${legacyTimelineRowsHtml(p)}</div>
     </section>`;
+  }
+  function legacyCompletedHistoryHtml(p){
+    const count=legacyTimeline(p).length;
+    return `<details class="legacy-completed-history">
+      <summary>
+        <span class="legacy-completed-history-icon"><i class="fa-solid fa-clock-rotate-left"></i></span>
+        <span class="legacy-completed-history-copy">
+          <small>Acompanhamento</small>
+          <strong>Histórico do legado</strong>
+          <span>${count} ${count===1?'registro':'registros'} da execução</span>
+        </span>
+        <i class="fa-solid fa-chevron-down project-ui-expand-chevron" aria-hidden="true"></i>
+      </summary>
+      <div class="legacy-completed-history-body">
+        <div class="legacy-project-timeline">${legacyTimelineRowsHtml(p)}</div>
+      </div>
+    </details>`;
   }
 
   function statusPage(p){
@@ -165,6 +182,7 @@
         <small>O que ficou para a comunidade</small>
         <h2>${esc(p.result)}</h2>
         <p>Este é o resultado final registrado pelo voluntário.</p>
+        ${p.completedAt?`<span class="legacy-project-outcome-date"><i class="fa-solid fa-circle-check"></i>Concluído em ${esc(legacyProgressDate(p.completedAt))}</span>`:''}
       </div>
     </section>`:'';
 
@@ -202,7 +220,7 @@
 
     let content='';
     if(completed){
-      content=`${result}${legacyTrackingHtml(p)}`;
+      content=`${result}${legacyCompletedHistoryHtml(p)}`;
     }else if(inProgress){
       content=legacyTrackingHtml(p);
     }else{
@@ -214,12 +232,12 @@
 
       ${content}
 
-      <div class="legacy-project-actions ${editable?'legacy-project-actions-pair':''} ${inProgress?'legacy-project-actions-execution':''}">
+      ${completed?'':`<div class="legacy-project-actions ${editable?'legacy-project-actions-pair':''} ${inProgress?'legacy-project-actions-execution':''}">
         ${editable?`<button class="btn btn-outline" type="button" onclick="openLegacyProjectForm()"><i class="fa-solid fa-pen"></i>Editar</button><button class="btn btn-primary" type="button" onclick="submitLegacyProject()"><i class="fa-solid fa-paper-plane"></i>${p.status==='adjustments'?'Reenviar':'Enviar para análise'}</button>`:''}
         ${canStart?'<button class="btn btn-primary" type="button" onclick="startLegacyProject()"><i class="fa-solid fa-play"></i>Começar execução</button>':''}
         ${inProgress?'<button class="btn btn-outline" type="button" onclick="openLegacyProgressUpdate()"><i class="fa-solid fa-message"></i>Comentar andamento</button><button class="btn btn-primary" type="button" onclick="openLegacyCompletion()"><i class="fa-solid fa-flag-checkered"></i>Concluir legado</button>':''}
       </div>
-      <button class="legacy-how-link legacy-status-how" type="button" onclick="replayProjectOnboarding()"><i class="fa-regular fa-circle-question"></i>Como funciona?</button>
+      <button class="legacy-how-link legacy-status-how" type="button" onclick="replayProjectOnboarding()"><i class="fa-regular fa-circle-question"></i>Como funciona?</button>`}
     </section>`;
   }
   function candidatePreviewPage(){
@@ -260,23 +278,29 @@
   }
 
   window.volunteerProject=function(){
+    const p=project();
+    if(state.volunteerMode==='approved'&&p?.status==='completed')return statusPage(p);
     if(!window.OleiroProjects?.onboardingDone?.())return onboardingPage();
     if(state.volunteerMode!=='approved')return candidatePreviewPage();
-    const p=project();return p?statusPage(p):emptyPage();
+    return p?statusPage(p):emptyPage();
   };
 
   window.projectOnboardingNext=function(){
     const step=Number(state.projectOnboardingStep)||0;
     if(step<3){state.projectOnboardingStep=step+1;render();return}
     window.OleiroProjects?.completeOnboarding?.();state.projectOnboardingStep=0;render();
-    if(state.volunteerMode==='approved')setTimeout(()=>openLegacyProjectForm(),0);
+    if(state.volunteerMode==='approved'&&!project())setTimeout(()=>openLegacyProjectForm(),0);
   };
   window.projectOnboardingBack=function(){
     const step=Number(state.projectOnboardingStep)||0;
     if(step>0){state.projectOnboardingStep=step-1;render();return}
     navigateVolunteer('home');
   };
-  window.replayProjectOnboarding=function(){window.OleiroProjects?.resetOnboarding?.();state.projectOnboardingStep=0;render()};
+  window.replayProjectOnboarding=function(){
+    const p=project();
+    if(p?.status==='completed')return showToast('Este legado já foi concluído e está fechado para alterações.');
+    window.OleiroProjects?.resetOnboarding?.();state.projectOnboardingStep=0;render();
+  };
 
   function legacyWizardValue(value){return String(value??'')}
   function legacyWizardProgress(){
@@ -449,7 +473,9 @@
     });
   }
   window.openLegacyProjectForm=function(){
-    const p=project()||{};
+    const current=project();
+    if(current&&!['draft','adjustments'].includes(current.status))return showToast(current.status==='completed'?'Este legado já foi concluído e não pode mais ser editado.':'Este projeto já avançou de etapa e não pode mais ser editado.');
+    const p=current||{};
     legacyProjectWizardStep=0;
     legacyProjectWizardDraft={
       title:legacyWizardValue(p.title),
@@ -491,17 +517,18 @@
     if(!title||!category||!description||!why||!expectedResult)return showToast(tx('project.wizard.required'));
     if(!validDrive(driveUrl))return showToast(tx('project.wizard.drive.invalid'));
     const old=project();
+    if(old&&!['draft','adjustments'].includes(old.status))return showToast(old.status==='completed'?'Este legado já foi concluído e não pode mais ser editado.':'Este projeto já avançou de etapa e não pode mais ser editado.');
     window.OleiroProjects.saveOwn({title,category,description,why,expectedResult,materials,driveUrl,allowContinuation,status:old?.status==='adjustments'?'adjustments':'draft'});
     legacyProjectWizardDraft=null;legacyProjectWizardStep=0;
     legacyProjectWizardViewportCleanup?.();
     closeModal();render();showToast(tx('project.wizard.saved'));
   };
   window.submitLegacyProject=function(){
-    const p=project();if(!p)return;
+    const p=project();if(!p||!['draft','adjustments'].includes(p.status))return;
     window.OleiroProjects.saveOwn({status:'analysis',submittedAt:new Date().toISOString(),reviewNote:''});render();showToast('Projeto enviado para análise.');
   };
   window.startLegacyProject=function(){
-    const current=project();if(!current)return;
+    const current=project();if(!current||current.status!=='approved')return;
     window.OleiroProjects.saveOwn({status:'in_progress',startedAt:current.startedAt||new Date().toISOString()});
     render();
     showToast('Execução iniciada. Agora você pode registrar o progresso por aqui.');
@@ -530,11 +557,12 @@
     showToast('Progresso adicionado ao histórico.');
   };
   window.openLegacyCompletion=function(){
-    const p=project()||{};
+    const p=project();if(!p||p.status!=='in_progress')return;
     const body=`<div class="form-grid"><div class="field"><label for="legacyFinalResult">O que ficou para a comunidade?</label><textarea id="legacyFinalResult" class="textarea" maxlength="900" placeholder="Conte o que foi entregue e como a comunidade pode usar ou cuidar disso.">${esc(p.result||'')}</textarea></div><div class="field"><label for="legacyFinalDrive">Pasta pública do Google Drive <span class="legacy-optional">recomendado</span></label><input id="legacyFinalDrive" class="input" value="${esc(p.driveUrl||'')}" placeholder="https://drive.google.com/drive/folders/..."><small>Coloque fotos e vídeos do antes, durante e depois.</small></div><label class="check-card"><input id="legacyDrivePublic" type="checkbox"><span>Confirmei que qualquer pessoa com o link consegue visualizar a pasta</span></label></div>`;
     openModal('Concluir meu legado','Registre o resultado para que ele continue vivo na memória da Casa.',body,'<button class="btn btn-primary btn-block" type="button" onclick="completeLegacyProject()">Concluir projeto</button>');
   };
   window.completeLegacyProject=function(){
+    const current=project();if(!current||current.status!=='in_progress')return;
     const result=document.getElementById('legacyFinalResult')?.value.trim()||'',driveUrl=document.getElementById('legacyFinalDrive')?.value.trim()||'',confirmed=!!document.getElementById('legacyDrivePublic')?.checked;
     if(!result)return showToast('Conte o que ficou para a comunidade.');
     if(driveUrl&&!validDrive(driveUrl))return showToast('Use um link válido do Google Drive.');
