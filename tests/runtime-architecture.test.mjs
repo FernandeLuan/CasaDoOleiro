@@ -23,6 +23,11 @@ test('screen modules are loaded or explicitly retired',()=>{
   assert.deepEqual(unreferenced,[...retiredNotLoaded].sort(),'Unexpected dead/unloaded screen module. Retire it explicitly only after its behavior is merged and tested.');
 });
 
+test('runtime modules use semantic names instead of numbered rounds',()=>{
+  const all=[...screenFiles('js/portal'),...screenFiles('js/admin')];
+  assert.deepEqual(all.filter(path=>/\/round\d/i.test(path)),[],'Numbered round modules must be consolidated into semantic owners.');
+});
+
 test('retired round3 candidate override stays removed',()=>{
   assert.ok(!existsSync('js/portal/round3-ui.js'),'round3-ui.js must stay removed after its behavior was consolidated');
 });
