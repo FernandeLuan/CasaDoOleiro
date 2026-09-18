@@ -47,8 +47,10 @@ jobs:
           test ! -e release-dist/.github
           grep -q 'data-clean-ui-admin="1"' release-dist/admin/index.html
           grep -q 'data-clean-ui-portal="1"' release-dist/portal/index.html
-          grep -q 'admin-shell.js' release-dist/admin/index.html
-          grep -q 'desktop-shell.js' release-dist/portal/index.html
+          test -e release-dist/js/admin.bundle.js
+          test -e release-dist/js/portal.bundle.js
+          grep -q 'admin.bundle.js' release-dist/admin/index.html
+          grep -q 'portal.bundle.js' release-dist/portal/index.html
       - name: Check source and configuration syntax
         run: |
           find js functions/tools -type f -name '*.js' -print0 | xargs -0 -n1 node --check
