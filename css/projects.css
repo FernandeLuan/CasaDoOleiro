@@ -2584,3 +2584,85 @@ button.project-ui-row{appearance:none}
     margin-bottom:0;
   }
 }
+
+
+/* Projeto concluído · estado final fechado e compacto */
+.legacy-project-outcome-date{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  margin-top:9px;
+  color:var(--success);
+  font-size:.55rem;
+  font-weight:700;
+}
+.legacy-completed-history{
+  overflow:hidden;
+  border:1px solid color-mix(in srgb,var(--primary) 16%,var(--border));
+  border-radius:18px;
+  background:var(--surface);
+}
+.legacy-completed-history>summary{
+  list-style:none;
+  display:grid;
+  grid-template-columns:42px minmax(0,1fr) auto;
+  gap:11px;
+  align-items:center;
+  padding:14px;
+  cursor:pointer;
+}
+.legacy-completed-history>summary::-webkit-details-marker{display:none}
+.legacy-completed-history-icon{
+  width:42px;
+  height:42px;
+  border-radius:13px;
+  display:grid;
+  place-items:center;
+  background:var(--primary-soft);
+  color:var(--primary);
+}
+.legacy-completed-history-copy{
+  min-width:0;
+  display:block;
+}
+.legacy-completed-history-copy small{
+  display:block;
+  margin-bottom:2px;
+  color:var(--primary);
+  font-size:.52rem;
+  font-weight:700;
+  letter-spacing:.07em;
+  text-transform:uppercase;
+}
+.legacy-completed-history-copy strong{
+  display:block;
+  color:var(--text);
+  font-size:.76rem;
+  line-height:1.25;
+}
+.legacy-completed-history-copy>span{
+  display:block;
+  margin-top:2px;
+  color:var(--muted);
+  font-size:.56rem;
+}
+.legacy-completed-history>summary>.project-ui-expand-chevron{
+  margin:0;
+  color:var(--muted);
+}
+.legacy-completed-history[open]>summary{
+  border-bottom:1px solid var(--border);
+}
+.legacy-completed-history[open]>summary>.project-ui-expand-chevron{
+  transform:rotate(180deg);
+}
+.legacy-completed-history-body{
+  padding:6px 14px 12px;
+}
+.legacy-status-v5.is-completed{
+  gap:12px;
+}
+.legacy-status-v5.is-completed>.legacy-how-link,
+.legacy-status-v5.is-completed>.legacy-project-actions{
+  display:none;
+}
