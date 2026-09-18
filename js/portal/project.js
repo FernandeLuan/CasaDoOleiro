@@ -149,9 +149,9 @@
       <summary>
         <span class="legacy-completed-history-icon"><i class="fa-solid fa-clock-rotate-left"></i></span>
         <span class="legacy-completed-history-copy">
-          <small>Acompanhamento</small>
-          <strong>Histórico do legado</strong>
-          <span>${count} ${count===1?'registro':'registros'} da execução</span>
+          <small>Sua história</small>
+          <strong>Relembre sua jornada</strong>
+          <span>${count} ${count===1?'momento registrado':'momentos registrados'}</span>
         </span>
         <i class="fa-solid fa-chevron-down project-ui-expand-chevron" aria-hidden="true"></i>
       </summary>
@@ -161,12 +161,100 @@
     </details>`;
   }
 
+  function legacyCompletionIso(value){
+    if(!value)return '';
+    if(typeof value==='string')return value.slice(0,10);
+    if(typeof value?.toDate==='function')return value.toDate().toISOString().slice(0,10);
+    const date=new Date(value);
+    return Number.isNaN(date.getTime())?'':date.toISOString().slice(0,10);
+  }
+  function legacyCompletionDate(value){
+    const iso=legacyCompletionIso(value);
+    if(!iso)return '';
+    try{
+      return new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(iso+'T12:00:00')).replace('.','');
+    }catch{return iso}
+  }
+  function legacyCompletionDays(start,end){
+    const from=legacyCompletionIso(start),to=legacyCompletionIso(end);
+    if(!from||!to)return null;
+    const a=new Date(from+'T12:00:00'),b=new Date(to+'T12:00:00');
+    if(Number.isNaN(a.getTime())||Number.isNaN(b.getTime())||b<a)return null;
+    return Math.round((b-a)/86400000)+1;
+  }
+  function legacyCompletionVolunteerName(){
+    const session=state.currentSession||{},profile=session.profile||{},application=state.currentApplication||{};
+    return profile.name||profile.fullName||(Array.isArray(application.participantNames)?application.participantNames[0]:'')||'';
+  }
+  function legacyCompletionVisual(){
+    return `<div class="legacy-visual legacy-visual-farewell">
+      <span class="legacy-farewell-sprout"><i class="fa-solid fa-seedling"></i></span>
+      <span class="legacy-farewell-heart"><i class="fa-solid fa-heart"></i></span>
+      <span class="legacy-farewell-stars"><i class="fa-solid fa-sparkles"></i></span>
+      <span class="legacy-farewell-path"></span>
+    </div>`;
+  }
+  function legacyCompletionPage(p){
+    const application=state.currentApplication||{};
+    const fullName=legacyCompletionVolunteerName(),firstName=String(fullName||'').trim().split(/\s+/)[0]||'';
+    const start=application.stayStart||application.from||'';
+    const end=application.stayEnd||application.to||p.completedAt||'';
+    const startLabel=legacyCompletionDate(start);
+    const endLabel=legacyCompletionDate(end);
+    const days=legacyCompletionDays(start,end);
+    const unit=application.unitName||p.unitName||String(application.unitId||p.unitId||'').replace(/^./,c=>c.toUpperCase());
+    const progressCount=legacyProgressEntries(p).length;
+    const resultText=String(p.result||p.expectedResult||p.description||'').trim();
+    const title=firstName?`Foi muito bom ter você conosco, ${esc(firstName)} 💚`:'Foi muito bom ter você conosco 💚';
+
+    const staySentence=startLabel
+      ?`Você chegou em <strong>${esc(startLabel)}</strong>${days?` e permaneceu <strong>${days} ${days===1?'dia':'dias'}</strong> conosco`:''}${unit?` em <strong>${esc(unit)}</strong>`:''}.`
+      :'Obrigado por fazer parte dessa experiência com a Casa do Oleiro.';
+
+    const journeySentence=progressCount
+      ?`Ao longo dessa jornada, acompanhamos <strong>${progressCount} ${progressCount===1?'atualização':'atualizações'}</strong> do seu legado até ele ganhar forma.`
+      :'Ao longo dessa jornada, vimos seu legado ganhar forma e deixar uma marca na comunidade.';
+
+    return `<section class="section legacy-page legacy-completion-page">
+      <div class="legacy-completion-onboarding">
+        <div class="legacy-onboarding-body legacy-completion-body">
+          ${legacyCompletionVisual()}
+          <span class="eyebrow">Jornada concluída</span>
+          <h1>${title}</h1>
+          <p>${staySentence} ${journeySentence}</p>
+
+          <div class="legacy-completion-facts">
+            ${startLabel?`<div><small>Chegada</small><strong>${esc(startLabel)}</strong></div>`:''}
+            ${days?`<div><small>Tempo conosco</small><strong>${days} ${days===1?'dia':'dias'}</strong></div>`:''}
+            ${endLabel?`<div><small>Até</small><strong>${esc(endLabel)}</strong></div>`:''}
+          </div>
+
+          <div class="legacy-completion-project">
+            <span class="legacy-completion-project-icon"><i class="fa-solid fa-seedling"></i></span>
+            <div>
+              <small>O legado que você deixou</small>
+              <h2>${esc(p.title||'Projeto Legado')}</h2>
+              ${resultText?`<p>${esc(resultText)}</p>`:''}
+            </div>
+          </div>
+
+          ${p.completedAt?`<span class="legacy-completion-finished"><i class="fa-solid fa-circle-check"></i> Legado concluído em ${esc(legacyCompletionDate(p.completedAt))}</span>`:''}
+        </div>
+
+        <div class="legacy-completion-recap">
+          ${legacyCompletedHistoryHtml(p)}
+        </div>
+      </div>
+    </section>`;
+  }
+
   function statusPage(p){
+    if(p?.status==='completed')return legacyCompletionPage(p);
     const [label,tone]=statusMeta(p.status);
     const editable=['draft','adjustments'].includes(p.status);
     const canStart=p.status==='approved';
     const inProgress=p.status==='in_progress';
-    const completed=p.status==='completed';
+    const completed=false;
     const expandHero=inProgress||completed;
     const row=(icon,labelText,value)=>`<article class="legacy-project-story-row"><span><i class="fa-solid ${icon}"></i></span><div><small>${esc(labelText)}</small><p>${esc(value||'—')}</p></div></article>`;
     const storyRows=`<div class="legacy-project-story-list">
