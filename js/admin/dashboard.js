@@ -32,13 +32,6 @@ function openDashboardProjectFilter(status){
   state.projectSearch='';
   navigateManager('projects');
 }
-) {
-  return `<button class="manager-home-quick-action ${tone}" type="button" onclick="${action}">
-    <span class="manager-home-quick-icon"><i class="fa-solid ${icon}"></i></span>
-    <span class="manager-home-quick-copy"><strong>${escapeHtml(title)}</strong><small><b>${Number(count)||0}</b> ${escapeHtml(label)}</small></span>
-    <i class="fa-solid fa-chevron-right"></i>
-  </button>`;
-}
 let _managerHomePendingIndex=0;
 const _managerHomePendingDismissed=new Set();
 function managerHomePendingSlides(volunteerAnalysis,volunteerAdjustments,projectCounts){
