@@ -51,8 +51,9 @@
   function updateMetaLabels(){
     const label=metaLabel();
     document.querySelectorAll('[data-release-meta]').forEach(node=>{
+      const enabled=node.dataset.releaseMetaEnabled!=='0';
       node.textContent=label;
-      node.hidden=!label;
+      node.hidden=!label||!enabled;
     });
   }
   async function loadReleaseMeta(){
@@ -197,7 +198,7 @@
       <div class="release-announcement-top">
         <span class="release-announcement-spark" data-release-slide-icon><i class="fa-solid ${esc(slide.icon||'fa-wand-magic-sparkles')}"></i></span>
         <div class="release-announcement-copy">
-          <div class="release-announcement-meta"><span data-release-slide-eyebrow>${esc(slide.eyebrow||ANNOUNCEMENT.eyebrow)}</span><small data-release-meta ${slide.showMeta?'':'hidden'}></small></div>
+          <div class="release-announcement-meta"><span data-release-slide-eyebrow>${esc(slide.eyebrow||ANNOUNCEMENT.eyebrow)}</span><small data-release-meta data-release-meta-enabled="${slide.showMeta?'1':'0'}" ${slide.showMeta?'':'hidden'}></small></div>
           <strong data-release-slide-title>${esc(slide.title||'')}</strong>
           <p data-release-slide-summary>${esc(slide.summary||'')}</p>
         </div>
@@ -232,8 +233,9 @@
     if(icon)icon.className='fa-solid '+(slide.icon||'fa-wand-magic-sparkles');
     if(cta)cta.textContent=slide.ctaLabel||'Ver novidades';
     if(meta){
+      meta.dataset.releaseMetaEnabled=slide.showMeta?'1':'0';
       meta.hidden=!slide.showMeta;
-      if(slide.showMeta)updateMetaLabels();
+      updateMetaLabels();
     }
     if(pager)pager.outerHTML=releaseCarouselNavHtml();
     else{
@@ -415,10 +417,17 @@
 
   window.openPortalReleaseNotes=function(){
     markReleaseSeen();
+    releaseSlides().forEach(item=>hiddenHomeNoticeIds.add(item.id));
     const card=document.querySelector('[data-release-announcement]');
+    const remaining=homeSlides();
     if(card){
-      card.classList.add('is-leaving');
-      setTimeout(()=>card.remove(),180);
+      if(remaining.length){
+        homeSlideIndex=0;
+        renderReleaseSlide('prev');
+      }else{
+        card.classList.add('is-leaving');
+        setTimeout(()=>card.remove(),180);
+      }
     }
     const body=`<div class="release-notes-modal">
       <div class="release-notes-modal-intro">
@@ -447,9 +456,8 @@
       let html=stripProjectHighlight(baseVolunteerHome());
       const card=releaseCardHtml();
 
-      /* Durante a homologação mostramos simultaneamente todos os avisos relevantes.
-         Assim o ajuste do projeto, o convite do Projeto Legado e a novidade da versão
-         podem ser revisados repetidamente sem limpar localStorage. */
+      /* Na homologação, os avisos continuam disponíveis para teste, mas todos entram
+         em um único carrossel para evitar vários cards concorrendo na Home. */
       if(ALWAYS_SHOW_HOME_NOTICES){
         if(card&&!html.includes('data-release-announcement'))html=insertAfterExistingNotice(html,card);
         return html;
