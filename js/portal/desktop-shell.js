@@ -168,6 +168,7 @@
       <nav class="portal-sidebar-nav">
         ${sidebarItem('home','fa-house',navText('portal.nav.home','Início'))}
         ${planItem}
+        ${approved?sidebarItem('project','fa-seedling','Projeto'):''}
         ${sidebarItem('stay','fa-location-dot',navText('portal.nav.stay','Estadia'))}
         ${sidebarItem('info','fa-circle-info',navText('portal.nav.info','Informações'))}
         ${sidebarItem('profile','fa-user',navText('portal.nav.profile','Perfil'))}
