@@ -173,7 +173,7 @@
         <span class="legacy-status-kicker">Projeto Legado</span>
         <span class="legacy-status-hero-summary-side">
           <span class="legacy-status-chip ${tone}">${esc(label)}</span>
-          ${expandHero?'<i class="fa-solid fa-chevron-down legacy-status-hero-chevron" aria-hidden="true"></i>':''}
+          ${expandHero?'<i class="fa-solid fa-chevron-down legacy-status-hero-chevron project-ui-expand-chevron" aria-hidden="true"></i>':''}
         </span>
       </div>
       <h1>${esc(p.title||'Meu projeto')}</h1>
@@ -181,8 +181,8 @@
       ${p.status==='adjustments'&&p.reviewNote?`<button class="legacy-status-review-link" type="button" onclick="event.preventDefault();event.stopPropagation();openLegacyProjectAdjustmentNotice()"><i class="fa-solid fa-message"></i>Ver orientação da equipe</button>`:''}`;
 
     const hero=expandHero
-      ?`<details class="legacy-status-hero-v5 legacy-status-hero-expandable">
-          <summary class="legacy-status-hero-summary">${heroSummary}</summary>
+      ?`<details class="project-ui-expandable legacy-status-project-expandable">
+          <summary class="legacy-status-hero-v5 legacy-status-hero-summary">${heroSummary}</summary>
           <div class="legacy-status-hero-expanded">
             <div class="legacy-status-hero-expanded-head"><span>Projeto original</span></div>
             ${storyRows}
