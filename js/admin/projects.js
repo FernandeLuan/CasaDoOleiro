@@ -171,7 +171,7 @@
     const modalSubtitle=p.status==='analysis'
       ?'Revise a proposta enviada pelo voluntário.'
       :p.status==='in_progress'
-        ?'Luan está executando este legado.'
+        ?`${esc(p.ownerName||'O voluntário')} está executando este legado.`
         :p.status==='completed'
           ?'Resultado, histórico e registros do legado.'
           :'Informações do projeto.';
