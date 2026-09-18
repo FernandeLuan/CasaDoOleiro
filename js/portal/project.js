@@ -161,12 +161,21 @@
     if(driveUrl&&!confirmed)return showToast('Confirme que o link do Drive está público.');
     window.OleiroProjects.saveOwn({status:'completed',result,driveUrl,completedAt:new Date().toISOString()});closeModal();render();showToast('Seu legado foi concluído. Obrigado por deixar algo para a comunidade.');
   };
+  window.skipLegacyProjectPrompt=function(){
+    openModal(
+      'Você pode conhecer depois',
+      '',
+      '<div class="legacy-skip-message"><span class="legacy-skip-icon"><i class="fa-solid fa-seedling"></i></span><div><strong>O Projeto continua disponível para você.</strong><p>Quando quiser saber mais, abra a aba <b>Projeto</b> no menu inferior. Você poderá conhecer a proposta e continuar de onde parou.</p></div></div>',
+      '<div class="legacy-skip-actions"><button class="btn btn-outline" type="button" onclick="closeModal()">Fechar</button><button class="btn btn-primary" type="button" onclick="closeModal();navigateVolunteer(\'project\')">Ir para Projeto</button></div>'
+    );
+  };
+
   window.legacyProjectHomeNoticeHtml=function(){
     if(state.volunteerMode!=='approved')return '';
     const p=project(),done=p?.status==='completed';
     if(done)return '';
-    const label=p?'Continuar meu projeto':'Criar meu projeto';
-    return `<section class="legacy-home-callout"><span class="legacy-home-callout-icon"><i class="fa-solid fa-seedling"></i></span><div><strong>Seu legado na Casa</strong><p>${p?'Seu projeto ainda faz parte da sua jornada.':'Todo voluntário deixa uma contribuição para a comunidade.'}</p></div><button class="btn btn-soft" onclick="navigateVolunteer('project')">${label}</button></section>`;
+    const label=p?'Continuar':'Conhecer';
+    return `<section class="legacy-home-callout legacy-home-callout-glow"><span class="legacy-home-callout-icon"><i class="fa-solid fa-seedling"></i></span><div class="legacy-home-callout-copy"><strong>Projeto de legado</strong><p>${p?'Seu projeto ainda faz parte da sua jornada.':'Descubra como sua passagem pode deixar algo útil para a comunidade.'}</p></div><div class="legacy-home-callout-actions"><button class="btn btn-outline" type="button" onclick="skipLegacyProjectPrompt()">Agora não</button><button class="btn btn-soft" type="button" onclick="navigateVolunteer('project')">${label}</button></div></section>`;
   };
 
   let legacyProjectSwipeStart=null;
