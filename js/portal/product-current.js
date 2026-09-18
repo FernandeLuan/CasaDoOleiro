@@ -26,8 +26,8 @@
     const approved=state.volunteerMode==='approved';
     if(approved&&state.volunteerPage==='plan')state.volunteerPage='agenda';
     const items=approved
-      ?[['home','fa-house',t('portal.nav.home')],['agenda','fa-calendar-check',t('portal.nav.agenda')],['project','fa-seedling','Projeto'],['profile','fa-user','Conta']]
-      :[['home','fa-house',t('portal.nav.home')],['plan','fa-calendar-plus',t('portal.nav.planning')],['project','fa-seedling','Projeto'],['profile','fa-user','Conta']];
+      ?[['home','fa-house',t('portal.nav.home')],['agenda','fa-calendar-check',t('portal.nav.agenda')],['project','fa-seedling',t('portal.nav.project')],['profile','fa-user',t('portal.nav.account')]]
+      :[['home','fa-house',t('portal.nav.home')],['plan','fa-calendar-plus',t('portal.nav.planning')],['project','fa-seedling',t('portal.nav.project')],['profile','fa-user',t('portal.nav.account')]];
     return `<nav class="bottom-nav volunteer-nav-current portal-nav-current">${items.map(([id,ic,tx])=>`<button class="nav-btn ${state.volunteerPage===id?'active':''}" onclick="navigateVolunteer('${id}')"><i class="fa-solid ${ic}"></i><span>${safeHtml(tx)}</span></button>`).join('')}<button class="nav-btn nav-logout" type="button" onclick="confirmVolunteerLogout()"><i class="fa-solid fa-right-from-bracket"></i><span>${safeHtml(t('portal.nav.signout'))}</span></button></nav>`;
   };
 
@@ -48,7 +48,7 @@
     html=html.replace(unitInArrival,`<span style="font-size:.62rem;color:var(--muted)">${safeHtml(t('portal.home.noActivityDay'))}</span>`);
     if(!html.includes('legacy-home-callout')){
       let projectCallout=typeof window.legacyProjectHomeNoticeHtml==='function'?window.legacyProjectHomeNoticeHtml():'';
-      if(!projectCallout&&!approved)projectCallout=`<section class="legacy-home-callout legacy-home-callout-glow portal-project-teaser" data-project-highlight="1"><span class="legacy-home-callout-icon"><i class="fa-solid fa-seedling"></i></span><div class="legacy-home-callout-copy"><strong>Projeto Legado</strong><p>Descubra como sua passagem pode deixar algo útil para a comunidade.</p></div><div class="legacy-home-callout-actions"><button class="btn btn-outline" type="button" onclick="skipLegacyProjectPrompt()">Agora não</button><button class="btn btn-primary" type="button" onclick="openPortalProjectHighlight()">Conhecer</button></div></section>`;
+      if(!projectCallout&&!approved)projectCallout=`<section class="legacy-home-callout legacy-home-callout-glow portal-project-teaser" data-project-highlight="1"><span class="legacy-home-callout-icon"><i class="fa-solid fa-seedling"></i></span><div class="legacy-home-callout-copy"><strong>${safeHtml(t('project.name'))}</strong><p>${safeHtml(t('project.home.newBody'))}</p></div><div class="legacy-home-callout-actions"><button class="btn btn-outline" type="button" onclick="skipLegacyProjectPrompt()">${safeHtml(t('project.home.notNow'))}</button><button class="btn btn-primary" type="button" onclick="openPortalProjectHighlight()">${safeHtml(t('project.home.know'))}</button></div></section>`;
       if(projectCallout){const heroEnd=html.indexOf('</section>');html=heroEnd>=0?html.slice(0,heroEnd+10)+projectCallout+html.slice(heroEnd+10):projectCallout+html}
     }
     if(!html.includes('home-unit-support'))html+=support;

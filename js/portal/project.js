@@ -2,6 +2,7 @@
 (function legacyProjectPortal(){
   const categories=['Sustentabilidade','Estrutura','Educação','Saúde e bem-estar','Cultura e lazer','Organização','Comunicação','Tecnologia','Outro'];
   const esc=v=>typeof escapeHtml==='function'?escapeHtml(v):String(v??'');
+  const tx=(key,params={})=>typeof t==='function'?t(key,params):String(key||'');
 
   function statusMeta(status){
     return {
@@ -30,10 +31,10 @@
   function onboardingPage(){
     const step=Math.max(0,Math.min(3,Number(state.projectOnboardingStep)||0));
     const slides=[
-      ['Deixe algo que continua.','Sua experiência pode virar uma contribuição que permaneça na Casa depois da sua partida.'],
-      ['O que é deixar um legado?','Pode ser uma horta, oficina, melhoria, material ou ideia simples que outras pessoas possam continuar.'],
-      ['Encontre uma ideia.','Observe a Casa, converse com as pessoas e pense onde suas habilidades podem ajudar.'],
-      ['Qual será o seu legado?','Crie algo útil, possível e que possa continuar crescendo depois da sua estadia.']
+      [tx('project.onboarding.1.title'),tx('project.onboarding.1.body')],
+      [tx('project.onboarding.2.title'),tx('project.onboarding.2.body')],
+      [tx('project.onboarding.3.title'),tx('project.onboarding.3.body')],
+      [tx('project.onboarding.4.title'),tx('project.onboarding.4.body')]
     ];
     const [title,text]=slides[step];
     return `<section class="legacy-onboarding">
@@ -41,7 +42,7 @@
         ${onboardingIllustration(step)}
         <h1>${esc(title)}</h1><p>${esc(text)}</p>
       </div>
-      <div class="legacy-onboarding-footer"><span>Deslize para conhecer</span><div class="legacy-dots">${slides.map((_,i)=>`<i class="${i===step?'active':''}"></i>`).join('')}</div><button class="btn btn-primary btn-block legacy-next" type="button" onclick="projectOnboardingNext()">${step===3?'Quero criar meu projeto':'Próximo'}</button></div>
+      <div class="legacy-onboarding-footer"><span>${esc(tx('project.onboarding.swipe'))}</span><div class="legacy-dots">${slides.map((_,i)=>`<i class="${i===step?'active':''}"></i>`).join('')}</div><button class="btn btn-primary btn-block legacy-next" type="button" onclick="projectOnboardingNext()">${esc(step===3?tx('project.onboarding.create'):tx('project.onboarding.next'))}</button></div>
     </section>`;
   }
   function emptyPage(){
@@ -84,35 +85,39 @@
   }
 
   function candidatePreviewPage(){
+    const ideas=[
+      ['fa-leaf','project.idea.sustainability.title','project.idea.sustainability.body'],
+      ['fa-hammer','project.idea.improvements.title','project.idea.improvements.body'],
+      ['fa-people-group','project.idea.community.title','project.idea.community.body'],
+      ['fa-laptop-code','project.idea.technology.title','project.idea.technology.body']
+    ];
     return `<section class="section legacy-page legacy-candidate-preview-v2">
       <div class="legacy-candidate-hero-v2">
-        <span class="legacy-candidate-kicker">Projeto Legado</span>
-        <h1>Uma ideia sua pode continuar aqui.</h1>
-        <p>Conheça possibilidades agora e crie seu projeto quando sua candidatura for aprovada.</p>
+        <span class="legacy-candidate-kicker">${esc(tx('project.name'))}</span>
+        <h1>${esc(tx('project.candidate.heroTitle'))}</h1>
+        <p>${esc(tx('project.candidate.heroBody'))}</p>
       </div>
 
       <div class="legacy-candidate-flow legacy-candidate-flow-minimal">
         <div class="legacy-candidate-steps">
-          <article class="is-current"><span>1</span><small>Agora</small><strong>Conheça</strong></article>
-          <article><span>2</span><small>Após aprovação</small><strong>Crie</strong></article>
-          <article><span>3</span><small>Na estadia</small><strong>Realize</strong></article>
+          <article class="is-current"><span>1</span><small>${esc(tx('project.candidate.now'))}</small><strong>${esc(tx('project.candidate.know'))}</strong></article>
+          <article><span>2</span><small>${esc(tx('project.candidate.afterApproval'))}</small><strong>${esc(tx('project.candidate.create'))}</strong></article>
+          <article><span>3</span><small>${esc(tx('project.candidate.duringStay'))}</small><strong>${esc(tx('project.candidate.realize'))}</strong></article>
         </div>
       </div>
 
-      <div class="legacy-candidate-possibilities legacy-candidate-possibilities-v2">
+      <div class="legacy-candidate-possibilities legacy-candidate-possibilities-v3">
         <div class="legacy-candidate-possibilities-head">
-          <span class="eyebrow">Possibilidades</span>
-          <h2>Onde sua ideia pode fazer diferença</h2>
+          <span class="eyebrow">${esc(tx('project.candidate.ideasEyebrow'))}</span>
+          <h2>${esc(tx('project.candidate.ideasTitle'))}</h2>
+          <p>${esc(tx('project.candidate.ideasSubtitle'))}</p>
         </div>
-        <div class="legacy-candidate-possibility-icons" aria-label="Áreas possíveis para o Projeto Legado">
-          <div><span><i class="fa-solid fa-leaf"></i></span><strong>Sustentabilidade</strong></div>
-          <div><span><i class="fa-solid fa-hammer"></i></span><strong>Melhorias</strong></div>
-          <div><span><i class="fa-solid fa-people-group"></i></span><strong>Comunidade</strong></div>
-          <div><span><i class="fa-solid fa-laptop-code"></i></span><strong>Tecnologia</strong></div>
+        <div class="legacy-candidate-idea-cards">
+          ${ideas.map(([icon,titleKey,bodyKey])=>`<article class="legacy-candidate-idea-card"><span><i class="fa-solid ${icon}"></i></span><div><strong>${esc(tx(titleKey))}</strong><p>${esc(tx(bodyKey))}</p></div></article>`).join('')}
         </div>
       </div>
 
-      <button class="legacy-how-link legacy-candidate-how-v2" type="button" onclick="replayProjectOnboarding()"><i class="fa-regular fa-circle-question"></i>Rever apresentação</button>
+      <button class="legacy-how-link legacy-candidate-how-v2" type="button" onclick="replayProjectOnboarding()"><i class="fa-regular fa-circle-question"></i>${esc(tx('project.candidate.replay'))}</button>
     </section>`;
   }
 
@@ -181,10 +186,10 @@
   window.skipLegacyProjectPrompt=function(){
     window.dismissPortalProjectHighlight?.();
     openModal(
-      'Você pode conhecer depois',
+      tx('project.skip.title'),
       '',
-      '<div class="legacy-skip-message"><span class="legacy-skip-icon"><i class="fa-solid fa-seedling"></i></span><div><strong>O Projeto continua disponível para você.</strong><p>Quando quiser saber mais, abra a aba <b>Projeto</b> no menu inferior. Você poderá conhecer a proposta e continuar de onde parou.</p></div></div>',
-      '<div class="legacy-skip-actions"><button class="btn btn-outline" type="button" onclick="closeModal()">Fechar</button><button class="btn btn-primary" type="button" onclick="closeModal();navigateVolunteer(\'project\')">Ir para Projeto</button></div>'
+      `<div class="legacy-skip-message"><span class="legacy-skip-icon"><i class="fa-solid fa-seedling"></i></span><div><strong>${esc(tx('project.skip.available'))}</strong><p>${esc(tx('project.skip.body'))}</p></div></div>`,
+      `<div class="legacy-skip-actions"><button class="btn btn-outline" type="button" onclick="closeModal()">${esc(tx('common.close'))}</button><button class="btn btn-primary" type="button" onclick="closeModal();navigateVolunteer('project')">${esc(tx('project.skip.go'))}</button></div>`
     );
   };
 
@@ -192,8 +197,8 @@
     if(state.volunteerMode!=='approved')return '';
     const p=project(),done=p?.status==='completed';
     if(done)return '';
-    const label=p?'Continuar':'Conhecer';
-    return `<section class="legacy-home-callout legacy-home-callout-glow" data-project-highlight="1"><span class="legacy-home-callout-icon"><i class="fa-solid fa-seedling"></i></span><div class="legacy-home-callout-copy"><strong>Projeto Legado</strong><p>${p?'Seu projeto ainda faz parte da sua jornada.':'Descubra como sua passagem pode deixar algo útil para a comunidade.'}</p></div><div class="legacy-home-callout-actions"><button class="btn btn-outline" type="button" onclick="skipLegacyProjectPrompt()">Agora não</button><button class="btn btn-primary" type="button" onclick="openPortalProjectHighlight()">${label}</button></div></section>`;
+    const label=p?tx('project.home.continue'):tx('project.home.know');
+    return `<section class="legacy-home-callout legacy-home-callout-glow" data-project-highlight="1"><span class="legacy-home-callout-icon"><i class="fa-solid fa-seedling"></i></span><div class="legacy-home-callout-copy"><strong>${esc(tx('project.name'))}</strong><p>${esc(p?tx('project.home.existingBody'):tx('project.home.newBody'))}</p></div><div class="legacy-home-callout-actions"><button class="btn btn-outline" type="button" onclick="skipLegacyProjectPrompt()">${esc(tx('project.home.notNow'))}</button><button class="btn btn-primary" type="button" onclick="openPortalProjectHighlight()">${esc(label)}</button></div></section>`;
   };
 
   let legacyProjectSwipeStart=null;
