@@ -2522,3 +2522,52 @@ button.project-ui-row{appearance:none}
 .legacy-admin-page-clean .legacy-project-tools>.candidate-filter-button{
   align-self:center;
 }
+
+
+/* Portal Projeto · mesmo comportamento expansível do Admin */
+/* O <details> externo agora é o mesmo componente usado no Admin.
+   O hero verde é apenas o summary; o conteúdo abre abaixo dele, não dentro dele. */
+.legacy-status-project-expandable{
+  overflow:hidden;
+  border:0;
+  border-radius:24px;
+  background:transparent;
+  box-shadow:0 14px 32px rgba(31,78,57,.12);
+}
+.legacy-status-project-expandable>.legacy-status-hero-summary{
+  margin:0;
+  width:100%;
+  border-radius:24px;
+  box-shadow:none;
+}
+.legacy-status-project-expandable[open]>.legacy-status-hero-summary{
+  border-radius:24px 24px 0 0;
+}
+.legacy-status-project-expandable>.legacy-status-hero-expanded{
+  margin:0;
+  border:1px solid var(--border);
+  border-top:0;
+  border-radius:0 0 24px 24px;
+  background:var(--surface);
+}
+.legacy-status-project-expandable[open] .project-ui-expand-chevron{
+  transform:rotate(180deg);
+}
+/* Evita duas regras diferentes controlando a mesma seta. */
+.legacy-status-project-expandable[open] .legacy-status-hero-chevron{
+  transform:rotate(180deg);
+}
+@media(max-width:760px){
+  .legacy-status-project-expandable{
+    border-radius:22px;
+  }
+  .legacy-status-project-expandable>.legacy-status-hero-summary{
+    border-radius:22px;
+  }
+  .legacy-status-project-expandable[open]>.legacy-status-hero-summary{
+    border-radius:22px 22px 0 0;
+  }
+  .legacy-status-project-expandable>.legacy-status-hero-expanded{
+    border-radius:0 0 22px 22px;
+  }
+}
