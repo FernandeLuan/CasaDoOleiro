@@ -64,6 +64,44 @@ async function bundlePortalAssets(){
   return {css:cssMatches.length,js:scriptMatches.length};
 }
 
+async function bundleAdminAssets(){
+  const adminFile=path.join(out,'admin/index.html');
+  let html=await readFile(adminFile,'utf8');
+
+  const cssPattern=/<link\s+([^>]*?)rel="stylesheet"([^>]*?)href="(\.\.\/css\/[^"?]+)(?:\?[^"]*)?"([^>]*)>/g;
+  const cssMatches=[...html.matchAll(cssPattern)];
+  if(!cssMatches.length)throw new Error('Nenhum CSS local do Admin encontrado para bundle.');
+  const cssParts=[];
+  for(const match of cssMatches){
+    const sourcePath=path.resolve(path.dirname(adminFile),match[3]);
+    cssParts.push(`/* ${match[3]} */\n${await readFile(sourcePath,'utf8')}\n`);
+    html=html.replace(match[0],'');
+  }
+  await writeFile(path.join(out,'css/admin.bundle.css'),cssParts.join('\n'),'utf8');
+  html=html.replace('</head>','<link rel="stylesheet" href="../css/admin.bundle.css"></head>');
+
+  const scriptPattern=/<script([^>]*)\s+src="(\.\.\/js\/[^"?]+)(?:\?[^"]*)?"([^>]*)><\/script>/g;
+  const scriptMatches=[...html.matchAll(scriptPattern)];
+  const configIndex=scriptMatches.findIndex(match=>match[2].endsWith('/firebase/firebase-config.js'));
+  if(configIndex<0)throw new Error('firebase-config.js não encontrado no Admin.');
+
+  const pre=scriptMatches.slice(0,configIndex),config=scriptMatches[configIndex],post=scriptMatches.slice(configIndex+1);
+  async function writeScriptBundle(matches,target){
+    const parts=[];
+    for(const match of matches){
+      const sourcePath=path.resolve(path.dirname(adminFile),match[2]);
+      parts.push(`/* ${match[2]} */\n${await readFile(sourcePath,'utf8')}\n;\n`);
+    }
+    await writeFile(path.join(out,target),parts.join('\n'),'utf8');
+  }
+  await writeScriptBundle(pre,'js/admin-pre.bundle.js');
+  await writeScriptBundle(post,'js/admin.bundle.js');
+  for(const match of scriptMatches)html=html.replace(match[0],'');
+  html=html.replace('</body>',`<script src="../js/admin-pre.bundle.js"></script>${config[0]}<script data-clean-ui-admin="1" src="../js/admin.bundle.js"></script></body>`);
+  await writeFile(adminFile,html,'utf8');
+  return {css:cssMatches.length,js:scriptMatches.length};
+}
+
 // Fail before deleting the previous build or publishing a broken entry point.
 await checkSiteAssets(root);
 await rm(out,{recursive:true,force:true});
@@ -83,6 +121,7 @@ if(!admin.includes('data-clean-ui-admin="1"')||!admin.includes('../js/admin/admi
 if(!portal.includes('data-clean-ui-portal="1"'))throw new Error('Portal desktop shell não está declarado diretamente na fonte.');
 
 const portalBundle=await bundlePortalAssets();
+const adminBundle=await bundleAdminAssets();
 
 const htmlAssetPattern=/((?:src|href)="(?:\.\.\/)?(?:js|css)\/[^"?]+)(?:\?[^\"]*)?(\")/g;
 for(const relative of ['index.html','login.html','admin/index.html','portal/index.html']){
@@ -94,4 +133,5 @@ await writeFile(path.join(out,'release.json'),JSON.stringify({environment,build:
 console.log(`Canonical site build ready: ${out}`);
 console.log(`Environment: ${environment}`);
 console.log(`Portal bundles: ${portalBundle.js} scripts -> 3 requests; ${portalBundle.css} stylesheets -> 1 request.`);
+console.log(`Admin bundles: ${adminBundle.js} scripts -> 3 requests; ${adminBundle.css} stylesheets -> 1 request.`);
 console.log('Source modules remain separated for maintenance; production is bundled in build order.');
