@@ -84,18 +84,34 @@
   }
 
   function candidatePreviewPage(){
-    return `<section class="section legacy-page">
-      <div class="legacy-page-title"><span class="eyebrow">Projeto Legado</span><h1>Conheça agora. Crie quando sua candidatura for aprovada.</h1><p>Você já pode entender a proposta, observar necessidades da comunidade e guardar ideias. A criação e o envio do projeto ficam disponíveis quando sua estadia for confirmada.</p></div>
-      <div class="notice"><i class="fa-solid fa-lock"></i><div><strong>Criação liberada após a aprovação</strong><br>Enquanto isso, use esta área para conhecer exemplos e pensar no que combina com suas habilidades.</div></div>
-      <div class="section-head legacy-inspire-head"><div><h2>Ideias para observar</h2><p>O projeto pode ser simples, útil e possível de continuar depois.</p></div></div>
-      <div class="legacy-idea-grid">
-        ${ideaCard('fa-leaf','Sustentabilidade','Horta, composteira, plantio, reaproveitamento ou separação de resíduos.')}
-        ${ideaCard('fa-hammer','Melhorias','Organização de espaços, pequenos reparos, sinalização ou estrutura.')}
-        ${ideaCard('fa-people-group','Comunidade','Oficinas, esporte, cultura, dinâmicas ou atividades que possam continuar.')}
-        ${ideaCard('fa-book-open','Conhecimento','Manuais, materiais educativos, aulas ou processos documentados.')}
-        ${ideaCard('fa-laptop-code','Tecnologia','Planilhas, sistemas, automações ou soluções de comunicação.')}
+    return `<section class="section legacy-page legacy-candidate-preview">
+      <div class="legacy-candidate-hero">
+        <span class="legacy-candidate-hero-icon"><i class="fa-solid fa-seedling"></i></span>
+        <div>
+          <span class="eyebrow">Projeto Legado</span>
+          <h1>Conheça. Inspire-se. Crie depois.</h1>
+          <p>Explore ideias agora. A criação do seu projeto é liberada quando sua candidatura for aprovada.</p>
+        </div>
       </div>
-      <button class="legacy-how-link" type="button" onclick="replayProjectOnboarding()"><i class="fa-regular fa-circle-question"></i>Rever como funciona</button>
+
+      <div class="legacy-candidate-status">
+        <span><i class="fa-solid fa-lock"></i></span>
+        <div><small>Disponibilidade</small><strong>Criação após a aprovação</strong></div>
+      </div>
+
+      <div class="legacy-candidate-section-head">
+        <div><span class="eyebrow">Inspire-se</span><h2>Escolha um caminho</h2></div>
+        <small>Seu projeto pode começar simples.</small>
+      </div>
+
+      <div class="legacy-candidate-idea-grid">
+        <article class="legacy-candidate-idea"><span><i class="fa-solid fa-leaf"></i></span><div><strong>Sustentabilidade</strong><p>Horta, composteira e reaproveitamento.</p></div></article>
+        <article class="legacy-candidate-idea"><span><i class="fa-solid fa-hammer"></i></span><div><strong>Melhorias</strong><p>Espaços, organização e pequenos reparos.</p></div></article>
+        <article class="legacy-candidate-idea"><span><i class="fa-solid fa-people-group"></i></span><div><strong>Comunidade</strong><p>Oficinas, esporte e cultura.</p></div></article>
+        <article class="legacy-candidate-idea"><span><i class="fa-solid fa-laptop-code"></i></span><div><strong>Tecnologia</strong><p>Sistemas, materiais e automações.</p></div></article>
+      </div>
+
+      <button class="legacy-how-link legacy-candidate-how" type="button" onclick="replayProjectOnboarding()"><i class="fa-regular fa-circle-question"></i>Rever introdução</button>
     </section>`;
   }
 
