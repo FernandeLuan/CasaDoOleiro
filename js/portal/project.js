@@ -62,10 +62,7 @@
 
       <section class="legacy-empty-inspiration">
         <div class="legacy-empty-inspiration-head">
-          <div>
-            <span class="eyebrow">${esc(tx('project.empty.inspirationEyebrow'))}</span>
-            <h2>${esc(tx('project.empty.inspirationTitle'))}</h2>
-          </div>
+          <h2>${esc(tx('project.empty.inspirationEyebrow'))}</h2>
         </div>
         <div class="legacy-empty-idea-grid">
           ${ideas.map(([icon,titleKey,bodyKey])=>ideaCard(icon,tx(titleKey),tx(bodyKey))).join('')}
