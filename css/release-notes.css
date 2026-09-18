@@ -241,3 +241,108 @@
     height:20px;
   }
 }
+
+
+/* Home · carrossel v2: borda viva, seta animada e swipe */
+.release-announcement-card{
+  isolation:isolate;
+  touch-action:pan-y;
+  -webkit-user-select:none;
+  user-select:none;
+}
+.release-announcement-card::before{
+  content:"";
+  position:absolute;
+  z-index:3;
+  inset:-1px;
+  border-radius:19px;
+  padding:2px;
+  background:linear-gradient(
+    115deg,
+    transparent 0%,
+    transparent 34%,
+    rgba(255,255,255,.95) 47%,
+    color-mix(in srgb,var(--primary) 82%,#fff) 52%,
+    transparent 65%,
+    transparent 100%
+  );
+  background-size:260% 100%;
+  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;
+  mask-composite:exclude;
+  pointer-events:none;
+  animation:releaseBorderSweep 3.1s linear infinite;
+}
+@keyframes releaseBorderSweep{
+  0%{background-position:180% 0}
+  100%{background-position:-80% 0}
+}
+
+.release-announcement-nav{
+  padding-bottom:0;
+  min-height:22px;
+}
+.release-announcement-arrow i{
+  display:block;
+  will-change:transform,filter,opacity;
+}
+.release-announcement-arrow .fa-arrow-right{
+  animation:releaseArrowForward 1.9s ease-in-out infinite;
+}
+.release-announcement-arrow .fa-arrow-left{
+  animation:releaseArrowBackward 1.9s ease-in-out infinite;
+}
+.release-announcement-nav.is-middle .release-announcement-arrow:last-child i{
+  animation-delay:.28s;
+}
+@keyframes releaseArrowForward{
+  0%,18%,100%{
+    transform:translateX(0);
+    opacity:.62;
+    filter:drop-shadow(0 0 0 transparent);
+  }
+  48%{
+    transform:translateX(3px);
+    opacity:1;
+    filter:drop-shadow(-3px 0 3px color-mix(in srgb,var(--primary) 45%,transparent));
+  }
+  72%{
+    transform:translateX(1px);
+    opacity:.82;
+    filter:drop-shadow(-1px 0 2px color-mix(in srgb,var(--primary) 20%,transparent));
+  }
+}
+@keyframes releaseArrowBackward{
+  0%,18%,100%{
+    transform:translateX(0);
+    opacity:.62;
+    filter:drop-shadow(0 0 0 transparent);
+  }
+  48%{
+    transform:translateX(-3px);
+    opacity:1;
+    filter:drop-shadow(3px 0 3px color-mix(in srgb,var(--primary) 45%,transparent));
+  }
+  72%{
+    transform:translateX(-1px);
+    opacity:.82;
+    filter:drop-shadow(1px 0 2px color-mix(in srgb,var(--primary) 20%,transparent));
+  }
+}
+
+.release-announcement-card.is-dragging{
+  animation:none!important;
+  transition:none!important;
+  transform:translate3d(var(--release-drag-x,0),0,0)!important;
+  cursor:grabbing;
+}
+.release-announcement-card:not(.is-dragging){
+  --release-drag-x:0px;
+}
+
+@media(prefers-reduced-motion:reduce){
+  .release-announcement-card::before,
+  .release-announcement-arrow i{
+    animation:none!important;
+  }
+}
