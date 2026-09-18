@@ -66,11 +66,11 @@ function managerHomePendingSlidesVisible(volunteerAnalysis,volunteerAdjustments,
 function managerHomePendingPagerHtml(total,index){
   if(total<=1)return '';
   const first=index===0,last=index===total-1;
-  return `<div class="project-ui-pager" aria-label="Navegação das pendências">
-    <strong>${index+1}/${total}</strong>
-    <div>
-      ${first?'':`<button type="button" onclick="shiftManagerHomePending(-1,event)" aria-label="Pendência anterior"><i class="fa-solid fa-arrow-left"></i></button>`}
-      ${last?'':`<button type="button" onclick="shiftManagerHomePending(1,event)" aria-label="Próxima pendência"><i class="fa-solid fa-arrow-right"></i></button>`}
+  return `<div class="notice-carousel-pager" aria-label="Navegação das pendências">
+    <strong class="notice-carousel-counter">${index+1}/${total}</strong>
+    <div class="notice-carousel-nav">
+      ${first?'':`<button type="button" class="notice-carousel-arrow" onclick="shiftManagerHomePending(-1,event)" aria-label="Pendência anterior"><i class="fa-solid fa-arrow-left"></i></button>`}
+      ${last?'':`<button type="button" class="notice-carousel-arrow" onclick="shiftManagerHomePending(1,event)" aria-label="Próxima pendência"><i class="fa-solid fa-arrow-right"></i></button>`}
     </div>
   </div>`;
 }
@@ -78,21 +78,21 @@ function managerHomePendingCard(slides){
   if(!slides.length)return '';
   if(_managerHomePendingIndex>=slides.length)_managerHomePendingIndex=0;
   const slide=slides[_managerHomePendingIndex],total=slides.length;
-  return `<div class="list manager-home-project-pending-wrap">
-    <div class="list-item clickable project-ui-row project-ui-pending" role="button" tabindex="0" onclick="${slide.action}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();${slide.action}}">
-      <span class="avatar project-ui-avatar"><i class="fa-solid ${slide.icon}"></i></span>
-      <div class="item-main">
-        <h3>${escapeHtml(slide.title)}</h3>
-        <p>${escapeHtml(slide.area)} • ${escapeHtml(slide.text)}</p>
-        <div class="item-meta"><span class="badge ${slide.tone||''}">${escapeHtml(slide.statusLabel||'Precisa de atenção')}</span></div>
+  return `<section class="notice-carousel-card ${slide.tone?'is-'+slide.tone:''}" aria-label="Pendências" data-manager-home-pending>
+    <div class="notice-carousel-top">
+      <span class="notice-carousel-icon"><i class="fa-solid ${slide.icon}"></i></span>
+      <div class="notice-carousel-copy">
+        <div class="notice-carousel-meta"><span>${escapeHtml(slide.area)} · precisa de atenção</span></div>
+        <strong data-notice-title>${escapeHtml(slide.title)}</strong>
+        <p data-notice-summary>${escapeHtml(slide.text)}</p>
       </div>
-      <div class="project-ui-pending-side" onclick="event.stopPropagation()">
-        ${managerHomePendingPagerHtml(total,_managerHomePendingIndex)}
-        <button class="project-ui-dismiss" type="button" onclick="dismissManagerHomePending(event)">Agora não</button>
-      </div>
-      <i class="fa-solid fa-chevron-right project-ui-chevron"></i>
+      ${managerHomePendingPagerHtml(total,_managerHomePendingIndex)}
     </div>
-  </div>`;
+    <div class="notice-carousel-actions">
+      <button class="btn btn-outline" type="button" onclick="dismissManagerHomePending(event)">Agora não</button>
+      <button class="btn btn-primary" type="button" onclick="${slide.action}">Ver pendência</button>
+    </div>
+  </section>`;
 }
 function dismissManagerHomePending(event){
   event?.preventDefault?.();
@@ -140,10 +140,9 @@ function managerHome(){
     .manager-home{width:100%;display:grid;gap:16px}.manager-home-grid{display:grid;gap:16px;align-items:stretch}
     .manager-home-card{background:var(--surface);border:1px solid var(--border);border-radius:26px;padding:22px;box-shadow:var(--shadow);margin:0;min-width:0}
     .manager-home-card .section-head{align-items:flex-start;margin-bottom:16px}.manager-home-card .section-head h2{margin:0 0 4px;font-size:1.12rem;line-height:1.25;color:var(--text)}.manager-home-card .section-head p{margin:0;color:var(--muted);font-size:.76rem}
-    .manager-home-hero{margin:0;min-width:0}.manager-home-hero h1{letter-spacing:-.035em}.manager-home-today-list{display:grid;gap:10px;min-height:0}.manager-home-today-list>.empty{min-height:100px;display:grid;place-items:center}.manager-home-movements .card{box-shadow:none}
+    .manager-home-hero{margin:0;min-width:0}.manager-home-hero h1{letter-spacing:-.035em}.manager-home-hero .manager-home-hero-secondary{border-color:rgba(255,255,255,.28);color:#fff}.manager-home-today-list{display:grid;gap:10px;min-height:0}.manager-home-today-list>.empty{min-height:100px;display:grid;place-items:center}.manager-home-movements .card{box-shadow:none}
     .manager-home-today-item{cursor:pointer}
     .manager-home-top.single{grid-template-columns:1fr!important}
-    .manager-home-project-pending-wrap{margin:0}
     @media(min-width:1024px){
       .manager-home-grid{grid-template-columns:minmax(0,1.18fr) minmax(380px,.92fr)}
       .manager-home-hero{min-height:238px;padding:28px 34px;display:flex;flex-direction:column;justify-content:center;border-radius:26px}.manager-home-hero h1{font-size:clamp(2.2rem,2.8vw,3.35rem);line-height:1.04;margin:8px 0 10px}.manager-home-hero p{font-size:.88rem;max-width:720px;margin:0}.manager-home-hero .hero-actions{margin-top:20px}.manager-home-hero .btn{min-height:44px;padding:10px 16px;font-size:.75rem}
@@ -157,7 +156,7 @@ function managerHome(){
     <div class="manager-home-grid manager-home-top single">
       <section class="hero manager-home-hero">
         <div class="eyebrow" style="color:#d9eadf">Casa do Oleiro • Gestão</div><h1>${managerGreeting()}</h1><p class="muted">Veja o que precisa da sua atenção e o que acontece hoje na Casa.</p>
-        <div class="hero-actions"><button class="btn btn-light" onclick="navigateManager('volunteer')"><i class="fa-solid fa-users"></i>Ver voluntariado</button><button class="btn btn-outline" style="border-color:rgba(255,255,255,.28);color:white" onclick="navigateManager('planning')"><i class="fa-regular fa-calendar-check"></i>Abrir planejamento</button></div>
+        <div class="hero-actions"><button class="btn btn-light" onclick="navigateManager('volunteer')"><i class="fa-solid fa-users"></i>Ver voluntariado</button><button class="btn btn-outline" class="manager-home-hero-secondary" onclick="navigateManager('planning')"><i class="fa-regular fa-calendar-check"></i>Abrir planejamento</button></div>
       </section>
     </div>
     ${pendingCardHtml}
