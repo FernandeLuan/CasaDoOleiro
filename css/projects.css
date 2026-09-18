@@ -1450,3 +1450,161 @@
     margin-top:0!important;
   }
 }
+
+
+/* Admin Projetos · toolbar width + modal cleanup v5 */
+/* O grid compartilhado de voluntários prevê um terceiro botão (+). Em Projetos só há busca + filtro. */
+.legacy-project-tools{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  width:100%!important;
+  max-width:none!important;
+  gap:10px!important;
+}
+.legacy-project-tools .candidate-search{
+  min-width:0!important;
+  width:100%!important;
+}
+.legacy-project-tools .candidate-filter-button{
+  justify-self:end;
+}
+
+/* Detalhe do projeto: menos caixas e sem repetir o título dentro do corpo. */
+.legacy-admin-detail-v3{
+  display:grid;
+  gap:13px;
+}
+.legacy-admin-context-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:2px 0 10px;
+  border-bottom:1px solid color-mix(in srgb,var(--border) 88%,transparent);
+}
+.legacy-admin-context-person{
+  display:grid;
+  grid-template-columns:36px minmax(0,1fr);
+  gap:10px;
+  align-items:center;
+  min-width:0;
+}
+.legacy-admin-context-person>span{
+  width:36px;
+  height:36px;
+  border-radius:12px;
+  display:grid;
+  place-items:center;
+  background:var(--primary-soft);
+  color:var(--primary);
+  font-size:.66rem;
+}
+.legacy-admin-context-person>div{
+  min-width:0;
+}
+.legacy-admin-context-person strong{
+  display:block;
+  font-size:.68rem;
+  line-height:1.3;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.legacy-admin-context-person small{
+  display:block;
+  margin-top:2px;
+  color:var(--muted);
+  font-size:.53rem;
+  line-height:1.35;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.legacy-admin-context-status{
+  flex:0 0 auto;
+}
+.legacy-admin-context-status .badge{
+  padding:6px 9px!important;
+  border-radius:999px!important;
+  font-size:.51rem!important;
+  line-height:1!important;
+}
+
+/* A timeline vira o bloco principal, sem moldura externa. */
+.legacy-admin-detail-v3.has-tracking .legacy-admin-tracking{
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  gap:7px;
+}
+.legacy-admin-detail-v3.has-tracking .legacy-admin-tracking-head{
+  padding:0 1px 3px;
+}
+.legacy-admin-detail-v3.has-tracking .legacy-admin-tracking-head h3{
+  font-size:.8rem;
+}
+.legacy-admin-detail-v3.has-tracking .legacy-admin-tracking-head p{
+  margin-top:3px;
+  font-size:.55rem;
+}
+.legacy-admin-detail-v3.has-tracking .legacy-admin-timeline{
+  border-top:1px solid color-mix(in srgb,var(--border) 88%,transparent);
+  border-bottom:1px solid color-mix(in srgb,var(--border) 88%,transparent);
+}
+.legacy-admin-detail-v3.has-tracking .legacy-admin-timeline-item{
+  margin:0!important;
+  padding:12px 0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.legacy-admin-detail-v3.has-tracking .legacy-admin-timeline-item + .legacy-admin-timeline-item{
+  border-top:1px solid color-mix(in srgb,var(--border) 84%,transparent)!important;
+}
+.legacy-admin-detail-v3.has-tracking .legacy-admin-timeline-item>span{
+  background:var(--primary-soft);
+  border:0;
+}
+.legacy-admin-detail-v3.has-tracking .legacy-admin-original{
+  border-left:0;
+  border-right:0;
+  border-radius:0;
+  background:transparent;
+}
+.legacy-admin-detail-v3.has-tracking .legacy-admin-original>summary{
+  padding-left:0;
+  padding-right:0;
+}
+.legacy-admin-detail-v3.has-tracking .legacy-admin-original-body{
+  padding-left:0;
+  padding-right:0;
+}
+
+/* O cabeçalho do modal já mostra o nome do projeto, então não precisa de tanto peso visual. */
+.legacy-admin-modal .modal-head{
+  padding-bottom:13px!important;
+}
+.legacy-admin-modal .modal-head h2{
+  font-size:.98rem!important;
+}
+.legacy-admin-modal .modal-head p{
+  max-width:390px;
+}
+.legacy-admin-modal .modal-body{
+  padding-top:12px!important;
+}
+
+@media(max-width:760px){
+  .legacy-project-tools{
+    grid-template-columns:minmax(0,1fr) 56px!important;
+  }
+  .legacy-project-tools .candidate-filter-button{
+    width:56px!important;
+    min-width:56px!important;
+  }
+  .legacy-admin-context-row{
+    gap:9px;
+  }
+}
