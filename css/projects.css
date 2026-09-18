@@ -378,15 +378,9 @@
 .legacy-status-v5>.legacy-project-actions{margin-top:0}
 .legacy-status-v5>.legacy-how-link{margin-top:-2px}
 
-.legacy-project-update-card{display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:11px;align-items:center;margin-top:12px;padding:14px;border:1px solid #e8c876;border-radius:18px;background:linear-gradient(145deg,#fff7df,#fffdf7);box-shadow:0 8px 22px rgba(156,104,18,.06);transition:.2s ease}
-.legacy-project-update-card.is-leaving{opacity:0;transform:translateY(-5px)}
-.legacy-project-update-icon{width:42px;height:42px;border-radius:13px;background:#fff0c8;color:#a36d12;display:grid;place-items:center}
-.legacy-project-update-copy{min-width:0}
-.legacy-project-update-copy small{display:block;color:#a36d12;font-size:.52rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase}
-.legacy-project-update-copy strong{display:block;margin-top:2px;color:var(--text);font-size:.72rem}
-.legacy-project-update-copy p{margin:2px 0 0;color:var(--muted);font-size:.58rem;line-height:1.35}
-.legacy-project-update-card .btn{min-height:40px;white-space:nowrap}
-
+.project-adjustment-announcement .release-announcement-spark{background:#fff0c8;color:#a36d12}
+.project-adjustment-announcement .release-announcement-meta>span{color:#a36d12}
+.project-adjustment-announcement{border-color:color-mix(in srgb,#d9b45d 48%,var(--border))}
 .legacy-adjustment-modal-shell{max-width:520px}
 .legacy-adjustment-modal{display:grid;grid-template-columns:46px minmax(0,1fr);gap:12px;align-items:start}
 .legacy-adjustment-modal-icon{width:46px;height:46px;border-radius:14px;background:#fff0c8;color:#a36d12;display:grid;place-items:center}
@@ -402,7 +396,4 @@
   .legacy-status-review-link{width:100%;justify-content:center}
   .legacy-project-story-row{grid-template-columns:36px minmax(0,1fr);padding:12px 2px}
   .legacy-project-story-row>span{width:36px;height:36px}
-  .legacy-project-update-card{grid-template-columns:40px minmax(0,1fr);padding:13px}
-  .legacy-project-update-icon{width:40px;height:40px}
-  .legacy-project-update-card .btn{grid-column:1/-1;width:100%}
 }
