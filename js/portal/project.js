@@ -205,8 +205,8 @@
     const projectTitle=String(p.title||'Projeto Legado').trim();
 
     const arrivalText=startLabel
-      ?`Sua história com a Casa começou em <strong>${esc(startLabel)}</strong>${days?`. Foram <strong>${days} ${days===1?'dia':'dias'}</strong> conosco`:''}${unit?` em <strong>${esc(unit)}</strong>`:''}${endLabel?`, até ${esc(endLabel)}`:''}.`
-      :'Sua história com a Casa foi feita de presença, troca e muitos momentos que agora fazem parte da nossa memória.';
+      ?`Você chegou à Casa do Oleiro em <strong>${esc(startLabel)}</strong>${days?`. Foram <strong>${days} ${days===1?'dia':'dias'}</strong> conosco`:''}${unit?` em <strong>${esc(unit)}</strong>`:''}${endLabel?`, até ${esc(endLabel)}`:''}.`
+      :'Foi muito bom receber você na Casa do Oleiro e compartilhar essa experiência juntos.';
 
     const journeyText=progressCount
       ?`Ao longo dessa experiência, acompanhamos <strong>${progressCount} ${progressCount===1?'momento':'momentos'}</strong> do seu projeto ganhando forma. Cada etapa ajudou a construir o legado que ficou por aqui.`
