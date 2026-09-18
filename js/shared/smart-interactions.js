@@ -275,6 +275,64 @@
   };
   window.OleiroUI.transition=function(direction='forward',scope='page'){beginNavigation(direction,scope);scheduleMotion()};
 
+  /* Swipe compartilhado dos cards de aviso.
+     O gesto é detectado aqui; cada tela decide apenas o que é "anterior" e "próximo". */
+  let noticeSwipe=null;
+  const resetNoticeSwipe=card=>card?.classList?.remove('is-dragging');
+  document.addEventListener('pointerdown',event=>{
+    const card=event.target.closest?.('[data-notice-carousel]');
+    if(!card||event.button!==0||event.target.closest?.('button,a,input,textarea,select'))return;
+    noticeSwipe={
+      card,
+      pointerId:event.pointerId,
+      startX:event.clientX,
+      startY:event.clientY,
+      lastX:event.clientX,
+      horizontal:false
+    };
+    try{card.setPointerCapture?.(event.pointerId)}catch{}
+  },{passive:true});
+  document.addEventListener('pointermove',event=>{
+    const swipe=noticeSwipe;
+    if(!swipe||swipe.pointerId!==event.pointerId||!swipe.card?.isConnected)return;
+    const dx=event.clientX-swipe.startX;
+    const dy=event.clientY-swipe.startY;
+    swipe.lastX=event.clientX;
+    if(!swipe.horizontal){
+      if(Math.abs(dx)<7)return;
+      if(Math.abs(dy)>Math.abs(dx)*.9){
+        resetNoticeSwipe(swipe.card);
+        noticeSwipe=null;
+        return;
+      }
+      swipe.horizontal=true;
+      swipe.card.classList.add('is-dragging');
+    }
+    if(event.cancelable)event.preventDefault();
+  },{passive:false});
+  function finishNoticeSwipe(event){
+    const swipe=noticeSwipe;
+    if(!swipe||swipe.pointerId!==event.pointerId)return;
+    noticeSwipe=null;
+    const card=swipe.card;
+    const dx=(swipe.lastX??event.clientX)-swipe.startX;
+    const dy=event.clientY-swipe.startY;
+    resetNoticeSwipe(card);
+    if(!swipe.horizontal||Math.abs(dx)<42||Math.abs(dx)<=Math.abs(dy)*1.05)return;
+    const direction=dx<0?'next':'prev';
+    card.dispatchEvent(new CustomEvent('oleiro:notice-swipe',{
+      bubbles:true,
+      detail:{direction,source:card.dataset.noticeCarousel||''}
+    }));
+  }
+  document.addEventListener('pointerup',finishNoticeSwipe,{passive:true});
+  document.addEventListener('pointercancel',event=>{
+    const swipe=noticeSwipe;
+    if(!swipe||swipe.pointerId!==event.pointerId)return;
+    noticeSwipe=null;
+    resetNoticeSwipe(swipe.card);
+  },{passive:true});
+
   /* Acordeões/grupos mantêm o estado ao voltar para a tela. */
   function enhanceDetails(root=document){
     root.querySelectorAll?.('.info-accordion details,.group-details').forEach(details=>{
