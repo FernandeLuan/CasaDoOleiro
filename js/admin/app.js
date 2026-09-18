@@ -221,7 +221,8 @@ async function bootManager(){
   if(state.managerPage==='home')render();
   const initial=await Promise.allSettled([
     hydrateManagerSchedule(_oleiroToday,_oleiroToday,{force:true}),
-    hydrateManagerDashboardData({force:true})
+    hydrateManagerDashboardData({force:true}),
+    typeof window.hydrateManagerHomeOccupancy==='function'?window.hydrateManagerHomeOccupancy({force:true}):Promise.resolve([])
   ]);
   if(initial[0].status==='rejected')console.warn('Agenda de hoje indisponível no carregamento inicial:',initial[0].reason);
   if(initial[1].status==='rejected')console.warn('Resumo do painel indisponível no carregamento inicial:',initial[1].reason);
@@ -233,7 +234,7 @@ async function bootManager(){
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState!=='visible'||state.role!=='manager')return;
   if(state.managerPage==='volunteer')refreshManagerApplications().catch(console.error);
-  if(state.managerPage==='home'){hydrateManagerDashboardData({force:false}).catch(console.error);hydrateManagerSchedule(_oleiroToday,_oleiroToday,{force:false}).then(()=>render()).catch(console.error)}
+  if(state.managerPage==='home'){hydrateManagerDashboardData({force:false}).catch(console.error);hydrateManagerSchedule(_oleiroToday,_oleiroToday,{force:false}).then(()=>render()).catch(console.error);if(typeof window.hydrateManagerHomeOccupancy==='function')window.hydrateManagerHomeOccupancy({force:false}).catch(console.error)}
   hydrateManagerPendingChanges({force:false}).catch(console.error);
   if(state.managerPage==='agenda')hydrateManagerSchedule(state.agendaFrom||_oleiroToday,state.agendaTo||_oleiroToday,{force:false}).then(()=>render()).catch(console.error);
 });
