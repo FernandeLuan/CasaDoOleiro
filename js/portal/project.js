@@ -5,7 +5,6 @@
   const tx=(key,params={})=>typeof t==='function'?t(key,params):String(key||'');
   /* Homologação: mantém os avisos visíveis para facilitar validação visual.
      Remover/desativar antes de promover esta branch para produção. */
-  const ALWAYS_SHOW_HOME_NOTICES=true;
   let legacyProjectWizardStep=0;
   let legacyProjectWizardDraft=null;
   let legacyProjectWizardViewportCleanup=null;
@@ -22,20 +21,6 @@
     }[status]||['Rascunho',''];
   }
   function project(){return window.OleiroProjects?.getOwn?.()||null}
-  function projectAdjustmentToken(p){
-    return [p?.id||'',p?.reviewedAt||p?.updatedAt||'',p?.reviewNote||''].join('|');
-  }
-  function projectAdjustmentSeenKey(){
-    return `oleiro.portal.project-adjustment.seen.v1:${String(state.currentSession?.uid||'anon')}`;
-  }
-  function projectAdjustmentSeen(p){
-    if(ALWAYS_SHOW_HOME_NOTICES)return false;
-    try{return localStorage.getItem(projectAdjustmentSeenKey())===projectAdjustmentToken(p)}catch{return false}
-  }
-  function markProjectAdjustmentSeen(p){
-    if(ALWAYS_SHOW_HOME_NOTICES)return;
-    try{localStorage.setItem(projectAdjustmentSeenKey(),projectAdjustmentToken(p))}catch{}
-  }
   function ownerName(){
     const p=state.currentSession?.profile||{},a=state.currentApplication||{};
     return p.name||p.fullName||(Array.isArray(a.participantNames)?a.participantNames[0]:null)||'Voluntário';
@@ -274,25 +259,7 @@
     </section>`;
   }
 
-  function resetCompletedPreviewProjectForReview(){
-    if(!window.OleiroProjects?.isPreview)return;
-    const p=project();
-    if(!p||p.status!=='completed'||String(p.title||'').trim()!=='Composteira Orgânica')return;
-    const key=`oleiro.homologation.project-progress-reset.v1:${String(state.currentSession?.uid||'anon')}:${String(p.id||'project')}`;
-    try{
-      if(localStorage.getItem(key)==='1')return;
-      localStorage.setItem(key,'1');
-    }catch{}
-    window.OleiroProjects.saveOwn({
-      status:'in_progress',
-      completedAt:null,
-      result:'',
-      updatedAt:new Date().toISOString()
-    });
-  }
-
   window.volunteerProject=function(){
-    resetCompletedPreviewProjectForReview();
     if(!window.OleiroProjects?.onboardingDone?.())return onboardingPage();
     if(state.volunteerMode!=='approved')return candidatePreviewPage();
     const p=project();return p?statusPage(p):emptyPage();
@@ -575,7 +542,6 @@
     window.OleiroProjects.saveOwn({status:'completed',result,driveUrl,completedAt:new Date().toISOString()});closeModal();render();showToast('Seu legado foi concluído. Obrigado por deixar algo para a comunidade.');
   };
   window.dismissLegacyProjectAdjustmentNotice=function(){
-    const p=project();if(p)markProjectAdjustmentSeen(p);
     const card=document.querySelector('[data-project-adjustment-update="1"]');
     if(card){
       card.classList.add('is-leaving');
@@ -585,7 +551,6 @@
 
   window.openLegacyProjectAdjustmentNotice=function(){
     const p=project();if(!p||p.status!=='adjustments')return;
-    markProjectAdjustmentSeen(p);
     document.querySelector('[data-project-adjustment-update="1"]')?.classList.add('is-leaving');
     setTimeout(()=>document.querySelector('[data-project-adjustment-update="1"]')?.remove(),180);
     const body=`<div class="legacy-adjustment-modal"><span class="legacy-adjustment-modal-icon"><i class="fa-solid fa-pen-to-square"></i></span><div><small>${esc(tx('project.adjustment.modalEyebrow'))}</small><strong>${esc(tx('project.adjustment.modalTitle2'))}</strong><p>${esc(p.reviewNote||'Abra o projeto para conferir o que precisa ser revisto.')}</p></div></div>`;
