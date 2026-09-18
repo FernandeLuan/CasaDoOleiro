@@ -453,7 +453,7 @@
     const p=project(),done=p?.status==='completed';
     if(done)return '';
     if(p?.status==='adjustments'&&p.reviewNote&&!projectAdjustmentSeen(p)){
-      return `<section class="release-announcement-card project-adjustment-announcement" data-project-adjustment-update="1">
+      return `<section class="release-announcement-card project-adjustment-announcement legacy-home-callout-glow" data-project-adjustment-update="1">
         <div class="release-announcement-top">
           <span class="release-announcement-spark"><i class="fa-solid fa-pen-to-square"></i></span>
           <div class="release-announcement-copy">
