@@ -3,6 +3,9 @@
   const categories=['Sustentabilidade','Estrutura','Educação','Saúde e bem-estar','Cultura e lazer','Organização','Comunicação','Tecnologia','Outro'];
   const esc=v=>typeof escapeHtml==='function'?escapeHtml(v):String(v??'');
   const tx=(key,params={})=>typeof t==='function'?t(key,params):String(key||'');
+  /* Homologação: mantém os avisos visíveis para facilitar validação visual.
+     Remover/desativar antes de promover esta branch para produção. */
+  const ALWAYS_SHOW_HOME_NOTICES=true;
   let legacyProjectWizardStep=0;
   let legacyProjectWizardDraft=null;
   let legacyProjectWizardViewportCleanup=null;
@@ -26,9 +29,11 @@
     return `oleiro.portal.project-adjustment.seen.v1:${String(state.currentSession?.uid||'anon')}`;
   }
   function projectAdjustmentSeen(p){
+    if(ALWAYS_SHOW_HOME_NOTICES)return false;
     try{return localStorage.getItem(projectAdjustmentSeenKey())===projectAdjustmentToken(p)}catch{return false}
   }
   function markProjectAdjustmentSeen(p){
+    if(ALWAYS_SHOW_HOME_NOTICES)return;
     try{localStorage.setItem(projectAdjustmentSeenKey(),projectAdjustmentToken(p))}catch{}
   }
   function ownerName(){
