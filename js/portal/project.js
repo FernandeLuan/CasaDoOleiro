@@ -161,56 +161,6 @@
     </details>`;
   }
 
-  function legacyIsoDate(value){
-    if(!value)return '';
-    if(typeof value==='string')return value.slice(0,10);
-    if(typeof value?.toDate==='function')return value.toDate().toISOString().slice(0,10);
-    const date=new Date(value);return Number.isNaN(date.getTime())?'':date.toISOString().slice(0,10);
-  }
-  function legacyJourneyDate(value){
-    const iso=legacyIsoDate(value);if(!iso)return '';
-    try{return new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(iso+'T12:00:00')).replace('.','')}catch{return iso}
-  }
-  function legacyJourneyDays(start,end){
-    const from=legacyIsoDate(start),to=legacyIsoDate(end);if(!from||!to)return null;
-    const a=new Date(from+'T12:00:00'),b=new Date(to+'T12:00:00');
-    if(Number.isNaN(a.getTime())||Number.isNaN(b.getTime())||b<a)return null;
-    return Math.round((b-a)/86400000)+1;
-  }
-  function legacyVolunteerName(){
-    const session=state.currentSession||{},profile=session.profile||{},application=state.currentApplication||{};
-    return profile.name||profile.fullName||(Array.isArray(application.participantNames)?application.participantNames[0]:'')||'';
-  }
-  function legacyCompletionThankYouHtml(p){
-    const application=state.currentApplication||{};
-    const name=legacyVolunteerName(),firstName=String(name||'').trim().split(/\s+/)[0]||'';
-    const start=application.stayStart||application.from||'',end=application.stayEnd||application.to||p.completedAt||'';
-    const days=legacyJourneyDays(start,end),activityCount=Number(application.activityCount||0),unit=application.unitName||p.unitName||String(application.unitId||p.unitId||'').replace(/^./,c=>c.toUpperCase());
-    const intro=firstName?`Foi muito bom ter você conosco, ${esc(firstName)}.`:'Foi muito bom ter você conosco.';
-    const periodText=start
-      ?`Você chegou em <strong>${esc(legacyJourneyDate(start))}</strong>${days?` e viveu <strong>${days} ${days===1?'dia':'dias'}</strong> dessa experiência`:''}${unit?` em <strong>${esc(unit)}</strong>`:''}.`
-      :'Obrigado por fazer parte dessa experiência com a Casa do Oleiro.';
-    const activityText=activityCount>0
-      ?`Ao longo dessa jornada, seu planejamento reuniu <strong>${activityCount} ${activityCount===1?'atividade':'atividades'}</strong> e cada etapa ajudou a construir essa história.`
-      :'Ao longo dessa jornada, cada etapa ajudou a construir essa história.';
-    return `<section class="legacy-completion-thankyou">
-      <div class="legacy-completion-thankyou-icon"><i class="fa-solid fa-heart"></i></div>
-      <span class="eyebrow">Jornada concluída</span>
-      <h2>${intro}</h2>
-      <p>${periodText}</p>
-      <p>${activityText}</p>
-      <div class="legacy-completion-legacy">
-        <span><i class="fa-solid fa-seedling"></i></span>
-        <div>
-          <small>O legado que você deixou</small>
-          <strong>${esc(p.title||'Projeto Legado')}</strong>
-          <p>${esc(p.result||p.description||'Um projeto construído para a comunidade.')}</p>
-        </div>
-      </div>
-      ${p.completedAt?`<div class="legacy-completion-seal"><i class="fa-solid fa-circle-check"></i> Legado concluído em ${esc(legacyJourneyDate(p.completedAt))}</div>`:''}
-    </section>`;
-  }
-
   function statusPage(p){
     const [label,tone]=statusMeta(p.status);
     const editable=['draft','adjustments'].includes(p.status);
@@ -226,7 +176,15 @@
       ${p.materials?row('fa-toolbox','Materiais / apoio',p.materials):''}
     </div>`;
     const drive=p.driveUrl?`<a class="legacy-project-drive-v5" href="${esc(p.driveUrl)}" target="_blank" rel="noopener noreferrer"><span><i class="fa-brands fa-google-drive"></i></span><div><strong>Google Drive</strong><small>Fotos, vídeos e documentos do projeto</small></div><i class="fa-solid fa-arrow-up-right-from-square"></i></a>`:'';
-    const result=completed?legacyCompletionThankYouHtml(p):'';
+    const result=p.result?`<section class="legacy-project-outcome-v6">
+      <span class="legacy-project-outcome-icon"><i class="fa-solid fa-heart"></i></span>
+      <div>
+        <small>O que ficou para a comunidade</small>
+        <h2>${esc(p.result)}</h2>
+        <p>Este é o resultado final registrado pelo voluntário.</p>
+        ${p.completedAt?`<span class="legacy-project-outcome-date"><i class="fa-solid fa-circle-check"></i>Concluído em ${esc(legacyProgressDate(p.completedAt))}</span>`:''}
+      </div>
+    </section>`:'';
 
     const heroSummary=`
       <div class="legacy-status-hero-top">
