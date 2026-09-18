@@ -97,3 +97,8 @@
 
 .modal.modal-wide{max-width:560px!important}
 .modal.modal-compact{max-width:390px!important}
+
+/* Modal aberto com teclado móvel: estado compartilhado por fluxos com formulário longo. */
+.modal.modal-keyboard-open{
+  max-height:calc(var(--modal-viewport-height,100dvh) - 12px)!important;
+}
