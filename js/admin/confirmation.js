@@ -1,14 +1,6 @@
-/* Confirmação destrutiva do cadastro.
-   A exclusão completa usa Firebase Admin no utilitário do Cloud Shell; o navegador não
-   tem permissão para remover outra conta do Firebase Authentication. */
-(function confirmR15(){
-  function candidateEmail(p){
-    const direct=String(p?.email||'').trim();
-    const list=Array.isArray(p?.participantEmails)?p.participantEmails.map(value=>String(value||'').trim()).filter(Boolean):[];
-    return direct||list[0]||'';
-  }
-  function shellQuote(value){return "'" + String(value||'').replaceAll("'", "'\\''") + "'"}
-
+/* Exclusão administrativa direta do cadastro no Firestore.
+   A remoção revoga imediatamente o acesso ao Portal ao excluir o documento users/{uid}. */
+(function confirmDeleteVolunteer(){
   window.syncDeleteVolunteerConfirm=function(){
     const input=document.getElementById('deleteVolunteerConfirm'),button=document.getElementById('deleteVolunteerConfirmButton');
     if(!button)return;
@@ -18,37 +10,60 @@
   };
 
   window.requestDeleteVolunteerApplication=function(encodedId){
-    const id=decodeURIComponent(encodedId),p=candidateById(id);if(!p)return;
+    const id=decodeURIComponent(String(encodedId||'')),p=candidateById(id);if(!p)return;
     openModal(
       'Excluir cadastro definitivamente?',
-      `Esta ação remove ${escapeHtml(p.name)} do portal e do Firebase Authentication.`,
-      `<div class="notice danger"><i class="fa-solid fa-triangle-exclamation"></i><div><strong>Esta ação não pode ser desfeita.</strong><br>Atividades, sessões, perfil e acesso serão removidos.</div></div><div class="field" style="margin-top:12px"><label for="deleteVolunteerConfirm">Digite EXCLUIR para confirmar</label><input id="deleteVolunteerConfirm" class="input" autocomplete="off" placeholder="EXCLUIR" oninput="syncDeleteVolunteerConfirm()"></div>`,
-      `<div class="confirm-actions"><button class="btn btn-outline" type="button" onclick="closeModal()">Cancelar</button><button id="deleteVolunteerConfirmButton" class="btn btn-danger" type="button" onclick="confirmDeleteVolunteerApplication('${encodeURIComponent(id)}')" disabled>Continuar</button></div>`
+      `Esta ação apaga os dados de ${escapeHtml(p.name)} e revoga o acesso ao Portal.`,
+      `<div class="notice danger"><i class="fa-solid fa-triangle-exclamation"></i><div><strong>Esta ação não pode ser desfeita.</strong><br>Candidatura, histórico, atividades, sessões, perfil e permissão de acesso serão removidos.</div></div><div class="field" style="margin-top:12px"><label for="deleteVolunteerConfirm">Digite EXCLUIR para confirmar</label><input id="deleteVolunteerConfirm" class="input" autocomplete="off" autocapitalize="characters" placeholder="EXCLUIR" oninput="syncDeleteVolunteerConfirm()"></div>`,
+      `<div class="confirm-actions"><button class="btn btn-outline" type="button" onclick="closeModal()">Cancelar</button><button id="deleteVolunteerConfirmButton" class="btn btn-danger" type="button" onclick="confirmDeleteVolunteerApplication('${encodeURIComponent(id)}')" disabled><i class="fa-solid fa-trash"></i>Excluir definitivamente</button></div>`
     );
   };
 
-  window.confirmDeleteVolunteerApplication=function(encodedId){
-    const id=decodeURIComponent(encodedId),p=candidateById(id);if(!p)return;
-    const email=candidateEmail(p);
-    if(!email)return showToast('Este cadastro não possui e-mail disponível para a exclusão completa.');
-    const command=`cd ~/CasaDoOleiro && git pull && cd functions && npm install && node tools/delete-volunteer.js ${shellQuote(email)}`;
-    openModal(
-      'Executar exclusão completa',
-      'Por segurança, a exclusão definitiva é feita com Firebase Admin no Google Cloud Shell.',
-      `<div class="notice"><i class="fa-solid fa-shield-halved"></i><div>O navegador não pode apagar outra conta do Firebase Authentication. Use o utilitário administrativo abaixo para remover Authentication, candidatura, perfil, atividades, sessões e histórico de uma só vez.</div></div><div class="field" style="margin-top:12px"><label for="deleteVolunteerCommand">Comando</label><textarea id="deleteVolunteerCommand" class="textarea" readonly rows="4">${escapeHtml(command)}</textarea></div><small>O utilitário ainda pedirá a confirmação literal EXCLUIR antes de apagar qualquer dado.</small>`,
-      `<div class="confirm-actions"><button class="btn btn-outline" type="button" onclick="closeModal()">Fechar</button><button class="btn btn-primary" type="button" onclick="copyDeleteVolunteerCommand()"><i class="fa-regular fa-copy"></i>Copiar comando</button></div>`
-    );
-  };
+  function clearDeletedCandidateState(id){
+    const key=String(id);
+    state.candidates=(state.candidates||[]).filter(row=>String(row.id)!==key);
+    state.pendingChangeRequests=(state.pendingChangeRequests||[]).filter(row=>String(row.applicationId||'')!==key);
+    if(state.adminAccountReadAt)delete state.adminAccountReadAt[key];
+    if(state.participantAccessCache)delete state.participantAccessCache[key];
+    if(state.adminPlanningCache)delete state.adminPlanningCache[key];
+    if(state.adminPlanPageIndex)delete state.adminPlanPageIndex[key];
+    if(String(state.managerPlanningPersonId||'')===key){
+      state.managerPlanningPersonId='';
+      state.managerPlanningBody='';
+      state.managerPlanningTab='plan';
+      state.managerPlanningLoading=false;
+    }
+  }
 
-  window.copyDeleteVolunteerCommand=async function(){
-    const field=document.getElementById('deleteVolunteerCommand');if(!field)return;
-    const value=String(field.value||'');
+  window.confirmDeleteVolunteerApplication=async function(encodedId){
+    const id=decodeURIComponent(String(encodedId||'')),p=candidateById(id),button=document.getElementById('deleteVolunteerConfirmButton');
+    if(!p)return showToast('Cadastro não encontrado.');
+    if(String(document.getElementById('deleteVolunteerConfirm')?.value||'').trim()!=='EXCLUIR')return;
+    if(!window.OleiroServices?.applications?.purgeVolunteerApplication)return showToast('Serviço de exclusão indisponível.');
+
+    if(button){
+      button.disabled=true;
+      button.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i>Excluindo...';
+    }
+
     try{
-      await navigator.clipboard.writeText(value);
-      showToast('Comando copiado.');
-    }catch{
-      field.focus();field.select();
-      try{document.execCommand('copy');showToast('Comando copiado.')}catch{showToast('Selecione e copie o comando manualmente.')}
+      const result=await window.OleiroServices.applications.purgeVolunteerApplication(id);
+      clearDeletedCandidateState(id);
+      closeModal();
+      state.managerPage='volunteer';
+      render();
+      if(typeof afterNavigation==='function')afterNavigation();
+      showToast(result?.alreadyDeleted?'O cadastro já havia sido excluído.':'Cadastro excluído e acesso revogado.');
+      Promise.resolve(typeof hydrateManagerDashboardData==='function'?hydrateManagerDashboardData({force:true}):null).catch(console.error);
+    }catch(error){
+      console.error('Falha ao excluir cadastro:',error);
+      const message=String(error?.message||'');
+      if(/permission|insufficient/i.test(message))showToast('A exclusão foi bloqueada pelas permissões do banco. Atualize a página e tente novamente.');
+      else showToast(message||'Não foi possível excluir o cadastro.');
+      if(button?.isConnected){
+        button.disabled=false;
+        button.innerHTML='<i class="fa-solid fa-trash"></i>Excluir definitivamente';
+      }
     }
   };
 })();
