@@ -14,7 +14,7 @@
     openModal(
       'Excluir cadastro definitivamente?',
       `Esta ação apaga os dados de ${escapeHtml(p.name)} e revoga o acesso ao Portal.`,
-      `<div class="notice danger"><i class="fa-solid fa-triangle-exclamation"></i><div><strong>Esta ação não pode ser desfeita.</strong><br>Candidatura, histórico, atividades, sessões, perfil e permissão de acesso serão removidos.</div></div><div class="field" style="margin-top:12px"><label for="deleteVolunteerConfirm">Digite EXCLUIR para confirmar</label><input id="deleteVolunteerConfirm" class="input" autocomplete="off" autocapitalize="characters" placeholder="EXCLUIR" oninput="syncDeleteVolunteerConfirm()"></div>`,
+      `<div class="notice danger"><i class="fa-solid fa-triangle-exclamation"></i><div><strong>Esta ação não pode ser desfeita.</strong><br>Candidatura, atividades, sessões, perfil e permissão de acesso serão removidos.</div></div><div class="field" style="margin-top:12px"><label for="deleteVolunteerConfirm">Digite EXCLUIR para confirmar</label><input id="deleteVolunteerConfirm" class="input" autocomplete="off" autocapitalize="characters" placeholder="EXCLUIR" oninput="syncDeleteVolunteerConfirm()"></div>`,
       `<div class="confirm-actions"><button class="btn btn-outline" type="button" onclick="closeModal()">Cancelar</button><button id="deleteVolunteerConfirmButton" class="btn btn-danger" type="button" onclick="confirmDeleteVolunteerApplication('${encodeURIComponent(id)}')" disabled><i class="fa-solid fa-trash"></i>Excluir definitivamente</button></div>`
     );
   };
@@ -53,7 +53,7 @@
       state.managerPage='volunteer';
       render();
       if(typeof afterNavigation==='function')afterNavigation();
-      showToast(result?.alreadyDeleted?'O cadastro já havia sido excluído.':'Cadastro excluído e acesso revogado.');
+      showToast(result?.alreadyDeleted?'O cadastro já havia sido excluído.':'Cadastro excluído do sistema e acesso revogado.');
       Promise.resolve(typeof hydrateManagerDashboardData==='function'?hydrateManagerDashboardData({force:true}):null).catch(console.error);
     }catch(error){
       console.error('Falha ao excluir cadastro:',error);
