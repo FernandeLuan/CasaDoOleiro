@@ -154,9 +154,9 @@
     state.projectUnit=normalizeProjectUnit(state.projectUnit);
     const list=rows(),activeFilter=state.projectFilter!=='all'||state.projectUnit!=='all';
     return `<section class="section legacy-admin-page legacy-admin-page-clean compact-page-top">
-      <div class="candidate-tools candidate-tools-compact legacy-project-tools">
-        <div class="filter-search candidate-search"><i class="fa-solid fa-magnifying-glass"></i><input id="projectSearch" class="input" type="search" value="${esc(state.projectSearch||'')}" placeholder="Buscar projeto ou voluntário" oninput="updateLegacyProjectSearch(this.value)"></div>
-        <button class="candidate-filter-button ${activeFilter?'active':''}" type="button" onclick="openLegacyProjectFilters()" aria-label="Filtros"><i class="fa-solid fa-sliders"></i>${activeFilter?'<span class="filter-dot"></span>':''}</button>
+      <div class="admin-filter-toolbar">
+        <div class="filter-search admin-filter-search"><i class="fa-solid fa-magnifying-glass"></i><input id="projectSearch" class="input" type="search" value="${esc(state.projectSearch||'')}" placeholder="Buscar projeto ou voluntário" oninput="updateLegacyProjectSearch(this.value)"></div>
+        <button class="admin-filter-button ${activeFilter?'active':''}" type="button" onclick="openLegacyProjectFilters()" aria-label="Filtros"><i class="fa-solid fa-sliders"></i>${activeFilter?'<span class="filter-dot"></span>':''}</button>
       </div>
       <div class="list project-ui-list">${list.length?list.map(projectCard).join(''):'<div class="empty"><i class="fa-solid fa-seedling"></i>Nenhum projeto encontrado.</div>'}</div>
     </section>`;
