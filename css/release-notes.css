@@ -345,3 +345,17 @@
     flex-basis:20px;
   }
 }
+
+
+/* Unified notice carousel tones */
+.release-announcement-card.is-warning{
+  border-color:color-mix(in srgb,#d7a642 46%,var(--border));
+}
+.release-announcement-card.is-warning .release-announcement-spark{
+  background:#fff0c8;
+  color:#a36d12;
+  box-shadow:0 7px 18px rgba(163,109,18,.12);
+}
+.release-announcement-card.is-warning .release-announcement-meta>span{
+  color:#a36d12;
+}
