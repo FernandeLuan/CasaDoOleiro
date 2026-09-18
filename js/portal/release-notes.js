@@ -147,7 +147,7 @@
   function resetReleaseSwipe(card){
     if(!card)return;
     card.classList.remove('is-dragging');
-    card.style.removeProperty('--release-drag-x');
+    card.style.removeProperty('--release-content-drag-x');
   }
   document.addEventListener('pointerdown',event=>{
     const card=event.target.closest?.('[data-release-announcement]');
@@ -182,7 +182,7 @@
     const first=homeSlideIndex===0,last=homeSlideIndex===homeSlides().length-1;
     const blocked=(first&&dx>0)||(last&&dx<0);
     const distance=Math.max(-62,Math.min(62,blocked?dx*.28:dx*.72));
-    swipe.card.style.setProperty('--release-drag-x',distance+'px');
+    swipe.card.style.setProperty('--release-content-drag-x',distance+'px');
   },{passive:false});
   function finishReleaseSwipe(event){
     const swipe=releaseSwipe;
