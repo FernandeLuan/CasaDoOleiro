@@ -29,6 +29,7 @@ function openDashboardVolunteerFilter(status){
 }
 function openDashboardProjectFilter(status){
   state.projectFilter=String(status||'all');
+  state.projectUnit='all';
   state.projectSearch='';
   navigateManager('projects');
 }
