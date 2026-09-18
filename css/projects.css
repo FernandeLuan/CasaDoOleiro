@@ -1,5 +1,5 @@
 /* Projeto Legado — estilos específicos consolidados.
-   Primitivos (botões, cards, badges, listas, modais e avisos) ficam nos estilos compartilhados. */
+   Cards, badges, botões, formulários, modais e avisos usam os componentes compartilhados. */
 
 .legacy-page{
   max-width:980px;
@@ -289,122 +289,6 @@
 }
 .legacy-hand.right{
   transform:rotate(10deg);
-}
-.legacy-home-callout{
-  position:relative;
-  isolation:isolate;
-  display:grid;
-  grid-template-columns:44px minmax(0,1fr);
-  gap:12px;
-  align-items:center;
-  margin-bottom:16px;
-  padding:15px;
-  background:linear-gradient(145deg,color-mix(in srgb,var(--primary-soft) 86%,var(--surface)),var(--surface));
-  border:1px solid color-mix(in srgb,var(--primary) 26%,var(--border));
-  border-radius:18px;
-  overflow:hidden;
-  transition:opacity .2s ease,transform .2s ease;
-}
-.legacy-home-callout.is-leaving{
-  opacity:0;
-  transform:translateY(-6px);
-}
-.legacy-home-callout>*{
-  position:relative;
-  z-index:1;
-}
-.legacy-home-callout-icon{
-  width:44px;
-  height:44px;
-  border-radius:14px;
-  background:var(--primary);
-  color:white;
-  display:grid;
-  place-items:center;
-  box-shadow:0 6px 16px color-mix(in srgb,var(--primary) 22%,transparent);
-}
-.legacy-home-callout-copy{
-  min-width:0;
-}
-.legacy-home-callout strong{
-  display:block;
-  font-size:.78rem;
-  line-height:1.25;
-}
-.legacy-home-callout p{
-  font-size:.64rem;
-  line-height:1.45;
-  color:var(--muted);
-  margin-top:3px;
-}
-.legacy-home-callout-actions{
-  grid-column:1/-1;
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
-  margin-top:2px;
-}
-.legacy-home-callout-actions .btn{
-  width:100%;
-  min-height:42px;
-}
-.legacy-home-callout-glow::before{
-  content:"";
-  position:absolute;
-  z-index:0;
-  inset:-1px;
-  border-radius:19px;
-  padding:2px;
-  background:linear-gradient(115deg,transparent 0%,transparent 34%,rgba(255,255,255,.95) 47%,color-mix(in srgb,var(--primary) 82%,#fff) 52%,transparent 65%,transparent 100%);
-  background-size:260% 100%;
-  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
-  -webkit-mask-composite:xor;
-  mask-composite:exclude;
-  pointer-events:none;
-  animation:legacyBorderSweep 3.1s linear infinite;
-}
-.legacy-home-callout-glow::after{
-  content:"";
-  position:absolute;
-  width:92px;
-  height:92px;
-  border-radius:50%;
-  right:-28px;
-  top:-36px;
-  background:color-mix(in srgb,var(--primary) 14%,transparent);
-  filter:blur(1px);
-  pointer-events:none;
-}
-.legacy-skip-message{
-  display:grid;
-  grid-template-columns:42px minmax(0,1fr);
-  gap:12px;
-  align-items:start;
-}
-.legacy-skip-icon{
-  width:42px;
-  height:42px;
-  border-radius:13px;
-  background:var(--primary-soft);
-  color:var(--primary);
-  display:grid;
-  place-items:center;
-}
-.legacy-skip-message strong{
-  display:block;
-  font-size:.75rem;
-}
-.legacy-skip-message p{
-  margin-top:5px;
-  font-size:.66rem;
-  line-height:1.5;
-  color:var(--muted);
-}
-.legacy-skip-actions{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
-  width:100%;
 }
 .legacy-admin-page{
   max-width:1320px;
@@ -2365,10 +2249,6 @@ button.project-ui-row{
   transform:rotate(180deg);
 }
 @media(prefers-reduced-motion:reduce){
-  .legacy-home-callout-glow::before{
-    animation:none;
-    background-position:center;
-  }
   .legacy-candidate-steps::after{
     animation:none;
     display:none;
@@ -2418,30 +2298,6 @@ button.project-ui-row{
   }
   .legacy-onboarding-footer{
     padding-bottom:8px;
-  }
-  .legacy-home-callout{
-    grid-template-columns:40px minmax(0,1fr);
-    padding:14px;
-  }
-  .legacy-home-callout-icon{
-    width:40px;
-    height:40px;
-  }
-  .legacy-home-callout strong{
-    font-size:.8rem;
-  }
-  .legacy-home-callout p{
-    font-size:.66rem;
-  }
-  .legacy-home-callout-actions{
-    grid-template-columns:1fr 1fr;
-    gap:8px;
-  }
-  .legacy-home-callout-actions .btn{
-    width:100%;
-    min-width:0;
-    padding-left:8px;
-    padding-right:8px;
   }
   .legacy-candidate-preview-v2{
     gap:14px;
@@ -2708,8 +2564,6 @@ button.project-ui-row{
   }
 }
 
-@keyframes legacyBorderSweep{0%{background-position:180% 0}100%{background-position:-80% 0}}
-
 @keyframes legacyStepTravel{
   0%{left:16.5%;opacity:0}
   6%{left:16.5%;opacity:.72}
@@ -2754,37 +2608,16 @@ button.project-ui-row{
   }
 }
 
-/* Projeto Admin — composição sobre os componentes compartilhados */
-.project-ui-row{
-  width:100%;
-  font:inherit;
-  color:var(--text);
-  text-align:left;
-  cursor:pointer;
-}
+/* Admin Projeto: composição sobre .list-item/.avatar/.item-main/.item-meta/.badge */
+.project-ui-row{width:100%;font:inherit;color:var(--text);text-align:left;cursor:pointer}
 button.project-ui-row{appearance:none}
 .project-ui-avatar{font-size:.76rem}
-.project-ui-chevron{
-  flex:0 0 auto;
-  margin-top:11px;
-  color:var(--muted);
-  font-size:.7rem;
-}
+.project-ui-chevron{flex:0 0 auto;margin-top:11px;color:var(--muted);font-size:.7rem}
 .project-ui-list{gap:12px}
-.project-ui-expandable{
-  overflow:hidden;
-  border:1px solid var(--border);
-  border-radius:16px;
-  background:var(--surface);
-  box-shadow:0 3px 16px rgba(0,0,0,.035);
-}
+.project-ui-expandable{overflow:hidden;border:1px solid var(--border);border-radius:16px;background:var(--surface);box-shadow:0 3px 16px rgba(0,0,0,.035)}
 .project-ui-expandable>summary{list-style:none}
 .project-ui-expandable>summary::-webkit-details-marker{display:none}
-.project-ui-expandable>.project-ui-summary{
-  border:0;
-  border-radius:0;
-  box-shadow:none;
-}
+.project-ui-expandable>.project-ui-summary{border:0;border-radius:0;box-shadow:none}
 .project-ui-expandable[open]>.project-ui-summary{border-bottom:1px solid var(--border)}
 .project-ui-expand-chevron{transition:transform .18s ease}
 .project-ui-expandable[open] .project-ui-expand-chevron{transform:rotate(180deg)}
