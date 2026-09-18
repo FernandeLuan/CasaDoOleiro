@@ -120,9 +120,9 @@ has js/services/auth-guard.js 'Sem conexão'
 css_has offline-action
 css_has unit-admin-card
 css_has overscroll-behavior-y:none
-has js/portal/round12-ui.js volunteer-change-pending
-has js/admin/round12-ui.js 'Aprovar mudança'
-has js/admin/round7-ui.js 'Reiniciar planejamento'
+has js/portal/pending-change-state.js volunteer-change-pending
+has js/admin/adjustment-focus.js 'Aprovar mudança'
+has js/admin/planning-maintenance.js 'Reiniciar planejamento'
 for token in 'Limpar planejamento' 'candidateSubmitted=[' "['analysis','adjustments']" admin-review-actions-r24 btn-plan-clear-warning day-initial-analysis 'Em análise'; do has js/admin/planning-review-controls.js "$token"; done
 for token in aria-busy action.resendReview action.sending; do has js/portal/review-safeguards.js "$token"; done
 has js/portal/selection-flow.js 'deleteSession(session.id'
