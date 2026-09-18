@@ -329,68 +329,12 @@
     renderReleaseSlide('next');
   };
 
-  let releaseSwipe=null;
-  function resetReleaseSwipe(card){
-    if(!card)return;
-    card.classList.remove('is-dragging');
-  }
-  document.addEventListener('pointerdown',event=>{
-    const card=event.target.closest?.('[data-release-announcement]');
-    if(!card||event.button!==0||event.target.closest?.('button,a'))return;
-    releaseSwipe={
-      card,
-      pointerId:event.pointerId,
-      startX:event.clientX,
-      startY:event.clientY,
-      lastX:event.clientX,
-      horizontal:false
-    };
-    try{card.setPointerCapture?.(event.pointerId)}catch{}
-  },{passive:true});
-  document.addEventListener('pointermove',event=>{
-    const swipe=releaseSwipe;
-    if(!swipe||swipe.pointerId!==event.pointerId||!swipe.card?.isConnected)return;
-    const dx=event.clientX-swipe.startX;
-    const dy=event.clientY-swipe.startY;
-    swipe.lastX=event.clientX;
-    if(!swipe.horizontal){
-      if(Math.abs(dx)<7)return;
-      if(Math.abs(dy)>Math.abs(dx)*.9){
-        resetReleaseSwipe(swipe.card);
-        releaseSwipe=null;
-        return;
-      }
-      swipe.horizontal=true;
-      swipe.card.classList.add('is-dragging');
-    }
-    if(event.cancelable)event.preventDefault();
-    /* O gesto é reconhecido, mas o conteúdo permanece completamente fixo.
-       A troca acontece apenas quando o dedo é solto após um swipe válido. */
-  },{passive:false});
-  function finishReleaseSwipe(event){
-    const swipe=releaseSwipe;
-    if(!swipe||swipe.pointerId!==event.pointerId)return;
-    releaseSwipe=null;
-    const card=swipe.card;
-    const dx=(swipe.lastX??event.clientX)-swipe.startX;
-    const dy=event.clientY-swipe.startY;
-    resetReleaseSwipe(card);
-    if(!swipe.horizontal||Math.abs(dx)<42||Math.abs(dx)<=Math.abs(dy)*1.05)return;
-    if(dx<0&&homeSlideIndex<homeSlides().length-1){
-      homeSlideIndex+=1;
-      renderReleaseSlide('next');
-    }else if(dx>0&&homeSlideIndex>0){
-      homeSlideIndex-=1;
-      renderReleaseSlide('prev');
-    }
-  }
-  document.addEventListener('pointerup',finishReleaseSwipe,{passive:true});
-  document.addEventListener('pointercancel',event=>{
-    const swipe=releaseSwipe;
-    if(!swipe||swipe.pointerId!==event.pointerId)return;
-    releaseSwipe=null;
-    resetReleaseSwipe(swipe.card);
-  },{passive:true});
+  document.addEventListener('oleiro:notice-swipe',event=>{
+    if(event.detail?.source!=='portal-home')return;
+    if(event.detail.direction==='next')window.portalReleaseNext?.();
+    else if(event.detail.direction==='prev')window.portalReleasePrev?.();
+  });
+
   window.dismissPortalHomeNotice=function(){
     const slide=homeSlide();
     if(!slide)return;
