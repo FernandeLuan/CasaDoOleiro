@@ -48,16 +48,20 @@
     async listScheduleRange({from,to}={}){
       if(!from||!to||String(to)<String(from))return [];
       return services.run(async()=>{
-        const context=await services.firebase(),{firestore}=context.modules,started=Date.now();
-        const q=firestore.query(
-          firestore.collection(context.db,'activity_sessions'),
-          firestore.where('date','>=',String(from)),
-          firestore.where('date','<=',String(to)),
-          firestore.orderBy('date','asc')
-        );
-        const snapshot=await firestore.getDocs(q);
-        services.recordQuery?.('activity_sessions/range',started,snapshot.size,{from:String(from),to:String(to),singleQuery:true});
-        return snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
+        const context=await services.firebase();
+        const key=JSON.stringify(['activity_sessions/range',String(from),String(to)]);
+        return services.shareQuery(context,key,async()=>{
+          const {firestore}=context.modules,started=Date.now();
+          const q=firestore.query(
+            firestore.collection(context.db,'activity_sessions'),
+            firestore.where('date','>=',String(from)),
+            firestore.where('date','<=',String(to)),
+            firestore.orderBy('date','asc')
+          );
+          const snapshot=await firestore.getDocs(q);
+          services.recordQuery?.('activity_sessions/range',started,snapshot.size,{from:String(from),to:String(to),singleQuery:true});
+          return snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
+        });
       },{loading:false,monitor:{area:'planning',action:'schedule_range'}});
     },
 
