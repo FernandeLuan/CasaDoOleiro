@@ -288,3 +288,55 @@
   .legacy-status-detail-row{padding:13px 14px}
   .legacy-status-v2 .legacy-project-actions.legacy-project-actions-pair{position:relative;z-index:1}
 }
+
+
+/* Projeto Legado — projeto salvo/revisão, versão compacta */
+.legacy-status-v4{display:grid;gap:10px;padding-top:10px;padding-bottom:100px}
+.legacy-status-card-v4{overflow:hidden;border:1px solid var(--border);border-radius:22px;background:var(--surface);box-shadow:0 10px 28px rgba(27,61,44,.05)}
+.legacy-status-card-head{padding:17px 17px 13px}
+.legacy-status-card-topline{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+.legacy-status-card-topline .eyebrow{margin:0}
+.legacy-status-card-topline .badge{flex:0 0 auto;white-space:nowrap}
+.legacy-status-card-v4 h1{margin:0;font-size:1.16rem;line-height:1.16;letter-spacing:-.02em;color:var(--text);overflow-wrap:anywhere}
+.legacy-status-card-v4 .legacy-status-card-copy>p{margin:5px 0 0;color:var(--muted);font-size:.64rem}
+
+.legacy-adjustment-inline{display:grid;grid-template-columns:30px minmax(0,1fr);gap:9px;align-items:start;margin:0 14px 12px;padding:10px 11px;border-radius:13px;background:color-mix(in srgb,#fff1c8 72%,var(--surface));color:#9b6812}
+.legacy-adjustment-inline>i{width:30px;height:30px;border-radius:10px;background:rgba(255,255,255,.62);display:grid;place-items:center;font-size:.7rem}
+.legacy-adjustment-inline strong{display:block;font-size:.63rem;line-height:1.25}
+.legacy-adjustment-inline p{margin:2px 0 0;font-size:.58rem;line-height:1.35;color:inherit}
+
+.legacy-status-grid-v4{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:0 14px 13px}
+.legacy-status-mini{min-width:0;padding:11px;border-radius:13px;background:color-mix(in srgb,var(--primary-soft) 34%,var(--surface));border:1px solid color-mix(in srgb,var(--primary) 8%,var(--border))}
+.legacy-status-mini small{display:block;margin-bottom:4px;color:var(--muted);font-size:.51rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.legacy-status-mini p{margin:0;color:var(--text);font-size:.61rem;line-height:1.42;overflow-wrap:anywhere}
+
+.legacy-drive-inline-v4{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:10px;align-items:center;margin:0 14px 13px;padding:10px 0 0;border-top:1px solid var(--border);text-decoration:none;color:inherit}
+.legacy-drive-inline-v4>span{width:34px;height:34px;border-radius:11px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center}
+.legacy-drive-inline-v4 strong{display:block;font-size:.63rem}
+.legacy-drive-inline-v4 small{display:block;margin-top:1px;color:var(--muted);font-size:.54rem}
+.legacy-drive-inline-v4>i{color:var(--muted);font-size:.68rem}
+
+.legacy-result-inline-v4{display:grid;grid-template-columns:30px minmax(0,1fr);gap:9px;margin:0 14px 13px;padding:10px 11px;border-radius:13px;background:var(--success-soft);color:var(--success)}
+.legacy-result-inline-v4 small{display:block;font-size:.51rem;font-weight:700;text-transform:uppercase}
+.legacy-result-inline-v4 p{margin:2px 0 0;color:var(--text);font-size:.6rem;line-height:1.4}
+
+.legacy-status-card-v4 .legacy-project-actions{margin:0;padding:0 14px 14px}
+.legacy-status-card-v4 .legacy-project-actions .btn{min-height:44px}
+.legacy-status-v4 .legacy-how-link{margin-top:0;padding-bottom:0}
+
+@media(max-width:760px){
+  .legacy-status-v4{padding-top:7px;padding-bottom:106px}
+  .legacy-status-card-head{padding:15px 14px 12px}
+  .legacy-status-card-v4 h1{font-size:1.06rem}
+  .legacy-status-card-v4 .legacy-status-card-copy>p{font-size:.61rem}
+  .legacy-status-grid-v4{gap:7px;padding:0 12px 12px}
+  .legacy-status-mini{padding:10px}
+  .legacy-status-mini small{font-size:.49rem}
+  .legacy-status-mini p{font-size:.59rem}
+  .legacy-adjustment-inline{margin:0 12px 11px}
+  .legacy-drive-inline-v4,.legacy-result-inline-v4{margin-left:12px;margin-right:12px}
+  .legacy-status-card-v4 .legacy-project-actions{padding:0 12px 12px}
+}
+@media(max-width:350px){
+  .legacy-status-grid-v4{grid-template-columns:1fr}
+}
