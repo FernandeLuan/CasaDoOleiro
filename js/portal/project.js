@@ -232,28 +232,38 @@
     const modal=modalRoot.querySelector('.legacy-project-wizard-modal'),backdrop=modalRoot.querySelector('.modal-backdrop');
     if(!modal||!backdrop)return;
     const vv=window.visualViewport;
-    const height=Math.max(320,Math.round(vv?.height||window.innerHeight||720));
+    const layoutHeight=Math.round(window.innerHeight||vv?.height||720);
+    const height=Math.max(300,Math.round(vv?.height||layoutHeight));
     const offsetTop=Math.max(0,Math.round(vv?.offsetTop||0));
-    const keyboardOpen=!!vv&&height<Math.round((window.innerHeight||height)*.82);
+    const keyboardOpen=!!vv&&(layoutHeight-height)>150;
     modal.style.setProperty('--legacy-vv-height',height+'px');
     modal.classList.toggle('legacy-keyboard-open',keyboardOpen);
     backdrop.style.height=height+'px';
     backdrop.style.top=offsetTop+'px';
     backdrop.style.bottom='auto';
+    if(keyboardOpen){
+      backdrop.style.setProperty('align-items','flex-start','important');
+      backdrop.style.setProperty('padding-top','6px','important');
+      backdrop.style.setProperty('padding-bottom','6px','important');
+    }else{
+      backdrop.style.removeProperty('align-items');
+      backdrop.style.removeProperty('padding-top');
+      backdrop.style.removeProperty('padding-bottom');
+    }
   }
   function keepLegacyWizardFieldVisible(target){
     if(!target)return;
     const body=target.closest('.modal-body');
     const reveal=()=>{
       if(!target.isConnected||!body)return;
-      target.scrollIntoView({block:'nearest',inline:'nearest'});
-      const targetBottom=target.getBoundingClientRect().bottom;
-      const bodyBottom=body.getBoundingClientRect().bottom;
-      if(targetBottom>bodyBottom-8)body.scrollTop+=targetBottom-bodyBottom+18;
+      const bodyRect=body.getBoundingClientRect(),targetRect=target.getBoundingClientRect(),safeTop=bodyRect.top+8,safeBottom=bodyRect.bottom-10;
+      if(targetRect.bottom>safeBottom)body.scrollTop+=targetRect.bottom-safeBottom;
+      if(targetRect.top<safeTop)body.scrollTop-=safeTop-targetRect.top;
     };
     requestAnimationFrame(reveal);
     setTimeout(reveal,90);
-    setTimeout(reveal,260);
+    setTimeout(reveal,220);
+    setTimeout(reveal,420);
   }
   function bindLegacyWizardViewport(){
     legacyProjectWizardViewportCleanup?.();
