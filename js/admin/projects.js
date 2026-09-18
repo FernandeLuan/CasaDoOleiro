@@ -63,7 +63,7 @@
       ${p.result?`<div class="legacy-admin-result legacy-admin-result-v2"><span><i class="fa-solid fa-circle-check"></i></span><div><small>Resultado final</small><p>${esc(p.result)}</p></div></div>`:''}
       ${p.driveUrl?`<a class="legacy-drive-card legacy-admin-drive-v2" href="${esc(p.driveUrl)}" target="_blank" rel="noopener noreferrer"><span><i class="fa-brands fa-google-drive"></i></span><div><strong>Abrir registros no Drive</strong><small>Fotos, vídeos e documentos</small></div><i class="fa-solid fa-arrow-up-right-from-square"></i></a>`:''}
     </div>`;
-    let footer='<button class="btn btn-outline" onclick="closeModal()">Fechar</button>';
+    let footer='';
     if(p.status==='analysis')footer='<button class="btn btn-outline" onclick="openLegacyAdjustment(\''+esc(p.id)+'\')">Pedir ajuste</button><button class="btn btn-primary" onclick="approveLegacyProject(\''+esc(p.id)+'\')">Aprovar projeto</button>';
     openModal('Projeto de legado','Analise a proposta e ajude o voluntário a transformar a ideia em algo possível.',body,footer);
     modalRoot.querySelector('.modal')?.classList.add('legacy-admin-modal');
