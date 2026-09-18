@@ -268,7 +268,25 @@
     </section>`;
   }
 
+  function resetCompletedPreviewProjectForReview(){
+    if(!window.OleiroProjects?.isPreview)return;
+    const p=project();
+    if(!p||p.status!=='completed'||String(p.title||'').trim()!=='Composteira Orgânica')return;
+    const key=`oleiro.homologation.project-progress-reset.v1:${String(state.currentSession?.uid||'anon')}:${String(p.id||'project')}`;
+    try{
+      if(localStorage.getItem(key)==='1')return;
+      localStorage.setItem(key,'1');
+    }catch{}
+    window.OleiroProjects.saveOwn({
+      status:'in_progress',
+      completedAt:null,
+      result:'',
+      updatedAt:new Date().toISOString()
+    });
+  }
+
   window.volunteerProject=function(){
+    resetCompletedPreviewProjectForReview();
     if(!window.OleiroProjects?.onboardingDone?.())return onboardingPage();
     if(state.volunteerMode!=='approved')return candidatePreviewPage();
     const p=project();return p?statusPage(p):emptyPage();
