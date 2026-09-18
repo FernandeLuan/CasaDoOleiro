@@ -91,7 +91,7 @@
       </div>
       ${p.driveUrl?`<a class="legacy-drive-card" href="${esc(p.driveUrl)}" target="_blank" rel="noopener noreferrer"><span><i class="fa-brands fa-google-drive"></i></span><div><strong>Registros no Google Drive</strong><small>Fotos, vídeos ou documentos do projeto</small></div><i class="fa-solid fa-arrow-up-right-from-square"></i></a>`:''}
       ${p.result?`<div class="legacy-result-card"><span><i class="fa-solid fa-heart"></i></span><div><small>O que ficou para a comunidade</small><p>${esc(p.result)}</p></div></div>`:''}
-      <div class="legacy-project-actions">
+      <div class="legacy-project-actions ${editable?'legacy-project-actions-pair':''}">
         ${editable?`<button class="btn btn-outline" type="button" onclick="openLegacyProjectForm()"><i class="fa-solid fa-pen"></i>Editar</button><button class="btn btn-primary" type="button" onclick="submitLegacyProject()"><i class="fa-solid fa-paper-plane"></i>${p.status==='adjustments'?'Reenviar':'Enviar para análise'}</button>`:''}
         ${canStart?'<button class="btn btn-primary" type="button" onclick="startLegacyProject()"><i class="fa-solid fa-play"></i>Começar execução</button>':''}
         ${canFinish?'<button class="btn btn-primary" type="button" onclick="openLegacyCompletion()"><i class="fa-solid fa-flag-checkered"></i>Concluir meu legado</button>':''}
