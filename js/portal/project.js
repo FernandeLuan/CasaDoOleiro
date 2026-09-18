@@ -147,10 +147,6 @@
           <p>${active?'Registre os avanços do projeto enquanto ele acontece.':'Veja como o projeto avançou até a conclusão.'}</p>
         </div>
       </div>
-      ${active?`<div class="legacy-project-tracking-actions">
-        <button class="btn btn-outline" type="button" onclick="openLegacyProgressUpdate()"><i class="fa-solid fa-message"></i>Comentar progresso</button>
-        <button class="btn btn-primary" type="button" onclick="openLegacyCompletion()"><i class="fa-solid fa-flag-checkered"></i>Concluir legado</button>
-      </div>`:''}
       <div class="legacy-project-timeline">
         ${rows.length?rows.map(item=>`<article class="legacy-project-timeline-item ${esc(item.type)}">
           <span class="legacy-project-timeline-icon"><i class="fa-solid ${icon(item.type)}"></i></span>
@@ -224,9 +220,10 @@
 
       ${content}
 
-      <div class="legacy-project-actions ${editable?'legacy-project-actions-pair':''}">
+      <div class="legacy-project-actions ${editable?'legacy-project-actions-pair':''} ${inProgress?'legacy-project-actions-execution':''}">
         ${editable?`<button class="btn btn-outline" type="button" onclick="openLegacyProjectForm()"><i class="fa-solid fa-pen"></i>Editar</button><button class="btn btn-primary" type="button" onclick="submitLegacyProject()"><i class="fa-solid fa-paper-plane"></i>${p.status==='adjustments'?'Reenviar':'Enviar para análise'}</button>`:''}
         ${canStart?'<button class="btn btn-primary" type="button" onclick="startLegacyProject()"><i class="fa-solid fa-play"></i>Começar execução</button>':''}
+        ${inProgress?'<button class="btn btn-outline" type="button" onclick="openLegacyProgressUpdate()"><i class="fa-solid fa-message"></i>Comentar andamento</button><button class="btn btn-primary" type="button" onclick="openLegacyCompletion()"><i class="fa-solid fa-flag-checkered"></i>Concluir legado</button>':''}
       </div>
       <button class="legacy-how-link legacy-status-how" type="button" onclick="replayProjectOnboarding()"><i class="fa-regular fa-circle-question"></i>Como funciona?</button>
     </section>`;
