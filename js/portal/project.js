@@ -366,15 +366,15 @@
     return true;
   }
   function syncLegacyWizardViewport(){
-    const modal=modalRoot.querySelector('.legacy-project-wizard-modal'),backdrop=modalRoot.querySelector('.modal-backdrop');
+    const modal=modalRoot.querySelector('.project-wizard-modal'),backdrop=modalRoot.querySelector('.modal-backdrop');
     if(!modal||!backdrop)return;
     const vv=window.visualViewport;
     const layoutHeight=Math.round(window.innerHeight||vv?.height||720);
     const height=Math.max(300,Math.round(vv?.height||layoutHeight));
     const offsetTop=Math.max(0,Math.round(vv?.offsetTop||0));
     const keyboardOpen=!!vv&&(layoutHeight-height)>150;
-    modal.style.setProperty('--legacy-vv-height',height+'px');
-    modal.classList.toggle('legacy-keyboard-open',keyboardOpen);
+    modal.style.setProperty('--project-vv-height',height+'px');
+    modal.classList.toggle('project-wizard-keyboard-open',keyboardOpen);
     backdrop.style.height=height+'px';
     backdrop.style.top=offsetTop+'px';
     backdrop.style.bottom='auto';
@@ -437,7 +437,7 @@
       legacyWizardBody(),
       footer
     );
-    const modal=modalRoot.querySelector('.modal');modal?.classList.add('modal-wide');
+    const modal=modalRoot.querySelector('.modal');modal?.classList.add('modal-wide','project-wizard-modal');
     
     bindLegacyWizardViewport();
     requestAnimationFrame(()=>{
