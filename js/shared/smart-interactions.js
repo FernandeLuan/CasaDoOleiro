@@ -275,63 +275,124 @@
   };
   window.OleiroUI.transition=function(direction='forward',scope='page'){beginNavigation(direction,scope);scheduleMotion()};
 
-  /* Swipe compartilhado dos cards de aviso.
-     O gesto é detectado aqui; cada tela decide apenas o que é "anterior" e "próximo". */
+  /* Swipe único dos cards de aviso — Portal + Admin.
+     Em touch (iOS/Android) usamos Touch Events diretamente; em mouse/caneta, Pointer Events.
+     O conteúdo fica parado durante o gesto e só troca ao soltar, igual ao comportamento aprovado no Portal. */
   let noticeSwipe=null;
-  const resetNoticeSwipe=card=>card?.classList?.remove('is-dragging');
-  document.addEventListener('pointerdown',event=>{
-    const card=event.target.closest?.('[data-notice-carousel]');
-    if(!card||event.button!==0||event.target.closest?.('button,a,input,textarea,select'))return;
-    noticeSwipe={
-      card,
-      pointerId:event.pointerId,
-      startX:event.clientX,
-      startY:event.clientY,
-      lastX:event.clientX,
-      horizontal:false
-    };
-    try{card.setPointerCapture?.(event.pointerId)}catch{}
-  },{passive:true});
-  document.addEventListener('pointermove',event=>{
+
+  function noticeCardFromTarget(target){
+    return target instanceof Element?target.closest('[data-notice-carousel]'):null;
+  }
+  function noticeInteractiveTarget(target){
+    return target instanceof Element&&!!target.closest('button,a,input,textarea,select,label');
+  }
+  function resetNoticeSwipe(card){
+    card?.classList?.remove('is-dragging');
+  }
+  function beginNoticeSwipe(card,id,x,y,kind){
+    noticeSwipe={card,id,startX:x,startY:y,lastX:x,lastY:y,horizontal:false,kind};
+    card.classList.add('is-swipe-ready');
+  }
+  function moveNoticeSwipe(x,y,event){
     const swipe=noticeSwipe;
-    if(!swipe||swipe.pointerId!==event.pointerId||!swipe.card?.isConnected)return;
-    const dx=event.clientX-swipe.startX;
-    const dy=event.clientY-swipe.startY;
-    swipe.lastX=event.clientX;
+    if(!swipe||!swipe.card?.isConnected)return;
+    const dx=x-swipe.startX,dy=y-swipe.startY;
+    swipe.lastX=x;swipe.lastY=y;
+
     if(!swipe.horizontal){
       if(Math.abs(dx)<7)return;
       if(Math.abs(dy)>Math.abs(dx)*.9){
         resetNoticeSwipe(swipe.card);
+        swipe.card.classList.remove('is-swipe-ready');
         noticeSwipe=null;
         return;
       }
       swipe.horizontal=true;
       swipe.card.classList.add('is-dragging');
     }
-    if(event.cancelable)event.preventDefault();
-  },{passive:false});
-  function finishNoticeSwipe(event){
+
+    if(event?.cancelable)event.preventDefault();
+  }
+  function completeNoticeSwipe(x,y){
     const swipe=noticeSwipe;
-    if(!swipe||swipe.pointerId!==event.pointerId)return;
+    if(!swipe)return;
     noticeSwipe=null;
+
     const card=swipe.card;
-    const dx=(swipe.lastX??event.clientX)-swipe.startX;
-    const dy=event.clientY-swipe.startY;
+    const dx=(Number.isFinite(x)?x:swipe.lastX)-swipe.startX;
+    const dy=(Number.isFinite(y)?y:swipe.lastY)-swipe.startY;
     resetNoticeSwipe(card);
+    card?.classList?.remove('is-swipe-ready');
+
     if(!swipe.horizontal||Math.abs(dx)<42||Math.abs(dx)<=Math.abs(dy)*1.05)return;
-    const direction=dx<0?'next':'prev';
+
     card.dispatchEvent(new CustomEvent('oleiro:notice-swipe',{
       bubbles:true,
-      detail:{direction,source:card.dataset.noticeCarousel||''}
+      detail:{direction:dx<0?'next':'prev',source:card.dataset.noticeCarousel||''}
     }));
   }
-  document.addEventListener('pointerup',finishNoticeSwipe,{passive:true});
+
+  /* iPhone/iPad: Touch Events em capture evitam que outros gestos da página engulam o swipe. */
+  document.addEventListener('touchstart',event=>{
+    if(event.touches.length!==1||noticeInteractiveTarget(event.target))return;
+    const card=noticeCardFromTarget(event.target);
+    if(!card)return;
+    const touch=event.touches[0];
+    beginNoticeSwipe(card,touch.identifier,touch.clientX,touch.clientY,'touch');
+  },{capture:true,passive:true});
+
+  document.addEventListener('touchmove',event=>{
+    const swipe=noticeSwipe;
+    if(!swipe||swipe.kind!=='touch')return;
+    const touch=[...event.touches].find(item=>item.identifier===swipe.id);
+    if(!touch)return;
+    moveNoticeSwipe(touch.clientX,touch.clientY,event);
+  },{capture:true,passive:false});
+
+  document.addEventListener('touchend',event=>{
+    const swipe=noticeSwipe;
+    if(!swipe||swipe.kind!=='touch')return;
+    const touch=[...event.changedTouches].find(item=>item.identifier===swipe.id);
+    completeNoticeSwipe(touch?.clientX, touch?.clientY);
+  },{capture:true,passive:true});
+
+  document.addEventListener('touchcancel',()=>{
+    if(noticeSwipe?.kind!=='touch')return;
+    const card=noticeSwipe.card;
+    noticeSwipe=null;
+    resetNoticeSwipe(card);
+    card?.classList?.remove('is-swipe-ready');
+  },{capture:true,passive:true});
+
+  /* Mouse/caneta: Pointer Events. Touch fica exclusivamente no caminho acima. */
+  document.addEventListener('pointerdown',event=>{
+    if(event.pointerType==='touch'||event.button!==0||noticeInteractiveTarget(event.target))return;
+    const card=noticeCardFromTarget(event.target);
+    if(!card)return;
+    beginNoticeSwipe(card,event.pointerId,event.clientX,event.clientY,'pointer');
+    try{card.setPointerCapture?.(event.pointerId)}catch{}
+  },{capture:true,passive:true});
+
+  document.addEventListener('pointermove',event=>{
+    const swipe=noticeSwipe;
+    if(!swipe||swipe.kind!=='pointer'||swipe.id!==event.pointerId)return;
+    moveNoticeSwipe(event.clientX,event.clientY,event);
+  },{capture:true,passive:false});
+
+  document.addEventListener('pointerup',event=>{
+    const swipe=noticeSwipe;
+    if(!swipe||swipe.kind!=='pointer'||swipe.id!==event.pointerId)return;
+    completeNoticeSwipe(event.clientX,event.clientY);
+  },{capture:true,passive:true});
+
   document.addEventListener('pointercancel',event=>{
     const swipe=noticeSwipe;
-    if(!swipe||swipe.pointerId!==event.pointerId)return;
+    if(!swipe||swipe.kind!=='pointer'||swipe.id!==event.pointerId)return;
+    const card=swipe.card;
     noticeSwipe=null;
-    resetNoticeSwipe(swipe.card);
-  },{passive:true});
+    resetNoticeSwipe(card);
+    card?.classList?.remove('is-swipe-ready');
+  },{capture:true,passive:true});
 
   /* Acordeões/grupos mantêm o estado ao voltar para a tela. */
   function enhanceDetails(root=document){
