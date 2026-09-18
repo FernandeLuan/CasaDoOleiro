@@ -45,14 +45,21 @@ function managerHomePendingSlides(volunteerAnalysis,volunteerAdjustments,project
 function managerHomePreviewPendingSlides(){
   if(window.OleiroProjects?.isPreview!==true)return [];
   return [
-    {id:'preview-project-analysis',icon:'fa-seedling',area:'Projetos',title:'1 projeto em análise',text:'Projeto Legado aguardando sua decisão.',statusLabel:'Em análise',tone:'info',action:"openDashboardProjectFilter('analysis')"},
-    {id:'preview-volunteer-adjustments',icon:'fa-users',area:'Voluntariado',title:'1 ajuste pendente',text:'Mudança aguardando nova revisão.',statusLabel:'Ajustes',tone:'warning',action:"openDashboardVolunteerFilter('adjustments')"},
-    {id:'preview-project-adjustments',icon:'fa-seedling',area:'Projetos',title:'1 projeto com ajuste',text:'Projeto Legado aguardando nova revisão.',statusLabel:'Ajustes',tone:'warning',action:"openDashboardProjectFilter('adjustments')"}
+    {id:'preview-volunteer-analysis',icon:'fa-users',area:'Voluntariado',title:'2 candidaturas em análise',text:'Perfis aguardando sua revisão.',statusLabel:'Em análise',tone:'info',action:"openDashboardVolunteerFilter('analysis')",preview:true},
+    {id:'preview-volunteer-adjustments',icon:'fa-users',area:'Voluntariado',title:'1 ajuste pendente',text:'Mudança aguardando nova revisão.',statusLabel:'Ajustes',tone:'warning',action:"openDashboardVolunteerFilter('adjustments')",preview:true},
+    {id:'preview-project-analysis',icon:'fa-seedling',area:'Projetos',title:'1 projeto em análise',text:'Projeto Legado aguardando sua decisão.',statusLabel:'Em análise',tone:'info',action:"openDashboardProjectFilter('analysis')",preview:true},
+    {id:'preview-project-adjustments',icon:'fa-seedling',area:'Projetos',title:'1 projeto com ajuste',text:'Projeto Legado aguardando nova revisão.',statusLabel:'Ajustes',tone:'warning',action:"openDashboardProjectFilter('adjustments')",preview:true}
   ].filter(slide=>!_managerHomePendingDismissed.has(slide.id));
 }
 function managerHomePendingSlidesVisible(volunteerAnalysis,volunteerAdjustments,projectCounts){
   const real=managerHomePendingSlides(volunteerAnalysis,volunteerAdjustments,projectCounts);
-  return real.length?real:managerHomePreviewPendingSlides();
+  const preview=managerHomePreviewPendingSlides();
+  if(!preview.length)return real;
+
+  /* Homologação: mantém os exemplos disponíveis mesmo quando já existe uma pendência real.
+     Assim o carrossel inteiro pode ser validado sem criar dados falsos no banco. */
+  const realKeys=new Set(real.map(slide=>slide.id));
+  return [...real,...preview.filter(slide=>!realKeys.has(slide.id))];
 }
 function managerHomePendingPagerHtml(total,index){
   if(total<=1)return '';
@@ -73,7 +80,7 @@ function managerHomePendingCard(slides){
     <div class="notice-carousel-top">
       <span class="notice-carousel-icon"><i class="fa-solid ${slide.icon}"></i></span>
       <div class="notice-carousel-copy">
-        <div class="notice-carousel-meta"><span>${escapeHtml(slide.area)} · precisa de atenção</span></div>
+        <div class="notice-carousel-meta"><span>${escapeHtml(slide.preview?'Simulação · '+slide.area:slide.area+' · precisa de atenção')}</span></div>
         <strong data-notice-title>${escapeHtml(slide.title)}</strong>
         <p data-notice-summary>${escapeHtml(slide.text)}</p>
       </div>
