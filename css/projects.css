@@ -48,8 +48,9 @@
 .legacy-candidate-flow-minimal{padding:18px 14px 15px}
 .legacy-candidate-steps{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .legacy-candidate-steps::before{content:"";position:absolute;left:16.5%;right:16.5%;top:15px;height:4px;border-radius:999px;background:var(--surface-2);z-index:0}
-.legacy-candidate-steps::after{content:"";position:absolute;left:16.5%;top:15px;width:22%;height:4px;border-radius:999px;background:linear-gradient(90deg,var(--primary),color-mix(in srgb,var(--primary) 55%,var(--surface-2)));z-index:0;animation:legacyStepPulse 1.8s ease-in-out infinite alternate}
-@keyframes legacyStepPulse{from{opacity:.72}to{opacity:1}}
+.legacy-candidate-steps::after{content:"";position:absolute;left:16.5%;right:16.5%;top:15px;height:4px;border-radius:999px;background:linear-gradient(90deg,transparent 0%,transparent 36%,color-mix(in srgb,var(--primary) 25%,transparent) 43%,var(--primary) 50%,color-mix(in srgb,var(--primary) 25%,transparent) 57%,transparent 64%,transparent 100%);background-size:240% 100%;background-position:140% 0;z-index:0;filter:drop-shadow(0 0 4px color-mix(in srgb,var(--primary) 38%,transparent));animation:legacyStepSweep 2.6s linear infinite}
+@keyframes legacyStepSweep{0%{background-position:140% 0}100%{background-position:-140% 0}}
+@media(prefers-reduced-motion:reduce){.legacy-candidate-steps::after{animation:none;background-position:center}}
 .legacy-candidate-steps article{position:relative;z-index:1;display:grid;justify-items:center;text-align:center;gap:3px;min-width:0}
 .legacy-candidate-steps article>span{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);border:1px solid var(--border);color:var(--muted);font-size:.64rem;font-weight:700}
 .legacy-candidate-steps article.is-current>span{background:var(--primary);border-color:var(--primary);color:#fff;box-shadow:0 5px 12px color-mix(in srgb,var(--primary) 22%,transparent)}
@@ -76,7 +77,7 @@
   .legacy-candidate-hero-v2 p{font-size:.75rem;line-height:1.46}
   .legacy-candidate-flow{padding:14px 10px 13px}
   .legacy-candidate-steps::before{top:15px}
-  .legacy-candidate-steps::after{top:15px;width:23%}
+  .legacy-candidate-steps::after{top:15px}
   .legacy-candidate-steps small{font-size:.56rem}
   .legacy-candidate-steps strong{font-size:.66rem}
 }
