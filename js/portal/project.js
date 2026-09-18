@@ -92,10 +92,7 @@
       </div>
 
       <div class="legacy-candidate-flow">
-        <div class="legacy-candidate-flow-head">
-          <div><span class="eyebrow">Como funciona</span><strong>Da ideia à realização</strong></div>
-          <small><i class="fa-solid fa-lock"></i> criação após aprovação</small>
-        </div>
+        <span class="eyebrow legacy-candidate-flow-label">Como funciona</span>
         <div class="legacy-candidate-steps">
           <article class="is-current"><span>1</span><small>Agora</small><strong>Conheça</strong></article>
           <article><span>2</span><small>Após aprovação</small><strong>Crie</strong></article>
@@ -103,16 +100,17 @@
         </div>
       </div>
 
-      <div class="legacy-candidate-ideas-head">
-        <span class="eyebrow">Possibilidades</span>
-        <h2>O que pode virar um legado?</h2>
-      </div>
-
-      <div class="legacy-candidate-idea-grid-v2">
-        <article class="legacy-candidate-idea-v2"><span><i class="fa-solid fa-leaf"></i></span><div><strong>Sustentabilidade</strong><p>Horta, composteira ou reaproveitamento.</p></div></article>
-        <article class="legacy-candidate-idea-v2"><span><i class="fa-solid fa-hammer"></i></span><div><strong>Melhorias</strong><p>Organização, espaços e pequenos reparos.</p></div></article>
-        <article class="legacy-candidate-idea-v2"><span><i class="fa-solid fa-people-group"></i></span><div><strong>Comunidade</strong><p>Oficinas, esporte ou cultura.</p></div></article>
-        <article class="legacy-candidate-idea-v2"><span><i class="fa-solid fa-laptop-code"></i></span><div><strong>Tecnologia</strong><p>Sistemas, materiais ou automações.</p></div></article>
+      <div class="legacy-candidate-ideas-panel">
+        <div class="legacy-candidate-ideas-title">
+          <span class="eyebrow">Possibilidades</span>
+          <h2>Algumas formas de deixar sua marca</h2>
+        </div>
+        <div class="legacy-candidate-idea-grid-v3">
+          <article class="legacy-candidate-idea-v3"><span><i class="fa-solid fa-leaf"></i></span><strong>Sustentabilidade</strong><small>Horta, composteira e reaproveitamento</small></article>
+          <article class="legacy-candidate-idea-v3"><span><i class="fa-solid fa-hammer"></i></span><strong>Melhorias</strong><small>Organização, espaços e pequenos reparos</small></article>
+          <article class="legacy-candidate-idea-v3"><span><i class="fa-solid fa-people-group"></i></span><strong>Comunidade</strong><small>Oficinas, esporte e cultura</small></article>
+          <article class="legacy-candidate-idea-v3"><span><i class="fa-solid fa-laptop-code"></i></span><strong>Tecnologia</strong><small>Sistemas, materiais e automações</small></article>
+        </div>
       </div>
 
       <button class="legacy-how-link legacy-candidate-how-v2" type="button" onclick="replayProjectOnboarding()"><i class="fa-regular fa-circle-question"></i>Rever apresentação</button>
