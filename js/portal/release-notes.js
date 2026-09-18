@@ -147,7 +147,6 @@
   function resetReleaseSwipe(card){
     if(!card)return;
     card.classList.remove('is-dragging');
-    card.style.removeProperty('--release-content-drag-x');
   }
   document.addEventListener('pointerdown',event=>{
     const card=event.target.closest?.('[data-release-announcement]');
@@ -179,10 +178,8 @@
       swipe.card.classList.add('is-dragging');
     }
     if(event.cancelable)event.preventDefault();
-    const first=homeSlideIndex===0,last=homeSlideIndex===homeSlides().length-1;
-    const blocked=(first&&dx>0)||(last&&dx<0);
-    const distance=Math.max(-62,Math.min(62,blocked?dx*.28:dx*.72));
-    swipe.card.style.setProperty('--release-content-drag-x',distance+'px');
+    /* O gesto é reconhecido, mas o conteúdo permanece completamente fixo.
+       A troca acontece apenas quando o dedo é solto após um swipe válido. */
   },{passive:false});
   function finishReleaseSwipe(event){
     const swipe=releaseSwipe;
