@@ -428,6 +428,15 @@
     );
   };
 
+  window.dismissLegacyProjectAdjustmentNotice=function(){
+    const p=project();if(p)markProjectAdjustmentSeen(p);
+    const card=document.querySelector('[data-project-adjustment-update="1"]');
+    if(card){
+      card.classList.add('is-leaving');
+      setTimeout(()=>card.remove(),220);
+    }
+  };
+
   window.openLegacyProjectAdjustmentNotice=function(){
     const p=project();if(!p||p.status!=='adjustments')return;
     markProjectAdjustmentSeen(p);
@@ -444,7 +453,20 @@
     const p=project(),done=p?.status==='completed';
     if(done)return '';
     if(p?.status==='adjustments'&&p.reviewNote&&!projectAdjustmentSeen(p)){
-      return `<section class="legacy-project-update-card" data-project-adjustment-update="1"><span class="legacy-project-update-icon"><i class="fa-solid fa-pen-to-square"></i></span><div class="legacy-project-update-copy"><small>${esc(tx('project.adjustment.homeEyebrow'))}</small><strong>${esc(tx('project.adjustment.homeTitle'))}</strong><p>${esc(tx('project.adjustment.homeBody'))}</p></div><button class="btn btn-primary" type="button" onclick="openLegacyProjectAdjustmentNotice()">${esc(tx('project.adjustment.view'))}</button></section>`;
+      return `<section class="release-announcement-card project-adjustment-announcement" data-project-adjustment-update="1">
+        <div class="release-announcement-top">
+          <span class="release-announcement-spark"><i class="fa-solid fa-pen-to-square"></i></span>
+          <div class="release-announcement-copy">
+            <div class="release-announcement-meta"><span>${esc(tx('project.adjustment.homeEyebrow'))}</span></div>
+            <strong>${esc(tx('project.adjustment.homeTitle'))}</strong>
+            <p>${esc(tx('project.adjustment.homeBody'))}</p>
+          </div>
+        </div>
+        <div class="release-announcement-actions">
+          <button class="btn btn-outline" type="button" onclick="dismissLegacyProjectAdjustmentNotice()">${esc(tx('project.home.notNow'))}</button>
+          <button class="btn btn-primary" type="button" onclick="openLegacyProjectAdjustmentNotice()">${esc(tx('project.adjustment.view'))}</button>
+        </div>
+      </section>`;
     }
     const label=p?tx('project.home.continue'):tx('project.home.know');
     return `<section class="legacy-home-callout legacy-home-callout-glow" data-project-highlight="1"><span class="legacy-home-callout-icon"><i class="fa-solid fa-seedling"></i></span><div class="legacy-home-callout-copy"><strong>${esc(tx('project.name'))}</strong><p>${esc(p?tx('project.home.existingBody'):tx('project.home.newBody'))}</p></div><div class="legacy-home-callout-actions"><button class="btn btn-outline" type="button" onclick="skipLegacyProjectPrompt()">${esc(tx('project.home.notNow'))}</button><button class="btn btn-primary" type="button" onclick="openPortalProjectHighlight()">${esc(label)}</button></div></section>`;
