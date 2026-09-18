@@ -35,6 +35,8 @@
   let metaPromise=null;
   let homeSlideIndex=0;
   const hiddenHomeNoticeIds=new Set();
+  let homeNoticeRefreshAt=0;
+  let homeNoticeRefreshPromise=null;
 
   function uid(){return String(state?.currentSession?.uid||'anon')}
   function releaseSeenKey(){return `oleiro.portal.release-notes.seen.v1:${uid()}`}
@@ -99,17 +101,20 @@
     };
   }
   function activityAdjustmentSlides(){
-    const slides=[],seen=new Set();
-    const page=state.volunteerMode==='approved'?'agenda':'plan';
+    const slides=[],seenIds=new Set(),seenDates=new Set(),page=state.volunteerMode==='approved'?'agenda':'plan';
+    const pushSlide=slide=>{
+      if(!slide?.id||hiddenHomeNoticeIds.has(slide.id)||seenIds.has(slide.id))return;
+      seenIds.add(slide.id);
+      slides.push(slide);
+    };
     const dayAdjustments=state.currentApplication?.dayAdjustments;
     if(dayAdjustments&&typeof dayAdjustments==='object'){
       Object.entries(dayAdjustments).forEach(([date,item])=>{
-        if(!item)return;
+        if(!item||String(item?.status||'requested')==='resolved')return;
         const note=String(item?.note||'').trim();
         const id='day-adjustment:'+date+':'+note;
-        if(hiddenHomeNoticeIds.has(id))return;
-        seen.add(String(date));
-        slides.push({
+        seenDates.add(String(date));
+        pushSlide({
           id,
           type:'day_adjustment',
           tone:'warning',
@@ -120,35 +125,100 @@
           ctaLabel:'Ver ajuste',
           page,
           date:String(date),
+          note,
           showMeta:false
         });
       });
     }
-    (state.sessions||[]).forEach(row=>{
-      const raw=rawSession(row);
-      if(raw.adminAdjustmentStatus!=='requested')return;
+
+    const rows=state.sessions||[];
+    rows.forEach(row=>{
+      const raw=rawSession(row),activity=row?.activity||{};
       const date=String(row?.date||raw.date||'').slice(0,10);
-      if(date&&seen.has(date))return;
-      const activity=row?.activity||{};
-      const name=String(activity.name||raw.activityName||'atividade').trim();
-      const sessionId=String(row?.sessionId||raw.id||raw.sessionId||raw.activityId||name);
-      const id='activity-adjustment:'+sessionId+':'+date+':'+String(raw.adminAdjustmentRequestedAt||'');
-      if(hiddenHomeNoticeIds.has(id))return;
-      slides.push({
-        id,
-        type:'activity_adjustment',
-        tone:'warning',
-        icon:'fa-list-check',
-        eyebrow:'Ajuste em uma atividade',
-        title:'A equipe pediu um ajuste em '+name,
-        summary:date?'Confira a orientação referente a '+fmtNoticeDate(date)+'.':'Confira a orientação da equipe para esta atividade.',
-        ctaLabel:'Ver atividade',
-        page,
-        date,
-        showMeta:false
-      });
+      const activityId=String(row?.activityId||raw.activityId||activity.id||'');
+      const sessionId=String(row?.sessionId||row?.id||raw.id||raw.sessionId||activityId||date||'activity');
+      const name=String(activity.name||row?.activityName||raw.activityName||'atividade').trim();
+
+      if(raw.adminAdjustmentStatus==='requested'){
+        const note=String(raw.adminAdjustmentNote||'').trim();
+        const stamp=String(raw.adminAdjustmentRequestedAt?.seconds||raw.adminAdjustmentRequestedAt||'');
+        pushSlide({
+          id:'session-adjustment:'+sessionId+':'+stamp+':'+note,
+          type:'activity_adjustment',
+          tone:'warning',
+          icon:'fa-list-check',
+          eyebrow:'Ajuste em uma atividade',
+          title:'A equipe pediu um ajuste em '+name,
+          summary:note||(date?'Confira a orientação referente a '+fmtNoticeDate(date)+'.':'Confira a orientação da equipe para esta atividade.'),
+          ctaLabel:'Ver ajuste',
+          page,
+          date,
+          note,
+          sessionId,
+          activityId,
+          showMeta:false
+        });
+      }
+
+      if(raw.postApprovalProposal===true&&raw.reviewStatus==='adjustments'){
+        const note=String(raw.reviewNote||'').trim();
+        const stamp=String(raw.reviewedAt?.seconds||raw.reviewedAt||'');
+        pushSlide({
+          id:'proposal-readjust:'+activityId+':'+stamp+':'+note,
+          type:'activity_adjustment',
+          tone:'warning',
+          icon:'fa-list-check',
+          eyebrow:'Ajuste em uma atividade',
+          title:'A equipe pediu um reajuste em '+name,
+          summary:note||(date?'Confira a orientação referente a '+fmtNoticeDate(date)+'.':'Confira a orientação da equipe para esta atividade.'),
+          ctaLabel:'Ver ajuste',
+          page,
+          date,
+          note,
+          sessionId,
+          activityId,
+          showMeta:false
+        });
+      }
+
+      if(raw.status==='change_requested'&&raw.changeReviewStatus==='adjustments'){
+        const note=String(raw.changeReviewNote||raw.changeReviewRequestNote||'').trim();
+        const stamp=String(raw.changeReviewedAt?.seconds||raw.changeReviewedAt||'');
+        pushSlide({
+          id:'change-readjust:'+sessionId+':'+stamp+':'+note,
+          type:'activity_adjustment',
+          tone:'warning',
+          icon:'fa-arrows-rotate',
+          eyebrow:'Ajuste em uma atividade',
+          title:'A equipe pediu um reajuste em '+name,
+          summary:note||(date?'Confira a orientação referente a '+fmtNoticeDate(date)+'.':'Confira a orientação da equipe para esta atividade.'),
+          ctaLabel:'Ver ajuste',
+          page,
+          date,
+          note,
+          sessionId,
+          activityId,
+          showMeta:false
+        });
+      }
     });
+
     return slides;
+  }
+
+  async function refreshHomeNoticeData(force=false){
+    const application=state.currentApplication;
+    const loader=typeof window.hydrateVolunteerPlanning==='function'?window.hydrateVolunteerPlanning:(typeof hydrateVolunteerPlanning==='function'?hydrateVolunteerPlanning:null);
+    if(!application?.id||!loader)return;
+    const now=Date.now();
+    if(!force&&now-homeNoticeRefreshAt<6000)return;
+    if(homeNoticeRefreshPromise)return homeNoticeRefreshPromise;
+    homeNoticeRefreshAt=now;
+    homeNoticeRefreshPromise=Promise.resolve(loader(application,{force:true}))
+      .then(()=>{if(state.volunteerPage==='home'&&typeof render==='function')render()})
+      .catch(error=>console.warn('Não foi possível atualizar os avisos da Home:',error))
+      .finally(()=>{homeNoticeRefreshPromise=null});
+    return homeNoticeRefreshPromise;
   }
   function releaseSlides(){
     const slides=Array.isArray(ANNOUNCEMENT.homeSlides)?ANNOUNCEMENT.homeSlides.filter(Boolean):[];
@@ -399,6 +469,12 @@
       return;
     }
     if(slide.type==='activity_adjustment'){
+      if(slide.note){
+        const body=`<div class="notice warning"><i class="fa-solid fa-circle-info"></i><div><strong>${esc(slide.title||'Ajuste solicitado')}</strong><br><span data-no-i18n>${esc(slide.note)}</span></div></div>`;
+        const footer=`<div class="release-notes-actions"><button class="btn btn-outline" type="button" onclick="closeModal()">Fechar</button><button class="btn btn-primary" type="button" onclick="closeModal();navigateVolunteer('${esc(slide.page||'plan')}');${slide.date?`setTimeout(()=>window.scrollToVolunteerDay?.('${esc(slide.date)}'),120)`:''}"><i class="fa-solid fa-arrow-right"></i>Ir para atividade</button></div>`;
+        openModal('Ajuste solicitado','Orientação da equipe',body,footer);
+        return;
+      }
       navigateVolunteer(slide.page||'plan');
       if(slide.date)setTimeout(()=>window.scrollToVolunteerDay?.(slide.date),120);
       return;
@@ -446,7 +522,9 @@
   if(baseNavigateVolunteer){
     window.navigateVolunteer=navigateVolunteer=function(page){
       if(String(page)==='project')markProjectSeen();
-      return baseNavigateVolunteer(page);
+      const result=baseNavigateVolunteer(page);
+      if(String(page)==='home')setTimeout(()=>refreshHomeNoticeData(),60);
+      return result;
     };
   }
 
@@ -481,6 +559,13 @@
       return html.replace(/<\/section>\s*$/,`${card}</section>`);
     };
   }
+
+  document.addEventListener('visibilitychange',()=>{
+    if(!document.hidden&&state.volunteerPage==='home')setTimeout(()=>refreshHomeNoticeData(),80);
+  });
+  window.addEventListener('focus',()=>{
+    if(state.volunteerPage==='home')setTimeout(()=>refreshHomeNoticeData(),80);
+  });
 
   const loadMetaWhenIdle=()=>loadReleaseMeta();
   if(typeof requestIdleCallback==='function')requestIdleCallback(loadMetaWhenIdle,{timeout:1800});
