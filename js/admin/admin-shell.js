@@ -163,17 +163,6 @@
       if(!root)return;
       const p=planningPerson();
       if(!p)return;
-      const headActions=root.querySelector('.planning-profile-actions');
-      if(headActions&&typeof window.openAdminPlanningMenu==='function'&&!headActions.querySelector('.planning-overflow-button')&&p.status!=='rejected'&&!p.inactive){
-        const button=document.createElement('button');
-        button.className='planning-overflow-button';
-        button.type='button';
-        button.setAttribute('aria-label','Mais opções do planejamento');
-        button.title='Mais opções do planejamento';
-        button.innerHTML='<i class="fa-solid fa-ellipsis-vertical"></i>';
-        button.onclick=()=>window.openAdminPlanningMenu(encodeURIComponent(String(p.id)));
-        headActions.prepend(button);
-      }
       const tabs=root.querySelector('.person-refactor-tabs'),head=root.querySelector('.planning-profile-head');
       if(tabs&&head&&!tabs.classList.contains('planning-profile-tabs')){tabs.classList.add('planning-profile-tabs');head.appendChild(tabs)}
       root.querySelectorAll('details.planning-day-card[data-plan-date]').forEach(card=>{
