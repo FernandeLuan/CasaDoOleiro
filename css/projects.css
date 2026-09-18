@@ -658,10 +658,7 @@
 .legacy-empty-replay{
   margin-top:0;
 }
-.legacy-project-wizard-modal{
-  width:min(420px,100%)!important;
-  max-width:420px!important;
-}
+.project-wizard-modal{}
 .legacy-project-wizard{
   display:grid;
   grid-template-rows:auto auto auto;
@@ -821,24 +818,24 @@
 .legacy-wizard-actions .btn i{
   margin:0 3px;
 }
-.legacy-project-wizard-modal.legacy-keyboard-open{
-  max-height:calc(var(--legacy-vv-height,100dvh) - 12px)!important;
+.project-wizard-modal.project-wizard-keyboard-open{
+  max-height:calc(var(--project-vv-height,100dvh) - 12px)!important;
 }
-.legacy-project-wizard-modal.legacy-keyboard-open .legacy-wizard-progress{
+.project-wizard-modal.project-wizard-keyboard-open .legacy-wizard-progress{
   gap:4px;
   margin-bottom:9px;
 }
-.legacy-project-wizard-modal.legacy-keyboard-open .legacy-wizard-progress i{
+.project-wizard-modal.project-wizard-keyboard-open .legacy-wizard-progress i{
   height:3px;
 }
-.legacy-project-wizard-modal.legacy-keyboard-open .legacy-wizard-copy{
+.project-wizard-modal.project-wizard-keyboard-open .legacy-wizard-copy{
   margin-bottom:8px;
 }
-.legacy-project-wizard-modal.legacy-keyboard-open .legacy-wizard-copy h3{
+.project-wizard-modal.project-wizard-keyboard-open .legacy-wizard-copy h3{
   font-size:.85rem;
   line-height:1.18;
 }
-.legacy-project-wizard-modal.legacy-keyboard-open .legacy-wizard-copy p{
+.project-wizard-modal.project-wizard-keyboard-open .legacy-wizard-copy p{
   display:-webkit-box;
   -webkit-box-orient:vertical;
   -webkit-line-clamp:2;
@@ -847,39 +844,39 @@
   font-size:.55rem;
   line-height:1.28;
 }
-.legacy-project-wizard-modal.legacy-keyboard-open .legacy-wizard-control{
+.project-wizard-modal.project-wizard-keyboard-open .legacy-wizard-control{
   gap:7px;
 }
-.legacy-project-wizard-modal.legacy-keyboard-open .legacy-wizard-input{
+.project-wizard-modal.project-wizard-keyboard-open .legacy-wizard-input{
   min-height:42px!important;
   font-size:.7rem!important;
 }
-.legacy-project-wizard-modal.legacy-keyboard-open .legacy-wizard-textarea{
+.project-wizard-modal.project-wizard-keyboard-open .legacy-wizard-textarea{
   min-height:64px!important;
   max-height:76px!important;
   font-size:.68rem!important;
   resize:none;
 }
-.legacy-project-wizard-modal.legacy-keyboard-open .legacy-wizard-actions{
+.project-wizard-modal.project-wizard-keyboard-open .legacy-wizard-actions{
   gap:7px;
 }
-.legacy-project-wizard-modal.legacy-keyboard-open .legacy-wizard-actions .btn{
+.project-wizard-modal.project-wizard-keyboard-open .legacy-wizard-actions .btn{
   min-height:38px!important;
   padding-top:7px!important;
   padding-bottom:7px!important;
   font-size:.67rem!important;
 }
-.legacy-project-wizard-modal.legacy-keyboard-open .legacy-wizard-category-grid{
+.project-wizard-modal.project-wizard-keyboard-open .legacy-wizard-category-grid{
   gap:6px;
 }
-.legacy-project-wizard-modal.legacy-keyboard-open .legacy-wizard-choice{
+.project-wizard-modal.project-wizard-keyboard-open .legacy-wizard-choice{
   min-height:40px;
   padding:7px 9px;
 }
-.legacy-project-wizard-modal.legacy-keyboard-open .legacy-wizard-binary{
+.project-wizard-modal.project-wizard-keyboard-open .legacy-wizard-binary{
   gap:6px;
 }
-.legacy-project-wizard-modal.legacy-keyboard-open .legacy-wizard-binary-option{
+.project-wizard-modal.project-wizard-keyboard-open .legacy-wizard-binary-option{
   padding:8px;
 }
 .legacy-wizard-review{
