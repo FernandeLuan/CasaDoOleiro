@@ -574,16 +574,6 @@
     if(driveUrl&&!confirmed)return showToast('Confirme que o link do Drive está público.');
     window.OleiroProjects.saveOwn({status:'completed',result,driveUrl,completedAt:new Date().toISOString()});closeModal();render();showToast('Seu legado foi concluído. Obrigado por deixar algo para a comunidade.');
   };
-  window.skipLegacyProjectPrompt=function(){
-    window.dismissPortalProjectHighlight?.();
-    openModal(
-      tx('project.skip.title'),
-      '',
-      `<div class="legacy-skip-message"><span class="legacy-skip-icon"><i class="fa-solid fa-seedling"></i></span><div><strong>${esc(tx('project.skip.available'))}</strong><p>${esc(tx('project.skip.body'))}</p></div></div>`,
-      `<div class="legacy-skip-actions"><button class="btn btn-outline" type="button" onclick="closeModal()">${esc(tx('common.close'))}</button><button class="btn btn-primary" type="button" onclick="closeModal();navigateVolunteer('project')">${esc(tx('project.skip.go'))}</button></div>`
-    );
-  };
-
   window.dismissLegacyProjectAdjustmentNotice=function(){
     const p=project();if(p)markProjectAdjustmentSeen(p);
     const card=document.querySelector('[data-project-adjustment-update="1"]');
@@ -602,30 +592,6 @@
     const footer=`<div class="legacy-adjustment-modal-actions"><button class="btn btn-outline" type="button" onclick="closeModal()">${esc(tx('project.adjustment.close'))}</button><button class="btn btn-primary" type="button" onclick="closeModal();navigateVolunteer('project');setTimeout(()=>openLegacyProjectForm(),80)"><i class="fa-solid fa-pen"></i>${esc(tx('project.adjustment.edit'))}</button></div>`;
     openModal(tx('project.adjustment.modalTitle'),'',body,footer);
     modalRoot.querySelector('.modal')?.classList.add('modal-compact');
-  };
-
-  window.legacyProjectHomeNoticeHtml=function(){
-    if(state.volunteerMode!=='approved')return '';
-    const p=project(),done=p?.status==='completed';
-    if(done)return '';
-    if(p?.status==='adjustments'&&p.reviewNote&&!projectAdjustmentSeen(p)){
-      return `<section class="notice-carousel-card is-warning" data-project-adjustment-update="1">
-        <div class="notice-carousel-top">
-          <span class="notice-carousel-icon"><i class="fa-solid fa-pen-to-square"></i></span>
-          <div class="notice-carousel-copy">
-            <div class="notice-carousel-meta"><span>${esc(tx('project.adjustment.homeEyebrow'))}</span></div>
-            <strong>${esc(tx('project.adjustment.homeTitle'))}</strong>
-            <p>${esc(tx('project.adjustment.homeBody'))}</p>
-          </div>
-        </div>
-        <div class="notice-carousel-actions">
-          <button class="btn btn-outline" type="button" onclick="dismissLegacyProjectAdjustmentNotice()">${esc(tx('project.home.notNow'))}</button>
-          <button class="btn btn-primary" type="button" onclick="openLegacyProjectAdjustmentNotice()">${esc(tx('project.adjustment.view'))}</button>
-        </div>
-      </section>`;
-    }
-    const label=p?tx('project.home.continue'):tx('project.home.know');
-    return `<section class="legacy-home-callout legacy-home-callout-glow" data-project-highlight="1"><span class="legacy-home-callout-icon"><i class="fa-solid fa-seedling"></i></span><div class="legacy-home-callout-copy"><strong>${esc(tx('project.name'))}</strong><p>${esc(p?tx('project.home.existingBody'):tx('project.home.newBody'))}</p></div><div class="legacy-home-callout-actions"><button class="btn btn-outline" type="button" onclick="skipLegacyProjectPrompt()">${esc(tx('project.home.notNow'))}</button><button class="btn btn-primary" type="button" onclick="openPortalProjectHighlight()">${esc(label)}</button></div></section>`;
   };
 
   let legacyProjectSwipeStart=null;
