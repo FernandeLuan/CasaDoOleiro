@@ -12,7 +12,8 @@
 - Planning board no longer performs one Firestore session query per candidate. It uses one date-range query and joins sessions to applications in memory.
 - Account opening no longer rereads the application document just to render data already present in the candidates list.
 - Admin startup reuses the authenticated, scoped session cache instead of immediately forcing the same dashboard/schedule reads again.
-- Portal and Admin source modules remain separated for maintenance, while homologation/runtime builds collapse them into 3 JS requests plus 1 local CSS request per app.
+- Portal and Admin source modules remain separated by responsibility, while homologation/runtime builds collapse them into 3 JS requests plus 1 local CSS request per app.
+- Portal/Admin bootstrap now waits until the document finishes loading, preventing an early partial render before late runtime decorators are available.
 - The build rejects orphaned runtime JS modules and preserves classic-script execution scope/order inside runtime bundles.
 - Removed dead/superseded modules:
   - `js/admin/emergency-contact-sync.js`
@@ -34,7 +35,7 @@
 
 Source modules are still intentionally split by responsibility. The build performs request consolidation; source files must not be merged blindly because many classic scripts rely on global functions and ordered decorators.
 
-Remaining `round*.js` files are **active compatibility layers**, not dead files. They must be moved function-by-function into semantic owners before deletion. The build now fails if a runtime JS file becomes orphaned, so dead modules cannot silently accumulate again.
+All numbered runtime `round*.js` modules have now been removed. Their behavior was preserved at the same execution points under semantic modules: Portal uses `experience-summary.js`, `experience-guidance.js`, `planning-feedback.js` and `pending-change-state.js`; Admin uses `planning-summary.js`, `planning-maintenance.js` and `adjustment-focus.js`. The build now rejects both orphaned runtime modules and any new numbered `round*.js` runtime file.
 
 ## Branch cleanup
 
@@ -83,4 +84,4 @@ These branches contain no unique code that is still required, are ancestors of t
 
 ## Next consolidation target
 
-The next structural task is not another visual override. It is to move the remaining active `round*.js` behavior into semantic modules, validate each move, then delete the round file. Do not delete active compatibility files simply because their names are old.
+Keep new behavior inside the existing semantic owner whenever possible. New visual or workflow changes must not introduce numbered compatibility modules; extend the responsible Portal/Admin/service module and cover the behavior with a regression test.
