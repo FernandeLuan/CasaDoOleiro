@@ -99,12 +99,12 @@
         </div>
       </div>
 
-      <div class="legacy-candidate-possibilities">
+      <div class="legacy-candidate-possibilities legacy-candidate-possibilities-v2">
         <div class="legacy-candidate-possibilities-head">
           <span class="eyebrow">Possibilidades</span>
-          <h2>Seu legado pode nascer de diferentes áreas</h2>
+          <h2>Onde sua ideia pode fazer diferença</h2>
         </div>
-        <div class="legacy-candidate-possibility-list">
+        <div class="legacy-candidate-possibility-icons" aria-label="Áreas possíveis para o Projeto Legado">
           <div><span><i class="fa-solid fa-leaf"></i></span><strong>Sustentabilidade</strong></div>
           <div><span><i class="fa-solid fa-hammer"></i></span><strong>Melhorias</strong></div>
           <div><span><i class="fa-solid fa-people-group"></i></span><strong>Comunidade</strong></div>

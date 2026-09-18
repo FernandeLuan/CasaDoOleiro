@@ -18,6 +18,52 @@ async function rewrite(relative,transform){
   if(next!==source)await writeFile(file,next,'utf8');
 }
 
+async function bundlePortalAssets(){
+  const portalFile=path.join(out,'portal/index.html');
+  let html=await readFile(portalFile,'utf8');
+
+  const cssPattern=/<link\s+rel="stylesheet"\s+href="(\.\.\/css\/[^"?]+)(?:\?[^"]*)?"\s*>/g;
+  const cssMatches=[...html.matchAll(cssPattern)];
+  if(!cssMatches.length)throw new Error('Nenhum CSS local do Portal encontrado para bundle.');
+  const cssParts=[];
+  for(const match of cssMatches){
+    const sourcePath=path.resolve(path.dirname(portalFile),match[1]);
+    cssParts.push(`/* ${match[1]} */\n${await readFile(sourcePath,'utf8')}\n`);
+    html=html.replace(match[0],'');
+  }
+  await writeFile(path.join(out,'css/portal.bundle.css'),cssParts.join('\n'),'utf8');
+  html=html.replace('</head>','<link rel="stylesheet" href="../css/portal.bundle.css"></head>');
+
+  const scriptPattern=/<script([^>]*)\s+src="(\.\.\/js\/[^"?]+)(?:\?[^"]*)?"([^>]*)><\/script>/g;
+  const scriptMatches=[...html.matchAll(scriptPattern)];
+  const configIndex=scriptMatches.findIndex(match=>match[2].endsWith('/firebase/firebase-config.js'));
+  if(configIndex<0)throw new Error('firebase-config.js não encontrado no Portal.');
+
+  const pre=scriptMatches.slice(0,configIndex);
+  const config=scriptMatches[configIndex];
+  const post=scriptMatches.slice(configIndex+1);
+  if(!pre.length||!post.length)throw new Error('Ordem de scripts do Portal inválida para bundle.');
+
+  async function writeScriptBundle(matches,target){
+    const parts=[];
+    for(const match of matches){
+      const sourcePath=path.resolve(path.dirname(portalFile),match[2]);
+      parts.push(`/* ${match[2]} */\n${await readFile(sourcePath,'utf8')}\n;\n`);
+    }
+    await writeFile(path.join(out,target),parts.join('\n'),'utf8');
+  }
+
+  await writeScriptBundle(pre,'js/portal-pre.bundle.js');
+  await writeScriptBundle(post,'js/portal.bundle.js');
+
+  for(const match of scriptMatches)html=html.replace(match[0],'');
+  const scripts=`<script src="../js/portal-pre.bundle.js"></script>${config[0]}<script data-clean-ui-portal="1" src="../js/portal.bundle.js"></script>`;
+  html=html.replace('</body>',`${scripts}</body>`);
+  await writeFile(portalFile,html,'utf8');
+
+  return {css:cssMatches.length,js:scriptMatches.length};
+}
+
 // Fail before deleting the previous build or publishing a broken entry point.
 await checkSiteAssets(root);
 await rm(out,{recursive:true,force:true});
@@ -36,6 +82,8 @@ const portal=await readFile(path.join(out,'portal/index.html'),'utf8');
 if(!admin.includes('data-clean-ui-admin="1"')||!admin.includes('../js/admin/admin-shell.js'))throw new Error('Admin Clean UI não está declarado diretamente na fonte.');
 if(!portal.includes('data-clean-ui-portal="1"'))throw new Error('Portal desktop shell não está declarado diretamente na fonte.');
 
+const portalBundle=await bundlePortalAssets();
+
 const htmlAssetPattern=/((?:src|href)="(?:\.\.\/)?(?:js|css)\/[^"?]+)(?:\?[^\"]*)?(\")/g;
 for(const relative of ['index.html','login.html','admin/index.html','portal/index.html']){
   await rewrite(relative,source=>source.replace(htmlAssetPattern,`$1?v=${assetKey}$2`));
@@ -45,4 +93,5 @@ await checkSiteAssets(out);
 await writeFile(path.join(out,'release.json'),JSON.stringify({environment,build:buildId,commit,publishedAt:new Date().toISOString()})+'\n','utf8');
 console.log(`Canonical site build ready: ${out}`);
 console.log(`Environment: ${environment}`);
-console.log('Source and runtime now use the same application structure.');
+console.log(`Portal bundles: ${portalBundle.js} scripts -> 3 requests; ${portalBundle.css} stylesheets -> 1 request.`);
+console.log('Source modules remain separated for maintenance; production is bundled in build order.');

@@ -89,8 +89,8 @@ const version = await request(`${apiBase}/sites/${encodeURIComponent(siteId)}/ve
     config: {
       headers: [
         { glob: '**/*.html', headers: { 'Cache-Control': 'no-store' } },
-        { glob: '**/*.js', headers: { 'Cache-Control': 'no-cache' } },
-        { glob: '**/*.css', headers: { 'Cache-Control': 'no-cache' } },
+        { glob: '**/*.js', headers: { 'Cache-Control': 'public,max-age=31536000,immutable' } },
+        { glob: '**/*.css', headers: { 'Cache-Control': 'public,max-age=31536000,immutable' } },
       ],
       rewrites: [
         { glob: '/admin', path: '/admin/index.html' },
