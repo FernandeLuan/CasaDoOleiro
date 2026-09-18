@@ -23,10 +23,8 @@ test('screen modules are loaded or explicitly retired',()=>{
   assert.deepEqual(unreferenced,[...retiredNotLoaded].sort(),'Unexpected dead/unloaded screen module. Retire it explicitly only after its behavior is merged and tested.');
 });
 
-test('round3 does not override candidate planning',()=>{
-  const round3=readFileSync('js/portal/round3-ui.js','utf8');
-  assert.ok(!/volunteerPlan\s*=\s*function/.test(round3),'round3 must not replace the canonical Planning renderer');
-  assert.ok(!round3.includes('edição fica bloqueada'));
+test('retired round3 candidate override stays removed',()=>{
+  assert.ok(!existsSync('js/portal/round3-ui.js'),'round3-ui.js must stay removed after its behavior was consolidated');
 });
 
 test('candidate planning has one canonical page owner',()=>{
@@ -78,12 +76,12 @@ test('retired candidate renderer stays removed and legacy compact header stays h
   assert.ok(css.includes('.candidate-plan-compact-head{display:none!important}'));
 });
 
-test('delete confirmation has no missing inline handlers',()=>{
+test('delete confirmation uses only the canonical Cloud Shell flow',()=>{
   const confirmation=readFileSync('js/admin/confirmation.js','utf8');
-  assert.ok(confirmation.includes('window.syncDeleteVolunteerConfirm=function'));
-  assert.ok(confirmation.includes('window.confirmDeleteVolunteerApplication=function'));
+  assert.ok(confirmation.includes('window.requestDeleteVolunteerApplication=function'));
   assert.ok(confirmation.includes('window.copyDeleteVolunteerCommand=async function'));
   assert.ok(confirmation.includes('tools/delete-volunteer.js'));
+  assert.ok(!confirmation.includes('window.confirmDeleteVolunteerApplication=function'),'browser must not expose a direct destructive delete handler');
 });
 
 test('analysis copy never says editing is blocked',()=>{
