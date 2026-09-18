@@ -151,6 +151,7 @@
   if(baseVolunteerHome){
     window.volunteerHome=volunteerHome=function(){
       let html=baseVolunteerHome();
+      if(html.includes('data-project-adjustment-update="1"'))return html;
       const hasProject=html.includes('data-project-highlight="1"');
       if(hasProject&&!projectSeen())return html;
       if(hasProject)html=stripProjectHighlight(html);
