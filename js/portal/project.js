@@ -3,6 +3,9 @@
   const categories=['Sustentabilidade','Estrutura','Educação','Saúde e bem-estar','Cultura e lazer','Organização','Comunicação','Tecnologia','Outro'];
   const esc=v=>typeof escapeHtml==='function'?escapeHtml(v):String(v??'');
   const tx=(key,params={})=>typeof t==='function'?t(key,params):String(key||'');
+  let legacyProjectWizardStep=0;
+  let legacyProjectWizardDraft=null;
+
 
   function statusMeta(status){
     return {
@@ -152,31 +155,138 @@
   };
   window.replayProjectOnboarding=function(){window.OleiroProjects?.resetOnboarding?.();state.projectOnboardingStep=0;render()};
 
+  function legacyWizardValue(value){return String(value??'')}
+  function legacyWizardProgress(){
+    const total=8,current=legacyProjectWizardStep+1;
+    return `<div class="legacy-wizard-progress" aria-label="${esc(tx('project.wizard.progress',{current,total}))}">${Array.from({length:total},(_,index)=>`<i class="${index<=legacyProjectWizardStep?'active':''}"></i>`).join('')}</div>`;
+  }
+  function legacyWizardQuestion(title,helper,content){
+    return `<div class="legacy-project-wizard">${legacyWizardProgress()}<div class="legacy-wizard-copy"><h3>${esc(title)}</h3>${helper?`<p>${esc(helper)}</p>`:''}</div><div class="legacy-wizard-control">${content}</div></div>`;
+  }
+  function legacyWizardBody(){
+    const draft=legacyProjectWizardDraft||{};
+    if(legacyProjectWizardStep===0)return legacyWizardQuestion(
+      tx('project.wizard.name.question'),
+      tx('project.wizard.name.helper'),
+      `<input id="legacyWizardTitle" class="input legacy-wizard-input" maxlength="90" value="${esc(draft.title||'')}" placeholder="${esc(tx('project.wizard.name.placeholder'))}" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();legacyProjectWizardNext()}">`
+    );
+    if(legacyProjectWizardStep===1)return legacyWizardQuestion(
+      tx('project.wizard.category.question'),
+      tx('project.wizard.category.helper'),
+      `<div class="legacy-wizard-category-grid">${categories.map(category=>`<button class="legacy-wizard-choice ${draft.category===category?'active':''}" type="button" onclick="selectLegacyWizardCategory('${encodeURIComponent(category)}')">${esc(category)}</button>`).join('')}</div>`
+    );
+    if(legacyProjectWizardStep===2)return legacyWizardQuestion(
+      tx('project.wizard.description.question'),
+      tx('project.wizard.description.helper'),
+      `<textarea id="legacyWizardDescription" class="textarea legacy-wizard-textarea" maxlength="900" placeholder="${esc(tx('project.wizard.description.placeholder'))}">${esc(draft.description||'')}</textarea>`
+    );
+    if(legacyProjectWizardStep===3)return legacyWizardQuestion(
+      tx('project.wizard.why.question'),
+      tx('project.wizard.why.helper'),
+      `<textarea id="legacyWizardWhy" class="textarea legacy-wizard-textarea" maxlength="700" placeholder="${esc(tx('project.wizard.why.placeholder'))}">${esc(draft.why||'')}</textarea>`
+    );
+    if(legacyProjectWizardStep===4)return legacyWizardQuestion(
+      tx('project.wizard.result.question'),
+      tx('project.wizard.result.helper'),
+      `<textarea id="legacyWizardResult" class="textarea legacy-wizard-textarea" maxlength="600" placeholder="${esc(tx('project.wizard.result.placeholder'))}">${esc(draft.expectedResult||'')}</textarea>`
+    );
+    if(legacyProjectWizardStep===5)return legacyWizardQuestion(
+      tx('project.wizard.materials.question'),
+      tx('project.wizard.materials.helper'),
+      `<textarea id="legacyWizardMaterials" class="textarea legacy-wizard-textarea" maxlength="500" placeholder="${esc(tx('project.wizard.materials.placeholder'))}">${esc(draft.materials||'')}</textarea>`
+    );
+    if(legacyProjectWizardStep===6)return legacyWizardQuestion(
+      tx('project.wizard.continuity.question'),
+      tx('project.wizard.continuity.helper'),
+      `<div class="legacy-wizard-binary"><button class="legacy-wizard-binary-option ${draft.allowContinuation!==false?'active':''}" type="button" onclick="selectLegacyWizardContinuity(true)"><span><i class="fa-solid fa-people-group"></i></span><div><strong>${esc(tx('project.wizard.continuity.yes'))}</strong><small>${esc(tx('project.wizard.continuity.yesHint'))}</small></div></button><button class="legacy-wizard-binary-option ${draft.allowContinuation===false?'active':''}" type="button" onclick="selectLegacyWizardContinuity(false)"><span><i class="fa-solid fa-flag-checkered"></i></span><div><strong>${esc(tx('project.wizard.continuity.no'))}</strong><small>${esc(tx('project.wizard.continuity.noHint'))}</small></div></button></div>`
+    );
+    return legacyWizardQuestion(
+      tx('project.wizard.drive.question'),
+      tx('project.wizard.drive.helper'),
+      `<div class="legacy-wizard-drive"><input id="legacyWizardDrive" class="input legacy-wizard-input" value="${esc(draft.driveUrl||'')}" placeholder="${esc(tx('project.wizard.drive.placeholder'))}" inputmode="url" autocomplete="url"><div class="legacy-wizard-tip"><i class="fa-brands fa-google-drive"></i><span>${esc(tx('project.wizard.drive.tip'))}</span></div></div>`
+    );
+  }
+  function captureLegacyWizardStep(){
+    if(!legacyProjectWizardDraft)legacyProjectWizardDraft={};
+    const draft=legacyProjectWizardDraft;
+    if(legacyProjectWizardStep===0)draft.title=document.getElementById('legacyWizardTitle')?.value.trim()||draft.title||'';
+    if(legacyProjectWizardStep===2)draft.description=document.getElementById('legacyWizardDescription')?.value.trim()||draft.description||'';
+    if(legacyProjectWizardStep===3)draft.why=document.getElementById('legacyWizardWhy')?.value.trim()||draft.why||'';
+    if(legacyProjectWizardStep===4)draft.expectedResult=document.getElementById('legacyWizardResult')?.value.trim()||draft.expectedResult||'';
+    if(legacyProjectWizardStep===5)draft.materials=document.getElementById('legacyWizardMaterials')?.value.trim()||'';
+    if(legacyProjectWizardStep===7)draft.driveUrl=document.getElementById('legacyWizardDrive')?.value.trim()||'';
+    return draft;
+  }
+  function validateLegacyWizardStep(){
+    const draft=captureLegacyWizardStep();
+    if(legacyProjectWizardStep===0&&!draft.title)return showToast(tx('project.wizard.required')),false;
+    if(legacyProjectWizardStep===1&&!draft.category)return showToast(tx('project.wizard.category.required')),false;
+    if(legacyProjectWizardStep===2&&!draft.description)return showToast(tx('project.wizard.required')),false;
+    if(legacyProjectWizardStep===3&&!draft.why)return showToast(tx('project.wizard.required')),false;
+    if(legacyProjectWizardStep===4&&!draft.expectedResult)return showToast(tx('project.wizard.required')),false;
+    if(legacyProjectWizardStep===7&&!validDrive(draft.driveUrl))return showToast(tx('project.wizard.drive.invalid')),false;
+    return true;
+  }
+  function renderLegacyProjectWizard(){
+    const editing=!!project()?.id,total=8,current=legacyProjectWizardStep+1;
+    const footer=`<div class="legacy-wizard-actions">${legacyProjectWizardStep>0?`<button class="btn btn-outline" type="button" onclick="legacyProjectWizardBack()"><i class="fa-solid fa-arrow-left"></i>${esc(tx('project.wizard.back'))}</button>`:`<button class="btn btn-outline" type="button" onclick="closeModal()">${esc(tx('common.cancel'))}</button>`}<button class="btn btn-primary" type="button" onclick="legacyProjectWizardNext()">${esc(legacyProjectWizardStep===total-1?tx('project.wizard.save'):tx('project.wizard.next'))}${legacyProjectWizardStep===total-1?'<i class="fa-solid fa-check"></i>':'<i class="fa-solid fa-arrow-right"></i>'}</button></div>`;
+    openModal(
+      esc(tx(editing?'project.wizard.editTitle':'project.wizard.createTitle')),
+      esc(tx('project.wizard.progress',{current,total})),
+      legacyWizardBody(),
+      footer
+    );
+    const modal=modalRoot.querySelector('.modal');modal?.classList.add('legacy-project-wizard-modal');
+    requestAnimationFrame(()=>{
+      const target=modalRoot.querySelector('.legacy-wizard-input,.legacy-wizard-textarea');
+      if(target&&legacyProjectWizardStep!==7)target.focus({preventScroll:true});
+    });
+  }
   window.openLegacyProjectForm=function(){
     const p=project()||{};
-    const options=categories.map(c=>`<option value="${esc(c)}" ${p.category===c?'selected':''}>${esc(c)}</option>`).join('');
-    const body=`<div class="form-grid legacy-project-form">
-      <div class="field"><label for="legacyTitle">Nome do projeto</label><input id="legacyTitle" class="input" maxlength="90" value="${esc(p.title||'')}" placeholder="Ex.: Composteira comunitária"></div>
-      <div class="field"><label for="legacyCategory">Categoria</label><select id="legacyCategory" class="select"><option value="">Selecione</option>${options}</select></div>
-      <div class="field"><label for="legacyDescription">O que você pretende deixar como legado?</label><textarea id="legacyDescription" class="textarea" maxlength="900" placeholder="Conte de forma simples o que você quer criar, melhorar ou organizar.">${esc(p.description||'')}</textarea></div>
-      <div class="field"><label for="legacyWhy">Por que isso é importante para a comunidade?</label><textarea id="legacyWhy" class="textarea" maxlength="700" placeholder="Que necessidade isso atende ou que diferença pode fazer?">${esc(p.why||'')}</textarea></div>
-      <div class="field"><label for="legacyResult">Qual resultado você espera entregar?</label><textarea id="legacyResult" class="textarea" maxlength="600" placeholder="Ex.: composteira montada, identificada e com instruções de uso.">${esc(p.expectedResult||'')}</textarea></div>
-      <div class="field"><label for="legacyMaterials">Materiais ou apoio necessários <span class="legacy-optional">opcional</span></label><textarea id="legacyMaterials" class="textarea" maxlength="500" placeholder="Liste ferramentas, materiais ou ajuda que você acredita precisar.">${esc(p.materials||'')}</textarea></div>
-      <div class="field"><label class="check-card legacy-continuity"><input id="legacyContinuity" type="checkbox" ${p.allowContinuation!==false?'checked':''}><span>Este projeto pode ser continuado por futuros voluntários</span></label></div>
-      <div class="field"><label for="legacyDrive">Pasta pública do Google Drive <span class="legacy-optional">opcional</span></label><input id="legacyDrive" class="input" value="${esc(p.driveUrl||'')}" placeholder="https://drive.google.com/drive/folders/..."><small>Use uma pasta configurada como “Qualquer pessoa com o link pode visualizar”.</small></div>
-    </div>`;
-    const footer='<button class="btn btn-outline" type="button" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" type="button" onclick="saveLegacyProjectDraft()">Salvar projeto</button>';
-    openModal(p.id?'Editar projeto':'Criar meu projeto','Seu legado pode começar pequeno. O importante é que ele seja útil e possível de realizar.',body,footer);
-    modalRoot.querySelector('.modal')?.classList.add('legacy-project-modal');
+    legacyProjectWizardStep=0;
+    legacyProjectWizardDraft={
+      title:legacyWizardValue(p.title),
+      category:legacyWizardValue(p.category),
+      description:legacyWizardValue(p.description),
+      why:legacyWizardValue(p.why),
+      expectedResult:legacyWizardValue(p.expectedResult),
+      materials:legacyWizardValue(p.materials),
+      allowContinuation:p.allowContinuation!==false,
+      driveUrl:legacyWizardValue(p.driveUrl)
+    };
+    renderLegacyProjectWizard();
   };
+  window.selectLegacyWizardCategory=function(encoded){
+    if(!legacyProjectWizardDraft)return;
+    legacyProjectWizardDraft.category=decodeURIComponent(String(encoded||''));
+    renderLegacyProjectWizard();
+  };
+  window.selectLegacyWizardContinuity=function(value){
+    if(!legacyProjectWizardDraft)return;
+    legacyProjectWizardDraft.allowContinuation=!!value;
+    renderLegacyProjectWizard();
+  };
+  window.legacyProjectWizardBack=function(){
+    captureLegacyWizardStep();
+    if(legacyProjectWizardStep<=0)return closeModal();
+    legacyProjectWizardStep-=1;renderLegacyProjectWizard();
+  };
+  window.legacyProjectWizardNext=function(){
+    if(!validateLegacyWizardStep())return;
+    if(legacyProjectWizardStep<7){legacyProjectWizardStep+=1;renderLegacyProjectWizard();return}
+    window.saveLegacyProjectDraft();
+  };
+
   function validDrive(url){if(!url)return true;try{const host=new URL(url).hostname.toLowerCase();return host==='drive.google.com'||host.endsWith('.drive.google.com')||host==='docs.google.com'}catch{return false}}
   window.saveLegacyProjectDraft=function(){
-    const title=document.getElementById('legacyTitle')?.value.trim()||'',category=document.getElementById('legacyCategory')?.value||'',description=document.getElementById('legacyDescription')?.value.trim()||'',why=document.getElementById('legacyWhy')?.value.trim()||'',expectedResult=document.getElementById('legacyResult')?.value.trim()||'',materials=document.getElementById('legacyMaterials')?.value.trim()||'',driveUrl=document.getElementById('legacyDrive')?.value.trim()||'',allowContinuation=!!document.getElementById('legacyContinuity')?.checked;
-    if(!title||!category||!description||!why||!expectedResult)return showToast('Preencha os campos principais do projeto.');
-    if(!validDrive(driveUrl))return showToast('Use um link válido do Google Drive.');
+    const draft=captureLegacyWizardStep(),{title,category,description,why,expectedResult,materials,driveUrl}=draft,allowContinuation=draft.allowContinuation!==false;
+    if(!title||!category||!description||!why||!expectedResult)return showToast(tx('project.wizard.required'));
+    if(!validDrive(driveUrl))return showToast(tx('project.wizard.drive.invalid'));
     const old=project();
     window.OleiroProjects.saveOwn({title,category,description,why,expectedResult,materials,driveUrl,allowContinuation,status:old?.status==='adjustments'?'adjustments':'draft'});
-    closeModal();render();showToast('Projeto salvo.');
+    legacyProjectWizardDraft=null;legacyProjectWizardStep=0;
+    closeModal();render();showToast(tx('project.wizard.saved'));
   };
   window.submitLegacyProject=function(){
     const p=project();if(!p)return;
