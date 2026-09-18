@@ -5,6 +5,7 @@
   const tx=(key,params={})=>typeof t==='function'?t(key,params):String(key||'');
   let legacyProjectWizardStep=0;
   let legacyProjectWizardDraft=null;
+  let legacyProjectWizardViewportCleanup=null;
 
 
   function statusMeta(status){
@@ -227,7 +228,58 @@
     if(legacyProjectWizardStep===7&&!validDrive(draft.driveUrl))return showToast(tx('project.wizard.drive.invalid')),false;
     return true;
   }
+  function syncLegacyWizardViewport(){
+    const modal=modalRoot.querySelector('.legacy-project-wizard-modal'),backdrop=modalRoot.querySelector('.modal-backdrop');
+    if(!modal||!backdrop)return;
+    const vv=window.visualViewport;
+    const height=Math.max(320,Math.round(vv?.height||window.innerHeight||720));
+    const offsetTop=Math.max(0,Math.round(vv?.offsetTop||0));
+    const keyboardOpen=!!vv&&height<Math.round((window.innerHeight||height)*.82);
+    modal.style.setProperty('--legacy-vv-height',height+'px');
+    modal.classList.toggle('legacy-keyboard-open',keyboardOpen);
+    backdrop.style.height=height+'px';
+    backdrop.style.top=offsetTop+'px';
+    backdrop.style.bottom='auto';
+  }
+  function keepLegacyWizardFieldVisible(target){
+    if(!target)return;
+    const body=target.closest('.modal-body');
+    const reveal=()=>{
+      if(!target.isConnected||!body)return;
+      target.scrollIntoView({block:'nearest',inline:'nearest'});
+      const targetBottom=target.getBoundingClientRect().bottom;
+      const bodyBottom=body.getBoundingClientRect().bottom;
+      if(targetBottom>bodyBottom-8)body.scrollTop+=targetBottom-bodyBottom+18;
+    };
+    requestAnimationFrame(reveal);
+    setTimeout(reveal,90);
+    setTimeout(reveal,260);
+  }
+  function bindLegacyWizardViewport(){
+    legacyProjectWizardViewportCleanup?.();
+    const vv=window.visualViewport;
+    const onViewport=()=>{
+      syncLegacyWizardViewport();
+      const active=document.activeElement;
+      if(active?.classList?.contains('legacy-wizard-input')||active?.classList?.contains('legacy-wizard-textarea'))keepLegacyWizardFieldVisible(active);
+    };
+    const onFocus=event=>{
+      const target=event.target;
+      if(target?.classList?.contains('legacy-wizard-input')||target?.classList?.contains('legacy-wizard-textarea'))keepLegacyWizardFieldVisible(target);
+    };
+    vv?.addEventListener('resize',onViewport);
+    vv?.addEventListener('scroll',onViewport);
+    modalRoot.addEventListener('focusin',onFocus);
+    legacyProjectWizardViewportCleanup=()=>{
+      vv?.removeEventListener('resize',onViewport);
+      vv?.removeEventListener('scroll',onViewport);
+      modalRoot.removeEventListener('focusin',onFocus);
+      legacyProjectWizardViewportCleanup=null;
+    };
+    onViewport();
+  }
   function renderLegacyProjectWizard(){
+    legacyProjectWizardViewportCleanup?.();
     const editing=!!project()?.id,total=8,current=legacyProjectWizardStep+1;
     const footer=`<div class="legacy-wizard-actions">${legacyProjectWizardStep>0?`<button class="btn btn-outline" type="button" onclick="legacyProjectWizardBack()"><i class="fa-solid fa-arrow-left"></i>${esc(tx('project.wizard.back'))}</button>`:`<button class="btn btn-outline" type="button" onclick="closeModal()">${esc(tx('common.cancel'))}</button>`}<button class="btn btn-primary" type="button" onclick="legacyProjectWizardNext()">${esc(legacyProjectWizardStep===total-1?tx('project.wizard.save'):tx('project.wizard.next'))}${legacyProjectWizardStep===total-1?'<i class="fa-solid fa-check"></i>':'<i class="fa-solid fa-arrow-right"></i>'}</button></div>`;
     openModal(
@@ -237,9 +289,13 @@
       footer
     );
     const modal=modalRoot.querySelector('.modal');modal?.classList.add('legacy-project-wizard-modal');
+    bindLegacyWizardViewport();
     requestAnimationFrame(()=>{
       const target=modalRoot.querySelector('.legacy-wizard-input,.legacy-wizard-textarea');
-      if(target&&legacyProjectWizardStep!==7)target.focus({preventScroll:true});
+      if(target&&legacyProjectWizardStep!==7){
+        target.focus({preventScroll:true});
+        keepLegacyWizardFieldVisible(target);
+      }
     });
   }
   window.openLegacyProjectForm=function(){
@@ -286,6 +342,7 @@
     const old=project();
     window.OleiroProjects.saveOwn({title,category,description,why,expectedResult,materials,driveUrl,allowContinuation,status:old?.status==='adjustments'?'adjustments':'draft'});
     legacyProjectWizardDraft=null;legacyProjectWizardStep=0;
+    legacyProjectWizardViewportCleanup?.();
     closeModal();render();showToast(tx('project.wizard.saved'));
   };
   window.submitLegacyProject=function(){
