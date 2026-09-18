@@ -48,8 +48,21 @@ function candidatePlanContent(p){
 }
 function loadMoreCandidatePlan(id){state.candidatePlanVisible[String(id)]=(state.candidatePlanVisible[String(id)]||CANDIDATE_PLAN_PAGE_SIZE)+CANDIDATE_PLAN_PAGE_SIZE;refreshOpenPersonModal(id)}
 function exportCandidatePlanning(id){
-  const p=candidateById(id);if(!p)return;const days=candidatePlanningDays(p);const lines=[`Planejamento - ${p.name}`,`${p.unit} | ${fmtDate(p.from,true)} a ${fmtDate(p.to,true)}`,''];days.forEach(day=>{lines.push(`${dayName(day.date)} ${fmtDate(day.date,true)}`);day.sessions.sort(activityScheduleCompare).forEach(session=>{const a=session.activity||{};lines.push(`- ${a.name||session.activityName||'Atividade'} | ${Number(session.duration||a.duration)||0} min | ${activityPeriodValue(session,a)}${session.notes||a.notes?` | Obs.: ${session.notes||a.notes}`:''}`)});lines.push('')});const blob=new Blob([lines.join('\n')],{type:'text/plain;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`planejamento-${String(p.name||'voluntario').toLowerCase().replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'')}.txt`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  const p=candidateById(id);if(!p)return;
+  const days=candidatePlanningDays(p),lines=[`*Planejamento - ${p.name}*`,`${p.unit} • ${fmtDate(p.from,true)} a ${fmtDate(p.to,true)}`,''];
+  days.forEach(day=>{
+    lines.push(`*${dayName(day.date)} • ${fmtDate(day.date,true)}*`);
+    day.sessions.sort(activityScheduleCompare).forEach(session=>{
+      const a=session.activity||{},period=activityPeriodValue(session,a),duration=Number(session.duration||a.duration)||0,note=session.notes||a.notes||'';
+      lines.push(`• ${a.name||session.activityName||'Atividade'} (${duration} min • ${period})${note?`\n  Obs.: ${note}`:''}`);
+    });
+    lines.push('');
+  });
+  const text=lines.join('\n').trim();if(!text)return showToast('Não há planejamento para compartilhar.');
+  const url=`https://wa.me/?text=${encodeURIComponent(text)}`,opened=window.open(url,'_blank','noopener,noreferrer');
+  if(!opened)location.href=url;
 }
+
 function requestDayAdjust(id,date){const p=candidateById(id);if(!p)return;const existing=candidateDayAdjustment(p,date)?.note||'';openModal(`Ajuste em ${fmtDate(date,true)}`,'Explique somente o que precisa ser revisto neste dia.',`<div class="field"><label for="dayAdjustNote">Orientação ao voluntário</label><textarea id="dayAdjustNote" class="textarea" placeholder="Ex.: ajustar o período e reduzir a duração estimada.">${escapeHtml(existing)}</textarea></div>`,`<button class="btn btn-primary btn-block" type="button" onclick="saveDayAdjustment(${JSON.stringify(String(id))},${JSON.stringify(date)})">Solicitar ajuste</button>`)}
 async function saveDayAdjustment(id,date){const p=candidateById(id);const note=document.getElementById('dayAdjustNote')?.value.trim()||'';if(!p||!note)return showToast('Informe o ajuste solicitado.');try{await window.OleiroServices.applications.requestDayAdjustment(p.id,date,note);p.status='adjustments';p.dayAdjustments=p.dayAdjustments||{};p.dayAdjustments[date]={note,status:'requested'};p.pendingUntil=candidateDeadlineFrom(new Date(),7);p.needsAdminAttention=false;deriveAdminNotifications?.();renderPersonModal(p,'plan');showToast('Ajuste solicitado para este dia.')}catch(error){console.error(error);showToast(error?.message||'Não foi possível solicitar o ajuste.')}}
 
