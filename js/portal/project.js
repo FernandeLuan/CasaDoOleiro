@@ -84,34 +84,38 @@
   }
 
   function candidatePreviewPage(){
-    return `<section class="section legacy-page legacy-candidate-preview">
-      <div class="legacy-candidate-hero">
-        <span class="legacy-candidate-hero-icon"><i class="fa-solid fa-seedling"></i></span>
-        <div>
-          <span class="eyebrow">Projeto Legado</span>
-          <h1>Conheça. Inspire-se. Crie depois.</h1>
-          <p>Explore ideias agora. A criação do seu projeto é liberada quando sua candidatura for aprovada.</p>
+    return `<section class="section legacy-page legacy-candidate-preview-v2">
+      <div class="legacy-candidate-hero-v2">
+        <span class="legacy-candidate-kicker">Projeto Legado</span>
+        <h1>Uma ideia sua pode continuar aqui.</h1>
+        <p>Conheça possibilidades agora e crie seu projeto quando sua candidatura for aprovada.</p>
+      </div>
+
+      <div class="legacy-candidate-flow">
+        <div class="legacy-candidate-flow-head">
+          <div><span class="eyebrow">Como funciona</span><strong>Da ideia à realização</strong></div>
+          <small><i class="fa-solid fa-lock"></i> criação após aprovação</small>
+        </div>
+        <div class="legacy-candidate-steps">
+          <article class="is-current"><span>1</span><small>Agora</small><strong>Conheça</strong></article>
+          <article><span>2</span><small>Após aprovação</small><strong>Crie</strong></article>
+          <article><span>3</span><small>Na estadia</small><strong>Realize</strong></article>
         </div>
       </div>
 
-      <div class="legacy-candidate-status">
-        <span><i class="fa-solid fa-lock"></i></span>
-        <div><small>Disponibilidade</small><strong>Criação após a aprovação</strong></div>
+      <div class="legacy-candidate-ideas-head">
+        <span class="eyebrow">Possibilidades</span>
+        <h2>O que pode virar um legado?</h2>
       </div>
 
-      <div class="legacy-candidate-section-head">
-        <div><span class="eyebrow">Inspire-se</span><h2>Escolha um caminho</h2></div>
-        <small>Seu projeto pode começar simples.</small>
+      <div class="legacy-candidate-idea-grid-v2">
+        <article class="legacy-candidate-idea-v2"><span><i class="fa-solid fa-leaf"></i></span><div><strong>Sustentabilidade</strong><p>Horta, composteira ou reaproveitamento.</p></div></article>
+        <article class="legacy-candidate-idea-v2"><span><i class="fa-solid fa-hammer"></i></span><div><strong>Melhorias</strong><p>Organização, espaços e pequenos reparos.</p></div></article>
+        <article class="legacy-candidate-idea-v2"><span><i class="fa-solid fa-people-group"></i></span><div><strong>Comunidade</strong><p>Oficinas, esporte ou cultura.</p></div></article>
+        <article class="legacy-candidate-idea-v2"><span><i class="fa-solid fa-laptop-code"></i></span><div><strong>Tecnologia</strong><p>Sistemas, materiais ou automações.</p></div></article>
       </div>
 
-      <div class="legacy-candidate-idea-grid">
-        <article class="legacy-candidate-idea"><span><i class="fa-solid fa-leaf"></i></span><div><strong>Sustentabilidade</strong><p>Horta, composteira e reaproveitamento.</p></div></article>
-        <article class="legacy-candidate-idea"><span><i class="fa-solid fa-hammer"></i></span><div><strong>Melhorias</strong><p>Espaços, organização e pequenos reparos.</p></div></article>
-        <article class="legacy-candidate-idea"><span><i class="fa-solid fa-people-group"></i></span><div><strong>Comunidade</strong><p>Oficinas, esporte e cultura.</p></div></article>
-        <article class="legacy-candidate-idea"><span><i class="fa-solid fa-laptop-code"></i></span><div><strong>Tecnologia</strong><p>Sistemas, materiais e automações.</p></div></article>
-      </div>
-
-      <button class="legacy-how-link legacy-candidate-how" type="button" onclick="replayProjectOnboarding()"><i class="fa-regular fa-circle-question"></i>Rever introdução</button>
+      <button class="legacy-how-link legacy-candidate-how-v2" type="button" onclick="replayProjectOnboarding()"><i class="fa-regular fa-circle-question"></i>Rever apresentação</button>
     </section>`;
   }
 
