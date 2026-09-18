@@ -13,7 +13,12 @@
   }
 
   const baseVolunteerProfile=volunteerProfile;
-  volunteerProfile=function(){const html=baseVolunteerProfile();return html.replace(/<\/section>\s*$/,`${cardHtml()}</section>`)};
+  volunteerProfile=function(){
+    const html=baseVolunteerProfile(),card=cardHtml();
+    const preferences='<div class="card portal-account-preferences">';
+    if(html.includes(preferences))return html.replace(preferences,card+preferences);
+    return html.replace(/<\/section>\s*$/,`${card}</section>`);
+  };
 
   window.syncMyEmergencySaveState=function(){
     const button=document.getElementById('saveMyEmergencyButton');if(!button)return;
