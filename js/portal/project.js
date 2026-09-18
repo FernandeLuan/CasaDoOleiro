@@ -373,8 +373,8 @@
     const height=Math.max(300,Math.round(vv?.height||layoutHeight));
     const offsetTop=Math.max(0,Math.round(vv?.offsetTop||0));
     const keyboardOpen=!!vv&&(layoutHeight-height)>150;
-    modal.style.setProperty('--project-vv-height',height+'px');
-    modal.classList.toggle('project-wizard-keyboard-open',keyboardOpen);
+    modal.style.setProperty('--modal-viewport-height',height+'px');
+    modal.classList.toggle('modal-keyboard-open',keyboardOpen);
     backdrop.style.height=height+'px';
     backdrop.style.top=offsetTop+'px';
     backdrop.style.bottom='auto';
