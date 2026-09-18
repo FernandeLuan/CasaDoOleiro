@@ -76,7 +76,7 @@ function managerHomePendingCard(slides){
   if(!slides.length)return '';
   if(_managerHomePendingIndex>=slides.length)_managerHomePendingIndex=0;
   const slide=slides[_managerHomePendingIndex],total=slides.length;
-  return `<section class="notice-carousel-card" aria-label="Pendências" data-manager-home-pending>
+  return `<section class="notice-carousel-card" aria-label="Pendências" data-notice-carousel="admin-home" data-manager-home-pending>
     <div class="notice-carousel-top">
       <span class="notice-carousel-icon"><i class="fa-solid ${slide.icon}"></i></span>
       <div class="notice-carousel-copy">
@@ -92,6 +92,10 @@ function managerHomePendingCard(slides){
     </div>
   </section>`;
 }
+document.addEventListener('oleiro:notice-swipe',event=>{
+  if(event.detail?.source!=='admin-home')return;
+  shiftManagerHomePending(event.detail.direction==='next'?1:-1);
+});
 function dismissManagerHomePending(event){
   event?.preventDefault?.();
   event?.stopPropagation?.();
