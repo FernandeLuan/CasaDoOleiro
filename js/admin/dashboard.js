@@ -50,6 +50,18 @@ function managerHomePendingSlides(volunteerAnalysis,volunteerAdjustments,project
     projectCounts.adjustments?{icon:'fa-pen-ruler',eyebrow:'Projetos',title:`${projectCounts.adjustments} ${projectCounts.adjustments===1?'projeto com ajuste':'projetos com ajustes'}`,text:'Há Projeto Legado aguardando nova revisão.',action:"openDashboardProjectFilter('adjustments')"}:null
   ].filter(Boolean);
 }
+function managerHomePreviewPendingSlides(){
+  if(window.OleiroProjects?.isPreview!==true)return [];
+  return [
+    {icon:'fa-seedling',eyebrow:'Projetos',title:'1 projeto em análise',text:'Há Projeto Legado aguardando sua decisão.',action:"openDashboardProjectFilter('analysis')"},
+    {icon:'fa-rotate',eyebrow:'Voluntariado',title:'1 ajuste pendente',text:'Há uma alteração aguardando nova revisão.',action:"openDashboardVolunteerFilter('adjustments')"},
+    {icon:'fa-pen-ruler',eyebrow:'Projetos',title:'1 projeto com ajuste',text:'Há Projeto Legado aguardando nova revisão.',action:"openDashboardProjectFilter('adjustments')"}
+  ];
+}
+function managerHomePendingSlidesVisible(volunteerAnalysis,volunteerAdjustments,projectCounts){
+  const real=managerHomePendingSlides(volunteerAnalysis,volunteerAdjustments,projectCounts);
+  return real.length?real:managerHomePreviewPendingSlides();
+}
 function managerHomePendingCard(slides){
   if(!slides.length)return '';
   if(_managerHomePendingIndex>=slides.length)_managerHomePendingIndex=0;
@@ -73,7 +85,7 @@ function managerHomePendingCard(slides){
   </section>`;
 }
 function shiftManagerHomePending(delta){
-  const projectCounts=dashboardProjectCounts(),slides=managerHomePendingSlides(dashboardCount('analysis'),dashboardCount('adjustments'),projectCounts);
+  const projectCounts=dashboardProjectCounts(),slides=managerHomePendingSlidesVisible(dashboardCount('analysis'),dashboardCount('adjustments'),projectCounts);
   if(!slides.length)return;
   _managerHomePendingIndex=Math.max(0,Math.min(slides.length-1,_managerHomePendingIndex+Number(delta||0)));
   if(state.managerPage==='home')render();
@@ -90,7 +102,7 @@ function managerHome(){
   const todayRows=Array.isArray(state.managerTodaySessions)?state.managerTodaySessions:[],todaySessions=todayRows.filter(row=>String(row.date||'')===String(_oleiroToday)).map(session=>{const activity=session.activity||{};return {activity:{...activity,name:session.activityName||activity.name||'Atividade',owner:session.ownerName||activity.ownerName||activity.owner||'Voluntário',duration:Number(session.duration||activity.duration||60)},group:session.groupId||'A definir',status:session.status||'proposed',raw:session}}),arrivals=nextMovements('from'),departures=nextMovements('to');
   const todayLoading=state.managerTodayLoaded!==true,dashboardLoading=state.managerDashboardLoaded!==true;
   const projectCounts=dashboardProjectCounts(),volunteerAnalysis=dashboardCount('analysis'),volunteerAdjustments=dashboardCount('adjustments');
-  const pendingSlides=managerHomePendingSlides(volunteerAnalysis,volunteerAdjustments,projectCounts);
+  const pendingSlides=managerHomePendingSlidesVisible(volunteerAnalysis,volunteerAdjustments,projectCounts);
   const pendingCardHtml=managerHomePendingCard(pendingSlides);
   const todayHtml=todayLoading?'<div class="empty compact-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando atividades...</div>':todaySessions.length?todaySessions.map(s=>agendaItem(s.activity.name,s.activity.owner,s.group,s.status,activityPeriodValue(s.raw||{},s.activity),s.activity.duration)).join(''):'<div class="empty">Nenhuma atividade prevista para hoje.</div>';
   const movementsLoading='<div class="empty compact-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando movimentações...</div>';
