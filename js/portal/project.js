@@ -85,16 +85,33 @@
     </section>`;
   }
 
+  function candidatePreviewPage(){
+    return `<section class="section legacy-page">
+      <div class="legacy-page-title"><span class="eyebrow">Projeto de legado</span><h1>Conheça agora. Crie quando sua candidatura for aprovada.</h1><p>Você já pode entender a proposta, observar necessidades da comunidade e guardar ideias. A criação e o envio do projeto ficam disponíveis quando sua estadia for confirmada.</p></div>
+      <div class="notice"><i class="fa-solid fa-lock"></i><div><strong>Criação liberada após a aprovação</strong><br>Enquanto isso, use esta área para conhecer exemplos e pensar no que combina com suas habilidades.</div></div>
+      <div class="section-head legacy-inspire-head"><div><h2>Ideias para observar</h2><p>O projeto pode ser simples, útil e possível de continuar depois.</p></div></div>
+      <div class="legacy-idea-grid">
+        ${ideaCard('fa-leaf','Sustentabilidade','Horta, composteira, plantio, reaproveitamento ou separação de resíduos.')}
+        ${ideaCard('fa-hammer','Melhorias','Organização de espaços, pequenos reparos, sinalização ou estrutura.')}
+        ${ideaCard('fa-people-group','Comunidade','Oficinas, esporte, cultura, dinâmicas ou atividades que possam continuar.')}
+        ${ideaCard('fa-book-open','Conhecimento','Manuais, materiais educativos, aulas ou processos documentados.')}
+        ${ideaCard('fa-laptop-code','Tecnologia','Planilhas, sistemas, automações ou soluções de comunicação.')}
+      </div>
+      <button class="legacy-how-link" type="button" onclick="replayProjectOnboarding()"><i class="fa-regular fa-circle-question"></i>Rever como funciona</button>
+    </section>`;
+  }
+
   window.volunteerProject=function(){
-    if(state.volunteerMode!=='approved')return '<section class="section"><div class="notice"><i class="fa-solid fa-lock"></i><div>Seu projeto de legado será liberado após a aprovação da candidatura.</div></div></section>';
     if(!window.OleiroProjects?.onboardingDone?.())return onboardingPage();
+    if(state.volunteerMode!=='approved')return candidatePreviewPage();
     const p=project();return p?statusPage(p):emptyPage();
   };
 
   window.projectOnboardingNext=function(){
     const step=Number(state.projectOnboardingStep)||0;
     if(step<3){state.projectOnboardingStep=step+1;render();return}
-    window.OleiroProjects?.completeOnboarding?.();state.projectOnboardingStep=0;render();setTimeout(()=>openLegacyProjectForm(),0);
+    window.OleiroProjects?.completeOnboarding?.();state.projectOnboardingStep=0;render();
+    if(state.volunteerMode==='approved')setTimeout(()=>openLegacyProjectForm(),0);
   };
   window.projectOnboardingBack=function(){
     const step=Number(state.projectOnboardingStep)||0;
