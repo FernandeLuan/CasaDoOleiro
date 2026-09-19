@@ -12,7 +12,6 @@
   const baseNavigateManager=window.navigateManager||navigateManager;
   const BOARD_CACHE_MS=2*60*1000;
   const MAX_APPLICATION_PAGES=3;
-  const SESSION_CONCURRENCY=4;
 
   function addDaysIso(iso,days){const d=new Date(`${iso}T12:00:00`);d.setDate(d.getDate()+Number(days||0));return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
   function normalized(value){return String(value||'').trim().toLocaleLowerCase('pt-BR')}
@@ -133,9 +132,6 @@
     while(hasMore&&page<MAX_APPLICATION_PAGES){const result=await window.OleiroServices.applications.list({status:'all',unit:'all',search:'',cursor,limit:50});(result?.items||[]).forEach(item=>{const id=String(item.id);if(!known.has(id)){known.add(id);rows.push(item)}});cursor=result?.nextCursor||null;hasMore=!!result?.hasMore&&!!cursor;page+=1}
     return rows;
   }
-  async function mapLimited(items,limit,worker){
-    const out=new Array(items.length),next={value:0};async function run(){while(next.value<items.length){const index=next.value++;try{out[index]=await worker(items[index],index)}catch(error){out[index]={error,item:items[index]}}}}await Promise.all(Array.from({length:Math.min(limit,items.length)},run));return out;
-  }
   async function loadPlanningBoardData({force=false}={}){
     if(state.planningBoardLoading)return;
     const from=String(state.planningBoardFrom||''),to=String(state.planningBoardTo||'');if(!from||!to||to<from){state.planningBoardError='O período selecionado é inválido.';render();return}
@@ -143,10 +139,11 @@
     state.planningBoardLoading=true;state.planningBoardError='';render();
     try{
       if(force||!state.planningBoardCandidates.length||Date.now()-state.planningBoardCandidatesAt>BOARD_CACHE_MS){state.planningBoardCandidates=await fetchCandidates();state.planningBoardCandidatesAt=Date.now()}
-      const relevant=(state.planningBoardCandidates||[]).filter(p=>p.status!=='rejected'&&!p.inactive&&(!p.from||p.from<=to)&&(!p.to||p.to>=from));
-      if(!window.OleiroServices?.planning?.listSessions)throw new Error('Serviço de planejamento indisponível.');
-      const results=await mapLimited(relevant,SESSION_CONCURRENCY,async person=>{const rows=await window.OleiroServices.planning.listSessions({applicationId:person.id,from,to});return (rows||[]).filter(row=>row.status!=='rejected'&&row.reviewStatus!=='rejected').map(row=>({...row,applicationId:String(person.id),person}))});
-      const sessions=[],failures=[];results.forEach(result=>{if(Array.isArray(result))sessions.push(...result);else if(result?.error)failures.push(result)});state.planningBoardSessions=sessions;state.planningBoardLoadedRange=rangeKey;state.planningBoardLoadedAt=Date.now();if(failures.length)state.planningBoardError=`${failures.length} planejamento(s) não puderam ser carregados nesta atualização.`;
+      if(!window.OleiroServices?.planning?.listScheduleRange)throw new Error('Consulta consolidada de planejamento indisponível.');
+      const people=new Map((state.planningBoardCandidates||[]).filter(p=>p.status!=='rejected'&&!p.inactive&&(!p.from||p.from<=to)&&(!p.to||p.to>=from)).map(p=>[String(p.id),p]));
+      const rows=await window.OleiroServices.planning.listScheduleRange({from,to});
+      state.planningBoardSessions=(rows||[]).filter(row=>people.has(String(row.applicationId))&&row.status!=='rejected'&&row.reviewStatus!=='rejected').map(row=>({...row,applicationId:String(row.applicationId),person:people.get(String(row.applicationId))}));
+      state.planningBoardLoadedRange=rangeKey;state.planningBoardLoadedAt=Date.now();
     }catch(error){console.error('Falha ao carregar quadro de planejamento:',error);state.planningBoardError=error?.message||'Não foi possível carregar os planejamentos.'}
     finally{state.planningBoardLoading=false;if(state.managerPage==='planning'&&!state.managerPlanningPersonId)render()}
   }

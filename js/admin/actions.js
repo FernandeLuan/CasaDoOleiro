@@ -35,23 +35,53 @@ function candidatePlanningDays(p){
   applyCandidatePlanningCache(p.id,cache);const byDate=new Map();(state.sessions||[]).forEach(session=>{if(!session.date)return;const list=byDate.get(session.date)||[];list.push({...session,activity:planningActivityForSession(session)});byDate.set(session.date,list)});
   return [...byDate.entries()].sort(([a],[b])=>a.localeCompare(b)).map(([date,sessions])=>({date,sessions:sessions.sort(activityScheduleCompare)}));
 }
-function candidateDayAdjustment(p,date){return p.dayAdjustments&&p.dayAdjustments[date]?p.dayAdjustments[date]:null}
+function candidateDayAdjustment(p,date){if(p?.status!=='adjustments')return null;return p.dayAdjustments&&p.dayAdjustments[date]?p.dayAdjustments[date]:null}
 function adminPlanningDayCard(p,day){
   const adjustment=candidateDayAdjustment(p,day.date);const canAdjust=['analysis','adjustments'].includes(p.status);const id=candidateActionArg(p.id);const dateArg=encodeURIComponent(day.date);
   return `<div class="card planning-day-card"><div class="planning-day-head"><div><strong>${fmtDate(day.date,true)} <small>${dayName(day.date)}</small></strong>${adjustment?`<span class="badge warning">Reajustar</span>`:''}</div>${canAdjust?`<button class="btn btn-soft btn-xs" type="button" onclick="requestDayAdjust(decodeURIComponent('${id}'),decodeURIComponent('${dateArg}'))"><i class="fa-solid fa-pen"></i>Ajuste</button>`:''}</div>${adjustment?`<div class="day-adjustment-note"><i class="fa-solid fa-circle-info"></i><span>${escapeHtml(adjustment.note||'Ajuste solicitado pela equipe.')}</span></div>`:''}<div class="planning-day-sessions">${day.sessions.map(session=>{const a=session.activity||{};const note=session.notes||a.notes||'';const group=session.groupId&&session.groupId!=='A definir'?` • Grupo ${escapeHtml(session.groupId)}`:'';return `<div class="planning-session-row"><div><strong>${escapeHtml(a.name||session.activityName||'Atividade')}</strong><span>${Number(session.duration||a.duration)||0} min • ${escapeHtml(activityPeriodValue(session,a))} • 1 sessão${group}</span>${note?`<p>${escapeHtml(note)}</p>`:''}</div></div>`}).join('')}</div></div>`;
 }
 function candidatePlanContent(p){
   const cache=candidatePlanningCache(p.id);if(!cache)return `<div class="empty compact-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando planejamento...</div>`;
+  p.activities=(cache.activities||[]).length;p.sessions=(cache.sessions||[]).length;
   const days=candidatePlanningDays(p);if(!days.length)return `<div class="empty"><i class="fa-regular fa-calendar-xmark"></i>Nenhuma atividade cadastrada ainda.</div>`;
-  const visible=Math.max(CANDIDATE_PLAN_PAGE_SIZE,state.candidatePlanVisible[String(p.id)]||CANDIDATE_PLAN_PAGE_SIZE);const shown=days.slice(0,visible);const remaining=days.length-shown.length;const arg=candidateActionArg(p.id);
-  return `<div class="planning-by-day">${shown.map(day=>adminPlanningDayCard(p,day)).join('')}</div>${remaining>0?`<button class="btn btn-soft btn-block" type="button" onclick="loadMoreCandidatePlan(decodeURIComponent('${arg}'))"><i class="fa-solid fa-chevron-down"></i>Ver mais ${Math.min(CANDIDATE_PLAN_PAGE_SIZE,remaining)}</button>`:''}<div class="planning-admin-footer"><button class="btn btn-outline" type="button" onclick="exportCandidatePlanning(decodeURIComponent('${arg}'))"><i class="fa-solid fa-file-export"></i>Exportar planejamento</button>${['analysis','adjustments'].includes(p.status)?`<button class="btn btn-primary" type="button" onclick="approveCandidate(decodeURIComponent('${arg}'))">Aprovar planejamento</button>`:''}</div>`;
+  const visible=Math.max(CANDIDATE_PLAN_PAGE_SIZE,state.candidatePlanVisible[String(p.id)]||CANDIDATE_PLAN_PAGE_SIZE),shown=days.slice(0,visible),remaining=days.length-shown.length,arg=candidateActionArg(p.id),reviewing=['analysis','adjustments'].includes(p.status);
+  return `<div class="planning-by-day">${shown.map(day=>adminPlanningDayCard(p,day)).join('')}</div>${remaining>0?`<button class="btn btn-soft btn-block" type="button" style="margin-top:10px" onclick="loadMoreCandidatePlan(decodeURIComponent('${arg}'))"><i class="fa-solid fa-chevron-down"></i>Ver mais ${Math.min(CANDIDATE_PLAN_PAGE_SIZE,remaining)}</button>`:''}<div class="planning-admin-footer planning-review-footer"><button class="btn btn-outline planning-whatsapp" type="button" onclick="exportCandidatePlanning(decodeURIComponent('${arg}'))"><i class="fa-brands fa-whatsapp"></i>Compartilhar no WhatsApp</button>${reviewing?`<button class="btn btn-primary" type="button" onclick="approveCandidate(decodeURIComponent('${arg}'))"><i class="fa-solid fa-check"></i>Aprovar</button><button class="btn btn-danger-soft" type="button" onclick="rejectCandidate(decodeURIComponent('${arg}'))"><i class="fa-solid fa-xmark"></i>Recusar</button>`:''}</div>`;
 }
+
 function loadMoreCandidatePlan(id){state.candidatePlanVisible[String(id)]=(state.candidatePlanVisible[String(id)]||CANDIDATE_PLAN_PAGE_SIZE)+CANDIDATE_PLAN_PAGE_SIZE;refreshOpenPersonModal(id)}
 function exportCandidatePlanning(id){
-  const p=candidateById(id);if(!p)return;const days=candidatePlanningDays(p);const lines=[`Planejamento - ${p.name}`,`${p.unit} | ${fmtDate(p.from,true)} a ${fmtDate(p.to,true)}`,''];days.forEach(day=>{lines.push(`${dayName(day.date)} ${fmtDate(day.date,true)}`);day.sessions.sort(activityScheduleCompare).forEach(session=>{const a=session.activity||{};lines.push(`- ${a.name||session.activityName||'Atividade'} | ${Number(session.duration||a.duration)||0} min | ${activityPeriodValue(session,a)}${session.notes||a.notes?` | Obs.: ${session.notes||a.notes}`:''}`)});lines.push('')});const blob=new Blob([lines.join('\n')],{type:'text/plain;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`planejamento-${String(p.name||'voluntario').toLowerCase().replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'')}.txt`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  const p=candidateById(id);if(!p)return;
+  const days=candidatePlanningDays(p),lines=[`*Planejamento - ${p.name}*`,`${p.unit} • ${fmtDate(p.from,true)} a ${fmtDate(p.to,true)}`,''];
+  days.forEach(day=>{
+    lines.push(`*${dayName(day.date)} • ${fmtDate(day.date,true)}*`);
+    day.sessions.sort(activityScheduleCompare).forEach(session=>{
+      const a=session.activity||{},period=activityPeriodValue(session,a),duration=Number(session.duration||a.duration)||0,note=session.notes||a.notes||'';
+      lines.push(`• ${a.name||session.activityName||'Atividade'} (${duration} min • ${period})${note?`\n  Obs.: ${note}`:''}`);
+    });
+    lines.push('');
+  });
+  const text=lines.join('\n').trim();if(!text)return showToast('Não há planejamento para compartilhar.');
+  const url=`https://wa.me/?text=${encodeURIComponent(text)}`,opened=window.open(url,'_blank','noopener,noreferrer');
+  if(!opened)location.href=url;
 }
+
 function requestDayAdjust(id,date){const p=candidateById(id);if(!p)return;const existing=candidateDayAdjustment(p,date)?.note||'';openModal(`Ajuste em ${fmtDate(date,true)}`,'Explique somente o que precisa ser revisto neste dia.',`<div class="field"><label for="dayAdjustNote">Orientação ao voluntário</label><textarea id="dayAdjustNote" class="textarea" placeholder="Ex.: ajustar o período e reduzir a duração estimada.">${escapeHtml(existing)}</textarea></div>`,`<button class="btn btn-primary btn-block" type="button" onclick="saveDayAdjustment(${JSON.stringify(String(id))},${JSON.stringify(date)})">Solicitar ajuste</button>`)}
-async function saveDayAdjustment(id,date){const p=candidateById(id);const note=document.getElementById('dayAdjustNote')?.value.trim()||'';if(!p||!note)return showToast('Informe o ajuste solicitado.');try{await window.OleiroServices.applications.requestDayAdjustment(p.id,date,note);p.status='adjustments';p.dayAdjustments=p.dayAdjustments||{};p.dayAdjustments[date]={note,status:'requested'};p.pendingUntil=candidateDeadlineFrom(new Date(),7);p.needsAdminAttention=false;deriveAdminNotifications?.();renderPersonModal(p,'plan');showToast('Ajuste solicitado para este dia.')}catch(error){console.error(error);showToast(error?.message||'Não foi possível solicitar o ajuste.')}}
+async function saveDayAdjustment(id,date){
+  const p=candidateById(id),note=document.getElementById('dayAdjustNote')?.value.trim()||'',button=document.getElementById('r4DayAdjustSave');
+  if(!p||!note)return showToast('Informe o ajuste solicitado.');
+  if(button){button.disabled=true;button.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i>Salvando...'}
+  const newCycle=p.status==='analysis',nextAdjustments=newCycle?{}:{...(p.dayAdjustments||{})};
+  nextAdjustments[date]={note,status:'requested',requestedAt:new Date()};
+  const deadline=new Date();deadline.setDate(deadline.getDate()+7);
+  try{
+    await window.OleiroServices.applications.update(p.id,{dayAdjustments:nextAdjustments,status:'adjustments',active:true,planningDeadlineAt:deadline});
+    p.status='adjustments';p.dayAdjustments=nextAdjustments;p.pendingUntil=deadline.toISOString();
+    renderPersonModal(p,'plan');showToast('Ajuste solicitado para este dia.');
+  }catch(error){
+    console.error(error);showToast(error?.message||'Não foi possível solicitar o ajuste.');
+    if(button?.isConnected){button.disabled=false;button.textContent='Solicitar ajuste'}
+  }
+}
 
 function personTabContent(p,tab){
   const [l]=statusMeta(p.status);const arg=candidateActionArg(p.id);

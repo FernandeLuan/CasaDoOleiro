@@ -168,6 +168,7 @@
       <nav class="portal-sidebar-nav">
         ${sidebarItem('home','fa-house',navText('portal.nav.home','Início'))}
         ${planItem}
+        ${approved?sidebarItem('project','fa-seedling','Projeto'):''}
         ${sidebarItem('stay','fa-location-dot',navText('portal.nav.stay','Estadia'))}
         ${sidebarItem('info','fa-circle-info',navText('portal.nav.info','Informações'))}
         ${sidebarItem('profile','fa-user',navText('portal.nav.profile','Perfil'))}
@@ -192,7 +193,12 @@
     if(typeof state==='undefined'||state.role!=='volunteer'||!app)return;
     syncModalLock();
     app.classList.add('portal-desktop-root');
-    app.querySelector(':scope > .portal-sidebar-desktop')?.remove();
+    const existing=app.querySelector(':scope > .portal-sidebar-desktop');
+    if(!window.matchMedia('(min-width:1024px)').matches){
+      existing?.remove();
+      return;
+    }
+    existing?.remove();
     app.insertAdjacentHTML('afterbegin',sidebarHtml());
     const sidebar=app.querySelector(':scope > .portal-sidebar-desktop');
     if(sidebar&&typeof applyI18n==='function')applyI18n(sidebar);

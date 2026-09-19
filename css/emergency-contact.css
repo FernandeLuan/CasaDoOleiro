@@ -11,3 +11,5 @@
 @media (max-width:520px){
   .account-emergency-card .emergency-person-row{grid-template-columns:minmax(0,1fr) auto!important}
 }
+
+.volunteer-emergency-card{margin-top:12px}

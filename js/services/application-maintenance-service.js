@@ -16,12 +16,18 @@
         ));
         services.recordQuery?.('applications/expired-pending',started,snapshot.size,{page:page+1,limit:max});
         if(snapshot.empty)break;
+        const mutations=[],now=firestore.serverTimestamp();
         for(const applicationDoc of snapshot.docs){
-          const data=applicationDoc.data()||{},uids=[...new Set((data.participantUids||[]).map(String).filter(Boolean))],batch=firestore.writeBatch(context.db),now=firestore.serverTimestamp();
-          batch.update(applicationDoc.ref,{status:'rejected',active:false,planningDeadlineAt:null,rejectedReason:'Prazo de 7 dias para envio do planejamento expirado.',rejectedAt:now,autoRejected:true,needsAdminAttention:false,updatedAt:now});
-          uids.forEach(uid=>batch.update(firestore.doc(context.db,'users',uid),{active:false,updatedAt:now}));
-          await batch.commit();total+=1;
+          const data=applicationDoc.data()||{},uids=[...new Set((data.participantUids||[]).map(String).filter(Boolean))];
+          mutations.push([applicationDoc.ref,{status:'rejected',active:false,planningDeadlineAt:null,rejectedReason:'Prazo de 7 dias para envio do planejamento expirado.',rejectedAt:now,autoRejected:true,needsAdminAttention:false,updatedAt:now}]);
+          uids.forEach(uid=>mutations.push([firestore.doc(context.db,'users',uid),{active:false,updatedAt:now}]));
         }
+        for(let index=0;index<mutations.length;index+=400){
+          const batch=firestore.writeBatch(context.db);
+          mutations.slice(index,index+400).forEach(([ref,patch])=>batch.update(ref,patch));
+          await batch.commit();
+        }
+        total+=snapshot.size;
         if(snapshot.size<max)break;
       }
       return total;

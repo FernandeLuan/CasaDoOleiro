@@ -140,11 +140,13 @@
     if(!page)return;
     const filters=page.querySelector('.planning-board-filters');
     if(!filters)return;
+    filters.classList.add('admin-filter-toolbar');
+    filters.querySelector('.planning-board-search')?.classList.add('admin-filter-search');
     let button=filters.querySelector('.planning-board-mobile-filter-button');
     if(!button){
       button=document.createElement('button');
       button.type='button';
-      button.className='planning-board-mobile-filter-button';
+      button.className='planning-board-mobile-filter-button admin-filter-button';
       button.setAttribute('aria-label','Filtros do planejamento');
       button.setAttribute('title','Filtros');
       button.setAttribute('onclick','openPlanningMobileFilters()');

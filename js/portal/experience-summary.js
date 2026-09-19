@@ -1,5 +1,5 @@
-/* Round 5 — Portal: reenvio encerra ajuste, estadia mais limpa e próxima atividade sem botão redundante. */
-(function round5Portal(){
+/* Portal — status do planejamento, resumo da estadia e experiência inicial. */
+(function experienceSummaryPortal(){
   volunteerDayAdjustment=function(date){
     if(state.volunteerPlanStatus!=='adjustments')return null;
     const rows=state.currentApplication?.dayAdjustments;return rows&&typeof rows==='object'?rows[date]||null:null;

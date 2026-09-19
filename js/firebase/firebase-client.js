@@ -49,4 +49,10 @@
     isConfigured(){return hasConfig(window.OLEIRO_FIREBASE_CONFIG)},
     get ready(){if(!readyPromise)readyPromise=initialize();return readyPromise;}
   };
+
+  // Warm-up: Auth/Firestore são necessários no boot do portal/admin.
+  // Iniciar agora permite baixar/inicializar o SDK enquanto os demais módulos locais carregam.
+  if(/\/(portal|admin)\//.test(location.pathname)&&hasConfig(window.OLEIRO_FIREBASE_CONFIG)){
+    void window.OleiroFirebase.ready.catch(error=>console.warn('[Firebase] warm-up falhou:',error));
+  }
 })();

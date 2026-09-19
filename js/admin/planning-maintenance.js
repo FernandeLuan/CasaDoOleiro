@@ -1,5 +1,5 @@
-/* Admin — editor de datas simples, reset de teste e status de agenda enxutos. */
-(function round7Admin(){
+/* Admin — manutenção de datas, reinício de planejamento e estados de agenda. */
+(function planningMaintenanceAdmin(){
   window.syncStayDateNative=function(){
     const from=document.getElementById('editStayFrom');
     const to=document.getElementById('editStayTo');

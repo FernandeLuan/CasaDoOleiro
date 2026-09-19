@@ -1,5 +1,5 @@
-/* Round 6 — Portal: navegação limpa, grupos explicados e e-mails neutros no iOS. */
-(function round6Portal(){
+/* Portal — orientação de grupos e refinamentos da experiência do candidato. */
+(function experienceGuidancePortal(){
   const baseVolunteerHome=volunteerHome;
   volunteerHome=function(){
     let html=baseVolunteerHome();

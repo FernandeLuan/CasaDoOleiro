@@ -79,12 +79,12 @@ test('Approved volunteer can add a new activity and Admin gets blue scoped info 
 
 test('Rodeio activity assistant is unit-scoped and has no candidate lifecycle controls',async({page})=>{
   await login(page,'assistant@oleiro.test','Assistant123!','admin');
-  for(const label of ['Início','Voluntariado','Planejamento','Ocupação','Grupos'])await expect(navAction(page,label)).toBeVisible();
+  for(const label of ['Início','Voluntariado','Planejamento','Projetos','Grupos'])await expect(navAction(page,label)).toBeVisible();
+  const homeOccupancy=page.locator('[data-home-occupancy]');await expect(homeOccupancy).toBeVisible({timeout:20_000});const homeUnits=homeOccupancy.locator('.home-occ-units button');await expect(homeUnits).toHaveCount(1);await expect(homeUnits).toHaveText('Rodeio');await expect(homeOccupancy.getByText('Indaial',{exact:true})).toHaveCount(0);
   await navAction(page,'Voluntariado').click();const list=page.locator('#candidateList');await expect(list).toContainText('Aprovado E2E',{timeout:20_000});await expect(list).not.toContainText('Indaial E2E');await expect(page.locator('.candidate-add-button')).toHaveCount(0);
   const denied=await page.evaluate(async()=>{try{await window.OleiroServices.applications.getById('e2e-indaial-application');return 'allowed'}catch(error){return String(error?.code||error?.message||'denied')}});expect(denied).not.toBe('allowed');
 
   const person=list.locator('.list-item.clickable').filter({hasText:'Aprovado E2E'}).first();await person.click();const detail=page.locator('#app');await expect(detail.locator('.person-refactor-tabs button.active')).toContainText('Planejamento',{timeout:20_000});await expect(detail.getByRole('button',{name:/Conta$/})).toHaveCount(0);await expect(detail.getByRole('button',{name:/Histórico$/})).toHaveCount(0);await expect(detail.getByRole('button',{name:/Estadia/})).toHaveCount(0);await expect(detail.getByRole('button',{name:/Aprovar planejamento/})).toHaveCount(0);await expect(detail.getByRole('button',{name:/Limpar/})).toHaveCount(0);
 
-  await navAction(page,'Ocupação').click();const occupancyUnits=page.locator('.occupancy-v2-unit');await expect(occupancyUnits).toHaveCount(1,{timeout:20_000});await expect(occupancyUnits).toHaveText('Rodeio');
   await navAction(page,'Grupos').click();const groupUnits=page.locator('.groups-unit-column');await expect(groupUnits).toHaveCount(1,{timeout:20_000});await expect(groupUnits).toContainText('Rodeio');await expect(page.getByText('Indaial',{exact:true})).toHaveCount(0);
 });

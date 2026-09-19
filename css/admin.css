@@ -35,3 +35,65 @@
 .hero::before{width:430px;height:430px;right:-270px;top:105px;border:1.5px solid rgba(255,255,255,.11);box-shadow:0 0 0 76px rgba(255,255,255,.018),0 0 0 152px rgba(255,255,255,.012);transform:rotate(-14deg)}
 .hero::after{width:560px;height:240px;left:-175px;bottom:-165px;border:70px solid rgba(255,255,255,.025);transform:rotate(9deg)}
 .hero>*{position:relative;z-index:1}
+
+
+/* Toolbar compartilhada — Planejamento, Voluntariado e Projetos */
+.admin-filter-toolbar{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 46px;
+  gap:8px;
+  align-items:center;
+  width:100%;
+  margin:0 0 12px;
+}
+.admin-filter-search{
+  position:relative;
+  min-width:0;
+  width:100%;
+}
+.admin-filter-search>i{
+  position:absolute;
+  left:13px;
+  top:50%;
+  transform:translateY(-50%);
+  color:var(--muted);
+  font-size:.72rem;
+  pointer-events:none;
+}
+.admin-filter-search .input{
+  width:100%;
+  height:46px;
+  min-height:46px;
+  padding-left:36px;
+  border-radius:13px;
+}
+.admin-filter-button{
+  position:relative;
+  width:46px;
+  min-width:46px;
+  height:46px;
+  min-height:46px;
+  border:1px solid var(--border);
+  border-radius:13px;
+  background:var(--surface);
+  color:var(--text);
+  display:grid;
+  place-items:center;
+  font-size:.76rem;
+  box-shadow:0 3px 16px rgba(0,0,0,.035);
+}
+.admin-filter-button.active{
+  border-color:var(--primary);
+  color:var(--primary);
+  background:var(--primary-soft);
+}
+.admin-filter-button .filter-dot{
+  position:absolute;
+  top:7px;
+  right:7px;
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:var(--primary);
+  box-shadow:0 0 0 2px var(--surface);
+}

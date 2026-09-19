@@ -112,13 +112,16 @@
         return hit.rows;
       }
       return services.run(async()=>{
-        const context=await services.firebase();const {firestore}=context.modules,started=Date.now(),constraints=[firestore.where('status','==','approved'),firestore.where('stayMonths','array-contains',String(month))];
-        if(normalizedUnit!=='all')constraints.push(firestore.where('unitId','==',normalizedUnit));
-        const snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'applications'),...constraints));
-        const rows=snapshot.docs.map(mapApplication).filter(row=>!row.inactive);
-        occupancyCache.set(key,{at:Date.now(),rows});
-        services.recordQuery?.('applications/occupancy-month',started,snapshot.size,{month:String(month),unitId:normalizedUnit});
-        return rows;
+        const context=await services.firebase();
+        return services.shareQuery(context,`applications/occupancy-month/${key}`,async()=>{
+          const {firestore}=context.modules,started=Date.now(),constraints=[firestore.where('status','==','approved'),firestore.where('stayMonths','array-contains',String(month))];
+          if(normalizedUnit!=='all')constraints.push(firestore.where('unitId','==',normalizedUnit));
+          const snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'applications'),...constraints));
+          const rows=snapshot.docs.map(mapApplication).filter(row=>!row.inactive);
+          occupancyCache.set(key,{at:Date.now(),rows});
+          services.recordQuery?.('applications/occupancy-month',started,snapshot.size,{month:String(month),unitId:normalizedUnit});
+          return rows;
+        });
       },{loading:false,monitor:{area:'applications',action:'occupancy_month'}});
     },
 

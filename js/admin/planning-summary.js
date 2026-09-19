@@ -1,5 +1,5 @@
-/* Admin: Home enxuta, detalhe com retorno e planejamento por dia. */
-(function round6Admin(){
+/* Admin — resumo da Home, detalhes de atividade e planejamento por dia. */
+(function planningSummaryAdmin(){
   function safe(value){return encodeURIComponent(String(value??''))}
   function shortDate(date){try{return new Intl.DateTimeFormat(typeof currentLocale==='function'?currentLocale():'pt-BR',{day:'2-digit',month:'2-digit'}).format(new Date(`${date}T12:00:00`))}catch{return fmtDate(date)}}
   function shortDay(date){try{return new Intl.DateTimeFormat(typeof currentLocale==='function'?currentLocale():'pt-BR',{weekday:'short'}).format(new Date(`${date}T12:00:00`)).replace('.','').toLowerCase()}catch{return String(dayName(date)||'').slice(0,3).toLowerCase()}}

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, normalize } from 'node:path';
 
-const retiredNotLoaded=new Set(['js/portal/candidate-view.js']);
+const retiredNotLoaded=new Set();
 
 function localScripts(htmlPath){
   const html=readFileSync(htmlPath,'utf8');
@@ -23,17 +23,19 @@ test('screen modules are loaded or explicitly retired',()=>{
   assert.deepEqual(unreferenced,[...retiredNotLoaded].sort(),'Unexpected dead/unloaded screen module. Retire it explicitly only after its behavior is merged and tested.');
 });
 
-test('round3 does not override candidate planning',()=>{
-  const round3=readFileSync('js/portal/round3-ui.js','utf8');
-  assert.ok(!/volunteerPlan\s*=\s*function/.test(round3),'round3 must not replace the canonical Planning renderer');
-  assert.ok(!round3.includes('edição fica bloqueada'));
+test('runtime modules use semantic names instead of numbered rounds',()=>{
+  const all=[...screenFiles('js/portal'),...screenFiles('js/admin')];
+  assert.deepEqual(all.filter(path=>/\/round\d/i.test(path)),[],'Numbered round modules must be consolidated into semantic owners.');
+});
+
+test('retired round3 candidate override stays removed',()=>{
+  assert.ok(!existsSync('js/portal/round3-ui.js'),'round3-ui.js must stay removed after its behavior was consolidated');
 });
 
 test('candidate planning has one canonical page owner',()=>{
   const portalHtml=readFileSync('portal/index.html','utf8');
   const planning=readFileSync('js/portal/planejamento.js','utf8');
   const enhancements=readFileSync('js/portal/planning-enhancements.js','utf8');
-  const retired=readFileSync('js/portal/candidate-view.js','utf8');
   const rules=readFileSync('js/shared/domain-rules.js','utf8');
 
   assert.ok(!portalHtml.includes('../js/portal/candidate-view.js'),'candidate-view.js is retired and must not be loaded');
@@ -42,7 +44,7 @@ test('candidate planning has one canonical page owner',()=>{
   assert.match(planning,/candidate-plan-content/);
   assert.ok(!planning.includes('candidate-plan-compact-head'),'Planning must not reintroduce the duplicated period/status header');
   assert.ok(!/volunteerPlan\s*=\s*function/.test(enhancements),'planning-enhancements must not own the page renderer');
-  assert.ok(retired.includes('candidate-plan-compact-head'),'Retired module retained only as rollback evidence');
+  assert.ok(!existsSync('js/portal/candidate-view.js'),'candidate-view.js must stay removed after consolidation');
   assert.ok(rules.includes("'submitted'"),'Submitted/analysis must stay editable until approval');
 });
 
@@ -73,24 +75,22 @@ test('admin planning keeps request-adjustment in the contextual action rail',()=
   assert.ok(agenda.includes("['analysis','adjustments'].includes"));
 });
 
-test('retired candidate renderer is safe if an old cached page still loads it',()=>{
-  const retired=readFileSync('js/portal/candidate-view.js','utf8');
+test('retired candidate renderer stays removed and legacy compact header stays hidden',()=>{
   const css=readFileSync('css/product-current.css','utf8');
-  assert.ok(retired.includes("['draft','submitted','adjustments']"));
-  assert.ok(!retired.includes('${compactHeader()}'),'Retired renderer must not bring back duplicated period/status');
+  assert.ok(!existsSync('js/portal/candidate-view.js'),'candidate-view.js must remain removed from runtime sources');
   assert.ok(css.includes('.candidate-plan-compact-head{display:none!important}'));
 });
 
-test('delete confirmation has no missing inline handlers',()=>{
+test('delete confirmation uses only the canonical Cloud Shell flow',()=>{
   const confirmation=readFileSync('js/admin/confirmation.js','utf8');
-  assert.ok(confirmation.includes('window.syncDeleteVolunteerConfirm=function'));
-  assert.ok(confirmation.includes('window.confirmDeleteVolunteerApplication=function'));
+  assert.ok(confirmation.includes('window.requestDeleteVolunteerApplication=function'));
   assert.ok(confirmation.includes('window.copyDeleteVolunteerCommand=async function'));
   assert.ok(confirmation.includes('tools/delete-volunteer.js'));
+  assert.ok(!confirmation.includes('window.confirmDeleteVolunteerApplication=function'),'browser must not expose a direct destructive delete handler');
 });
 
 test('analysis copy never says editing is blocked',()=>{
-  const home=readFileSync('js/portal/round5-ui.js','utf8');
+  const home=readFileSync('js/portal/experience-summary.js','utf8');
   assert.ok(!home.includes('edição fica bloqueada'));
   assert.ok(home.includes('continuar adicionando e ajustando atividades'));
 });

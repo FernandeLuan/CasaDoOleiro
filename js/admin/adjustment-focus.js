@@ -1,5 +1,5 @@
-/* Round 12 — Ajustes administrativos focados no dia certo e descrições visíveis. */
-(function round12Admin(){
+/* Admin — foco na fila de ajustes e descrições visíveis no planejamento. */
+(function adjustmentFocusAdmin(){
   const basePersonCompact=personCompact;
   const basePersonTabContent=personTabContent;
   const baseManagerHome=managerHome;

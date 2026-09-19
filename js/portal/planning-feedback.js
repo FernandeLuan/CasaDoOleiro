@@ -1,5 +1,5 @@
-/* Portal — feedback de carregamento e detalhes da atividade. */
-(function portalPlanningUx(){
+/* Portal — feedback de carregamento e detalhes do planejamento. */
+(function portalPlanningFeedback(){
   window.retryVolunteerPlanning=async function(){
     const application=state.currentApplication;if(!application?.id)return;
     state.volunteerPlanningFailedFor=null;state.volunteerPlanningLoadedFor=null;render();

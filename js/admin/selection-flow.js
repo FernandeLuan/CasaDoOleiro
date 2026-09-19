@@ -36,6 +36,7 @@
     const completed=status==='completed';
     return `<div class="card selection-flow-card"><div class="selection-flow-head"><div><span class="eyebrow">Reunião de definição</span><strong>${completed?'Reunião realizada':'Reunião agendada'}</strong></div><span class="badge ${completed?'success':'info'}">${completed?'Realizada':'Agendada'}</span></div>${meetingDetails(p)}${completed?`<div class="selection-final-actions"><button class="btn btn-danger" type="button" onclick="requestFinalSelectionDecision('${id}','reject')"><i class="fa-solid fa-xmark"></i>Não aprovar</button><button class="btn btn-primary" type="button" onclick="requestFinalSelectionDecision('${id}','approve')"><i class="fa-solid fa-check"></i>Aprovar candidato</button></div>`:`<div class="selection-meeting-actions"><button class="btn btn-outline" type="button" onclick="openSelectionMeetingEditor('${id}')"><i class="fa-solid fa-pen"></i>Editar</button><button class="btn btn-primary" type="button" onclick="requestCompleteSelectionMeeting('${id}')"><i class="fa-solid fa-check"></i>Marcar como realizada</button></div>`}</div>`;
   }
+  window.selectionAccountCard=selectionAccountCard;
 
   const baseRenderPersonModal=renderPersonModal;
   renderPersonModal=function(p,tab='plan'){

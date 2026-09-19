@@ -1,5 +1,5 @@
-/* Round 12/28 — estado visual de mudança pendente, sem depender do idioma. */
-(function round12Portal(){
+/* Portal — estado visual de mudança pendente, sem depender do idioma. */
+(function pendingChangeStatePortal(){
   const baseSessionCardVolunteer=sessionCardVolunteer;
 
   /* A pendência fica somente no botão. Seleção por estrutura/status, não por texto. */

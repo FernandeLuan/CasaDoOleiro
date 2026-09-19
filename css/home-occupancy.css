@@ -1,0 +1,66 @@
+/* Ocupação compacta na Home */
+.home-occ-card{padding:20px 22px!important;overflow:hidden}
+.home-occ-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:15px}
+.home-occ-head h2{margin:0;font-size:1.05rem;line-height:1.2}
+.home-occ-controls{display:grid;grid-template-columns:minmax(190px,1fr) minmax(160px,.85fr);gap:8px;align-items:center;min-width:min(430px,100%)}
+.home-occ-units{display:grid;grid-template-columns:1fr 1fr;padding:3px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;min-width:0}
+.home-occ-units button{width:100%;height:36px;border:0;border-radius:9px;background:transparent;color:var(--muted);font-size:.64rem;font-weight:700;line-height:1;min-width:0;padding:0 6px!important;white-space:nowrap;overflow:hidden}
+.home-occ-units button.active{background:var(--surface);color:var(--primary);box-shadow:0 2px 8px rgba(20,43,31,.08)}
+.home-occ-month{position:relative;display:flex;align-items:center;justify-content:center;min-width:0;height:44px;border:1px solid var(--border);border-radius:12px;background:var(--surface);overflow:hidden}
+.home-occ-month select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:2}
+.home-occ-month-label{display:block;max-width:100%;padding:0 30px 0 10px;color:var(--text);font-family:var(--font-body);font-size:14px;font-weight:700;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center}.home-occ-month>i{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:.58rem;color:var(--muted);pointer-events:none;z-index:1}
+.home-occ-weekdays,.home-occ-calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.home-occ-weekdays{margin-bottom:6px}
+.home-occ-weekdays span{text-align:center;color:var(--muted);font-size:.52rem;font-weight:700;letter-spacing:.05em;padding:4px 0}
+.home-occ-calendar{position:relative;min-height:330px;touch-action:pan-y}
+.home-occ-day{position:relative;min-height:58px;border:1px solid var(--border);border-radius:11px;background:var(--surface);color:var(--text);padding:8px;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;text-align:left;overflow:hidden}
+button.home-occ-day{cursor:pointer}
+button.home-occ-day:hover{border-color:color-mix(in srgb,var(--primary) 36%,var(--border));background:color-mix(in srgb,var(--primary-soft) 32%,var(--surface))}
+.home-occ-day.blank{border-color:transparent;background:transparent}
+.home-occ-day.today{border-color:var(--primary);box-shadow:inset 0 0 0 1px var(--primary)}
+.home-occ-day.occupied{background:color-mix(in srgb,var(--primary-soft) 28%,var(--surface))}
+.home-occ-day-number{font:700 .65rem var(--font-body)}
+.home-occ-markers{display:flex;align-items:center;gap:3px;min-height:9px;max-width:100%}
+.home-occ-markers small{font-size:.46rem;color:var(--muted);font-weight:700;margin-left:1px}
+.home-occ-dot{display:block;width:6px;height:6px;border-radius:999px;background:var(--primary)}
+.home-occ-dot.female{background:#9a6f7f}.home-occ-dot.couple{width:11px;border-radius:4px;background:#9b7c4e}
+.home-occ-loading{grid-column:1/-1;min-height:250px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--muted);font-size:.62rem}
+.home-occ-loading i{color:var(--primary);font-size:1rem}
+.home-occ-people{display:grid;gap:8px}
+.home-occ-person{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:9px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
+.home-occ-person:last-child{border-bottom:0}
+.home-occ-person-dot{width:8px;height:8px;border-radius:999px;background:var(--primary)}
+.home-occ-person-dot.female{background:#9a6f7f}.home-occ-person-dot.couple{width:12px;border-radius:4px;background:#9b7c4e}
+.home-occ-person strong{display:block;font-size:.69rem}.home-occ-person small{display:block;margin-top:2px;color:var(--muted);font-size:.57rem}
+.home-occ-person-flows{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.home-occ-person-flows span{font-size:.49rem;font-weight:700;padding:4px 6px;border-radius:999px;background:var(--surface-2);color:var(--muted)}
+.home-occ-person-flows span.arrival{background:var(--primary-soft);color:var(--primary)}
+
+@media(min-width:1024px){
+  .home-occ-calendar{min-height:360px}
+  .home-occ-day{min-height:66px}
+}
+@media(max-width:760px){
+  .home-occ-card{padding:16px!important}
+  .home-occ-head{align-items:stretch;flex-direction:column;gap:11px}
+  .home-occ-head>div{width:100%;display:flex;justify-content:center}
+  .home-occ-head h2{font-size:.94rem;text-align:center}
+  .home-occ-controls{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;min-width:0;width:100%;max-width:none}
+  .home-occ-units{width:100%;min-width:0}
+  .home-occ-units button{height:38px;font-size:12px;padding:0 4px!important}
+  .home-occ-month{width:100%;min-width:0;height:44px}
+  .home-occ-month-label{font-size:12px;padding-left:8px;padding-right:26px}
+  .home-occ-month>i{right:9px}
+  .home-occ-weekdays,.home-occ-calendar{gap:4px}
+  .home-occ-weekdays span{font-size:.47rem}
+  .home-occ-calendar{min-height:296px}
+  .home-occ-day{min-height:48px;border-radius:9px;padding:6px}
+  .home-occ-day-number{font-size:.58rem}
+  .home-occ-dot{width:5px;height:5px}.home-occ-dot.couple{width:9px}
+}
+@media(max-width:360px){
+  .home-occ-controls{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .home-occ-units button{font-size:11px}
+  .home-occ-month-label{font-size:11px;padding-left:6px;padding-right:24px}
+  .home-occ-day{min-height:45px}
+}

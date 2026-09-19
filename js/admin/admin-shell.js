@@ -127,7 +127,7 @@
           ${sidebarItem(state.managerPage==='home','fa-house','Início',"navigateManager('home')")}
           ${sidebarItem(state.managerPage==='volunteer','fa-users','Voluntariado',"navigateManager('volunteer')")}
           ${sidebarItem(state.managerPage==='planning','fa-calendar-check','Planejamento',"navigateManager('planning')")}
-          ${sidebarItem(state.managerPage==='occupancy','fa-bed','Ocupação','openManagerOccupancy()')}
+          ${sidebarItem(state.managerPage==='projects','fa-seedling','Projetos',"navigateManager('projects')")}
           ${sidebarItem(menuActive,'fa-bars','Menu',"navigateManager('menu')")}
         </nav>
         <div class="admin-sidebar-spacer-r62"></div>
@@ -293,7 +293,7 @@
 
     managerNav=function(){
       const item=(icon,label,action,active=false)=>`<button class="nav-btn ${active?'active':''}" onclick="${action}"><i class="fa-solid ${icon}"></i><span>${label}</span></button>`;
-      return `<nav class="bottom-nav">${item('fa-house','Início',"navigateManager('home')",state.managerPage==='home')}${item('fa-users','Voluntariado',"navigateManager('volunteer')",state.managerPage==='volunteer')}${item('fa-calendar-check','Planejamento',"navigateManager('planning')",state.managerPage==='planning')}${item('fa-bed','Ocupação','openManagerOccupancy()',state.managerPage==='occupancy')}${item('fa-bars','Menu',"navigateManager('menu')",['menu','groups'].includes(state.managerPage))}</nav>`;
+      return `<nav class="bottom-nav">${item('fa-house','Início',"navigateManager('home')",state.managerPage==='home')}${item('fa-users','Voluntariado',"navigateManager('volunteer')",state.managerPage==='volunteer')}${item('fa-calendar-check','Planejamento',"navigateManager('planning')",state.managerPage==='planning')}${item('fa-seedling','Projetos',"navigateManager('projects')",state.managerPage==='projects')}${item('fa-people-group','Grupos',"navigateManager('groups')",state.managerPage==='groups')}</nav>`;
     };
     window.managerNav=managerNav;
 
@@ -338,6 +338,7 @@
         volunteer:()=>managerVolunteers(),
         agenda:()=>managerAgenda(),
         groups:()=>managerGroups(),
+        projects:()=>typeof window.managerProjects==='function'?window.managerProjects():'<section class="section"><div class="empty">Módulo de projetos indisponível.</div></section>',
         menu:()=>managerMenu()
       };
       const page=pages[state.managerPage]||pages.home;

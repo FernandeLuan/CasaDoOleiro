@@ -40,6 +40,7 @@ async function login(page,email,password,target,language='pt'){
 const navAction=(page,label)=>page.getByRole('button',{name:new RegExp(`^.{0,3}${label}$`)});
 const appAction=(page,label)=>page.locator('#app').getByRole('button',{name:new RegExp(label)});
 const activityCard=(page,label)=>page.locator('.activity-card').filter({hasText:label});
+const profileNavAction=page=>page.locator(`button[onclick="navigateVolunteer('profile')"]:visible`).first();
 
 async function waitForCandidateList(page){
   const list=page.locator('#candidateList');
@@ -167,7 +168,7 @@ test('Candidate History is lazy and loads only after opening its tab',async({pag
 
 test('Volunteer can edit own emergency contact and Admin sees the same profile data',async({page})=>{
   await login(page,'voluntario@oleiro.test','Volunteer123!','portal');
-  await navAction(page,'Perfil').click();
+  await profileNavAction(page).click();
   const emergency=page.locator('.volunteer-emergency-card');
   await expect(emergency).toBeVisible();
   await expect(emergency).toContainText('Contato de emergência');
@@ -230,8 +231,8 @@ test('Candidate creates, edits, moves and deletes own proposed activity',async({
 });
 
 for(const locale of [
-  {lang:'en',infoNav:'Information',arrival:'How to get here',software:'Software version',planning:'Planning',add:'Add activity',namePlaceholder:'E.g. English conversation',descriptionPlaceholder:'How does the activity work?',profileNav:'Profile',emergencyTitle:'Emergency contact',emergencyAdd:'Add contact'},
-  {lang:'es',infoNav:'Información',arrival:'Cómo llegar',software:'Versión del software',planning:'Planificación',add:'Agregar actividad',namePlaceholder:'Ej.: Conversación en inglés',descriptionPlaceholder:'¿Cómo funciona la actividad?',profileNav:'Perfil',emergencyTitle:'Contacto de emergencia',emergencyAdd:'Agregar contacto'}
+  {lang:'en',infoNav:'Information',arrival:'How to get here',software:'Software version',planning:'Planning',add:'Add activity',namePlaceholder:'E.g. English conversation',descriptionPlaceholder:'How does the activity work?',profileNav:'Account',emergencyTitle:'Emergency contact',emergencyAdd:'Add contact'},
+  {lang:'es',infoNav:'Información',arrival:'Cómo llegar',software:'Versión del software',planning:'Planificación',add:'Agregar actividad',namePlaceholder:'Ej.: Conversación en inglés',descriptionPlaceholder:'¿Cómo funciona la actividad?',profileNav:'Cuenta',emergencyTitle:'Contacto de emergencia',emergencyAdd:'Agregar contacto'}
 ]){
   test(`Volunteer critical information, profile and activity placeholders render in ${locale.lang}`,async({page})=>{
     await login(page,'voluntario@oleiro.test','Volunteer123!','portal',locale.lang);
@@ -247,7 +248,7 @@ for(const locale of [
     await expect(page.locator('#actPeriod option[value="Manhã"]')).not.toHaveText('Manhã');
     await page.evaluate(()=>closeModal());
 
-    await navAction(page,locale.profileNav).click();
+    await profileNavAction(page).click();
     const emergency=page.locator('.volunteer-emergency-card');
     await expect(emergency).toContainText(locale.emergencyTitle);
     await expect(emergency.getByRole('button',{name:new RegExp(`${locale.emergencyAdd}$`)})).toBeVisible();
