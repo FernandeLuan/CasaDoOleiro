@@ -151,3 +151,10 @@ test('production release notice dismissal must stay enabled',()=>{
   assert.match(releaseNotes,/const ALWAYS_SHOW_HOME_NOTICES=false;/,'Production must persist dismissed release notices instead of forcing homologation banners to reappear.');
   assert.ok(!releaseNotes.includes('const ALWAYS_SHOW_HOME_NOTICES=true;'),'Homologation-only always-show flag must never ship enabled.');
 });
+
+
+test('release dismissal does not depend on browser storage',()=>{
+  const releaseNotes=readFileSync('js/portal/release-notes.js','utf8');
+  assert.ok(releaseNotes.includes('releaseDismissedInSession=true'),'Dismissal must take effect in memory even when localStorage is unavailable.');
+  assert.ok(releaseNotes.includes("filter(slide=>!hiddenHomeNoticeIds.has(slide.id))"),'Dismissed release slides must be removed from the current Home carousel immediately.');
+});
