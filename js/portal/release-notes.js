@@ -9,7 +9,7 @@
   if(window.__OLEIRO_PORTAL_RELEASE_NOTES__)return;
   window.__OLEIRO_PORTAL_RELEASE_NOTES__=true;
 
-  const ALWAYS_SHOW_HOME_NOTICES=true; // homologação: manter avisos sempre visíveis para teste
+  const ALWAYS_SHOW_HOME_NOTICES=false; // produção: respeitar a dispensa do usuário e só reexibir quando ANNOUNCEMENT.id mudar
   const ANNOUNCEMENT={
     id:'2026-09-portal-projeto-legado-v3',
     eyebrow:'Nova atualização',
