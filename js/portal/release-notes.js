@@ -33,14 +33,15 @@
   let releaseMeta=null;
   let metaPromise=null;
   let homeSlideIndex=0;
+  let releaseDismissedInSession=false;
   const hiddenHomeNoticeIds=new Set();
   let homeNoticeRefreshAt=0;
   let homeNoticeRefreshPromise=null;
 
   function uid(){return String(state?.currentSession?.uid||'anon')}
   function releaseSeenKey(){return `oleiro.portal.release-notes.seen.v1:${uid()}`}
-  function releaseSeen(){if(ALWAYS_SHOW_HOME_NOTICES)return false;try{return localStorage.getItem(releaseSeenKey())===ANNOUNCEMENT.id}catch{return false}}
-  function markReleaseSeen(){if(ALWAYS_SHOW_HOME_NOTICES)return;try{localStorage.setItem(releaseSeenKey(),ANNOUNCEMENT.id)}catch{}}
+  function releaseSeen(){if(ALWAYS_SHOW_HOME_NOTICES)return false;if(releaseDismissedInSession)return true;try{return localStorage.getItem(releaseSeenKey())===ANNOUNCEMENT.id}catch{return false}}
+  function markReleaseSeen(){if(ALWAYS_SHOW_HOME_NOTICES)return;releaseDismissedInSession=true;try{localStorage.setItem(releaseSeenKey(),ANNOUNCEMENT.id)}catch{}}
 
   function metaLabel(){
     const build=String(releaseMeta?.build||'').trim();
@@ -229,7 +230,7 @@
       summary:slide.summary,
       ctaLabel:'Ver novidades',
       showMeta:true
-    }));
+    })).filter(slide=>!hiddenHomeNoticeIds.has(slide.id));
   }
   function homeSlides(){
     const slides=[];
