@@ -144,3 +144,10 @@ test('production keeps Firestore rules deployment behind emulator validation',()
   assert.ok(workflow.includes('--only firestore:rules'),'production workflow must deploy Firestore rules explicitly');
   assert.ok(!workflow.includes('FIREBASE_TOKEN'),'production rules deploy must not depend on a long-lived Firebase token');
 });
+
+
+test('production release notice dismissal must stay enabled',()=>{
+  const releaseNotes=readFileSync('js/portal/release-notes.js','utf8');
+  assert.match(releaseNotes,/const ALWAYS_SHOW_HOME_NOTICES=false;/,'Production must persist dismissed release notices instead of forcing homologation banners to reappear.');
+  assert.ok(!releaseNotes.includes('const ALWAYS_SHOW_HOME_NOTICES=true;'),'Homologation-only always-show flag must never ship enabled.');
+});
