@@ -49,7 +49,8 @@
       if(!from||!to||String(to)<String(from))return [];
       return services.run(async()=>{
         const context=await services.firebase();
-        const key=JSON.stringify(['activity_sessions/range',String(from),String(to)]);
+        const accessUnits=services.accessScope?.unitIds?.(),scopeKey=Array.isArray(accessUnits)?[...accessUnits].sort():null;
+        const key=JSON.stringify(['activity_sessions/range',String(from),String(to),String(unitId||'all').toLowerCase(),scopeKey]);
         return services.shareQuery(context,key,async()=>{
           const {firestore}=context.modules,started=Date.now();
           const constraints=[firestore.where('date','>=',String(from)),firestore.where('date','<=',String(to))];
