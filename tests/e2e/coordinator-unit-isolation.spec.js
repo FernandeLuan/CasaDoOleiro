@@ -78,7 +78,7 @@ test('unassigned activity assistant cannot reuse cached occupancy from another s
   await page.locator('#email').fill('assistant@oleiro.test');
   await page.locator('#password').fill('Assistant123!');
   await page.locator('#loginButton').click();
-  await expect(page).toHaveURL(/\\/admin\\//,{timeout:30_000});
+  await expect(page).toHaveURL(url=>url.pathname.startsWith('/admin/'),{timeout:30_000});
   await page.waitForFunction(()=>window.state?.currentSession?.user?.role==='activity_assistant'&&typeof window.navigateManager==='function',undefined,{timeout:20_000});
   await page.evaluate(()=>{
     const session=state.currentSession,user=session.user;
