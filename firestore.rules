@@ -374,22 +374,6 @@ service cloud.firestore {
     }
 
 
-    function assistantMayManageVolunteerUser() {
-      return isActivityAssistant()
-        && resource.data.role == 'volunteer'
-        && request.resource.data.role == 'volunteer'
-        && ('unitIds' in resource.data)
-        && resource.data.unitIds is list
-        && resource.data.unitIds.size() > 0
-        && ('unitIds' in currentUser())
-        && currentUser().unitIds is list
-        && currentUser().unitIds.hasAll(resource.data.unitIds)
-        && request.resource.data.unitIds == resource.data.unitIds
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'active', 'updatedAt'
-        ]);
-    }
-
     function assistantMayRequestApplicationAdjustment() {
       return assistantHasUnit(resource.data.unitId)
         && resource.data.active == true
@@ -541,7 +525,7 @@ service cloud.firestore {
         || (isActivityAssistant() && ('unitIds' in resource.data) && ('unitIds' in currentUser()) && resource.data.unitIds.hasAny(currentUser().unitIds));
       allow create: if managerCanCreateUser(request.resource.data);
       allow delete: if isAdmin() || (isCoordinator() && resource.data.role == 'volunteer' && managerCanManageUser(uid));
-      allow update: if isAdmin() || coordinatorUpdatesUser(uid) || assistantMayManageVolunteerUser() || participantMarksFirstAccess(uid);
+      allow update: if isAdmin() || coordinatorUpdatesUser(uid) || participantMarksFirstAccess(uid);
     }
 
     match /units/{unitId} {

@@ -175,6 +175,7 @@ test('activity assistants remain limited to their assigned unit and cannot react
     });
   });
   const db=dbFor('assistant-rodeio');
+  await assertFails(updateDoc(docRef(db,'users','volunteer-rodeio'),{active:false}));
   await assertSucceeds(getDoc(docRef(db,'applications','application-rodeio')));
   await assertFails(getDoc(docRef(db,'applications','application-indaial')));
   await assertSucceeds(getDoc(docRef(db,'groups','group-rodeio')));
