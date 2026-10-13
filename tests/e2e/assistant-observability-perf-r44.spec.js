@@ -9,7 +9,8 @@ test('assistant stays unit-scoped without candidate approval lifecycle rights', 
   const groups=fs.readFileSync('js/services/group-service.js','utf8');
   expect(rules).not.toContain('assistantMayManageApplication');
   expect(rules).toContain('assistantMayRequestApplicationAdjustment');
-  expect(rules).toContain('assistantMayManageVolunteerUser');
+  expect(rules).not.toContain('assistantMayManageVolunteerUser');
+  expect(rules).toContain("allow update: if isAdmin() || coordinatorUpdatesUser(uid) || participantMarksFirstAccess(uid);");
   expect(rules).toContain('resource.data.unitIds.hasAny(currentUser().unitIds)');
   expect(rules).toContain('isActivityAssistant() && assistantHasUnit(resource.data.unitId)');
   expect(ui).toContain('assistantUnitLabel');

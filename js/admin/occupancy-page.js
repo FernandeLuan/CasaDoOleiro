@@ -107,7 +107,7 @@
   function monthTitle(){const {year,monthIndex}=monthParts(),locale=typeof currentLocale==='function'?currentLocale():'pt-BR',text=new Intl.DateTimeFormat(locale,{month:'long',year:'numeric'}).format(new Date(year,monthIndex,1,12));return text.charAt(0).toUpperCase()+text.slice(1)}
   function weekdays(){const locale=typeof currentLocale==='function'?currentLocale():'pt-BR',sunday=new Date(2021,7,1,12);return Array.from({length:7},(_,i)=>{const d=new Date(sunday);d.setDate(sunday.getDate()+i);return new Intl.DateTimeFormat(locale,{weekday:'short'}).format(d).replace('.','').slice(0,3).toUpperCase()})}
   function units(){const rows=Array.isArray(state.occupancyUnits)&&state.occupancyUnits.length?state.occupancyUnits:(window.OleiroDemoDB?.units||[]),allowed=window.OleiroServices?.accessScope?.unitIds?.();return rows.filter(row=>row&&row.active!==false&&(!Array.isArray(allowed)||allowed.includes(String(row.id||'').toLowerCase())))}
-  function unitId(){const rows=units(),current=String(state.occupancyUnitId||'rodeio');return rows.some(row=>String(row.id)===current)?current:String(rows[0]?.id||'rodeio')}
+  function unitId(){const rows=units(),current=String(state.occupancyUnitId||'');return rows.some(row=>String(row.id)===current)?current:String(rows[0]?.id||'')}
   function source(){return Array.isArray(state.occupancyCandidates)?state.occupancyCandidates:[]}
   function peopleCount(rows){return (rows||[]).reduce((sum,row)=>sum+Math.max(1,Number(row.participantCount)||row.participantNames?.length||1),0)}
   function peopleForDate(iso,rows=source()){return (rows||[]).filter(row=>row.status==='approved'&&!row.inactive&&row.from&&row.to&&row.from<=iso&&row.to>=iso)}
@@ -181,9 +181,16 @@
 
   async function loadData(){
     const services=window.OleiroServices;if(!services?.applications?.listOccupancyMonth)throw new Error('Serviço de ocupação indisponível.');
+    const allowed=services.accessScope?.unitIds?.();
+    if(Array.isArray(allowed)&&allowed.length===0){
+      state.occupancyUnits=[];state.occupancyUnitId='';state.occupancyCandidates=[];state.occupancyTodayCandidates=[];state.occupancyScreenError='Nenhuma unidade foi atribuída a este usuário.';return;
+    }
     let rows=units();if(services.units?.list){try{rows=await services.units.list({includeInactive:false})||rows}catch(error){console.warn('Não foi possível atualizar as unidades da ocupação:',error)}}
-    state.occupancyUnits=rows;state.occupancyUnitId=unitId();
-    const currentMonth=month(),todayMonth=String(_oleiroToday).slice(0,7),currentUnit=state.occupancyUnitId;
+    state.occupancyUnits=Array.isArray(allowed)?rows.filter(row=>row&&allowed.includes(String(row.id||'').trim().toLowerCase())):rows;
+    state.occupancyUnitId=unitId();
+    const currentUnit=state.occupancyUnitId;
+    if(!currentUnit){state.occupancyCandidates=[];state.occupancyTodayCandidates=[];state.occupancyScreenError='Nenhuma unidade disponível para consulta de ocupação.';return}
+    const currentMonth=month(),todayMonth=String(_oleiroToday).slice(0,7);
     const monthPromise=services.applications.listOccupancyMonth(currentMonth,{unitId:currentUnit});
     const todayPromise=todayMonth===currentMonth?monthPromise:services.applications.listOccupancyMonth(todayMonth,{unitId:currentUnit});
     const [monthRows,todayRows]=await Promise.all([monthPromise,todayPromise]);state.occupancyCandidates=monthRows||[];state.occupancyTodayCandidates=todayRows||[];
