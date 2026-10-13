@@ -107,15 +107,15 @@ test('redacts record identifiers embedded in request and transaction paths',()=>
   const s=setup();
   const event=s.sanitize({
     request:{url:'https://example.test/applications/app-private/history/event-private?token=private'},
-    message:'Failed at https://example.test/users/user-private/profile'
+    message:'Failed at https://example.test/users/user-private/profile and /users/relative-private/profile'
   });
   assert.equal(event.request.url,'https://example.test/applications/[redacted-id]/history/[redacted-id]');
-  assert.equal(event.message,'Failed at https://example.test/users/[redacted-id]/profile');
+  assert.equal(event.message,'Failed at https://example.test/users/[redacted-id]/profile and /users/[redacted-id]/profile');
 
   const transaction=s.sanitizeTransaction({
-    transaction:'https://example.test/activity_sessions/session-private?email=ana%40example.test'
+    transaction:'/activity_sessions/relative-session-private'
   });
-  assert.equal(transaction.transaction,'https://example.test/activity_sessions/[redacted-id]');
+  assert.equal(transaction.transaction,'/activity_sessions/[redacted-id]');
 });
 
 test('preserves Sentry correlation identifiers while redacting application identifiers',()=>{
