@@ -166,9 +166,19 @@ service cloud.firestore {
       );
     }
 
+    function sessionActivityMatchesApplication(data) {
+      return hasApplicationId(data)
+        && ('activityId' in data)
+        && data.activityId is string
+        && data.activityId.size() > 0
+        && existsAfter(/databases/$(database)/documents/activities/$(data.activityId))
+        && getAfter(/databases/$(database)/documents/activities/$(data.activityId)).data.applicationId == data.applicationId;
+    }
+
     function coordinatorCreatesSession(data) {
       let app = hasApplicationId(data) ? applicationData(data.applicationId) : {};
       return isCoordinator()
+        && sessionActivityMatchesApplication(data)
         && app is map
         && ('unitId' in app)
         && managerHasUnit(app.unitId)
@@ -675,6 +685,7 @@ service cloud.firestore {
       allow create: if isAdmin()
         || (
           hasApplicationId(request.resource.data)
+          && sessionActivityMatchesApplication(request.resource.data)
           &&
           activeUser()
           && participantOf(request.resource.data.applicationId)
@@ -690,8 +701,9 @@ service cloud.firestore {
         || coordinatorCreatesSession(request.resource.data)
         || (
           hasApplicationId(request.resource.data)
+          && sessionActivityMatchesApplication(request.resource.data)
           && isActivityAssistant()
-          && assistantOfApplication(request.resource.data.applicationId)
+          && assistantOfApplication(request.resource.data)
           && request.resource.data.unitId == applicationData(request.resource.data.applicationId).unitId
         );
 
