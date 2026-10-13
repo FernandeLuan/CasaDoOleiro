@@ -10,6 +10,7 @@ on:
       - 'js/**'
       - 'css/**'
       - 'firestore.rules'
+      - 'firestore.indexes.json'
       - 'firebase.json'
       - 'tests/e2e/**'
       - 'tests/emulator/**'
