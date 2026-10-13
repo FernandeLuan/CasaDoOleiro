@@ -26,9 +26,19 @@
     const raw=String(error?.code||'').toLowerCase();
     return raw.includes('/')?raw.split('/').pop():raw;
   }
+  const identifierPathSegments=new Set(['applications','application','users','user','activities','activity','activity_sessions','activity-sessions','sessions','session','volunteer_profiles','volunteer-profiles','groups','group','history']);
+  function cleanPath(pathname){
+    const parts=String(pathname||'').split('/');
+    for(let i=1;i<parts.length;i++){
+      let previous=parts[i-1];
+      try{previous=decodeURIComponent(previous)}catch{}
+      if(identifierPathSegments.has(String(previous).toLowerCase())&&parts[i])parts[i]='[redacted-id]';
+    }
+    return parts.join('/').replace(emailPattern,'[redacted-email]').replace(phonePattern,'[redacted-phone]');
+  }
   function cleanUrl(value){
-    try{const url=new URL(String(value||''),location.href),path=url.pathname.replace(emailPattern,'[redacted-email]').replace(phonePattern,'[redacted-phone]');return `${url.origin}${path}`}
-    catch{return String(value||'').split('?')[0].split('#')[0].replace(emailPattern,'[redacted-email]').replace(phonePattern,'[redacted-phone]')}
+    try{const url=new URL(String(value||''),location.href);return `${url.origin}${cleanPath(url.pathname)}`}
+    catch{return cleanPath(String(value||'').split('?')[0].split('#')[0])}
   }
   function cleanText(value){
     const clean=String(value||'').replace(/https?:\/\/[^\s"'<>]+/gi,url=>cleanUrl(url)).replace(emailPattern,'[redacted-email]').replace(phonePattern,'[redacted-phone]');
