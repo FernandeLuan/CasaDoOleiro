@@ -81,6 +81,9 @@ test('unassigned activity assistant cannot reuse cached occupancy from another s
   await expect(page).toHaveURL(url=>url.pathname.startsWith('/admin/'),{timeout:30_000});
   await page.waitForFunction(()=>window.state?.currentSession?.user?.role==='activity_assistant'&&typeof window.navigateManager==='function',undefined,{timeout:20_000});
   await page.evaluate(()=>{
+    // The test deliberately simulates a missing assignment; suppress normal navigation
+    // hydration so it does not immediately restore the seeded user's real assignment.
+    window.afterNavigation=()=>{};
     const session=state.currentSession,user=session.user;
     state.r31OccupancyMonth='2026-09';
     state.r31OccupancyScopeKey=JSON.stringify([session.uid,user.role,[...(user.unitIds||[])].sort()]);

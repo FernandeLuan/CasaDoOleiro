@@ -6,7 +6,7 @@
   const basePlanningSeries=planning?.createActivitySeries?.bind(planning);
   const text=key=>typeof t==='function'?t(key):key;
 
-  function rawSession(value){return value?.raw||value||{}}
+  function rawSession(value){if(!value||typeof value!=='object')return {};const raw=value.raw&&typeof value.raw==='object'?value.raw:{};return {...raw,...value}}
   function timeMs(value){
     if(!value)return 0;
     try{
