@@ -208,7 +208,7 @@
   window.openManagerOccupancy=function(){state.managerPage='occupancy';state.occupancyScreenMonth=month();state.occupancySelectedDate=selectedDate();if(typeof afterNavigation==='function')afterNavigation();return refresh()};
   window.shiftOccupancyMonth=function(delta){const {year,monthIndex}=monthParts(),date=new Date(year,monthIndex+Number(delta||0),1,12);state.occupancyScreenMonth=`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}`;state.occupancySelectedDate=String(_oleiroToday).startsWith(state.occupancyScreenMonth)?_oleiroToday:`${state.occupancyScreenMonth}-01`;return refresh()};
 
-  window.renderManager=function(){const assistant=String(state.currentSession?.user?.role||'')==='activity_assistant';if(assistant&&state.managerPage==='occupancy'&&typeof window.renderR31OccupancyPage==='function')return window.renderR31OccupancyPage();const result=baseRenderManager();if(state.role==='manager'&&state.managerPage==='occupancy')renderPage();else closeDayPopup();return result};
+  window.renderManager=function(){const assistant=String(state.currentSession?.user?.role||'')==='activity_assistant';if(assistant&&state.managerPage==='occupancy'&&typeof window.renderR31OccupancyPage==='function')return window.renderR31OccupancyPage();const result=baseRenderManager();if(!assistant&&state.role==='manager'&&state.managerPage==='occupancy')renderPage();else closeDayPopup();return result};
   window.render=function(){return window.renderManager()};
 
   document.addEventListener('keydown',event=>{if(event.key==='Escape'&&document.getElementById('occupancyDayModal'))closeDayPopup()});
