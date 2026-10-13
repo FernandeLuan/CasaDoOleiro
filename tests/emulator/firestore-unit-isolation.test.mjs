@@ -84,6 +84,7 @@ test('coordinator planning schedule queries can filter by assigned session unit'
 
 test('coordinators can create and update users only within their unit without changing role or unit scope',async()=>{
   const db=dbFor('coordinator-rodeio');
+  await assertFails(setDoc(docRef(db,'volunteer_profiles','coordinator-rodeio'),{name:'Forged volunteer profile'}));
   await assertSucceeds(setDoc(docRef(db,'users','new-volunteer'),{role:'volunteer',active:true,unitIds:['rodeio']}));
   await assertFails(setDoc(docRef(db,'users','foreign-volunteer'),{role:'volunteer',active:true,unitIds:['indaial']}));
   await assertSucceeds(updateDoc(docRef(db,'users','volunteer-rodeio'),{active:false}));
@@ -114,6 +115,7 @@ test('coordinators cannot create, move or delete applications outside their unit
   await assertSucceeds(setDoc(docRef(db,'applications','new-local-application'),{unitId:'rodeio',participantUids:['volunteer-rodeio'],active:true,status:'pending'}));
   await assertFails(setDoc(docRef(db,'applications','new-foreign-application'),{unitId:'indaial',participantUids:['volunteer-indaial'],active:true,status:'pending'}));
   await assertFails(setDoc(docRef(db,'applications','wrong-participant-application'),{unitId:'rodeio',participantUids:['volunteer-indaial'],active:true,status:'pending'}));
+  await assertFails(setDoc(docRef(db,'applications','non-volunteer-participant-application'),{unitId:'rodeio',participantUids:['coordinator-rodeio'],active:true,status:'pending'}));
   await assertSucceeds(updateDoc(docRef(db,'applications','application-rodeio'),{status:'analysis'}));
   await assertFails(updateDoc(docRef(db,'applications','application-rodeio'),{unitId:'indaial'}));
   await assertFails(updateDoc(docRef(db,'applications','application-indaial'),{status:'rejected'}));

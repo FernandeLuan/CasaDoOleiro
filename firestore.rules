@@ -95,6 +95,24 @@ service cloud.firestore {
       );
     }
 
+    function managerCanManageVolunteer(uid) {
+      let path = userPathFor(uid);
+      return isAdmin() || (
+        managerCanManageUser(uid)
+        && exists(path)
+        && get(path).data.role == 'volunteer'
+      );
+    }
+
+    function managerCanManageVolunteerAfter(uid) {
+      let path = userPathFor(uid);
+      return isAdmin() || (
+        managerCanManageUserAfter(uid)
+        && existsAfter(path)
+        && getAfter(path).data.role == 'volunteer'
+      );
+    }
+
     function managerCanCreateUser(data) {
       return isAdmin() || (
         isCoordinator()
@@ -115,11 +133,13 @@ service cloud.firestore {
         && data.participantUids.size() > 0
         && data.participantUids.size() <= 2
         && managerHasUserUnitAfter(data.participantUids[0])
+        && getAfter(userPathFor(data.participantUids[0])).data.role == 'volunteer'
         && getAfter(userPathFor(data.participantUids[0])).data.unitIds.hasAny([data.unitId])
         && (
           data.participantUids.size() == 1
           || (
             managerHasUserUnitAfter(data.participantUids[1])
+            && getAfter(userPathFor(data.participantUids[1])).data.role == 'volunteer'
             && getAfter(userPathFor(data.participantUids[1])).data.unitIds.hasAny([data.unitId])
           )
         )
@@ -532,9 +552,9 @@ service cloud.firestore {
 
     match /volunteer_profiles/{uid} {
       allow read: if activeUser() && (request.auth.uid == uid || managerHasUserUnit(uid));
-      allow create: if isAdmin() || (isCoordinator() && managerCanManageUserAfter(uid));
-      allow delete: if isAdmin() || (isCoordinator() && managerCanManageUser(uid));
-      allow update: if isAdmin() || (isCoordinator() && managerCanManageUser(uid)) || participantUpdatesEmergencyContact(uid);
+      allow create: if isAdmin() || (isCoordinator() && managerCanManageVolunteerAfter(uid));
+      allow delete: if isAdmin() || (isCoordinator() && managerCanManageVolunteer(uid));
+      allow update: if isAdmin() || (isCoordinator() && managerCanManageVolunteer(uid)) || participantUpdatesEmergencyContact(uid);
     }
 
     match /applications/{applicationId} {

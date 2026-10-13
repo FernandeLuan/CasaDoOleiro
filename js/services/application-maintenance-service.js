@@ -28,7 +28,7 @@
                 const userSnapshot=await readUser(firestore.doc(context.db,'users',uid));
                 if(!userSnapshot.exists())return false;
                 const assigned=userSnapshot.data()?.unitIds;
-                return Array.isArray(assigned)&&assigned.length>0&&assigned.every(unitId=>allowedUnitIds.includes(String(unitId||'').trim().toLowerCase()));
+                return userSnapshot.data()?.role==='volunteer'&&Array.isArray(assigned)&&assigned.length>0&&assigned.every(unitId=>allowedUnitIds.includes(String(unitId||'').trim().toLowerCase()));
               }catch{return false}
             }));
             deactivatableUids=uids.filter((uid,index)=>scopedResults[index]);
