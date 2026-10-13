@@ -22,7 +22,7 @@ O aplicativo cria contas de voluntários pelo Firebase Authentication. A autoriz
 
 ## 3. Firestore e regras
 
-Use o banco Cloud Firestore já configurado para o projeto. O repositório versiona as regras em `firestore.rules` e os índices em `firestore.indexes.json`. As regras devem ser validadas no emulador antes de qualquer publicação. O workflow de produção valida as permissões e publica **regras e índices** quando `firestore.rules`, `firestore.indexes.json` ou o próprio workflow mudam em `main`. A publicação permanece bloqueada fora de `main`; não execute deploy de produção como parte de uma auditoria local.
+Use o banco Cloud Firestore já configurado para o projeto. O repositório versiona as regras em `firestore.rules` e os índices em `firestore.indexes.json`. As regras devem ser validadas no emulador antes de qualquer publicação. O workflow de produção publica **regras e índices somente por acionamento manual** em GitHub Actions, na branch `main`, e exige marcar explicitamente a confirmação `confirm_production_deploy`. Alterações e merges na `main` não iniciam deploy automaticamente. Não execute deploy de produção como parte de uma auditoria local; a confirmação manual é uma autorização operacional separada.
 
 A autorização de coordenadores deve respeitar as unidades em `unitIds`. Não use uma substituição genérica por `isManager()` onde for necessário validar a unidade do registro. Administradores mantêm acesso global; coordenadores e assistentes permanecem limitados aos escopos permitidos pelas regras.
 

@@ -1,13 +1,13 @@
 name: Deploy Firestore rules and indexes
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - firestore.rules
-      - firestore.indexes.json
-      - .github/workflows/deploy-firestore-rules.yml
   workflow_dispatch:
+    inputs:
+      confirm_production_deploy:
+        description: "Confirm that the Firestore rules and indexes should be deployed to production"
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   validate-and-deploy:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && inputs.confirm_production_deploy
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
