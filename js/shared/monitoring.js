@@ -5,8 +5,10 @@
   const criticalCodes=new Set(['permission-denied','failed-precondition','unauthenticated','unavailable','resource-exhausted','internal','deadline-exceeded','aborted','data-loss']);
   const sensitiveKey=/(email|phone|password|passwd|token|authorization|cookie|contact|secret|name|messageText)/i;
   const sentryIdentifierKeys=new Set(['event_id','eventid','trace_id','traceid','span_id','spanid','parent_span_id','parentspanid','segment_id','segmentid','profile_id','profileid','transaction_id','transactionid']);
+  function normalizedKey(key){return String(key||'').replace(/([a-z0-9])([A-Z])/g,'$1_$2').toLowerCase().replace(/[^a-z0-9]+/g,'_')}
+  function isSentryIdentifierKey(key){return sentryIdentifierKeys.has(normalizedKey(key))}
   function identifierKey(key){
-    const normalized=String(key||'').replace(/([a-z0-9])([A-Z])/g,'$1_$2').toLowerCase().replace(/[^a-z0-9]+/g,'_');
+    const normalized=normalizedKey(key);
     if(sentryIdentifierKeys.has(normalized))return false;
     const tokens=normalized.split('_').filter(Boolean);
     return tokens.some(token=>['id','ids','uid','uids','uuid','uuids'].includes(token));
@@ -39,7 +41,11 @@
     if(Array.isArray(value))return value.slice(0,20).map(item=>scrub(item,depth+1));
     if(typeof value==='object'){
       const out={};
-      Object.entries(value).slice(0,40).forEach(([key,item])=>{out[key]=sensitiveKey.test(key)||identifierKey(key)?'[redacted]':scrub(item,depth+1)});
+      Object.entries(value).slice(0,40).forEach(([key,item])=>{
+        if(sensitiveKey.test(key)||identifierKey(key))out[key]='[redacted]';
+        else if(isSentryIdentifierKey(key))out[key]=item;
+        else out[key]=scrub(item,depth+1);
+      });
       return out;
     }
     return String(value);
