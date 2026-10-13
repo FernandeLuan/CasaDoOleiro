@@ -24,11 +24,13 @@ async function seed(){
       ['users/admin',{role:'admin',active:true,unitIds:['rodeio','indaial']}],
       ['users/volunteer-rodeio',{role:'volunteer',active:true,unitIds:['rodeio']}],
       ['users/volunteer-indaial',{role:'volunteer',active:true,unitIds:['indaial']}],
+      ['users/volunteer-shared',{role:'volunteer',active:true,unitIds:['rodeio','indaial']}],
       ['users/assistant-rodeio',{role:'activity_assistant',active:true,unitIds:['rodeio']}],
       ['units/rodeio',{name:'Rodeio',active:true}],
       ['units/indaial',{name:'Indaial',active:true}],
       ['volunteer_profiles/volunteer-rodeio',{name:'Volunteer R',email:'volunteer-r@example.test'}],
       ['volunteer_profiles/volunteer-indaial',{name:'Volunteer I',email:'volunteer-i@example.test'}],
+      ['volunteer_profiles/volunteer-shared',{name:'Volunteer Shared',email:'shared@example.test'}],
       ['applications/application-rodeio',{unitId:'rodeio',participantUids:['volunteer-rodeio'],active:true,status:'approved'}],
       ['applications/application-indaial',{unitId:'indaial',participantUids:['volunteer-indaial'],active:true,status:'approved'}],
       ['activities/activity-rodeio',{applicationId:'application-rodeio',name:'Activity R'}],
@@ -201,4 +203,16 @@ test('participants can edit a requested session adjustment and resubmit the plan
   await assertFails(updateDoc(docRef(db,'activity_sessions','session-manager-created'),{period:'Noite',updatedAt:serverTimestamp()}));
   await assertSucceeds(updateDoc(docRef(db,'activity_sessions','session-rodeio'),{adminAdjustmentStatus:'analysis',adminAdjustmentSubmittedAt:serverTimestamp(),updatedAt:serverTimestamp()}));
   await assertSucceeds(updateDoc(docRef(db,'applications','application-rodeio'),{status:'analysis',planningSubmittedAt:serverTimestamp(),updatedAt:serverTimestamp()}));
+});
+
+test('coordinators and assistants cannot mutate a volunteer account spanning another unit',async()=>{
+  const coordinator=dbFor('coordinator-rodeio');
+  await assertSucceeds(getDoc(docRef(coordinator,'users','volunteer-shared')));
+  await assertFails(updateDoc(docRef(coordinator,'users','volunteer-shared'),{active:false}));
+  await assertFails(deleteDoc(docRef(coordinator,'users','volunteer-shared')));
+  await assertFails(updateDoc(docRef(coordinator,'volunteer_profiles','volunteer-shared'),{name:'Changed outside scope'}));
+  await assertFails(deleteDoc(docRef(coordinator,'volunteer_profiles','volunteer-shared')));
+
+  const assistant=dbFor('assistant-rodeio');
+  await assertFails(updateDoc(docRef(assistant,'users','volunteer-shared'),{active:false}));
 });

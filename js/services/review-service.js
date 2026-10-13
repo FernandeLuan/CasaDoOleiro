@@ -7,19 +7,21 @@
   function assistantUnit(){
     if(rawRole()!=='activity_assistant')return '';
     const ids=window.state?.currentSession?.user?.unitIds;
-    return Array.isArray(ids)&&ids.length?String(ids[0]).toLowerCase():'rodeio';
+    return Array.isArray(ids)&&ids.length?String(ids[0]).toLowerCase():'';
   }
   function normalizeUnit(value){return String(value||'').trim().toLowerCase()}
   function scopedUnitIds(){
     const role=rawRole();
-    if(role==='activity_assistant')return [assistantUnit()];
-    if(role!=='coordinator')return null;
+    if(role==='admin')return null;
+    if(role==='activity_assistant'){const unit=assistantUnit();return unit?[unit]:[]}
+    if(role!=='coordinator')return [];
     const ids=window.state?.currentSession?.user?.unitIds;
     return Array.isArray(ids)?[...new Set(ids.map(normalizeUnit).filter(Boolean))]:[];
   }
   function applyUnitFilter(firestore,constraints,requested='all'){
-    const allowed=scopedUnitIds(),unit=normalizeUnit(requested);
-    if(allowed===null){if(unit&&unit!=='all')constraints.push(firestore.where('unitId','==',unit));return true}
+    const role=rawRole(),allowed=scopedUnitIds(),unit=normalizeUnit(requested);
+    if(role==='admin'){if(unit&&unit!=='all')constraints.push(firestore.where('unitId','==',unit));return true}
+    if(!Array.isArray(allowed))return false;
     const selected=unit&&unit!=='all'?(allowed.includes(unit)?[unit]:[]):allowed;
     if(!selected.length||selected.length>30)return false;
     constraints.push(selected.length===1
@@ -52,12 +54,13 @@
   }
 
   services.accessScope={
+    isAdmin(){return rawRole()==='admin'},
     isActivityAssistant(){return rawRole()==='activity_assistant'},
     isCoordinator(){return rawRole()==='coordinator'},
     unitId(){return assistantUnit()||null},
     unitIds(){return scopedUnitIds()},
     applyUnitFilter,
-    forceUnit(unitId='all'){return assistantUnit()||unitId}
+    forceUnit(unitId='all'){return rawRole()==='activity_assistant'?(assistantUnit()||'__no_assigned_unit__'):unitId}
   };
 
   const baseApplicationsList=services.applications.list?.bind(services.applications);

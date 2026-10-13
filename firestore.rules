@@ -67,6 +67,34 @@ service cloud.firestore {
       );
     }
 
+    function managerCanManageUser(uid) {
+      let path = userPathFor(uid);
+      return isAdmin() || (
+        isCoordinator()
+        && exists(path)
+        && ('unitIds' in get(path).data)
+        && get(path).data.unitIds is list
+        && get(path).data.unitIds.size() > 0
+        && ('unitIds' in currentUser())
+        && currentUser().unitIds is list
+        && currentUser().unitIds.hasAll(get(path).data.unitIds)
+      );
+    }
+
+    function managerCanManageUserAfter(uid) {
+      let path = userPathFor(uid);
+      return isAdmin() || (
+        isCoordinator()
+        && existsAfter(path)
+        && ('unitIds' in getAfter(path).data)
+        && getAfter(path).data.unitIds is list
+        && getAfter(path).data.unitIds.size() > 0
+        && ('unitIds' in currentUser())
+        && currentUser().unitIds is list
+        && currentUser().unitIds.hasAll(getAfter(path).data.unitIds)
+      );
+    }
+
     function managerCanCreateUser(data) {
       return isAdmin() || (
         isCoordinator()
@@ -143,7 +171,7 @@ service cloud.firestore {
 
     function coordinatorUpdatesUser(uid) {
       return isCoordinator()
-        && managerHasUserUnit(uid)
+        && managerCanManageUser(uid)
         && request.resource.data.role == resource.data.role
         && request.resource.data.unitIds == resource.data.unitIds
         && (
@@ -331,8 +359,11 @@ service cloud.firestore {
         && resource.data.role == 'volunteer'
         && request.resource.data.role == 'volunteer'
         && ('unitIds' in resource.data)
+        && resource.data.unitIds is list
+        && resource.data.unitIds.size() > 0
         && ('unitIds' in currentUser())
-        && resource.data.unitIds.hasAny(currentUser().unitIds)
+        && currentUser().unitIds is list
+        && currentUser().unitIds.hasAll(resource.data.unitIds)
         && request.resource.data.unitIds == resource.data.unitIds
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'active', 'updatedAt'
@@ -487,7 +518,7 @@ service cloud.firestore {
         || managerHasUserUnit(uid)
         || (isActivityAssistant() && ('unitIds' in resource.data) && ('unitIds' in currentUser()) && resource.data.unitIds.hasAny(currentUser().unitIds));
       allow create: if managerCanCreateUser(request.resource.data);
-      allow delete: if isAdmin() || (isCoordinator() && resource.data.role == 'volunteer' && managerHasUserUnit(uid));
+      allow delete: if isAdmin() || (isCoordinator() && resource.data.role == 'volunteer' && managerCanManageUser(uid));
       allow update: if isAdmin() || coordinatorUpdatesUser(uid) || assistantMayManageVolunteerUser() || participantMarksFirstAccess(uid);
     }
 
@@ -499,9 +530,9 @@ service cloud.firestore {
 
     match /volunteer_profiles/{uid} {
       allow read: if activeUser() && (request.auth.uid == uid || managerHasUserUnit(uid));
-      allow create: if isAdmin() || (isCoordinator() && managerHasUserUnitAfter(uid));
-      allow delete: if isAdmin() || (isCoordinator() && managerHasUserUnit(uid));
-      allow update: if isAdmin() || (isCoordinator() && managerHasUserUnit(uid)) || participantUpdatesEmergencyContact(uid);
+      allow create: if isAdmin() || (isCoordinator() && managerCanManageUserAfter(uid));
+      allow delete: if isAdmin() || (isCoordinator() && managerCanManageUser(uid));
+      allow update: if isAdmin() || (isCoordinator() && managerCanManageUser(uid)) || participantUpdatesEmergencyContact(uid);
     }
 
     match /applications/{applicationId} {
