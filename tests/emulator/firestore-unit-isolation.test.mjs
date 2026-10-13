@@ -33,7 +33,6 @@ async function seed(){
       ['volunteer_profiles/volunteer-shared',{name:'Volunteer Shared',email:'shared@example.test'}],
       ['applications/application-rodeio',{unitId:'rodeio',participantUids:['volunteer-rodeio'],active:true,status:'approved'}],
       ['applications/application-indaial',{unitId:'indaial',participantUids:['volunteer-indaial'],active:true,status:'approved'}],
-      ['applications/application-expired-rodeio',{unitId:'rodeio',participantUids:['volunteer-rodeio'],active:false,status:'rejected',autoRejected:true}],
       ['activities/activity-rodeio',{applicationId:'application-rodeio',name:'Activity R'}],
       ['activities/activity-indaial',{applicationId:'application-indaial',name:'Activity I'}],
       ['activity_sessions/session-rodeio',{applicationId:'application-rodeio',activityId:'activity-rodeio',unitId:'rodeio',status:'confirmed'}],
@@ -170,6 +169,11 @@ test('coordinators can manage groups and unit settings only in their units',asyn
 });
 
 test('activity assistants remain limited to their assigned unit and cannot reactivate closed applications',async()=>{
+  await testEnv.withSecurityRulesDisabled(async context=>{
+    await setDoc(docRef(context.firestore(),'applications','application-expired-rodeio'),{
+      unitId:'rodeio',participantUids:['volunteer-rodeio'],active:false,status:'rejected',autoRejected:true
+    });
+  });
   const db=dbFor('assistant-rodeio');
   await assertSucceeds(getDoc(docRef(db,'applications','application-rodeio')));
   await assertFails(getDoc(docRef(db,'applications','application-indaial')));
