@@ -4,7 +4,10 @@
   const sdkUrl='https://browser.sentry-cdn.com/10.53.1/bundle.tracing.replay.min.js';
   const criticalCodes=new Set(['permission-denied','failed-precondition','unauthenticated','unavailable','resource-exhausted','internal','deadline-exceeded','aborted','data-loss']);
   const sensitiveKey=/(email|phone|password|passwd|token|authorization|cookie|contact|secret|name|messageText)/i;
-  const identifierKey=/^(id|uid|uuid|applicationids?|sessionids?|userids?|participantids?|ownerid)$/i;
+  function identifierKey(key){
+    const tokens=String(key||'').replace(/([a-z0-9])([A-Z])/g,'$1_$2').toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+    return tokens.some(token=>['id','ids','uid','uids','uuid','uuids'].includes(token));
+  }
   const emailPattern=/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi;
   const phonePattern=/(?:\+?\d[\d\s().-]{7,}\d)/g;
   const queue=[];
@@ -33,7 +36,7 @@
     if(Array.isArray(value))return value.slice(0,20).map(item=>scrub(item,depth+1));
     if(typeof value==='object'){
       const out={};
-      Object.entries(value).slice(0,40).forEach(([key,item])=>{out[key]=sensitiveKey.test(key)||identifierKey.test(key)?'[redacted]':scrub(item,depth+1)});
+      Object.entries(value).slice(0,40).forEach(([key,item])=>{out[key]=sensitiveKey.test(key)||identifierKey(key)?'[redacted]':scrub(item,depth+1)});
       return out;
     }
     return String(value);
