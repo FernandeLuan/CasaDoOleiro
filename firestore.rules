@@ -166,6 +166,7 @@ service cloud.firestore {
       );
     }
 
+    /* getAfter preserves atomic creation when an activity and its sessions share a batch. */
     function activityPathFor(activityId) {
       return /databases/$(database)/documents/activities/$(activityId);
     }
