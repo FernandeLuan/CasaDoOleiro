@@ -42,6 +42,7 @@
   }
   function cleanText(value){
     const clean=String(value||'').replace(/https?:\/\/[^\s"'<>]+/gi,url=>cleanUrl(url))
+      .replace(/(\/[^\s"'<>?#]+)[?#][^\s"'<>]*/g,'$1')
       .replace(/(\/(?:applications?|users?|activities?|activity_sessions|activity-sessions|sessions?|volunteer_profiles|volunteer-profiles|groups?|history)\/)[^/?#\s]+/gi,'$1[redacted-id]')
       .replace(emailPattern,'[redacted-email]').replace(phonePattern,'[redacted-phone]');
     return clean.length>500?`${clean.slice(0,500)}…`:clean;
