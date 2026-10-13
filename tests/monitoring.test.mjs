@@ -85,13 +85,16 @@ test('Sentry scrubs identifiers and trace URLs before sending transactions and s
   const transaction=s.sanitizeTransaction({
     transaction:'https://example.test/app?email=ana%40example.test&token=private',
     request:{url:'https://example.test/app?id=private'},
-    tags:{applicationId:'app-private',userId:'user-private'},
-    spans:[{description:'GET https://example.test/api?token=private',data:{url:'https://example.test/api?email=ana%40example.test',sessionId:'session-private'}}]
+    tags:{applicationId:'app-private',userId:'user-private',activityId:'activity-private',createdByUid:'creator-private'},
+    spans:[{description:'GET https://example.test/api?token=private',data:{url:'https://example.test/api?email=ana%40example.test',sessionId:'session-private',ownerUid:'owner-private'}}]
   });
   assert.equal(transaction.transaction,'https://example.test/app');
   assert.equal(transaction.request.url,'https://example.test/app');
   assert.equal(transaction.tags.applicationId,'[redacted]');
   assert.equal(transaction.tags.userId,'[redacted]');
+  assert.equal(transaction.tags.activityId,'[redacted]');
+  assert.equal(transaction.tags.createdByUid,'[redacted]');
+  assert.equal(transaction.spans[0].data.ownerUid,'[redacted]');
   assert.equal(transaction.spans[0].description,'GET https://example.test/api');
   assert.equal(transaction.spans[0].data.url,'https://example.test/api');
   assert.equal(transaction.spans[0].data.sessionId,'[redacted]');
