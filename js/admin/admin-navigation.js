@@ -187,7 +187,8 @@
 
   installStyles();
 
-  window.managerNav=managerNav=function(){return bottomNav()};
+  const priorManagerNav=window.managerNav;
+  window.managerNav=managerNav=function(){if(String(state.currentSession?.user?.role||'')==='activity_assistant'&&typeof priorManagerNav==='function')return priorManagerNav();return bottomNav()};
 
   const baseRenderManager=window.renderManager;
   if(typeof baseRenderManager!=='function')return;
