@@ -1,32 +1,116 @@
 # Casa do Oleiro
 
-Aplicação web de gestão de voluntariado, planejamento, seleção e ocupação.
+**Uma plataforma para organizar a jornada de voluntariado — da candidatura ao planejamento da estadia.**
 
-## Ambientes e publicação
+O Casa do Oleiro é uma aplicação web criada para apoiar a operação de uma comunidade que recebe voluntários. O produto conecta o acompanhamento das candidaturas, a análise dos planejamentos, a comunicação de ajustes e a organização da ocupação em um fluxo único.
 
-A aplicação utiliza uma única estrutura de código para homologação e produção. O build canônico é `node scripts/build-site.mjs <diretório>`. O ambiente é identificado por `APP_ENV`, e a configuração Firebase é injetada pelo pipeline. Não existem adaptadores de dados fictícios nem transformações de runtime exclusivas da homologação.
+> Este repositório documenta um projeto real em evolução. Não são publicados dados pessoais de voluntários nem credenciais de acesso.
 
-- `main`: produção. Publicação pelo workflow Deploy Casa do Oleiro, somente após aprovação explícita da release.
-- `test/homologacao-clean-ui`: homologação com autenticação e dados reais. Pushes publicam exclusivamente o canal de homologação.
-- `release/prod-clean-ui`: candidato de produção, mantido como PR Draft até a aprovação final.
-- `release/prod-clean-ui-canonical`: integração isolada da fonte homologada com o pipeline de produção. Não publica a aplicação ao vivo.
+## O problema
 
-## Validação
+A gestão de voluntários envolve várias etapas e pessoas: receber candidaturas, avaliar propostas de atividades, acompanhar prazos, alinhar mudanças e prever a ocupação. Quando essas informações ficam dispersas, aumenta o esforço de coordenação e fica mais difícil entender qual é a próxima ação necessária.
+
+## A solução
+
+O produto é dividido em duas experiências conectadas:
+
+- **Portal do voluntário:** acompanhar a candidatura, preparar o planejamento de atividades e responder a solicitações de ajuste.
+- **Área administrativa:** analisar candidaturas, acompanhar pendências, revisar planejamentos e consultar agenda e ocupação.
+
+### Fluxo principal
+
+```mermaid
+flowchart LR
+    A[Candidatura] --> B[Análise do planejamento]
+    B --> C[Entrevista pelo Portal]
+    C --> D{Decisão}
+    D -->|Aprovada| E[Confirmação da estadia]
+    D -->|Ajustes necessários| B
+    D -->|Recusada| F[Encerramento]
+    E --> G[Preparação e recepção]
+```
+
+## Funcionalidades em destaque
+
+- Gestão de candidaturas individuais e em casal.
+- Planejamento de atividades e sessões por data.
+- Revisão de propostas e acompanhamento de ajustes.
+- Indicadores de atenção para pendências do voluntário e da administração.
+- Agenda e visão mensal de ocupação.
+- Separação de acesso por perfil e unidade operacional.
+- Interface responsiva e suporte a diferentes idiomas.
+
+## Decisões de produto e engenharia
+
+**Uma candidatura compartilhada para casais.** Cada participante mantém seu próprio usuário e perfil, enquanto os dois podem colaborar no mesmo planejamento. A desistência de uma pessoa não precisa apagar a candidatura da outra.
+
+**Consultas limitadas ao contexto necessário.** Listagens usam paginação; agendas consultam intervalos de datas; detalhes são carregados quando necessários. Resumos controlados na candidatura evitam leituras adicionais de perfis para montar cada item de lista.
+
+**Separação entre interface e serviços.** As experiências de Portal e Administração têm módulos próprios, com serviços compartilhados para regras e operações comuns. O build consolida arquivos para reduzir requisições sem misturar indiscriminadamente os módulos-fonte.
+
+**Publicação com validações.** O pipeline verifica integridade de assets, sintaxe, contratos de dados e artefato de produção. Os testes de navegador usam emuladores do Firebase; eles complementam, mas não substituem, a validação final com permissões e contas reais.
+
+**Proteção de dados e releases.** Dados pessoais de produção não devem ser usados como massa de teste. Configurações são injetadas no deploy, e alterações de interface não devem publicar automaticamente mudanças de regras, índices ou dados.
+
+## Arquitetura em alto nível
+
+```text
+Pessoa voluntária                  Equipe administrativa
+       |                                     |
+       v                                     v
+  Portal web                            Admin web
+       |                                     |
+       +----------- serviços ---------------+
+                         |
+             Firebase Authentication
+                         |
+                  Cloud Firestore
+
+Repositório GitHub
+       |
+       v
+GitHub Actions -> validações -> build -> GitHub Pages
+```
+
+O frontend é uma aplicação web estática publicada pelo GitHub Pages. O Firebase fornece autenticação e persistência com Cloud Firestore. A configuração do cliente e do monitoramento é injetada no pipeline de publicação.
+
+## Tecnologias
+
+- **Frontend:** HTML, CSS e JavaScript
+- **Dados e autenticação:** Firebase Authentication e Cloud Firestore
+- **Automação:** GitHub Actions
+- **Testes:** Node.js, Playwright e emuladores do Firebase
+- **Publicação:** GitHub Pages
+
+## Qualidade e validação
+
+Os workflows automatizam verificações como:
+
+- testes de integridade dos assets;
+- validação de sintaxe JavaScript e configuração JSON;
+- verificação do artefato para impedir a publicação de arquivos de desenvolvimento e regras internas;
+- testes de regressão em navegadores Chromium e WebKit;
+- conferência de contratos de dados e arquitetura.
+
+Para executar a suíte E2E localmente, com Node.js instalado:
 
 ```bash
-node --test tests/site-assets.test.mjs
-node scripts/build-site.mjs site-dist
-node scripts/check-site-assets.mjs site-dist
-bash scripts/check-real-data-contracts.sh
 npm install --no-audit --no-fund
 npx playwright install chromium webkit
 npm run test:e2e:emulated
 ```
 
-O workflow Production Clean UI executa os contratos de dados, o build de produção, a verificação de assets e a regressão isolada em Chromium e WebKit. Os testes de navegador utilizam emuladores; não substituem a conferência final com contas reais e permissões reais. Não usar dados pessoais de produção como massa de teste automatizado.
+## Meu papel no projeto
 
-## Segurança da release
+Atuação na concepção do produto, estruturação dos fluxos, priorização de melhorias, revisão de arquitetura e evolução da aplicação com desenvolvimento assistido por IA. O foco é combinar velocidade de entrega com legibilidade, testes e critérios de publicação seguros.
 
-O build publica apenas `admin`, `portal`, `css`, `js`, `icons`, os arquivos estáticos da raiz e `release.json`. Não incluir credenciais, `functions`, Rules, scripts de manutenção ou arquivos de desenvolvimento no artefato de Hosting. A API key, os demais parâmetros Firebase e a configuração de monitoramento são injetados durante o deploy.
+## Documentação técnica
 
-Antes de publicar: exigir CI verde, conferir o artefato, validar as rotas e os fluxos críticos no ambiente real, confirmar o plano de rollback e obter aprovação explícita. A publicação de alterações de Firestore Rules, índices, dados e serviços de e-mail é um procedimento separado e não faz parte da limpeza visual. Nenhuma migração destrutiva é autorizada por esta release.
+- [Backend e modelo de dados](BACKEND.md)
+- [Configuração do Firebase](FIREBASE_SETUP.md)
+- [Auditoria de arquitetura — setembro de 2026](docs/architecture-audit-20260918.md)
+- [Workflows de CI/CD](.github/workflows/)
+
+## Repositório
+
+[Ver código-fonte e histórico de desenvolvimento](https://github.com/FernandeLuan/CasaDoOleiro)
