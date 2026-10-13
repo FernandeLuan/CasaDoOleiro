@@ -64,3 +64,31 @@ test('coordinator screens query only assigned-unit records',async({page})=>{
   expect(result.arrivals.every(unitId=>unitId==='rodeio')).toBe(true);
   expect(result.occupancy.every(unitId=>unitId==='rodeio')).toBe(true);
 });
+
+test('unassigned activity assistant cannot reuse cached occupancy from another scope',async({page})=>{
+  await page.addInitScript(()=>localStorage.setItem('oleiro-language','pt'));
+  await page.route('**/js/firebase/firebase-config.js*',route=>route.fulfill({
+    status:200,contentType:'application/javascript',
+    body:`window.OLEIRO_FIREBASE_CONFIG=${JSON.stringify(firebaseConfig)};`
+  }));
+  await page.goto('/?emulator=1');
+  await page.waitForFunction(async()=>{
+    try{return !!(await window.OleiroFirebase?.ready)?.configured&&typeof window.OleiroAuth?.signIn==='function'}catch{return false}
+  },undefined,{timeout:30_000});
+  await page.locator('#email').fill('assistant@oleiro.test');
+  await page.locator('#password').fill('Assistant123!');
+  await page.locator('#loginButton').click();
+  await expect(page).toHaveURL(/\\/admin\\//,{timeout:30_000});
+  await page.waitForFunction(()=>window.state?.currentSession?.user?.role==='activity_assistant'&&typeof window.navigateManager==='function',undefined,{timeout:20_000});
+  await page.evaluate(()=>{
+    const session=state.currentSession,user=session.user;
+    state.r31OccupancyMonth='2026-09';
+    state.r31OccupancyScopeKey=JSON.stringify([session.uid,user.role,[...(user.unitIds||[])].sort()]);
+    state.r31OccupancyCache={'2026-09|rodeio':{at:Date.now(),rows:[{id:'stale',unitId:'rodeio',status:'approved',inactive:false,from:'2026-09-01',to:'2026-09-30',name:'DADO EM CACHE ANTIGO',country:'Brasil'}]}};
+    state.r31OccupancyRows=state.r31OccupancyCache['2026-09|rodeio'].rows;
+    user.unitIds=[];
+    navigateManager('occupancy');
+  });
+  await expect(page.locator('.occupancy-day.has-people')).toHaveCount(0);
+  await expect(page.locator('.occupancy-page-screen')).toContainText('Nenhuma unidade foi atribuída a este usuário.');
+});

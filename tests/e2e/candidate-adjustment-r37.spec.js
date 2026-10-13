@@ -46,7 +46,7 @@ test('analysis remains editable; requested adjustment can add new drafts and res
   await relogin(page,'admin@oleiro.test','Admin123!','admin');const modal=await openVolunteerByStatus(page,'analysis','Voluntário E2E');
   const day=modal.locator('.planning-person-day[data-plan-date="2026-09-15"]');await ensureDayVisible(day);const card=day.locator('.admin-portal-activity-card').filter({hasText:'Oficina candidato E2E'});await expect(card).toBeVisible();
   await card.locator('.planning-activity-trigger').click();await card.getByRole('button',{name:/Pedir ajuste$/}).click();await page.locator('#r31SessionAdjustNote').fill('Trocar o período desta atividade.');await page.locator('#r31SessionAdjustSave').click();
-  await expect.poll(()=>page.evaluate(async()=>{const app=await window.OleiroServices.applications.getById('e2e-application');return app?.status}),{timeout:20_000}).toBe('adjustments');
+  await expect.poll(()=>page.evaluate(async()=>{const context=await window.OleiroServices.firebase();const {firestore}=context.modules;const read=firestore.getDocFromServer||firestore.getDoc;const snapshot=await read(firestore.doc(context.db,'applications','e2e-application'));return snapshot.exists()?snapshot.data()?.status:null}),{timeout:20_000}).toBe('adjustments');
 
   await relogin(page,'voluntario@oleiro.test','Volunteer123!','portal');await navAction(page,'Planejamento').click();
   await expect(page.getByRole('button',{name:/Adicionar atividade/}).first()).toBeVisible({timeout:20_000});
