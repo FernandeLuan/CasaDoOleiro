@@ -4,8 +4,11 @@
   const sdkUrl='https://browser.sentry-cdn.com/10.53.1/bundle.tracing.replay.min.js';
   const criticalCodes=new Set(['permission-denied','failed-precondition','unauthenticated','unavailable','resource-exhausted','internal','deadline-exceeded','aborted','data-loss']);
   const sensitiveKey=/(email|phone|password|passwd|token|authorization|cookie|contact|secret|name|messageText)/i;
+  const sentryIdentifierKeys=new Set(['event_id','eventid','trace_id','traceid','span_id','spanid','parent_span_id','parentspanid','segment_id','segmentid','profile_id','profileid','transaction_id','transactionid']);
   function identifierKey(key){
-    const tokens=String(key||'').replace(/([a-z0-9])([A-Z])/g,'$1_$2').toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+    const normalized=String(key||'').replace(/([a-z0-9])([A-Z])/g,'$1_$2').toLowerCase().replace(/[^a-z0-9]+/g,'_');
+    if(sentryIdentifierKeys.has(normalized))return false;
+    const tokens=normalized.split('_').filter(Boolean);
     return tokens.some(token=>['id','ids','uid','uids','uuid','uuids'].includes(token));
   }
   const emailPattern=/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi;

@@ -102,3 +102,33 @@ test('Sentry scrubs identifiers and trace URLs before sending transactions and s
   assert.equal(span.description,'GET https://example.test/api');
   assert.equal(span.data.applicationId,'[redacted]');
 });
+
+test('preserves Sentry correlation identifiers while redacting application identifiers',()=>{
+  const s=setup();
+  const eventId='0123456789abcdef0123456789abcdef';
+  const traceId='1234567890abcdef1234567890abcdef';
+  const spanId='1234567890abcdef';
+  const parentSpanId='abcdefabcdefabcd';
+  const transaction=s.sanitizeTransaction({
+    event_id:eventId,
+    contexts:{trace:{trace_id:traceId,span_id:spanId,parent_span_id:parentSpanId}},
+    tags:{applicationId:'app-private',userId:'user-private'},
+    spans:[{span_id:spanId,trace_id:traceId,parent_span_id:parentSpanId,data:{sessionId:'session-private'}}]
+  });
+  assert.equal(transaction.event_id,eventId);
+  assert.equal(transaction.contexts.trace.trace_id,traceId);
+  assert.equal(transaction.contexts.trace.span_id,spanId);
+  assert.equal(transaction.contexts.trace.parent_span_id,parentSpanId);
+  assert.equal(transaction.spans[0].span_id,spanId);
+  assert.equal(transaction.spans[0].trace_id,traceId);
+  assert.equal(transaction.spans[0].parent_span_id,parentSpanId);
+  assert.equal(transaction.tags.applicationId,'[redacted]');
+  assert.equal(transaction.tags.userId,'[redacted]');
+  assert.equal(transaction.spans[0].data.sessionId,'[redacted]');
+
+  const span=s.sanitizeSpan({span_id:spanId,trace_id:traceId,parent_span_id:parentSpanId,data:{ownerUid:'owner-private'}});
+  assert.equal(span.span_id,spanId);
+  assert.equal(span.trace_id,traceId);
+  assert.equal(span.parent_span_id,parentSpanId);
+  assert.equal(span.data.ownerUid,'[redacted]');
+});
