@@ -707,7 +707,7 @@ service cloud.firestore {
           hasApplicationId(request.resource.data)
           && sessionActivityMatchesApplication(request.resource.data)
           && isActivityAssistant()
-          && assistantOfApplication(request.resource.data)
+          && assistantOfApplication(request.resource.data.applicationId)
           && request.resource.data.unitId == applicationData(request.resource.data.applicationId).unitId
         );
 
