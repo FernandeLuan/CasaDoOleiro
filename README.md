@@ -40,6 +40,20 @@ flowchart LR
 - Separação de acesso por perfil e unidade operacional.
 - Interface responsiva e suporte a diferentes idiomas.
 
+## Validação em contexto real
+
+O sistema foi desenvolvido como projeto de extensão acadêmica para a Comunidade Terapêutica Casa do Oleiro, com participação do acadêmico, da coordenação e da psicóloga na validação dos fluxos. O relatório do projeto registra também o primeiro uso operacional por um voluntário real da instituição.
+
+### Resultados iniciais relatados
+
+- Informações de candidatura, planejamento e estadia passaram a ser registradas em um ambiente centralizado, em vez de depender exclusivamente de conversas e memória individual.
+- A equipe passou a consultar candidaturas, agenda e ocupação por unidade em um fluxo comum.
+- A psicóloga envolvida estimou que determinadas rotinas administrativas, antes próximas de quatro horas por dia, passaram a demandar menos de uma hora em determinados dias.
+
+> **Como interpretar esse resultado:** a estimativa de tempo foi relatada pela equipe e não corresponde a uma medição científica ou a uma série histórica. O impacto ainda precisa ser acompanhado com métricas consistentes ao longo do tempo.
+
+O projeto se relaciona ao **ODS 3 — Saúde e Bem-Estar** de forma indireta: seu papel é fortalecer a organização do programa de voluntariado, não realizar atendimento clínico nem substituir a atuação terapêutica da instituição.
+
 ## Decisões de produto e engenharia
 
 **Uma candidatura compartilhada para casais.** Cada participante mantém seu próprio usuário e perfil, enquanto os dois podem colaborar no mesmo planejamento. A desistência de uma pessoa não precisa apagar a candidatura da outra.
@@ -80,7 +94,7 @@ O frontend é uma aplicação web estática publicada pelo GitHub Pages. O Fireb
 - **Dados e autenticação:** Firebase Authentication e Cloud Firestore
 - **Automação:** GitHub Actions
 - **Testes:** Node.js, Playwright e emuladores do Firebase
-- **Publicação:** GitHub Pages
+- **Observabilidade:** Sentry (monitoramento de erros e diagnóstico de performance)\n- **Publicação:** GitHub Pages
 
 ## Qualidade e validação
 
