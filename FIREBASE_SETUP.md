@@ -1,113 +1,101 @@
-# Firebase — configuração inicial da Casa do Oleiro
+# Firebase — configuração e operação da Casa do Oleiro
 
-Esta etapa conecta o frontend estático do GitHub Pages ao Firebase Authentication e ao Cloud Firestore.
+Este documento descreve a configuração existente do Firebase, os registros iniciais que precisam ser provisionados manualmente e os controles usados nos testes e deploys. Não crie um segundo projeto para seguir este guia.
 
-## 1. Criar o projeto
+## 1. Projeto e configuração Web
 
-No Firebase Console:
+O projeto utilizado pelos workflows de produção e homologação é `casadooleiro-35c4e`. O arquivo `js/firebase/firebase-config.js` permanece sem configuração de produção no Git: os workflows injetam a configuração Web durante o build. **Não** cole chaves de produção nesse arquivo nem versione arquivos de configuração gerados.
 
-1. criar um projeto chamado `CasaDoOleiro`;
-2. Google Analytics pode permanecer desativado nesta fase;
-3. permanecer no plano Spark enquanto os recursos usados couberem nas cotas gratuitas.
+Os workflows de Pages e homologação obtêm a Web API key do secret de repositório `FIREBASE_API_KEY`. Restrinja essa chave no Google Cloud às APIs Firebase necessárias e aos referenciadores HTTP autorizados para o site. A chave Web identifica o projeto; não substitui as regras de segurança do Firestore nem credenciais administrativas.
 
-## 2. Registrar o app Web
+A publicação de produção exige o secret `SENTRY_DSN`. O workflow de Pages falha antes de publicar se o secret estiver ausente, para que um build não desative silenciosamente o monitoramento.
 
-Em **Project settings → General → Your apps → Web (`</>`)**:
+## 2. Authentication
 
-- nickname: `Casa do Oleiro Web`;
-- não é necessário ativar Firebase Hosting, pois o site continua no GitHub Pages;
-- copiar o objeto `firebaseConfig` fornecido pelo Console.
+No Firebase Authentication:
 
-O objeto será colocado em `js/firebase/firebase-config.js`.
+1. habilite o provedor **Email/Password**;
+2. mantenha o domínio de produção do site em **Authorized domains** — atualmente `fernandeluan.github.io`;
+3. não habilite Phone/SMS sem uma alteração explícita dos requisitos do produto.
 
-## 3. Authentication
+O aplicativo cria contas de voluntários pelo Firebase Authentication. A autorização correspondente depende do documento `users/{UID}` e das regras do Firestore. Ter uma conta autenticada, por si só, não concede acesso administrativo.
 
-Em **Authentication**:
+## 3. Firestore e regras
 
-1. habilitar `Email/Password`;
-2. em **Settings → Authorized domains**, adicionar `fernandeluan.github.io`;
-3. não habilitar Phone/SMS nesta etapa.
+Use o banco Cloud Firestore já configurado para o projeto. O repositório versiona as regras em `firestore.rules` e os índices em `firestore.indexes.json`. As regras devem ser validadas no emulador antes de qualquer publicação. O workflow de produção valida as permissões e publica **regras e índices** quando `firestore.rules`, `firestore.indexes.json` ou o próprio workflow mudam em `main`. A publicação permanece bloqueada fora de `main`; não execute deploy de produção como parte de uma auditoria local.
 
-## 4. Firestore
+A autorização de coordenadores deve respeitar as unidades em `unitIds`. Não use uma substituição genérica por `isManager()` onde for necessário validar a unidade do registro. Administradores mantêm acesso global; coordenadores e assistentes permanecem limitados aos escopos permitidos pelas regras.
 
-Criar o Cloud Firestore em **Production mode**.
+## 4. Primeiro administrador e unidades iniciais
 
-Preferir uma região próxima da operação da Casa do Oleiro, como São Paulo, quando disponível e adequada no Console. A localização deve ser escolhida com cuidado antes de criar o banco.
+Esses registros são criados manualmente por um responsável autorizado no Console Firebase, não pelo aplicativo.
 
-O repositório já contém:
+1. Em **Authentication → Users**, crie o primeiro administrador e copie o UID. Guarde a senha somente com o responsável; nunca a envie no chat, inclua no Git ou exponha em logs.
+2. No Firestore, crie `users/{UID}` com pelo menos:
 
-- `firestore.rules`;
-- `firestore.indexes.json`;
-- `firebase.json`.
+   ```text
+   role: "admin"
+   active: true
+   language: "pt"
+   unitIds: ["rodeio", "indaial"]
+   ```
 
-As regras começam fechadas por padrão e só liberam operações explicitamente autorizadas.
+3. Garanta a existência dos documentos iniciais das unidades:
 
-## 5. Primeiro administrador
+   ```text
+   units/rodeio
+   name: "Rodeio"
+   active: true
+   acceptingVolunteers: true
+   ```
 
-Depois que Authentication e Firestore estiverem ativos:
+   ```text
+   units/indaial
+   name: "Indaial"
+   active: false
+   acceptingVolunteers: false
+   ```
 
-1. criar o primeiro usuário administrador em **Authentication → Users**;
-2. guardar a senha somente com o responsável — nunca enviar a senha pelo chat ou colocar no GitHub;
-3. copiar o UID gerado;
-4. criar manualmente no Firestore o documento `users/{UID}` com, no mínimo:
+   Indaial permanece indisponível para novas candidaturas até que o responsável a ative.
 
-```text
-role: "admin"
-active: true
-language: "pt"
-unitIds: ["rodeio", "indaial"]
-```
+## 5. Estratégia de leitura e dados de planejamento
 
-O Console do Firebase pode criar esse documento inicial mesmo antes de o próprio app possuir permissão de escrita.
-
-## 6. Unidades iniciais
-
-Criar:
-
-```text
-units/rodeio
-name: "Rodeio"
-active: true
-acceptingVolunteers: true
-```
-
-```text
-units/indaial
-name: "Indaial"
-active: false
-acceptingVolunteers: false
-```
-
-Indaial já existe no modelo desde o início, mas permanece invisível para novos cadastros até ser ativada.
-
-## 7. Estratégia de leitura
-
-A lista do Admin usa `applications` como documento de resumo. Para evitar N+1 leituras, cada application mantém também dados mínimos denormalizados para o card:
+O Admin utiliza `applications` como documento-resumo. Para evitar leituras N+1, cada candidatura mantém dados mínimos denormalizados para o cartão:
 
 - `participantNames`;
 - `participantCount`;
 - `participantCountries`;
 - `searchTokens`.
 
-Assim, uma página com 10 candidaturas pode ser montada com aproximadamente 10 leituras de application. Os perfis completos são buscados somente ao abrir os detalhes.
+Os perfis completos devem ser carregados apenas quando os detalhes da candidatura são abertos. Ao alterar esses campos, preserve a consistência do resumo com os perfis e participantes relacionados.
 
-## 8. Ambiente de desenvolvimento
+## 6. Desenvolvimento local e testes
 
-`?dev=1` permanece isolado:
+O modo `?dev=1` usa dados mock e não inicializa Firebase nem lê dados reais. A configuração Web fonte continua vazia para que abrir o aplicativo localmente não conecte acidentalmente ao projeto de produção.
 
-- usa somente `mock-data.js`;
-- não inicializa Firebase;
-- não lê dados reais;
-- continua disponível para regressão do frontend.
+Instale as dependências reproduzíveis a partir do lockfile e execute os testes de regras no emulador local:
 
-## 9. Ordem de ativação
+```sh
+npm ci
+npm run test:firestore:rules
+```
 
-1. preencher `firebase-config.js`;
-2. publicar as regras e índices;
-3. criar o primeiro Admin;
-4. validar login e proteção de rotas;
-5. conectar listagem de voluntários;
-6. conectar candidatura/perfil;
-7. migrar planilhas existentes;
-8. conectar planejamento e sessões;
-9. conectar sino, agenda, grupos e ocupação.
+A suíte ampliada usa os emuladores de Auth e Firestore, popula contas e registros sintéticos e executa os testes Playwright:
+
+```sh
+npm run test:e2e:emulated
+```
+
+Os testes devem usar o projeto de demonstração `demo-casadooleiro` e não devem conectar-se a dados de produção. Antes de uma liberação, valide login e proteção de rotas, isolamento entre unidades, candidatura/planejamento do voluntário, fluxos do assistente, grupos, agenda e ocupação.
+
+## 7. Ordem operacional de ativação/recuperação
+
+1. conferir os secrets e a configuração de domínio no ambiente correto;
+2. validar as regras e índices no emulador;
+3. provisionar ou verificar o primeiro administrador e as unidades;
+4. validar login, proteção de rotas e acesso por perfil/unidade;
+5. testar candidatura, perfil e planejamento;
+6. testar agenda, sessões, grupos, assistentes e ocupação;
+7. seguir o processo de release aprovado para homologação e produção.
+
+Não utilize uma execução local ou uma auditoria de código como autorização implícita para publicar alterações em produção.

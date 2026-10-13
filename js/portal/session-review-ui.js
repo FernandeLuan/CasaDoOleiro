@@ -29,7 +29,7 @@
   function insertReview(card,html){if(!html)return;card.querySelector('.r31-review-details')?.remove();const details=document.createElement('div');details.className='r31-review-details';details.innerHTML=html;const divider=document.createElement('div');divider.className='admin-portal-detail-divider r31-review-divider';divider.setAttribute('aria-hidden','true');const actions=card.querySelector('.activity-actions');card.insertBefore(divider,actions||null);card.insertBefore(details,actions||null)}
   function setActions(card,html){card.querySelectorAll(':scope > .activity-actions').forEach(node=>node.remove());if(html)card.insertAdjacentHTML('beforeend',html)}
   function statusCard(s,editable){
-    const raw=s?.raw||sessionById(s?.sessionId)||{},html=baseSessionCard(s,editable),root=document.createElement('div');root.innerHTML=html;const card=root.firstElementChild;if(!card)return html;card.classList.add('volunteer-session-card');
+    const raw={...(s?.raw||sessionById(s?.sessionId)||{}),...(s&&typeof s==='object'?s:{})},html=baseSessionCard(s,editable),root=document.createElement('div');root.innerHTML=html;const card=root.firstElementChild;if(!card)return html;card.classList.add('volunteer-session-card');
     const current=snapshot(raw),baseline=raw.adminAdjustmentBaseline||null,proposal=raw.changeProposal||null;
     if(raw.postApprovalProposal===true){
       const review=raw.reviewStatus||s.activity?.reviewStatus||'';

@@ -3,7 +3,12 @@
   function safe(value){return encodeURIComponent(String(value??''))}
   function validUrl(value){try{const url=new URL(String(value||''));return ['http:','https:'].includes(url.protocol)?url.toString():''}catch{return ''}}
   function patchPlanSessions(applicationId,status){
-    const apply=row=>{if(String(row.applicationId||applicationId)===String(applicationId)){row.status=status;if(row.raw)row.raw.status=status}};
+    const apply=row=>{
+      if(String(row.applicationId||applicationId)!==String(applicationId))return;
+      row.status=status;
+      if(status==='plan_approved'&&row.adminAdjustmentStatus)row.adminAdjustmentStatus='approved';
+      if(row.raw){row.raw.status=status;if(status==='plan_approved'&&row.raw.adminAdjustmentStatus)row.raw.adminAdjustmentStatus='approved'}
+    };
     (state.sessions||[]).forEach(apply);
     Object.entries(state.adminPlanPageCache||{}).forEach(([key,cache])=>{if(key.startsWith(`${applicationId}|`))(cache.sessions||[]).forEach(apply)});
   }
@@ -21,7 +26,7 @@
     try{
       const result=await window.OleiroServices.applications.approvePlanning(p.id,{participantUids:p.participantUids||[]});
       Object.assign(p,{status:'meeting',active:true,inactive:false,pendingUntil:null,planningDeadlineAt:null,dayAdjustments:{},meetingStatus:'pending',meetingDate:null,meetingTime:'',meetingDuration:30,meetingLink:'',meetingNotes:'',activities:Number(result.activityCount)||p.activities,sessions:Number(result.sessionCount)||p.sessions});
-      patchPlanSessions(p.id,'plan_approved');invalidateManagerScheduleCache?.();renderPersonModal(p,'plan');showToast('Planejamento aprovado. Próxima etapa: reunião de definição.');
+      patchPlanSessions(p.id,'plan_approved');invalidateManagerScheduleCache?.();closeModal();renderPersonModal(p,'plan');showToast('Planejamento aprovado. Próxima etapa: reunião de definição.');
     }catch(error){console.error(error);showToast(error?.message||'Não foi possível aprovar o planejamento.');if(button?.isConnected){button.disabled=false;button.textContent='Aprovar planejamento'}}
   };
 

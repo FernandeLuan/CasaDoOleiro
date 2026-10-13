@@ -137,11 +137,15 @@ test('all local script references exist',()=>{
 });
 
 
-test('production keeps Firestore rules deployment behind emulator validation',()=>{
+test('production deploys Firestore rules and indexes only after emulator validation',()=>{
   const workflow=readFileSync('.github/workflows/deploy-firestore-rules.yml','utf8');
   assert.ok(workflow.includes('legacy-planning-permissions.spec.js'),'rules deploy must run the permission regression first');
-  assert.ok(workflow.includes('google-github-actions/auth@v3'),'rules deploy must use short-lived Google credentials');
-  assert.ok(workflow.includes('--only firestore:rules'),'production workflow must deploy Firestore rules explicitly');
+  assert.match(workflow,/google-github-actions\/auth@[0-9a-f]{40} # v3/,'rules deploy must pin the short-lived Google credentials action');
+  assert.ok(workflow.includes("- firestore.indexes.json"),'index changes must trigger the production deployment workflow');
+  assert.ok(workflow.includes('--only firestore:rules,firestore:indexes'),'production workflow must deploy rules and indexes explicitly');
+  assert.ok(workflow.includes("if: github.ref == 'refs/heads/main'"),'production deployment must be restricted to main');
+  assert.ok(workflow.indexOf('Validate Firestore unit isolation') < workflow.indexOf('Authenticate to Google Cloud'),'emulator permission tests must pass before production authentication');
+  assert.ok(workflow.indexOf('Authenticate to Google Cloud') < workflow.indexOf('--only firestore:rules,firestore:indexes'),'production deployment must happen after validation and authentication');
   assert.ok(!workflow.includes('FIREBASE_TOKEN'),'production rules deploy must not depend on a long-lived Firebase token');
 });
 

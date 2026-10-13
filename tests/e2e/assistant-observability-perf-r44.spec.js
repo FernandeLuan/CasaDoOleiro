@@ -9,13 +9,16 @@ test('assistant stays unit-scoped without candidate approval lifecycle rights', 
   const groups=fs.readFileSync('js/services/group-service.js','utf8');
   expect(rules).not.toContain('assistantMayManageApplication');
   expect(rules).toContain('assistantMayRequestApplicationAdjustment');
-  expect(rules).toContain('assistantMayManageVolunteerUser');
+  expect(rules).not.toContain('assistantMayManageVolunteerUser');
+  expect(rules).toContain("allow update: if isAdmin() || coordinatorUpdatesUser(uid) || participantMarksFirstAccess(uid);");
   expect(rules).toContain('resource.data.unitIds.hasAny(currentUser().unitIds)');
   expect(rules).toContain('isActivityAssistant() && assistantHasUnit(resource.data.unitId)');
   expect(ui).toContain('assistantUnitLabel');
   expect(ui).not.toContain("['approveCandidate','rejectCandidate','reactivateCandidate'");
   expect(apps).toContain("async listOccupancyMonth(month,{unitId='all'}={})");
-  expect(apps).toContain("firestore.where('unitId','==',normalizedUnit)");
+  expect(apps).toContain('if(!applyUnitFilter(firestore,constraints,unit))');
+  expect(scoped).toContain("firestore.where('unitId','==',selected[0])");
+  expect(scoped).toContain("firestore.where('unitId','in',selected)");
   expect(scoped).toContain("services.applications.list=async function(args={}){const unit=assistantUnit();return baseApplicationsList({...args,...(unit?{unit}: {})})}");
   expect(scoped).toContain("firestore.where('unitId','==',forced),firestore.where('status','==','approved')");
   expect(scoped).toContain("firestore.where('unitId','==',forced),firestore.where('status','==','change_requested')");

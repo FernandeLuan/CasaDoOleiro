@@ -200,6 +200,10 @@
     return 'dialog';
   }
   function focusModal(modal){
+    // Mobile bottom sheets must not race the user's interaction by opening the keyboard
+    // asynchronously just after a form control has received input. Let mobile users
+    // choose when to focus fields; preserve initial focus management on desktop dialogs.
+    if(window.innerWidth<760)return;
     const target=modal?.querySelector('input:not([type="hidden"]):not([disabled]),textarea:not([disabled]),select:not([disabled]),button:not([disabled])');
     requestAnimationFrame(()=>target?.focus?.({preventScroll:true}));
   }

@@ -87,7 +87,11 @@
     if(!from||!to)return [];
     return services.run(async()=>{
       const context=await services.firebase(),{firestore}=context.modules,collection=firestore.collection(context.db,'activity_sessions'),normalizedUnit=unitId&&unitId!=='all'?String(unitId).toLowerCase():'',started=Date.now();
-      const constraints=[firestore.where('status','==','confirmed')];if(normalizedUnit)constraints.push(firestore.where('unitId','==',normalizedUnit));constraints.push(firestore.where('date','>=',String(from)),firestore.where('date','<=',String(to)),firestore.orderBy('date','asc'));
+      const constraints=[firestore.where('status','==','confirmed')];
+      const applyScope=services.accessScope?.applyUnitFilter;
+      if(applyScope&&!applyScope(firestore,constraints,normalizedUnit||'all'))return [];
+      if(!applyScope&&normalizedUnit)constraints.push(firestore.where('unitId','==',normalizedUnit));
+      constraints.push(firestore.where('date','>=',String(from)),firestore.where('date','<=',String(to)),firestore.orderBy('date','asc'));
       try{
         const snapshot=await firestore.getDocs(firestore.query(collection,...constraints));services.recordQuery?.('activity_sessions/operational-schedule',started,snapshot.size,{from,to,unitId:normalizedUnit||'all',status:'confirmed'});
         return snapshot.docs.map(doc=>{const row={id:doc.id,...doc.data()};return {...row,activity:{id:row.activityId,name:row.activityName||'Atividade',description:row.activityDescription||'',duration:Number(row.duration)||60,participation:row.participation||'Livre',materials:row.materials||'',notes:row.notes||'',period:row.period||'Sem preferência',time:row.time||'',owner:row.ownerName||'Voluntário',applicationId:row.applicationId}}});

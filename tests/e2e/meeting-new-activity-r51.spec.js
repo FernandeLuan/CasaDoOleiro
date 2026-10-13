@@ -42,7 +42,8 @@ test('Firestore permits meeting proposals without unlocking existing approved-pl
   expect(sessionCreate).toContain('createsApprovedProposal(request.resource.data)');
 
   const updates=rules.slice(rules.indexOf('function updatesApprovedProposal'),rules.indexOf('function participantSubmitsSessionAdjustment'));
-  expect(updates).toContain('proposalApplication(resource.data.applicationId)');
+  expect(updates).toContain("app.status in ['meeting', 'approved']");
+  expect(updates).toContain('app.participantUids.hasAny([request.auth.uid])');
 
   const changeRequest=rules.slice(rules.indexOf('function participantRequestsApprovedChange'),rules.indexOf('function participantResubmitsApprovedChange'));
   expect(changeRequest).toContain('approvedApplication(resource.data.applicationId)');

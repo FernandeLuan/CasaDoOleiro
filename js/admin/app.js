@@ -152,7 +152,8 @@ async function hydrateManagerBaseData({includeCandidates=true}={}){
   const unitsPromise=window.OleiroServices?.units?.list?window.OleiroServices.units.list({includeInactive:true}):Promise.resolve([]);
   const candidatesPromise=includeCandidates?loadManagerCandidates({force:true}):Promise.resolve(state.candidates||[]);
   const [unitsResult]=await Promise.all([unitsPromise,candidatesPromise]);
-  state.units=unitsResult||[];
+  const allUnits=unitsResult||[],allowedUnits=window.OleiroServices?.accessScope?.unitIds?.();
+  state.units=Array.isArray(allowedUnits)?allUnits.filter(unit=>allowedUnits.includes(String(unit.id||'').toLowerCase())):allUnits;
   const units=state.units||[];
   if(!units.some(unit=>String(unit.id)===String(state.groupUnitId||''))){
     state.groupUnitId=units.some(unit=>String(unit.id)==='rodeio')?'rodeio':String(units[0]?.id||'rodeio');

@@ -10,8 +10,9 @@ async function prepare(page){
 async function login(page,email,password,target){
   await prepare(page);await page.goto('/?emulator=1');
   await page.waitForFunction(async()=>{try{const context=await window.OleiroFirebase?.ready;return !!context?.configured&&typeof window.OleiroAuth?.signIn==='function'}catch{return false}},undefined,{timeout:30_000});
-  await page.locator('#email').fill(email);await page.locator('#password').fill(password);await page.locator('#loginButton').click();await expect(page).toHaveURL(new RegExp(`/${target}/`),{timeout:30_000});await page.waitForFunction(targetName=>typeof window.render==='function'&&(targetName==='portal'?typeof window.navigateVolunteer==='function':targetName==='admin'?typeof window.navigateManager==='function':true),target,{timeout:20_000});
+  await page.locator('#email').fill(email);await page.locator('#password').fill(password);await page.locator('#loginButton').click();await expect(page).toHaveURL(new RegExp(`/${target}/`),{timeout:30_000});await page.waitForFunction(targetName=>typeof window.render==='function'&&(targetName==='portal'?typeof window.navigateVolunteer==='function':targetName==='admin'?typeof window.navigateManager==='function':true),target,{timeout:20_000});await expect(page.getByRole('navigation').getByRole('button',{name:/Planejamento/})).toBeVisible({timeout:30_000});
 }
+async function waitForPortalNavigation(page){await expect(page.getByRole('navigation').getByRole('button',{name:/Planejamento/})).toBeVisible({timeout:30_000});const dismiss=page.getByRole('button',{name:'Agora não',exact:true});if(await dismiss.isVisible().catch(()=>false))await dismiss.press('Enter')}
 async function relogin(page,email,password,target){await page.evaluate(()=>window.OleiroAuth?.signOut?.());await login(page,email,password,target)}
 const navAction=(page,label)=>page.getByRole('button',{name:new RegExp(`^.{0,3}${label}$`)});
 async function openVolunteerByStatus(page,status,name){
@@ -31,6 +32,7 @@ async function addActivity(page,date,name,period){
 test.beforeEach(async()=>{await seedEmulators()});
 
 test('analysis remains editable; requested adjustment can add new drafts and resubmit them together',async({page})=>{
+  test.setTimeout(60_000);
   await login(page,'voluntario@oleiro.test','Volunteer123!','portal');await navAction(page,'Planejamento').click();
 
   // Build a second pre-existing activity so the adjustment can prove that unrelated old
@@ -44,9 +46,48 @@ test('analysis remains editable; requested adjustment can add new drafts and res
   await relogin(page,'admin@oleiro.test','Admin123!','admin');const modal=await openVolunteerByStatus(page,'analysis','Voluntário E2E');
   const day=modal.locator('.planning-person-day[data-plan-date="2026-09-15"]');await ensureDayVisible(day);const card=day.locator('.admin-portal-activity-card').filter({hasText:'Oficina candidato E2E'});await expect(card).toBeVisible();
   await card.locator('.planning-activity-trigger').click();await card.getByRole('button',{name:/Pedir ajuste$/}).click();await page.locator('#r31SessionAdjustNote').fill('Trocar o período desta atividade.');await page.locator('#r31SessionAdjustSave').click();
-  await expect.poll(()=>page.evaluate(async()=>{const app=await window.OleiroServices.applications.getById('e2e-application');return app?.status}),{timeout:20_000}).toBe('adjustments');
+  // The click does not await the async onclick handler. Wait until it has completed successfully
+  // (the confirmation button disappears only after the batch write resolves) before navigating.
+  await expect(page.locator('#r31SessionAdjustSave')).toHaveCount(0,{timeout:20_000});
+  await expect.poll(()=>page.evaluate(async()=>{
+    const context=await window.OleiroServices.firebase(),{firestore}=context.modules;
+    const read=firestore.getDocFromServer||firestore.getDoc;
+    const [app,session]=await Promise.all([
+      read(firestore.doc(context.db,'applications','e2e-application')),
+      read(firestore.doc(context.db,'activity_sessions','e2e-candidate-session'))
+    ]);
+    return {
+      applicationStatus:app.exists()?app.data()?.status||null:null,
+      sessionAdjustment:session.exists()?session.data()?.adminAdjustmentStatus||null:null
+    };
+  }),{timeout:20_000}).toEqual({applicationStatus:'adjustments',sessionAdjustment:'requested'});
 
-  await relogin(page,'voluntario@oleiro.test','Volunteer123!','portal');await navAction(page,'Planejamento').click();
+  await relogin(page,'voluntario@oleiro.test','Volunteer123!','portal');
+  await expect.poll(()=>page.evaluate(async()=>{
+    const context=await window.OleiroServices.firebase(),{firestore}=context.modules;
+    const read=firestore.getDocFromServer||firestore.getDoc;
+    const [app,session]=await Promise.all([
+      read(firestore.doc(context.db,'applications','e2e-application')),
+      read(firestore.doc(context.db,'activity_sessions','e2e-candidate-session'))
+    ]);
+    const clientSession=(state.sessions||[]).find(row=>String(row.id)==='e2e-candidate-session');
+    return {
+      applicationStatus:state.currentApplication?.status||null,
+      planStatus:state.volunteerPlanStatus||null,
+      planningLoadedFor:state.volunteerPlanningLoadedFor||null,
+      sessionAdjustment:clientSession?.adminAdjustmentStatus||null,
+      serverApplicationStatus:app.exists()?app.data()?.status||null:null,
+      serverSessionAdjustment:session.exists()?session.data()?.adminAdjustmentStatus||null:null
+    };
+  }),{timeout:20_000}).toEqual({
+    applicationStatus:'adjustments',
+    planStatus:'adjustments',
+    planningLoadedFor:'e2e-application',
+    sessionAdjustment:'requested',
+    serverApplicationStatus:'adjustments',
+    serverSessionAdjustment:'requested'
+  });
+  await navAction(page,'Planejamento').click();
   await expect(page.getByRole('button',{name:/Adicionar atividade/}).first()).toBeVisible({timeout:20_000});
   const requested=page.locator('.activity-card').filter({hasText:'Oficina candidato E2E'});await expect(requested.getByRole('button',{name:/Ajustar atividade/})).toBeVisible();await expect(requested.getByRole('button',{name:/Excluir/})).toHaveCount(0);
   const unrelated=page.locator('.activity-card').filter({hasText:'Atividade antiga E2E'});await expect(unrelated).toBeVisible();await expect(unrelated.locator('.activity-actions')).toHaveCount(0);
@@ -56,7 +97,7 @@ test('analysis remains editable; requested adjustment can add new drafts and res
 
   // Reload proves that the draft remains recognized from persisted timestamps, not only
   // from temporary in-memory state.
-  await page.reload();await expect(page).toHaveURL(/\/portal\//,{timeout:30_000});await navAction(page,'Planejamento').click();
+  await page.reload({waitUntil:'domcontentloaded'});await expect(page).toHaveURL(/\/portal\//,{timeout:30_000});await waitForPortalNavigation(page);await page.waitForFunction(()=>state.role==='volunteer'&&state.currentApplication?.id&&state.volunteerPlanningLoadedFor===String(state.currentApplication.id),undefined,{timeout:30_000});await navAction(page,'Planejamento').click();
   fresh=page.locator('.activity-card').filter({hasText:'Nova no reajuste E2E'});await expect(fresh).toContainText('Nova atividade',{timeout:20_000});await expect(fresh.getByRole('button',{name:/Editar/})).toBeVisible();await expect(page.locator('.activity-card').filter({hasText:'Atividade antiga E2E'}).locator('.activity-actions')).toHaveCount(0);
 
   await page.locator('.activity-card').filter({hasText:'Oficina candidato E2E'}).getByRole('button',{name:/Ajustar atividade/}).click();await page.locator('#r31ActPeriod').selectOption('Noite');await page.locator('#r31VolunteerAdjustSave').click();

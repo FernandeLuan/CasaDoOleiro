@@ -45,7 +45,7 @@
   document.addEventListener('click',event=>{if(!event.target.closest?.('.r32-session-signal'))closeSignal()});window.addEventListener('scroll',closeSignal,true);window.addEventListener('resize',closeSignal);
 
   sessionCardVolunteer=function(s,editable){
-    const html=baseSessionCard(s,editable),root=document.createElement('div');root.innerHTML=html;const card=root.firstElementChild;if(!card)return html;const row=rawSession(s?.raw||s);
+    const html=baseSessionCard(s,editable),root=document.createElement('div');root.innerHTML=html;const card=root.firstElementChild;if(!card)return html;const row=rawSession(s);
     const candidateWorkflowOpen=state.volunteerMode!=='approved'&&['pending','analysis','adjustments'].includes(String(state.currentApplication?.status||''));
     if(row.status==='plan_approved'&&!candidateWorkflowOpen){
       card.classList.remove('r31-card-warning','r31-card-info','r31-card-danger','r32-card-ready');card.querySelectorAll(':scope > .r31-review-divider,:scope > .r31-review-details,:scope > .activity-actions').forEach(node=>node.remove());

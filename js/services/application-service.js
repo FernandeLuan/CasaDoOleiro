@@ -6,6 +6,16 @@
   const occupancyCache=new Map();
 
   function normalize(value){return String(value||'').trim().toLocaleLowerCase('pt-BR')}
+  function applyUnitFilter(firestore,constraints,unit='all'){
+    const scope=services.accessScope?.applyUnitFilter;
+    if(scope)return scope(firestore,constraints,unit);
+    if(unit&&unit!=='all')constraints.push(firestore.where('unitId','==',normalize(unit)));
+    return true;
+  }
+  function currentAccessKey(){
+    const session=window.state?.currentSession||{},user=session.user||{};
+    return JSON.stringify([session.uid||'',user.role||session.role||'',Array.isArray(user.unitIds)?[...user.unitIds].sort():[]]);
+  }
   function isoDate(value){if(!value)return null;if(typeof value==='string')return value.slice(0,10);if(typeof value.toDate==='function')return value.toDate().toISOString().slice(0,10);return null}
   function isoDateTime(value){if(!value)return null;if(typeof value==='string')return value;if(typeof value.toDate==='function')return value.toDate().toISOString();return null}
   function unitLabel(id){const value=String(id||'');return value?value.charAt(0).toUpperCase()+value.slice(1):'—'}
@@ -13,7 +23,7 @@
   function stayPreviewKey(id,start,end){return `${String(id)}|${String(start)}|${String(end)}`}
   function cachedStayPreview(id,start,end){const key=stayPreviewKey(id,start,end),cached=stayPreviewCache.get(key);if(!cached||Date.now()-cached.at>STAY_PREVIEW_TTL){stayPreviewCache.delete(key);return null}return cached}
   function clearStayPreview(id){const prefix=`${String(id)}|`;for(const key of stayPreviewCache.keys())if(key.startsWith(prefix))stayPreviewCache.delete(key)}
-  function occupancyKey(month,unitId){return `${String(month)}|${String(unitId||'all')}`}
+  function occupancyKey(month,unitId){return `${String(month)}|${String(unitId||'all')}|${currentAccessKey()}`}
 
   function mapApplication(doc){
     const data=doc.data();
@@ -67,7 +77,7 @@
       return services.run(async()=>{
         const context=await services.firebase();const {firestore}=context.modules;const constraints=[];const term=normalize(search);
         if(status&&status!=='all')constraints.push(firestore.where('status','==',status));
-        if(unit&&unit!=='all')constraints.push(firestore.where('unitId','==',normalize(unit)));
+        if(!applyUnitFilter(firestore,constraints,unit))return {items:[],nextCursor:null,hasMore:false};
         if(term)constraints.push(firestore.where('searchTokens','array-contains',term.slice(0,24)));
         if(cursor)constraints.push(firestore.startAfter(cursor));
         const pageSize=Math.max(1,Math.min(Number(limit)||10,50));constraints.push(firestore.limit(pageSize));
@@ -78,23 +88,25 @@
       },{loading:false});
     },
 
-    async countStatus(status){
+    async countStatus(status,{unitId='all'}={}){
       if(!status||status==='all')return 0;
       return services.run(async()=>{
         const context=await services.firebase();const {firestore}=context.modules;
         if(typeof firestore.getCountFromServer!=='function')throw new Error('Contagem agregada do Firestore indisponível. A leitura ampla foi bloqueada.');
-        const q=firestore.query(firestore.collection(context.db,'applications'),firestore.where('status','==',String(status))),started=Date.now();
+        const constraints=[firestore.where('status','==',String(status))];if(!applyUnitFilter(firestore,constraints,unitId))return 0;
+        const q=firestore.query(firestore.collection(context.db,'applications'),...constraints),started=Date.now();
         const snapshot=await firestore.getCountFromServer(q),count=Number(snapshot.data().count)||0;services.recordQuery?.('applications/count-status',started,count,{status:String(status),aggregation:true});return count;
       },{loading:false});
     },
 
-    async listUpcoming({field='stayStart',from,to='',limit=3}={}){
+    async listUpcoming({field='stayStart',from,to='',limit=3,unitId='all'}={}){
       if(!from||!['stayStart','stayEnd'].includes(field))return [];
       return services.run(async()=>{
         const context=await services.firebase();const {firestore}=context.modules,max=Math.max(1,Math.min(Number(limit)||3,50)),started=Date.now(),constraints=[
           firestore.where('status','==','approved'),
           firestore.where(field,'>=',String(from))
         ];
+        if(!applyUnitFilter(firestore,constraints,unitId))return [];
         if(to)constraints.push(firestore.where(field,'<=',String(to)));
         constraints.push(firestore.orderBy(field,'asc'),firestore.limit(max));
         const snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'applications'),...constraints));
@@ -115,7 +127,7 @@
         const context=await services.firebase();
         return services.shareQuery(context,`applications/occupancy-month/${key}`,async()=>{
           const {firestore}=context.modules,started=Date.now(),constraints=[firestore.where('status','==','approved'),firestore.where('stayMonths','array-contains',String(month))];
-          if(normalizedUnit!=='all')constraints.push(firestore.where('unitId','==',normalizedUnit));
+          if(!applyUnitFilter(firestore,constraints,normalizedUnit))return [];
           const snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'applications'),...constraints));
           const rows=snapshot.docs.map(mapApplication).filter(row=>!row.inactive);
           occupancyCache.set(key,{at:Date.now(),rows});
@@ -125,10 +137,12 @@
       },{loading:false,monitor:{area:'applications',action:'occupancy_month'}});
     },
 
-    async getById(id,{enrichProfiles=true}={}){
+    async getById(id,{enrichProfiles=true,server=false}={}){
       return services.run(async()=>{
-        const context=await services.firebase(),applicationId=String(id);
-        const snapshot=await services.readDocument(context,'applications',applicationId,'applications/by-id');
+        const context=await services.firebase(),{firestore}=context.modules,applicationId=String(id);
+        const snapshot=server&&typeof firestore.getDocFromServer==='function'
+          ?await firestore.getDocFromServer(firestore.doc(context.db,'applications',applicationId))
+          :await services.readDocument(context,'applications',applicationId,'applications/by-id');
         if(!snapshot.exists())return null;
         const item=mapApplication(snapshot);return enrichProfiles?enrichApplicationProfiles(context,item):item;
       },{loading:false});

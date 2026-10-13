@@ -45,19 +45,20 @@
       },{loading:false});
     },
 
-    async listScheduleRange({from,to}={}){
+    async listScheduleRange({from,to,unitId='all'}={}){
       if(!from||!to||String(to)<String(from))return [];
       return services.run(async()=>{
         const context=await services.firebase();
-        const key=JSON.stringify(['activity_sessions/range',String(from),String(to)]);
+        const accessUnits=services.accessScope?.unitIds?.(),scopeKey=Array.isArray(accessUnits)?[...accessUnits].sort():null;
+        const key=JSON.stringify(['activity_sessions/range',String(from),String(to),String(unitId||'all').toLowerCase(),scopeKey]);
         return services.shareQuery(context,key,async()=>{
           const {firestore}=context.modules,started=Date.now();
-          const q=firestore.query(
-            firestore.collection(context.db,'activity_sessions'),
-            firestore.where('date','>=',String(from)),
-            firestore.where('date','<=',String(to)),
-            firestore.orderBy('date','asc')
-          );
+          const constraints=[firestore.where('date','>=',String(from)),firestore.where('date','<=',String(to))];
+          const applyScope=services.accessScope?.applyUnitFilter;
+          if(applyScope&&!applyScope(firestore,constraints,unitId))return [];
+          if(!applyScope&&unitId&&unitId!=='all')constraints.push(firestore.where('unitId','==',String(unitId).toLowerCase()));
+          constraints.push(firestore.orderBy('date','asc'));
+          const q=firestore.query(firestore.collection(context.db,'activity_sessions'),...constraints);
           const snapshot=await firestore.getDocs(q);
           services.recordQuery?.('activity_sessions/range',started,snapshot.size,{from:String(from),to:String(to),singleQuery:true});
           return snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
@@ -65,13 +66,16 @@
       },{loading:false,monitor:{area:'planning',action:'schedule_range'}});
     },
 
-    async listPendingChanges({limit=100}={}){
+    async listPendingChanges({limit=100,unitId='all'}={}){
       return services.run(async()=>{
         const context=await services.firebase();
         const {firestore}=context.modules;const max=Math.max(1,Math.min(Number(limit)||100,200)),started=Date.now();
+        const changesConstraints=[firestore.where('status','==','change_requested')],proposalConstraints=[firestore.where('reviewStatus','==','analysis')];
+        const applyScope=services.accessScope?.applyUnitFilter;
+        if(applyScope&&(!applyScope(firestore,changesConstraints,unitId)||!applyScope(firestore,proposalConstraints,unitId)))return [];
         const [changesSnapshot,proposalSnapshot]=await Promise.all([
-          firestore.getDocs(firestore.query(firestore.collection(context.db,'activity_sessions'),firestore.where('status','==','change_requested'),firestore.limit(max))),
-          firestore.getDocs(firestore.query(firestore.collection(context.db,'activity_sessions'),firestore.where('reviewStatus','==','analysis'),firestore.limit(max)))
+          firestore.getDocs(firestore.query(firestore.collection(context.db,'activity_sessions'),...changesConstraints,firestore.limit(max))),
+          firestore.getDocs(firestore.query(firestore.collection(context.db,'activity_sessions'),...proposalConstraints,firestore.limit(max)))
         ]);
         services.recordQuery?.('activity_sessions/pending-review',started,changesSnapshot.size+proposalSnapshot.size,{queries:2,limit:max});
         const rows=[
