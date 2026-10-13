@@ -21,7 +21,7 @@
     try{
       const result=await window.OleiroServices.applications.approvePlanning(p.id,{participantUids:p.participantUids||[]});
       Object.assign(p,{status:'meeting',active:true,inactive:false,pendingUntil:null,planningDeadlineAt:null,dayAdjustments:{},meetingStatus:'pending',meetingDate:null,meetingTime:'',meetingDuration:30,meetingLink:'',meetingNotes:'',activities:Number(result.activityCount)||p.activities,sessions:Number(result.sessionCount)||p.sessions});
-      patchPlanSessions(p.id,'plan_approved');invalidateManagerScheduleCache?.();renderPersonModal(p,'plan');showToast('Planejamento aprovado. Próxima etapa: reunião de definição.');
+      patchPlanSessions(p.id,'plan_approved');invalidateManagerScheduleCache?.();closeModal();renderPersonModal(p,'plan');showToast('Planejamento aprovado. Próxima etapa: reunião de definição.');
     }catch(error){console.error(error);showToast(error?.message||'Não foi possível aprovar o planejamento.');if(button?.isConnected){button.disabled=false;button.textContent='Aprovar planejamento'}}
   };
 
