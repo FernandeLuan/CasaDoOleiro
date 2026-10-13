@@ -33,6 +33,7 @@ async function seed(){
       ['volunteer_profiles/volunteer-shared',{name:'Volunteer Shared',email:'shared@example.test'}],
       ['applications/application-rodeio',{unitId:'rodeio',participantUids:['volunteer-rodeio'],active:true,status:'approved'}],
       ['applications/application-indaial',{unitId:'indaial',participantUids:['volunteer-indaial'],active:true,status:'approved'}],
+      ['applications/application-expired-rodeio',{unitId:'rodeio',participantUids:['volunteer-rodeio'],active:false,status:'rejected',autoRejected:true}],
       ['activities/activity-rodeio',{applicationId:'application-rodeio',name:'Activity R'}],
       ['activities/activity-indaial',{applicationId:'application-indaial',name:'Activity I'}],
       ['activity_sessions/session-rodeio',{applicationId:'application-rodeio',activityId:'activity-rodeio',unitId:'rodeio',status:'confirmed'}],
@@ -166,12 +167,19 @@ test('coordinators can manage groups and unit settings only in their units',asyn
   await assertFails(deleteDoc(docRef(db,'units','rodeio')));
 });
 
-test('activity assistants remain limited to their assigned unit',async()=>{
+test('activity assistants remain limited to their assigned unit and cannot reactivate closed applications',async()=>{
   const db=dbFor('assistant-rodeio');
   await assertSucceeds(getDoc(docRef(db,'applications','application-rodeio')));
   await assertFails(getDoc(docRef(db,'applications','application-indaial')));
   await assertSucceeds(getDoc(docRef(db,'groups','group-rodeio')));
   await assertFails(getDoc(docRef(db,'groups','group-indaial')));
+  const deadline=Timestamp.fromDate(new Date(Date.now()+86_400_000));
+  await assertFails(updateDoc(docRef(db,'applications','application-rodeio'),{
+    status:'adjustments',active:true,planningDeadlineAt:deadline,updatedAt:serverTimestamp()
+  }));
+  await assertFails(updateDoc(docRef(db,'applications','application-expired-rodeio'),{
+    status:'adjustments',active:true,planningDeadlineAt:deadline,updatedAt:serverTimestamp()
+  }));
 });
 
 test('administrators retain global access across both units',async()=>{

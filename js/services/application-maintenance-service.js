@@ -22,9 +22,10 @@
           mutations.push([applicationDoc.ref,{status:'rejected',active:false,planningDeadlineAt:null,rejectedReason:'Prazo de 7 dias para envio do planejamento expirado.',rejectedAt:now,autoRejected:true,needsAdminAttention:false,updatedAt:now}]);
           let deactivatableUids=uids;
           if(Array.isArray(allowedUnitIds)){
-            const scopedResults=await Promise.all(uids.map(async uid=>{
+            const readUser=firestore.getDocFromServer||firestore.getDoc;
+          const scopedResults=await Promise.all(uids.map(async uid=>{
               try{
-                const userSnapshot=await firestore.getDoc(firestore.doc(context.db,'users',uid));
+                const userSnapshot=await readUser(firestore.doc(context.db,'users',uid));
                 if(!userSnapshot.exists())return false;
                 const assigned=userSnapshot.data()?.unitIds;
                 return Array.isArray(assigned)&&assigned.length>0&&assigned.every(unitId=>allowedUnitIds.includes(String(unitId||'').trim().toLowerCase()));

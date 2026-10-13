@@ -372,6 +372,8 @@ service cloud.firestore {
 
     function assistantMayRequestApplicationAdjustment() {
       return assistantHasUnit(resource.data.unitId)
+        && resource.data.active == true
+        && resource.data.status in ['pending', 'analysis', 'adjustments']
         && request.resource.data.unitId == resource.data.unitId
         && request.resource.data.participantUids == resource.data.participantUids
         && request.resource.data.status == 'adjustments'
