@@ -107,7 +107,7 @@ test('redacts record identifiers embedded in request and transaction paths',()=>
   const s=setup();
   const event=s.sanitize({
     request:{url:'https://example.test/applications/app-private/history/event-private?token=private'},
-    message:'Failed at https://example.test/users/user-private/profile and /users/relative-private/profile'
+    message:'Failed at https://example.test/users/user-private/profile and /users/relative-private/profile?token=private#fragment'
   });
   assert.equal(event.request.url,'https://example.test/applications/[redacted-id]/history/[redacted-id]');
   assert.equal(event.message,'Failed at https://example.test/users/[redacted-id]/profile and /users/[redacted-id]/profile');
