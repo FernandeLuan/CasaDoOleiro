@@ -10,6 +10,23 @@
     return Array.isArray(ids)&&ids.length?String(ids[0]).toLowerCase():'rodeio';
   }
   function normalizeUnit(value){return String(value||'').trim().toLowerCase()}
+  function scopedUnitIds(){
+    const role=rawRole();
+    if(role==='activity_assistant')return [assistantUnit()];
+    if(role!=='coordinator')return null;
+    const ids=window.state?.currentSession?.user?.unitIds;
+    return Array.isArray(ids)?[...new Set(ids.map(normalizeUnit).filter(Boolean))]:[];
+  }
+  function applyUnitFilter(firestore,constraints,requested='all'){
+    const allowed=scopedUnitIds(),unit=normalizeUnit(requested);
+    if(allowed===null){if(unit&&unit!=='all')constraints.push(firestore.where('unitId','==',unit));return true}
+    const selected=unit&&unit!=='all'?(allowed.includes(unit)?[unit]:[]):allowed;
+    if(!selected.length||selected.length>30)return false;
+    constraints.push(selected.length===1
+      ?firestore.where('unitId','==',selected[0])
+      :firestore.where('unitId','in',selected));
+    return true;
+  }
   function isoDate(value){if(!value)return null;if(typeof value==='string')return value.slice(0,10);if(typeof value.toDate==='function')return value.toDate().toISOString().slice(0,10);return null}
   function isoDateTime(value){if(!value)return null;if(typeof value==='string')return value;if(typeof value.toDate==='function')return value.toDate().toISOString();return null}
   function unitLabel(id){const value=String(id||'');return value?value.charAt(0).toUpperCase()+value.slice(1):'—'}
@@ -36,7 +53,10 @@
 
   services.accessScope={
     isActivityAssistant(){return rawRole()==='activity_assistant'},
+    isCoordinator(){return rawRole()==='coordinator'},
     unitId(){return assistantUnit()||null},
+    unitIds(){return scopedUnitIds()},
+    applyUnitFilter,
     forceUnit(unitId='all'){return assistantUnit()||unitId}
   };
 

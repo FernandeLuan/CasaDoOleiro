@@ -15,7 +15,9 @@ test('assistant stays unit-scoped without candidate approval lifecycle rights', 
   expect(ui).toContain('assistantUnitLabel');
   expect(ui).not.toContain("['approveCandidate','rejectCandidate','reactivateCandidate'");
   expect(apps).toContain("async listOccupancyMonth(month,{unitId='all'}={})");
-  expect(apps).toContain("firestore.where('unitId','==',normalizedUnit)");
+  expect(apps).toContain('if(!applyUnitFilter(firestore,constraints,unit))');
+  expect(scoped).toContain("firestore.where('unitId','==',selected[0])");
+  expect(scoped).toContain("firestore.where('unitId','in',selected)");
   expect(scoped).toContain("services.applications.list=async function(args={}){const unit=assistantUnit();return baseApplicationsList({...args,...(unit?{unit}: {})})}");
   expect(scoped).toContain("firestore.where('unitId','==',forced),firestore.where('status','==','approved')");
   expect(scoped).toContain("firestore.where('unitId','==',forced),firestore.where('status','==','change_requested')");

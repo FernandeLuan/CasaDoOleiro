@@ -140,7 +140,7 @@ test('all local script references exist',()=>{
 test('production keeps Firestore rules deployment behind emulator validation',()=>{
   const workflow=readFileSync('.github/workflows/deploy-firestore-rules.yml','utf8');
   assert.ok(workflow.includes('legacy-planning-permissions.spec.js'),'rules deploy must run the permission regression first');
-  assert.ok(workflow.includes('google-github-actions/auth@v3'),'rules deploy must use short-lived Google credentials');
+  assert.match(workflow,/google-github-actions\/auth@[0-9a-f]{40} # v3/,'rules deploy must pin the short-lived Google credentials action');
   assert.ok(workflow.includes('--only firestore:rules'),'production workflow must deploy Firestore rules explicitly');
   assert.ok(!workflow.includes('FIREBASE_TOKEN'),'production rules deploy must not depend on a long-lived Firebase token');
 });

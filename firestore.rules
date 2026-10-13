@@ -9,6 +9,10 @@ service cloud.firestore {
       return /databases/$(database)/documents/users/$(request.auth.uid);
     }
 
+    function userPathFor(uid) {
+      return /databases/$(database)/documents/users/$(uid);
+    }
+
     function hasUser() {
       return signedIn() && exists(userPath());
     }
@@ -33,16 +37,125 @@ service cloud.firestore {
       return activeUser() && currentUser().role == 'activity_assistant';
     }
 
-    function isManager() {
-      return isAdmin() || isCoordinator();
-    }
-
     function managerHasUnit(unitId) {
       return isAdmin() || (
         isCoordinator()
         && ('unitIds' in currentUser())
         && currentUser().unitIds.hasAny([unitId])
       );
+    }
+
+    function managerHasUserUnit(uid) {
+      let path = userPathFor(uid);
+      return isAdmin() || (
+        isCoordinator()
+        && exists(path)
+        && ('unitIds' in get(path).data)
+        && ('unitIds' in currentUser())
+        && get(path).data.unitIds.hasAny(currentUser().unitIds)
+      );
+    }
+
+    function managerHasUserUnitAfter(uid) {
+      let path = userPathFor(uid);
+      return isAdmin() || (
+        isCoordinator()
+        && existsAfter(path)
+        && ('unitIds' in getAfter(path).data)
+        && ('unitIds' in currentUser())
+        && getAfter(path).data.unitIds.hasAny(currentUser().unitIds)
+      );
+    }
+
+    function managerCanCreateUser(data) {
+      return isAdmin() || (
+        isCoordinator()
+        && data.role == 'volunteer'
+        && ('unitIds' in data)
+        && data.unitIds is list
+        && data.unitIds.size() > 0
+        && ('unitIds' in currentUser())
+        && currentUser().unitIds.hasAll(data.unitIds)
+      );
+    }
+
+    function managerCreatesApplication(data) {
+      return isAdmin() || (
+        isCoordinator()
+        && managerHasUnit(data.unitId)
+        && data.participantUids is list
+        && data.participantUids.size() > 0
+        && data.participantUids.size() <= 2
+        && managerHasUserUnitAfter(data.participantUids[0])
+        && getAfter(userPathFor(data.participantUids[0])).data.unitIds.hasAny([data.unitId])
+        && (
+          data.participantUids.size() == 1
+          || (
+            managerHasUserUnitAfter(data.participantUids[1])
+            && getAfter(userPathFor(data.participantUids[1])).data.unitIds.hasAny([data.unitId])
+          )
+        )
+      );
+    }
+
+    function managerUpdatesApplication() {
+      return isAdmin() || (
+        isCoordinator()
+        && managerHasUnit(resource.data.unitId)
+        && request.resource.data.unitId == resource.data.unitId
+        && request.resource.data.participantUids == resource.data.participantUids
+      );
+    }
+
+    function managerOfSession(data) {
+      let app = hasApplicationId(data) ? applicationData(data.applicationId) : {};
+      return isAdmin() || (
+        isCoordinator()
+        && app is map
+        && ('unitId' in app)
+        && managerHasUnit(app.unitId)
+        && (!('unitId' in data) || data.unitId == app.unitId)
+      );
+    }
+
+    function coordinatorCreatesSession(data) {
+      let app = hasApplicationId(data) ? applicationData(data.applicationId) : {};
+      return isCoordinator()
+        && app is map
+        && ('unitId' in app)
+        && managerHasUnit(app.unitId)
+        && ('unitId' in data)
+        && data.unitId == app.unitId;
+    }
+
+    function coordinatorUpdatesSession() {
+      let app = hasApplicationId(resource.data) ? applicationData(resource.data.applicationId) : {};
+      return isCoordinator()
+        && app is map
+        && ('unitId' in app)
+        && managerHasUnit(app.unitId)
+        && request.resource.data.applicationId == resource.data.applicationId
+        && request.resource.data.activityId == resource.data.activityId
+        && ('unitId' in request.resource.data)
+        && request.resource.data.unitId == app.unitId
+        && (!('unitId' in resource.data) || request.resource.data.unitId == resource.data.unitId);
+    }
+
+    function coordinatorUpdatesUser(uid) {
+      return isCoordinator()
+        && managerHasUserUnit(uid)
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.unitIds == resource.data.unitIds
+        && (
+          (
+            resource.data.role == 'volunteer'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active', 'updatedAt'])
+          )
+          || (
+            request.auth.uid == uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'updatedAt'])
+          )
+        );
     }
 
     function assistantHasUnit(unitId) {
@@ -59,6 +172,12 @@ service cloud.firestore {
 
     function applicationData(applicationId) {
       return get(/databases/$(database)/documents/applications/$(applicationId)).data;
+    }
+
+    function hasApplicationId(data) {
+      return ('applicationId' in data)
+        && data.applicationId is string
+        && data.applicationId.size() > 0;
     }
 
     function participantOf(applicationId) {
@@ -242,10 +361,14 @@ service cloud.firestore {
         && data.createdByUid == request.auth.uid;
     }
 
-    function updatesApprovedProposal() {
+    function updatesApprovedProposal(applicationId) {
+      let app = applicationData(applicationId);
       return activeUser()
-        && participantOf(resource.data.applicationId)
-        && proposalApplication(resource.data.applicationId)
+        && app.active == true
+        && app.status in ['meeting', 'approved']
+        && ('participantUids' in app)
+        && app.participantUids.hasAny([request.auth.uid])
+        && request.resource.data.applicationId == resource.data.applicationId
         && resource.data.postApprovalProposal == true
         && resource.data.reviewStatus == 'adjustments'
         && request.resource.data.postApprovalProposal == true
@@ -255,19 +378,61 @@ service cloud.firestore {
         && request.resource.data.createdByUid == resource.data.createdByUid;
     }
 
-    function participantSubmitsSessionAdjustment() {
-      return activeUser()
-        && participantOf(resource.data.applicationId)
-        && candidateEditable(resource.data.applicationId)
+    function participantUpdatesCandidateSession() {
+      let app = applicationData(resource.data.applicationId);
+      let changed = request.resource.data.diff(resource.data).affectedKeys();
+      let candidate = app.active == true && app.status in ['pending', 'analysis', 'adjustments'];
+      let windowOpen = candidate && (
+        app.status == 'analysis'
+        || (
+          ('planningDeadlineAt' in app)
+          && app.planningDeadlineAt != null
+          && request.time <= app.planningDeadlineAt
+        )
+      );
+      let owned = (!('managerCreated' in resource.data) || resource.data.managerCreated != true)
+        && (
+          !('createdByUid' in resource.data)
+          || resource.data.createdByUid == request.auth.uid
+          || app.participantUids.hasAny([resource.data.createdByUid])
+        );
+      let editableFields = [
+        'activityName', 'activityDescription', 'participation', 'materials',
+        'notes', 'ownerName', 'date', 'time', 'period', 'duration', 'updatedAt'
+      ];
+      return hasApplicationId(resource.data)
+        && activeUser()
+        && ('participantUids' in app)
+        && app.participantUids.hasAny([request.auth.uid])
+        && request.resource.data.applicationId == resource.data.applicationId
+        && request.resource.data.activityId == resource.data.activityId
         && request.resource.data.status == resource.data.status
-        && ('adminAdjustmentStatus' in resource.data)
-        && resource.data.adminAdjustmentStatus == 'requested'
-        && request.resource.data.adminAdjustmentStatus == 'analysis'
-        && request.resource.data.adminAdjustmentSubmittedAt == request.time
-        && request.resource.data.updatedAt == request.time
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'adminAdjustmentStatus', 'adminAdjustmentSubmittedAt', 'updatedAt'
-        ]);
+        && candidate
+        && (
+          (
+            windowOpen
+            && resource.data.status in ['proposed', 'plan_approved', 'confirmed']
+            && owned
+            && changed.hasOnly(editableFields)
+          )
+          || (
+            ('adminAdjustmentStatus' in resource.data)
+            && resource.data.adminAdjustmentStatus == 'requested'
+            && request.resource.data.adminAdjustmentStatus == 'requested'
+            && owned
+            && changed.hasOnly(editableFields)
+          )
+          || (
+            ('adminAdjustmentStatus' in resource.data)
+            && resource.data.adminAdjustmentStatus == 'requested'
+            && request.resource.data.adminAdjustmentStatus == 'analysis'
+            && request.resource.data.adminAdjustmentSubmittedAt == request.time
+            && request.resource.data.updatedAt == request.time
+            && changed.hasOnly([
+              'adminAdjustmentStatus', 'adminAdjustmentSubmittedAt', 'updatedAt'
+            ])
+          )
+        );
     }
 
     function participantRequestsApprovedChange() {
@@ -317,33 +482,41 @@ service cloud.firestore {
     }
 
     match /users/{uid} {
-      allow read: if (signedIn() && request.auth.uid == uid) || isManager() || (isActivityAssistant() && ('unitIds' in resource.data) && resource.data.unitIds.hasAny(currentUser().unitIds));
-      allow create, delete: if isManager();
-      allow update: if isManager() || assistantMayManageVolunteerUser() || participantMarksFirstAccess(uid);
+      allow read: if (signedIn() && request.auth.uid == uid)
+        || isAdmin()
+        || managerHasUserUnit(uid)
+        || (isActivityAssistant() && ('unitIds' in resource.data) && ('unitIds' in currentUser()) && resource.data.unitIds.hasAny(currentUser().unitIds));
+      allow create: if managerCanCreateUser(request.resource.data);
+      allow delete: if isAdmin() || (isCoordinator() && resource.data.role == 'volunteer' && managerHasUserUnit(uid));
+      allow update: if isAdmin() || coordinatorUpdatesUser(uid) || assistantMayManageVolunteerUser() || participantMarksFirstAccess(uid);
     }
 
     match /units/{unitId} {
       allow read: if activeUser();
-      allow create, update, delete: if isManager();
+      allow create, delete: if isAdmin();
+      allow update: if managerHasUnit(unitId);
     }
 
     match /volunteer_profiles/{uid} {
-      allow read: if activeUser() && (request.auth.uid == uid || isManager());
-      allow create, delete: if isManager();
-      allow update: if isManager() || participantUpdatesEmergencyContact(uid);
+      allow read: if activeUser() && (request.auth.uid == uid || managerHasUserUnit(uid));
+      allow create: if isAdmin() || (isCoordinator() && managerHasUserUnitAfter(uid));
+      allow delete: if isAdmin() || (isCoordinator() && managerHasUserUnit(uid));
+      allow update: if isAdmin() || (isCoordinator() && managerHasUserUnit(uid)) || participantUpdatesEmergencyContact(uid);
     }
 
     match /applications/{applicationId} {
       allow read: if activeUser() && (
-        isManager()
+        managerHasUnit(resource.data.unitId)
         || assistantHasUnit(resource.data.unitId)
         || isParticipant(resource.data)
       );
-      allow create, delete: if isManager();
-      allow update: if isManager()
-        || assistantMayRequestApplicationAdjustment()
+      allow create: if managerCreatesApplication(request.resource.data);
+      allow delete: if isAdmin() || (isCoordinator() && managerHasUnit(resource.data.unitId));
+      allow update: if isAdmin()
         || participantMaySubmitApplication()
-        || participantMayResetEmptyAdjustment();
+        || participantMayResetEmptyAdjustment()
+        || assistantMayRequestApplicationAdjustment()
+        || managerUpdatesApplication();
 
       match /history/{eventId} {
         allow read: if activeUser() && (managerOfApplication(applicationId) || assistantOfApplication(applicationId));
@@ -366,16 +539,12 @@ service cloud.firestore {
 
     match /activities/{activityId} {
       allow read: if activeUser() && (
-        isManager()
+        managerOfApplication(resource.data.applicationId)
         || assistantOfApplication(resource.data.applicationId)
         || participantOf(resource.data.applicationId)
       );
 
-      allow create: if isManager()
-        || (
-          isActivityAssistant()
-          && assistantHasUnit(applicationData(request.resource.data.applicationId).unitId)
-        )
+      allow create: if isAdmin()
         || (
           activeUser()
           && participantOf(request.resource.data.applicationId)
@@ -386,9 +555,28 @@ service cloud.firestore {
             )
             || createsApprovedProposal(request.resource.data)
           )
-        );
+        )
+        || managerOfApplication(request.resource.data.applicationId)
+        || (
+          isActivityAssistant()
+          && assistantHasUnit(applicationData(request.resource.data.applicationId).unitId)
+        )
+        ;
 
-      allow update: if isManager()
+      allow update: if isAdmin()
+        || (
+          hasApplicationId(resource.data)
+          && updatesApprovedProposal(resource.data.applicationId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'name', 'description', 'duration', 'participation', 'materials',
+            'notes', 'period', 'time', 'ownerName', 'postApprovalProposal',
+            'reviewStatus', 'reviewNote', 'reviewSubmittedAt', 'updatedAt'
+          ])
+        )
+        || (
+          managerOfApplication(resource.data.applicationId)
+          && request.resource.data.applicationId == resource.data.applicationId
+        )
         || (
           assistantOfApplication(resource.data.applicationId)
           && request.resource.data.applicationId == resource.data.applicationId
@@ -412,19 +600,11 @@ service cloud.firestore {
                 'notes', 'period', 'time', 'ownerName', 'updatedAt'
               ])
             )
-            ||
-            (
-              updatesApprovedProposal()
-              && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-                'name', 'description', 'duration', 'participation', 'materials',
-                'notes', 'period', 'time', 'ownerName', 'postApprovalProposal',
-                'reviewStatus', 'reviewNote', 'reviewSubmittedAt', 'updatedAt'
-              ])
-            )
           )
         );
 
-      allow delete: if isManager()
+      allow delete: if isAdmin()
+        || managerOfApplication(resource.data.applicationId)
         || assistantOfApplication(resource.data.applicationId)
         || (
           activeUser()
@@ -442,19 +622,23 @@ service cloud.firestore {
     }
 
     match /activity_sessions/{sessionId} {
-      allow read: if activeUser() && (
-        isManager()
-        || assistantOfApplication(resource.data.applicationId)
-        || participantOf(resource.data.applicationId)
+      allow get: if activeUser() && (
+        managerOfSession(resource.data)
+        || (hasApplicationId(resource.data) && assistantOfApplication(resource.data.applicationId))
+        || (hasApplicationId(resource.data) && participantOf(resource.data.applicationId))
       );
+      allow list: if isAdmin() || (activeUser() && (
+        (('unitId' in resource.data) && managerHasUnit(resource.data.unitId))
+        || (hasApplicationId(resource.data) && managerOfApplication(resource.data.applicationId))
+        || (('unitId' in resource.data) && assistantHasUnit(resource.data.unitId))
+        || (hasApplicationId(resource.data) && assistantOfApplication(resource.data.applicationId))
+        || (hasApplicationId(resource.data) && participantOf(resource.data.applicationId))
+      ));
 
-      allow create: if isManager()
+      allow create: if isAdmin()
         || (
-          isActivityAssistant()
-          && assistantOfApplication(request.resource.data.applicationId)
-          && request.resource.data.unitId == applicationData(request.resource.data.applicationId).unitId
-        )
-        || (
+          hasApplicationId(request.resource.data)
+          &&
           activeUser()
           && participantOf(request.resource.data.applicationId)
           && request.resource.data.createdByUid == request.auth.uid
@@ -465,11 +649,36 @@ service cloud.firestore {
             candidateWindowOpen(request.resource.data.applicationId)
             || createsApprovedProposal(request.resource.data)
           )
+        )
+        || coordinatorCreatesSession(request.resource.data)
+        || (
+          hasApplicationId(request.resource.data)
+          && isActivityAssistant()
+          && assistantOfApplication(request.resource.data.applicationId)
+          && request.resource.data.unitId == applicationData(request.resource.data.applicationId).unitId
         );
 
-      allow update: if isManager()
+      allow update: if isAdmin()
+        || participantUpdatesCandidateSession()
         || (
-          assistantOfApplication(resource.data.applicationId)
+          hasApplicationId(resource.data)
+          && resource.data.status == 'proposed'
+          && request.resource.data.status == 'proposed'
+          && updatesApprovedProposal(resource.data.applicationId)
+          && request.resource.data.activityId == resource.data.activityId
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'activityName', 'activityDescription', 'participation', 'materials',
+            'notes', 'ownerName', 'date', 'time', 'period', 'duration', 'status',
+            'postApprovalProposal', 'reviewStatus', 'reviewNote',
+            'reviewSubmittedAt', 'updatedAt'
+          ])
+        )
+        || participantRequestsApprovedChange()
+        || participantResubmitsApprovedChange()
+        || coordinatorUpdatesSession()
+        || (
+          hasApplicationId(resource.data)
+          && assistantOfApplication(resource.data.applicationId)
           && request.resource.data.applicationId == resource.data.applicationId
           && request.resource.data.activityId == resource.data.activityId
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
@@ -483,54 +692,14 @@ service cloud.firestore {
             'adminAdjustmentBaseline', 'reviewStatus', 'reviewNote',
             'reviewSubmittedAt', 'reviewRequestNote', 'reviewBaseline', 'updatedAt'
           ])
-        )
-        || (
-          activeUser()
-          && participantOf(resource.data.applicationId)
-          && request.resource.data.applicationId == resource.data.applicationId
-          && request.resource.data.activityId == resource.data.activityId
-          && (
-            (
-              (
-                (
-                  candidateWindowOpen(resource.data.applicationId)
-                  && resource.data.status in ['proposed', 'plan_approved', 'confirmed']
-                  && request.resource.data.status == resource.data.status
-                  && participantOwnsEditableLegacy(resource.data)
-                )
-                || (
-                  candidateEditable(resource.data.applicationId)
-                  && ('adminAdjustmentStatus' in resource.data)
-                  && resource.data.adminAdjustmentStatus == 'requested'
-                  && request.resource.data.adminAdjustmentStatus == 'requested'
-                  && request.resource.data.status == resource.data.status
-                )
-              )
-              && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-                'activityName', 'activityDescription', 'participation', 'materials',
-                'notes', 'ownerName', 'date', 'time', 'period', 'duration', 'updatedAt'
-              ])
-            )
-            || participantSubmitsSessionAdjustment()
-            || participantRequestsApprovedChange()
-            || participantResubmitsApprovedChange()
-            || (
-              updatesApprovedProposal()
-              && resource.data.status == 'proposed'
-              && request.resource.data.status == 'proposed'
-              && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-                'activityName', 'activityDescription', 'participation', 'materials',
-                'notes', 'ownerName', 'date', 'time', 'period', 'duration', 'status',
-                'postApprovalProposal', 'reviewStatus', 'reviewNote',
-                'reviewSubmittedAt', 'updatedAt'
-              ])
-            )
-          )
         );
 
-      allow delete: if isManager()
-        || assistantOfApplication(resource.data.applicationId)
+      allow delete: if isAdmin()
+        || (isCoordinator() && managerOfSession(resource.data))
+        || (hasApplicationId(resource.data) && assistantOfApplication(resource.data.applicationId))
         || (
+          hasApplicationId(resource.data)
+          &&
           activeUser()
           && participantOf(resource.data.applicationId)
           && participantOwnsEditableLegacy(resource.data)
@@ -550,13 +719,20 @@ service cloud.firestore {
     }
 
     match /groups/{groupId} {
-      allow read: if isManager() || (
+      allow read: if managerHasUnit(resource.data.unitId) || (
         isActivityAssistant() && assistantHasUnit(resource.data.unitId)
       );
-      allow create: if isManager() || (
+      allow create: if managerHasUnit(request.resource.data.unitId) || (
         isActivityAssistant() && assistantHasUnit(request.resource.data.unitId)
       );
-      allow update, delete: if isManager() || (
+      allow delete: if isAdmin() || (isCoordinator() && managerHasUnit(resource.data.unitId)) || (
+        isActivityAssistant() && assistantHasUnit(resource.data.unitId)
+      );
+      allow update: if isAdmin() || (
+        isCoordinator()
+        && managerHasUnit(resource.data.unitId)
+        && request.resource.data.unitId == resource.data.unitId
+      ) || (
         isActivityAssistant()
         && assistantHasUnit(resource.data.unitId)
         && request.resource.data.unitId == resource.data.unitId

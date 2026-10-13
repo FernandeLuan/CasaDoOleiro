@@ -8,14 +8,15 @@ function setup({ready=true,enabled=true}={}){
   let now=0,script;
   const messages=[],errors=[],breadcrumbs=[];
   const scope={setTag(){},setExtras(){},setLevel(){},setFingerprint(){}};
+  let sentryOptions=null;
   const window={OLEIRO_SENTRY_CONFIG:{enabled,dsn:'test'},addEventListener(){},Sentry:{
-    init(){},withScope(fn){fn(scope)},captureException(e){errors.push(e)},
+    init(options){sentryOptions=options},withScope(fn){fn(scope)},captureException(e){errors.push(e)},
     captureMessage(message,level){messages.push({message,level})},addBreadcrumb(b){breadcrumbs.push(b)}
   }};
   runInNewContext(source,{window,Date:{now:()=>now},console,URL,location:{href:'https://example.test/',pathname:'/'},
     document:{createElement(){return {}},head:{appendChild(s){script=s}}}});
   if(ready&&script)script.onload();
-  return {api:window.OleiroMonitoring,messages,errors,breadcrumbs,time(n){now=n},ready(){script.onload()}};
+  return {api:window.OleiroMonitoring,messages,errors,breadcrumbs,time(n){now=n},ready(){script.onload()},sanitize(event){return sentryOptions.beforeSend(event)},sanitizeTransaction(event){return sentryOptions.beforeSendTransaction(event)},sanitizeSpan(span){return sentryOptions.beforeSendSpan(span)}};
 }
 const query=(s,ms,name='applications/by-id')=>s.api.captureSlowQuery({name,ms,count:1});
 
@@ -52,4 +53,49 @@ test('queued warnings flush and genuine service failures remain exceptions',()=>
 test('disabled monitoring and invalid durations do not emit',()=>{
   const disabled=setup({enabled:false});query(disabled,9000);assert.equal(disabled.messages.length,0);
   const s=setup();query(s,Infinity);query(s,NaN);assert.equal(s.messages.length,0);
+});
+
+test('Sentry removes personal data from exception strings, contexts, and request metadata',()=>{
+  const s=setup();
+  const clean=s.sanitize({
+    user:{email:'ana@example.test',id:'private'},
+    request:{url:'https://example.test/admin?email=ana%40example.test&token=private',headers:{authorization:'private'}},
+    message:'Failure for ana@example.test at +55 (47) 99999-1234',
+    exception:{values:[{type:'Error',value:'Contact ana@example.test / +55 47 99999-1234'}]},
+    contexts:{profile:{name:'Ana',phone:'+55 47 99999-1234'},details:{email:'ana@example.test'}},
+    breadcrumbs:[{message:'Called ana@example.test: +55 47 99999-1234',data:{contact:{phone:'+55 47 99999-1234'}}}],
+    extra:{email:'ana@example.test'},
+    tags:{role:'coordinator'}
+  });
+  assert.equal(clean.user,undefined);
+  assert.equal(clean.request.url,'https://example.test/admin');
+  assert.equal(clean.message,'Failure for [redacted-email] at [redacted-phone]');
+  assert.equal(clean.exception.values[0].value,'Contact [redacted-email] / [redacted-phone]');
+  assert.equal(clean.contexts.profile.name,'[redacted]');
+  assert.equal(clean.contexts.profile.phone,'[redacted]');
+  assert.equal(clean.contexts.details.email,'[redacted]');
+  assert.equal(clean.breadcrumbs[0].message,'Called [redacted-email]: [redacted-phone]');
+  assert.equal(clean.breadcrumbs[0].data.contact,'[redacted]');
+  assert.equal(clean.extra.email,'[redacted]');
+  assert.equal(clean.tags.role,'coordinator');
+});
+
+test('Sentry scrubs identifiers and trace URLs before sending transactions and spans',()=>{
+  const s=setup();
+  const transaction=s.sanitizeTransaction({
+    transaction:'https://example.test/app?email=ana%40example.test&token=private',
+    request:{url:'https://example.test/app?id=private'},
+    tags:{applicationId:'app-private',userId:'user-private'},
+    spans:[{description:'GET https://example.test/api?token=private',data:{url:'https://example.test/api?email=ana%40example.test',sessionId:'session-private'}}]
+  });
+  assert.equal(transaction.transaction,'https://example.test/app');
+  assert.equal(transaction.request.url,'https://example.test/app');
+  assert.equal(transaction.tags.applicationId,'[redacted]');
+  assert.equal(transaction.tags.userId,'[redacted]');
+  assert.equal(transaction.spans[0].description,'GET https://example.test/api');
+  assert.equal(transaction.spans[0].data.url,'https://example.test/api');
+  assert.equal(transaction.spans[0].data.sessionId,'[redacted]');
+  const span=s.sanitizeSpan({description:'GET https://example.test/api?email=ana%40example.test',data:{applicationId:'app-private'}});
+  assert.equal(span.description,'GET https://example.test/api');
+  assert.equal(span.data.applicationId,'[redacted]');
 });

@@ -27,6 +27,7 @@ export async function seedEmulators(){
     const approved=await auth.createUser({uid:'e2e-approved',email:'approved@oleiro.test',password:'Approved123!',displayName:'Aprovado E2E'});
     const indaial=await auth.createUser({uid:'e2e-indaial',email:'indaial@oleiro.test',password:'Indaial123!',displayName:'Indaial E2E'});
     const assistant=await auth.createUser({uid:'e2e-assistant',email:'assistant@oleiro.test',password:'Assistant123!',displayName:'Assistente Rodeio E2E'});
+    const coordinator=await auth.createUser({uid:'e2e-coordinator',email:'coordinator@oleiro.test',password:'Coordinator123!',displayName:'Coordenador Rodeio E2E'});
     const now=Timestamp.now(),deadline=Timestamp.fromDate(new Date(Date.now()+7*86400000));
 
     const batch=db.batch();
@@ -35,6 +36,7 @@ export async function seedEmulators(){
     batch.set(db.doc(`users/${approved.uid}`),{role:'volunteer',active:true,language:'pt',unitIds:['rodeio'],email:approved.email,firstPortalAccessAt:now,createdAt:now,updatedAt:now});
     batch.set(db.doc(`users/${indaial.uid}`),{role:'volunteer',active:true,language:'pt',unitIds:['indaial'],email:indaial.email,firstPortalAccessAt:now,createdAt:now,updatedAt:now});
     batch.set(db.doc(`users/${assistant.uid}`),{role:'activity_assistant',active:true,language:'pt',unitIds:['rodeio'],email:assistant.email,createdAt:now,updatedAt:now});
+    batch.set(db.doc(`users/${coordinator.uid}`),{role:'coordinator',active:true,language:'pt',unitIds:['rodeio'],email:coordinator.email,createdAt:now,updatedAt:now});
 
     batch.set(db.doc('units/rodeio'),{name:'Rodeio',active:true,acceptingVolunteers:true,createdAt:now,updatedAt:now});
     batch.set(db.doc('units/indaial'),{name:'Indaial',active:false,acceptingVolunteers:false,createdAt:now,updatedAt:now});

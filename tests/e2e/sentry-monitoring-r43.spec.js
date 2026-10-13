@@ -14,10 +14,15 @@ test('Sentry monitoring is privacy-safe and catches critical Firebase failures',
   expect(monitor).toContain('sendDefaultPii:false');
   expect(monitor).toContain("'permission-denied'");
   expect(monitor).toContain('beforeSend');
-  expect(monitor).toContain("if(event.user)delete event.user");
+  expect(monitor).toContain('if(clean.user)delete clean.user');
+  expect(monitor).toContain('beforeSendTransaction:beforeSend');
+  expect(monitor).toContain('beforeSendSpan:span=>scrub(span)');
+  expect(monitor).not.toContain("scope.setTag('applicationId'");
+  expect(monitor).not.toContain("scope.setTag('sessionId'");
   expect(monitor).toContain("category.startsWith('ui.')");
   expect(core).toContain('captureServiceError?.(error');
   expect(deploy).toContain('secrets.SENTRY_DSN');
+  expect(deploy).toContain('SENTRY_DSN repository secret is required for production releases.');
   expect(deploy).toContain("'enabled': bool(dsn)");
   [portal,admin,login].forEach(html=>{
     expect(html).toContain('monitoring-config.js');

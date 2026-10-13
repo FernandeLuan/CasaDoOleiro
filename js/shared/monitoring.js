@@ -4,6 +4,9 @@
   const sdkUrl='https://browser.sentry-cdn.com/10.53.1/bundle.tracing.replay.min.js';
   const criticalCodes=new Set(['permission-denied','failed-precondition','unauthenticated','unavailable','resource-exhausted','internal','deadline-exceeded','aborted','data-loss']);
   const sensitiveKey=/(email|phone|password|passwd|token|authorization|cookie|contact|secret|name|messageText)/i;
+  const identifierKey=/^(id|uid|uuid|applicationids?|sessionids?|userids?|participantids?|ownerid)$/i;
+  const emailPattern=/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi;
+  const phonePattern=/(?:\+?\d[\d\s().-]{7,}\d)/g;
   const queue=[];
   const slowQuerySeen=new Map();
   const monitoringStartedAt=Date.now();
@@ -16,41 +19,35 @@
     return raw.includes('/')?raw.split('/').pop():raw;
   }
   function cleanUrl(value){
-    try{const url=new URL(String(value||''),location.href);return `${url.origin}${url.pathname}`}
-    catch{return String(value||'').split('?')[0].split('#')[0]}
+    try{const url=new URL(String(value||''),location.href),path=url.pathname.replace(emailPattern,'[redacted-email]').replace(phonePattern,'[redacted-phone]');return `${url.origin}${path}`}
+    catch{return String(value||'').split('?')[0].split('#')[0].replace(emailPattern,'[redacted-email]').replace(phonePattern,'[redacted-phone]')}
+  }
+  function cleanText(value){
+    const clean=String(value||'').replace(/https?:\/\/[^\s"'<>]+/gi,url=>cleanUrl(url)).replace(emailPattern,'[redacted-email]').replace(phonePattern,'[redacted-phone]');
+    return clean.length>500?`${clean.slice(0,500)}…`:clean;
   }
   function scrub(value,depth=0){
     if(depth>4)return '[truncated]';
     if(value===null||value===undefined||typeof value==='boolean'||typeof value==='number')return value;
-    if(typeof value==='string'){
-      if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))return '[redacted-email]';
-      return value.length>500?`${value.slice(0,500)}…`:value;
-    }
+    if(typeof value==='string')return cleanText(value);
     if(Array.isArray(value))return value.slice(0,20).map(item=>scrub(item,depth+1));
     if(typeof value==='object'){
       const out={};
-      Object.entries(value).slice(0,40).forEach(([key,item])=>{out[key]=sensitiveKey.test(key)?'[redacted]':scrub(item,depth+1)});
+      Object.entries(value).slice(0,40).forEach(([key,item])=>{out[key]=sensitiveKey.test(key)||identifierKey.test(key)?'[redacted]':scrub(item,depth+1)});
       return out;
     }
     return String(value);
   }
   function beforeSend(event){
-    if(event.user)delete event.user;
-    if(event.request)event.request={url:cleanUrl(event.request.url||location.href)};
-    if(event.extra)event.extra=scrub(event.extra);
-    if(event.tags)event.tags=scrub(event.tags);
-    return event;
+    const clean=scrub(event);
+    if(clean.user)delete clean.user;
+    if(clean.request)clean.request={url:cleanUrl(clean.request.url||location.href)};
+    return clean;
   }
   function beforeBreadcrumb(breadcrumb){
     const category=String(breadcrumb?.category||'');
     if(category.startsWith('ui.'))return null;
-    const next={...breadcrumb};
-    if(next.data&&typeof next.data==='object'){
-      next.data=scrub(next.data);
-      if(next.data.url)next.data.url=cleanUrl(next.data.url);
-    }
-    if(next.message)next.message=scrub(next.message);
-    return next;
+    return scrub(breadcrumb);
   }
   function baseTags(meta={}){
     const role=String(window.state?.currentSession?.user?.role||'anonymous');
@@ -68,8 +65,6 @@
     let eventId=null;
     window.Sentry.withScope(scope=>{
       const tags=baseTags(meta);Object.entries(tags).forEach(([key,value])=>value&&scope.setTag(key,String(value)));
-      if(meta.applicationId)scope.setTag('applicationId',String(meta.applicationId));
-      if(meta.sessionId)scope.setTag('sessionId',String(meta.sessionId));
       if(meta.status)scope.setTag('recordStatus',String(meta.status));
       if(meta.extra)scope.setExtras(scrub(meta.extra));
       if(meta.action==='slow_firestore_query'){
@@ -134,6 +129,8 @@
           replaysSessionSampleRate:0,
           replaysOnErrorSampleRate:0.1,
           beforeSend,
+          beforeSendTransaction:beforeSend,
+          beforeSendSpan:span=>scrub(span),
           beforeBreadcrumb
         });
         initialized=true;flushQueue();

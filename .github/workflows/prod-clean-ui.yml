@@ -20,10 +20,10 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '24'
       - name: Validate source architecture
@@ -59,7 +59,7 @@ jobs:
           node -e "for (const p of ['firebase.json','firestore.indexes.json','functions/package.json','package.json']) JSON.parse(require('fs').readFileSync(p,'utf8'))"
       - name: Preserve production data contracts
         run: bash scripts/check-real-data-contracts.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: canonical-production-site
           path: release-dist/
@@ -78,16 +78,16 @@ jobs:
       APP_ENV: production
       E2E_SITE_ROOT: release-dist
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '24'
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
         with:
           distribution: temurin
           java-version: '21'
       - name: Install test dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
       - name: Install selected browser
         run: npx playwright install --with-deps ${{ matrix.project == 'chromium' && 'chromium' || 'webkit' }}
       - name: Build the canonical site under test
@@ -108,7 +108,7 @@ jobs:
             2>&1 | tee .e2e-diagnostics/ci.log
       - name: Upload browser diagnostics
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: e2e-${{ matrix.project }}-${{ matrix.shard }}-4
           path: |

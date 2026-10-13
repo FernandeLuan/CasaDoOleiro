@@ -1,0 +1,21 @@
+# Node dependencies
+node_modules/
+
+# Generated site builds
+site-dist/
+release-dist/
+
+# Browser/emulator test artifacts
+playwright-report/
+test-results/
+.e2e-diagnostics/
+firestore-debug.log
+firebase-debug.log
+ui-debug.log
+
+# Local Firebase emulator state and generated credentials
+.firebase/
+gha-creds-*.json
+.env
+.env.*
+!.env.example

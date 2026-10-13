@@ -2,18 +2,17 @@
   const services=window.OleiroServices=window.OleiroServices||{};
   services.applications=services.applications||{};
   services.applications.processExpiredPending=async function({pageSize=50}={}){
+    if(services.accessScope?.isActivityAssistant?.())return 0;
     return services.run(async()=>{
       const context=await services.firebase();const {firestore}=context.modules;let total=0;
       const max=Math.max(1,Math.min(Number(pageSize)||50,100));
       for(let page=0;page<20;page++){
         const started=Date.now();
-        const snapshot=await firestore.getDocs(firestore.query(
-          firestore.collection(context.db,'applications'),
-          firestore.where('status','==','pending'),
-          firestore.where('planningDeadlineAt','<=',firestore.Timestamp.fromDate(new Date())),
-          firestore.orderBy('planningDeadlineAt','asc'),
-          firestore.limit(max)
-        ));
+        const constraints=[firestore.where('status','==','pending'),firestore.where('planningDeadlineAt','<=',firestore.Timestamp.fromDate(new Date()))];
+        const applyScope=services.accessScope?.applyUnitFilter;
+        if(applyScope&&!applyScope(firestore,constraints,'all'))return total;
+        constraints.push(firestore.orderBy('planningDeadlineAt','asc'),firestore.limit(max));
+        const snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'applications'),...constraints));
         services.recordQuery?.('applications/expired-pending',started,snapshot.size,{page:page+1,limit:max});
         if(snapshot.empty)break;
         const mutations=[],now=firestore.serverTimestamp();
