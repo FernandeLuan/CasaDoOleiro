@@ -24,7 +24,7 @@ test('coordinator screens query only assigned-unit records',async({page})=>{
   await page.locator('#email').fill('coordinator@oleiro.test');
   await page.locator('#password').fill('Coordinator123!');
   await page.locator('#loginButton').click();
-  await expect(page).toHaveURL(/\/admin\//,{timeout:30_000});
+  await expect(page).toHaveURL(url=>url.pathname.startsWith('/admin/'),{timeout:30_000});
   await page.waitForFunction(()=>window.state?.currentSession?.user?.role==='coordinator'&&typeof window.OleiroServices?.planning?.listScheduleRange==='function',undefined,{timeout:20_000});
 
   const result=await page.evaluate(async()=>{
