@@ -47,6 +47,6 @@ test('non-manager roles do not inherit unrestricted query scope',()=>{
     const constraints=[];
     assert.equal(scope.applyUnitFilter(firestore,constraints,'all'),false);
     assert.equal(constraints.length,0);
-    assert.deepEqual(scope.unitIds(),[]);
+    assert.equal(scope.unitIds().length,0);
   }
 });
