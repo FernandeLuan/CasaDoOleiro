@@ -154,6 +154,12 @@ test('coordinators cannot cross units or change a session unit or application li
   await assertFails(deleteDoc(docRef(db,'activity_sessions','session-indaial')));
 });
 
+test('activity assistants cannot create sessions that reference another application activity',async()=>{
+  const db=dbFor('assistant-rodeio');
+  await assertSucceeds(setDoc(docRef(db,'activity_sessions','assistant-local-session'),{applicationId:'application-rodeio',activityId:'activity-rodeio',unitId:'rodeio',status:'confirmed'}));
+  await assertFails(setDoc(docRef(db,'activity_sessions','assistant-mismatched-session'),{applicationId:'application-rodeio',activityId:'activity-indaial',unitId:'rodeio',status:'confirmed'}));
+});
+
 test('coordinators can manage groups and unit settings only in their units',async()=>{
   const db=dbFor('coordinator-rodeio');
   await assertSucceeds(getDoc(docRef(db,'groups','group-rodeio')));
