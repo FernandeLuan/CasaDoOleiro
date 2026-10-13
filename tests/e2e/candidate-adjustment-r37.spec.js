@@ -46,7 +46,21 @@ test('analysis remains editable; requested adjustment can add new drafts and res
   await relogin(page,'admin@oleiro.test','Admin123!','admin');const modal=await openVolunteerByStatus(page,'analysis','Voluntário E2E');
   const day=modal.locator('.planning-person-day[data-plan-date="2026-09-15"]');await ensureDayVisible(day);const card=day.locator('.admin-portal-activity-card').filter({hasText:'Oficina candidato E2E'});await expect(card).toBeVisible();
   await card.locator('.planning-activity-trigger').click();await card.getByRole('button',{name:/Pedir ajuste$/}).click();await page.locator('#r31SessionAdjustNote').fill('Trocar o período desta atividade.');await page.locator('#r31SessionAdjustSave').click();
-  await expect.poll(()=>page.evaluate(async()=>{const context=await window.OleiroServices.firebase();const {firestore}=context.modules;const read=firestore.getDocFromServer||firestore.getDoc;const snapshot=await read(firestore.doc(context.db,'applications','e2e-application'));return snapshot.exists()?snapshot.data()?.status:null}),{timeout:20_000}).toBe('adjustments');
+  // The click does not await the async onclick handler. Wait until it has completed successfully
+  // (the confirmation button disappears only after the batch write resolves) before navigating.
+  await expect(page.locator('#r31SessionAdjustSave')).toHaveCount(0,{timeout:20_000});
+  await expect.poll(()=>page.evaluate(async()=>{
+    const context=await window.OleiroServices.firebase(),{firestore}=context.modules;
+    const read=firestore.getDocFromServer||firestore.getDoc;
+    const [app,session]=await Promise.all([
+      read(firestore.doc(context.db,'applications','e2e-application')),
+      read(firestore.doc(context.db,'activity_sessions','e2e-candidate-session'))
+    ]);
+    return {
+      applicationStatus:app.exists()?app.data()?.status||null:null,
+      sessionAdjustment:session.exists()?session.data()?.adminAdjustmentStatus||null:null
+    };
+  }),{timeout:20_000}).toEqual({applicationStatus:'adjustments',sessionAdjustment:'requested'});
 
   await relogin(page,'voluntario@oleiro.test','Volunteer123!','portal');
   await expect.poll(()=>page.evaluate(async()=>{
