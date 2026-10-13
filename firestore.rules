@@ -166,13 +166,17 @@ service cloud.firestore {
       );
     }
 
+    function activityPathFor(activityId) {
+      return /databases/$(database)/documents/activities/$(activityId);
+    }
+
     function sessionActivityMatchesApplication(data) {
       return hasApplicationId(data)
         && ('activityId' in data)
         && data.activityId is string
         && data.activityId.size() > 0
-        && existsAfter(/databases/$(database)/documents/activities/$(data.activityId))
-        && getAfter(/databases/$(database)/documents/activities/$(data.activityId)).data.applicationId == data.applicationId;
+        && existsAfter(activityPathFor(data.activityId))
+        && getAfter(activityPathFor(data.activityId)).data.applicationId == data.applicationId;
     }
 
     function coordinatorCreatesSession(data) {
