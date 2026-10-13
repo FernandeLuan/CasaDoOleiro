@@ -137,10 +137,12 @@
       },{loading:false,monitor:{area:'applications',action:'occupancy_month'}});
     },
 
-    async getById(id,{enrichProfiles=true}={}){
+    async getById(id,{enrichProfiles=true,server=false}={}){
       return services.run(async()=>{
-        const context=await services.firebase(),applicationId=String(id);
-        const snapshot=await services.readDocument(context,'applications',applicationId,'applications/by-id');
+        const context=await services.firebase(),{firestore}=context.modules,applicationId=String(id);
+        const snapshot=server&&typeof firestore.getDocFromServer==='function'
+          ?await firestore.getDocFromServer(firestore.doc(context.db,'applications',applicationId))
+          :await services.readDocument(context,'applications',applicationId,'applications/by-id');
         if(!snapshot.exists())return null;
         const item=mapApplication(snapshot);return enrichProfiles?enrichApplicationProfiles(context,item):item;
       },{loading:false});

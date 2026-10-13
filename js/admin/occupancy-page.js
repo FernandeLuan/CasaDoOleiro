@@ -181,8 +181,9 @@
 
   async function loadData(){
     const services=window.OleiroServices;if(!services?.applications?.listOccupancyMonth)throw new Error('Serviço de ocupação indisponível.');
-    const allowed=services.accessScope?.unitIds?.();
-    if(Array.isArray(allowed)&&allowed.length===0){
+    const allowed=services.accessScope?.unitIds?.(),user=state.currentSession?.user||{},role=String(user.role||state.currentSession?.role||'').toLowerCase(),assignedUnits=Array.isArray(user.unitIds)?user.unitIds.map(value=>String(value||'').trim().toLowerCase()).filter(Boolean):[];
+    const missingAssistantUnit=role==='activity_assistant'&&assignedUnits.length===0;
+    if((Array.isArray(allowed)&&allowed.length===0)||missingAssistantUnit){
       state.occupancyUnits=[];state.occupancyUnitId='';state.occupancyCandidates=[];state.occupancyTodayCandidates=[];state.occupancyScreenError='Nenhuma unidade foi atribuída a este usuário.';return;
     }
     let rows=units();if(services.units?.list){try{rows=await services.units.list({includeInactive:false})||rows}catch(error){console.warn('Não foi possível atualizar as unidades da ocupação:',error)}}
