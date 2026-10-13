@@ -141,6 +141,7 @@ test('coordinators cannot cross units or change a session unit or application li
   await assertSucceeds(getDoc(docRef(db,'activity_sessions','session-rodeio-legacy')));
   await assertFails(getDoc(docRef(db,'activity_sessions','session-indaial')));
   await assertSucceeds(setDoc(docRef(db,'activity_sessions','new-local-session'),{applicationId:'application-rodeio',activityId:'activity-rodeio',unitId:'rodeio',status:'confirmed'}));
+  await assertFails(setDoc(docRef(db,'activity_sessions','mismatched-activity-session'),{applicationId:'application-rodeio',activityId:'activity-indaial',unitId:'rodeio',status:'confirmed'}));
   await assertFails(setDoc(docRef(db,'activity_sessions','new-foreign-session'),{applicationId:'application-indaial',activityId:'activity-indaial',unitId:'indaial',status:'confirmed'}));
   await assertFails(setDoc(docRef(db,'activity_sessions','forged-session'),{applicationId:'application-rodeio',activityId:'activity-rodeio',unitId:'indaial',status:'confirmed'}));
   await assertSucceeds(updateDoc(docRef(db,'activity_sessions','session-rodeio'),{status:'proposed'}));
