@@ -10,7 +10,7 @@ Os eventos de negócio já gravados em `applications/{applicationId}/history/{ev
 
 Cada evento processado cria um documento em `notification_deliveries`. O ledger impede reenvio do mesmo evento e o Worker também usa uma chave de idempotência por destinatário no Resend.
 
-O progresso da leitura é persistido em `notification_dispatcher_state/email-dispatcher`. O Worker percorre o histórico do mais antigo para o mais recente e avança o cursor somente depois de tratar cada evento; se um envio falhar, interrompe o lote para que eventos posteriores não ultrapassem o evento pendente. Não apague esse documento para evitar reprocessamento desnecessário.
+O progresso da leitura é persistido em `notification_dispatcher_state/email-dispatcher`. O Worker percorre o histórico do mais antigo para o mais recente e avança o cursor somente depois de tratar cada evento; se um envio falhar, interrompe o lote para que eventos posteriores não ultrapassem o evento pendente. Um lock temporário em `notification_dispatcher_state/dispatcher-lock` impede que a execução agendada e a execução manual concorram pelo cursor; locks abandonados são recuperados após 15 minutos. Não apague o documento de cursor para evitar reprocessamento desnecessário.
 
 ## Modos
 
