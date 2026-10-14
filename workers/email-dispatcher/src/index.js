@@ -124,6 +124,29 @@ async function recentEvents(env,state){
   const response=await googleFetch(env,url,{method:'POST',body:JSON.stringify({structuredQuery})});if(!response.ok)throw new Error(`Firestore history query falhou (${response.status}): ${await response.text()}`);
   const rows=await response.json();return rows.filter(r=>r.document).map(r=>decodeDoc(r.document));
 }
+async function acquireRunLock(env){
+  const path='notification_dispatcher_state/dispatcher-lock',existing=await getDoc(env,path),now=Date.now();
+  if(existing){
+    const claimedAt=Date.parse(existing.claimedAt||'');
+    if(Number.isFinite(claimedAt)&&now-claimedAt<15*60*1000)return '';
+    const removed=await googleFetch(env,docUrl(env,path),{method:'DELETE'});
+    if(!removed.ok&&removed.status!==404)throw new Error(`Falha ao recuperar lock do dispatcher (${removed.status}): ${await removed.text()}`);
+  }
+  const token=crypto.randomUUID(),payload={token,claimedAt:new Date().toISOString()};
+  const url=`${FIRESTORE_API}/projects/${encodeURIComponent(project(env))}/databases/(default)/documents/notification_dispatcher_state?documentId=dispatcher-lock`;
+  const response=await googleFetch(env,url,{method:'POST',body:JSON.stringify(fields(payload))});
+  if(response.status===409)return '';
+  if(!response.ok)throw new Error(`Falha ao adquirir lock do dispatcher (${response.status}): ${await response.text()}`);
+  return token;
+}
+async function releaseRunLock(env,token){
+  try{
+    const path='notification_dispatcher_state/dispatcher-lock',existing=await getDoc(env,path);
+    if(existing?.token!==token)return;
+    const response=await googleFetch(env,docUrl(env,path),{method:'DELETE'});
+    if(!response.ok&&response.status!==404)console.error('Falha ao liberar lock do dispatcher',response.status,await response.text());
+  }catch(error){console.error('Falha ao liberar lock do dispatcher',error)}
+}
 async function saveDispatcherCursor(env,event){
   const path='notification_dispatcher_state/email-dispatcher',existing=await getDoc(env,path);
   const payload={cursorCreatedAt:event.createdAt,cursorName:event._name,updatedAt:new Date().toISOString()};
@@ -161,16 +184,20 @@ async function processEvent(env,event,mode,appCache){
 export async function runDispatcher(env){
   const mode=normalizeMode(env.EMAIL_MODE);if(mode==='off')return {mode,processed:0,sent:0,tested:0,failed:0,ignored:0,message:'Envio desativado.'};
   if(mode==='test'&&!csv(env.TEST_EMAIL).length)throw new Error('TEST_EMAIL é obrigatório em EMAIL_MODE=test.');
-  const state=await dispatcherState(env),events=await recentEvents(env,state),appCache=new Map(),summary={mode,scanned:events.length,processed:0,sent:0,tested:0,failed:0,ignored:0,alreadyProcessed:0,errors:[]};
-  for(const event of events){
-    try{
-      if(!SUPPORTED_TYPES.has(text(event.type))){summary.ignored++;await saveDispatcherCursor(env,event);continue}
-      const result=await processEvent(env,event,mode,appCache);summary.processed++;
-      if(result.status==='sent')summary.sent++;else if(result.status==='tested')summary.tested++;else if(result.status==='already_processed')summary.alreadyProcessed++;else summary.ignored++;
-      await saveDispatcherCursor(env,event);
-    }catch(error){summary.failed++;summary.errors.push(String(error?.message||error).slice(0,300));break}
-  }
-  return summary;
+  const lockToken=await acquireRunLock(env);
+  if(!lockToken)return {mode,processed:0,sent:0,tested:0,failed:0,ignored:0,skipped:'already_running',message:'Outro processamento está em andamento.'};
+  try{
+    const state=await dispatcherState(env),events=await recentEvents(env,state),appCache=new Map(),summary={mode,scanned:events.length,processed:0,sent:0,tested:0,failed:0,ignored:0,alreadyProcessed:0,errors:[]};
+    for(const event of events){
+      try{
+        if(!SUPPORTED_TYPES.has(text(event.type))){summary.ignored++;await saveDispatcherCursor(env,event);continue}
+        const result=await processEvent(env,event,mode,appCache);summary.processed++;
+        if(result.status==='sent')summary.sent++;else if(result.status==='tested')summary.tested++;else if(result.status==='already_processed')summary.alreadyProcessed++;else summary.ignored++;
+        await saveDispatcherCursor(env,event);
+      }catch(error){summary.failed++;summary.errors.push(String(error?.message||error).slice(0,300));break}
+    }
+    return summary;
+  }finally{await releaseRunLock(env,lockToken)}
 }
 function json(data,status=200){return new Response(JSON.stringify(data,null,2),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}})}
 export default {
