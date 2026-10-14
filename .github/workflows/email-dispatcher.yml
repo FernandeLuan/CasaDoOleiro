@@ -6,7 +6,7 @@ on:
     paths:
       - 'workers/email-dispatcher/**'
       - 'tests/email-dispatcher-r48.spec.mjs'
-      - 'js/services/history-hooks-r27.js'
+      - 'js/services/history-hooks.js'
       - 'firestore.indexes.json'
       - 'package.json'
       - '.github/workflows/email-dispatcher.yml'
@@ -31,7 +31,7 @@ jobs:
       - name: Validate JavaScript syntax
         run: |
           node --check workers/email-dispatcher/src/index.js
-          node --check js/services/history-hooks-r27.js
+          node --check js/services/history-hooks.js
 
       - name: Validate Firestore indexes JSON
         run: node -e "JSON.parse(require('fs').readFileSync('firestore.indexes.json','utf8'))"
