@@ -114,13 +114,24 @@ function project(env){const id=text(env.FIREBASE_PROJECT_ID);if(!id)throw new Er
 async function googleFetch(env,url,options={}){const token=await googleAccessToken(env),response=await fetch(url,{...options,headers:{authorization:`Bearer ${token}`,'content-type':'application/json',...(options.headers||{})}});return response}
 function docUrl(env,path){return `${FIRESTORE_API}/projects/${encodeURIComponent(project(env))}/databases/(default)/documents/${path.split('/').map(encodeURIComponent).join('/')}`}
 async function getDoc(env,path){const response=await googleFetch(env,docUrl(env,path));if(response.status===404)return null;if(!response.ok)throw new Error(`Firestore GET ${path} falhou (${response.status}): ${await response.text()}`);return decodeDoc(await response.json())}
-async function recentEvents(env){
+async function dispatcherState(env){return getDoc(env,'notification_dispatcher_state/email-dispatcher')}
+async function recentEvents(env,state){
   const start=text(env.NOTIFICATION_START_AT);if(!start||Number.isNaN(Date.parse(start)))throw new Error('NOTIFICATION_START_AT deve ser um ISO timestamp válido.');
   const limit=Math.max(1,Math.min(Number(env.BATCH_SIZE)||100,500));
   const url=`${FIRESTORE_API}/projects/${encodeURIComponent(project(env))}/databases/(default)/documents:runQuery`;
-  const body={structuredQuery:{from:[{collectionId:'history',allDescendants:true}],where:{fieldFilter:{field:{fieldPath:'createdAt'},op:'GREATER_THAN_OR_EQUAL',value:{timestampValue:new Date(start).toISOString()}}},orderBy:[{field:{fieldPath:'createdAt'},direction:'DESCENDING'}],limit}};
-  const response=await googleFetch(env,url,{method:'POST',body:JSON.stringify(body)});if(!response.ok)throw new Error(`Firestore history query falhou (${response.status}): ${await response.text()}`);
+  const structuredQuery={from:[{collectionId:'history',allDescendants:true}],where:{fieldFilter:{field:{fieldPath:'createdAt'},op:'GREATER_THAN_OR_EQUAL',value:{timestampValue:new Date(start).toISOString()}}},orderBy:[{field:{fieldPath:'createdAt'},direction:'ASCENDING'},{field:{fieldPath:'__name__'},direction:'ASCENDING'}],limit};
+  if(state?.cursorCreatedAt&&state?.cursorName)structuredQuery.startAt={values:[{timestampValue:state.cursorCreatedAt},{referenceValue:state.cursorName}],before:false};
+  const response=await googleFetch(env,url,{method:'POST',body:JSON.stringify({structuredQuery})});if(!response.ok)throw new Error(`Firestore history query falhou (${response.status}): ${await response.text()}`);
   const rows=await response.json();return rows.filter(r=>r.document).map(r=>decodeDoc(r.document));
+}
+async function saveDispatcherCursor(env,event){
+  const path='notification_dispatcher_state/email-dispatcher',existing=await getDoc(env,path);
+  const payload={cursorCreatedAt:event.createdAt,cursorName:event._name,updatedAt:new Date().toISOString()};
+  if(existing){const response=await googleFetch(env,docUrl(env,path),{method:'PATCH',body:JSON.stringify(fields(payload))});if(!response.ok)throw new Error(`Falha ao salvar cursor do dispatcher (${response.status}): ${await response.text()}`);return}
+  const url=`${FIRESTORE_API}/projects/${encodeURIComponent(project(env))}/databases/(default)/documents/notification_dispatcher_state?documentId=email-dispatcher`;
+  const response=await googleFetch(env,url,{method:'POST',body:JSON.stringify(fields(payload))});
+  if(response.status===409){const retry=await googleFetch(env,docUrl(env,path),{method:'PATCH',body:JSON.stringify(fields(payload))});if(!retry.ok)throw new Error(`Falha ao atualizar cursor concorrente (${retry.status}): ${await retry.text()}`);return}
+  if(!response.ok)throw new Error(`Falha ao criar cursor do dispatcher (${response.status}): ${await response.text()}`);
 }
 function eventIdentity(event){const parts=text(event._name).split('/documents/')[1]?.split('/')||[];const appIndex=parts.lastIndexOf('applications'),historyIndex=parts.lastIndexOf('history');if(appIndex<0||historyIndex<0)return null;return {applicationId:parts[appIndex+1],eventId:parts[historyIndex+1],path:parts.join('/')}}
 function deliveryId(identity){return base64UrlText(identity.path).slice(0,1200)}
@@ -150,8 +161,15 @@ async function processEvent(env,event,mode,appCache){
 export async function runDispatcher(env){
   const mode=normalizeMode(env.EMAIL_MODE);if(mode==='off')return {mode,processed:0,sent:0,tested:0,failed:0,ignored:0,message:'Envio desativado.'};
   if(mode==='test'&&!csv(env.TEST_EMAIL).length)throw new Error('TEST_EMAIL é obrigatório em EMAIL_MODE=test.');
-  const events=await recentEvents(env),appCache=new Map(),summary={mode,scanned:events.length,processed:0,sent:0,tested:0,failed:0,ignored:0,alreadyProcessed:0,errors:[]};
-  for(const event of events){if(!SUPPORTED_TYPES.has(text(event.type))){summary.ignored++;continue}try{const result=await processEvent(env,event,mode,appCache);summary.processed++;if(result.status==='sent')summary.sent++;else if(result.status==='tested')summary.tested++;else if(result.status==='already_processed')summary.alreadyProcessed++;else summary.ignored++;}catch(error){summary.failed++;summary.errors.push(String(error?.message||error).slice(0,300))}}
+  const state=await dispatcherState(env),events=await recentEvents(env,state),appCache=new Map(),summary={mode,scanned:events.length,processed:0,sent:0,tested:0,failed:0,ignored:0,alreadyProcessed:0,errors:[]};
+  for(const event of events){
+    try{
+      if(!SUPPORTED_TYPES.has(text(event.type))){summary.ignored++;await saveDispatcherCursor(env,event);continue}
+      const result=await processEvent(env,event,mode,appCache);summary.processed++;
+      if(result.status==='sent')summary.sent++;else if(result.status==='tested')summary.tested++;else if(result.status==='already_processed')summary.alreadyProcessed++;else summary.ignored++;
+      await saveDispatcherCursor(env,event);
+    }catch(error){summary.failed++;summary.errors.push(String(error?.message||error).slice(0,300));break}
+  }
   return summary;
 }
 function json(data,status=200){return new Response(JSON.stringify(data,null,2),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store'}})}
