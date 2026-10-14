@@ -1,0 +1,16 @@
+name = "casa-do-oleiro-email-dispatcher"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+[triggers]
+crons = ["*/5 * * * *"]
+
+[vars]
+EMAIL_MODE = "off"
+BATCH_SIZE = "100"
+FIREBASE_PROJECT_ID = ""
+EMAIL_FROM = ""
+NOTIFICATION_START_AT = ""
+
+[observability]
+enabled = true
