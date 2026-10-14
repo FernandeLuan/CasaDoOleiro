@@ -5,7 +5,7 @@ on:
     branches: [main]
     paths:
       - 'workers/email-dispatcher/**'
-      - 'tests/email-dispatcher-r48.spec.mjs'
+      - 'tests/email-dispatcher.spec.mjs'
       - 'js/services/history-hooks.js'
       - 'firestore.indexes.json'
       - 'package.json'
