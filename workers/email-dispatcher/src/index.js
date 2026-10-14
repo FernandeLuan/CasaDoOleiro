@@ -149,7 +149,7 @@ async function releaseRunLock(env,token){
 }
 async function saveDispatcherCursor(env,event){
   const path='notification_dispatcher_state/email-dispatcher',existing=await getDoc(env,path);
-  const payload={cursorCreatedAt:event.createdAt,cursorName:event._name,updatedAt:new Date().toISOString()};
+  const payload={cursorCreatedAt:new Date(event.createdAt),cursorName:event._name,updatedAt:new Date().toISOString()};
   if(existing){const response=await googleFetch(env,docUrl(env,path),{method:'PATCH',body:JSON.stringify(fields(payload))});if(!response.ok)throw new Error(`Falha ao salvar cursor do dispatcher (${response.status}): ${await response.text()}`);return}
   const url=`${FIRESTORE_API}/projects/${encodeURIComponent(project(env))}/databases/(default)/documents/notification_dispatcher_state?documentId=email-dispatcher`;
   const response=await googleFetch(env,url,{method:'POST',body:JSON.stringify(fields(payload))});
