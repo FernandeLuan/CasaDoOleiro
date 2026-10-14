@@ -8,7 +8,7 @@ crons = ["*/5 * * * *"]
 [vars]
 EMAIL_MODE = "off"
 BATCH_SIZE = "100"
-FIREBASE_PROJECT_ID = ""
+FIREBASE_PROJECT_ID = "casadooleiro-35c4e"
 EMAIL_FROM = ""
 NOTIFICATION_START_AT = ""
 
