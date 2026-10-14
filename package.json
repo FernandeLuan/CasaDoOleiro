@@ -6,7 +6,8 @@
     "test:e2e": "playwright test",
     "test:e2e:seed": "node tests/e2e/seed.mjs",
     "test:firestore:rules": "node --test tests/emulator/firestore-unit-isolation.test.mjs",
-    "test:e2e:emulated": "firebase emulators:exec --only auth,firestore --project demo-casadooleiro \"npm run test:firestore:rules && npm run test:e2e:seed && npm run test:e2e\""
+    "test:e2e:emulated": "firebase emulators:exec --only auth,firestore --project demo-casadooleiro \"npm run test:firestore:rules && npm run test:e2e:seed && npm run test:e2e\"",
+    "test:email": "node --test tests/email-dispatcher.spec.mjs"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^6.0.0",

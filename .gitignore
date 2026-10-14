@@ -19,3 +19,7 @@ gha-creds-*.json
 .env
 .env.*
 !.env.example
+
+# Local email dispatcher credentials
+workers/email-dispatcher/.dev.vars
+workers/email-dispatcher/.env
