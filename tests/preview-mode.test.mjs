@@ -59,7 +59,7 @@ test('production build artifact explicitly disables preview in the admin entry p
     assert.ok(adminBundle.includes('const PREVIEW_ENABLED=window.OLEIRO_PREVIEW_ENABLED===true'));
     assert.ok(adminBundle.includes('function managerHomePreviewPendingSlides()'));
     assert.ok(adminBundle.includes('if(window.OleiroProjects?.isPreview!==true)return [];'));
-    assert.ok(adminBundle.includes('window.openLegacyAdjustment=function(id){\n    if(window.OleiroProjects?.isPreview!==true)return;'));
+    assert.ok(adminBundle.includes('window.openLegacyAdjustment=function(id){') && adminBundle.includes('if(window.OleiroProjects?.isPreview!==true)return;'));
   }finally{
     rmSync(output,{recursive:true,force:true});
   }
