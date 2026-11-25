@@ -10,7 +10,7 @@
   window.__OLEIRO_PORTAL_RELEASE_NOTES__=true;
 
   const ALWAYS_SHOW_HOME_NOTICES=false; // produção: respeitar a dispensa do usuário e só reexibir quando ANNOUNCEMENT.id mudar
-  const ANNOUNCEMENT={
+  let ANNOUNCEMENT={
     id:'2026-09-portal-projeto-legado-v3',
     eyebrow:'Nova atualização',
     title:'Tem novidade por aqui ✨',
@@ -30,6 +30,7 @@
   };
 
   const esc=value=>typeof escapeHtml==='function'?escapeHtml(value):String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  let RELEASE_HISTORY=[];
   let releaseMeta=null;
   let metaPromise=null;
   let homeSlideIndex=0;
@@ -58,9 +59,24 @@
   async function loadReleaseMeta(){
     if(releaseMeta)return releaseMeta;
     if(metaPromise)return metaPromise;
-    metaPromise=fetch('../release.json',{cache:'no-store'})
-      .then(response=>response.ok?response.json():null)
-      .then(meta=>{releaseMeta=meta||null;updateMetaLabels();return releaseMeta})
+    const previousId=ANNOUNCEMENT.id;
+    metaPromise=Promise.all([
+      fetch('../release.json',{cache:'no-store'}).then(response=>response.ok?response.json():null).catch(()=>null),
+      fetch('../release-notes.json',{cache:'no-store'}).then(response=>response.ok?response.json():null).catch(()=>null)
+    ])
+      .then(([meta,notes])=>{
+        releaseMeta=meta||null;
+        RELEASE_HISTORY=Array.isArray(notes?.releases)?notes.releases:[];
+        const latest=RELEASE_HISTORY[0];
+        if(latest){
+          ANNOUNCEMENT={...ANNOUNCEMENT,...latest};
+          ANNOUNCEMENT.homeSlides=Array.isArray(latest.homeSlides)&&latest.homeSlides.length?latest.homeSlides:[{title:latest.title,summary:latest.summary}];
+          ANNOUNCEMENT.items=Array.isArray(latest.items)?latest.items:[];
+        }
+        updateMetaLabels();
+        if(previousId!==ANNOUNCEMENT.id&&state?.volunteerPage==='home'&&typeof render==='function')render();
+        return releaseMeta;
+      })
       .catch(()=>null)
       .finally(()=>{metaPromise=null});
     return metaPromise;
@@ -413,6 +429,7 @@
         <div><small>${esc(ANNOUNCEMENT.eyebrow)} <span data-release-meta></span></small><strong>${esc(ANNOUNCEMENT.title)}</strong><p>${esc(ANNOUNCEMENT.summary)}</p></div>
       </div>
       <div class="release-notes-list">${ANNOUNCEMENT.items.map(itemHtml).join('')}</div>
+      ${RELEASE_HISTORY.length>1?'<div class="release-history-list"><strong>Atualizações anteriores</strong>'+RELEASE_HISTORY.slice(1).map(release=>'<details class="release-history-entry"><summary><span>Versão '+esc(release.version||'')+' · '+esc(release.title||'Atualização')+'</span><i class="fa-solid fa-chevron-down"></i></summary><p>'+esc(release.summary||'')+'</p><div class="release-notes-list">'+(Array.isArray(release.items)?release.items.map(itemHtml).join(''):'')+'</div></details>').join('')+'</div>':''}
     </div>`;
     const footer=`<div class="release-notes-actions"><button class="btn btn-outline" type="button" onclick="closeModal()">Fechar</button><button class="btn btn-primary" type="button" onclick="closeModal();navigateVolunteer('${ANNOUNCEMENT.ctaPage}')"><i class="fa-solid fa-seedling"></i>${esc(ANNOUNCEMENT.ctaLabel)}</button></div>`;
     openModal('O que mudou?','',body,footer);
