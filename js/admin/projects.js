@@ -137,7 +137,6 @@
       ${p.driveUrl?`<a class="legacy-admin-meta-drive" href="${esc(p.driveUrl)}" target="_blank" rel="noopener noreferrer"><span><i class="fa-brands fa-google-drive"></i></span><div><strong>Drive</strong><small>Fotos e arquivos do projeto</small></div><i class="fa-solid fa-arrow-up-right-from-square"></i></a>`:''}
     </div>`;
   }
-
   function projectCard(p){
     return `<button class="list-item clickable project-ui-row project-ui-list-row" type="button" onclick="openLegacyProjectAdmin('${esc(p.id)}')">
       <span class="avatar project-ui-avatar"><i class="fa-solid fa-seedling"></i></span>
@@ -199,7 +198,7 @@
       ${p.status!=='completed'&&p.result?`<div class="legacy-admin-result legacy-admin-result-v2"><span><i class="fa-solid fa-circle-check"></i></span><div><small>Resultado final</small><p>${esc(p.result)}</p></div></div>`:''}
     </div>`;
     let footer='';
-    if(p.status==='analysis')footer='<div class="legacy-admin-review-actions"><button class="btn btn-outline" onclick="openLegacyAdjustment(\''+esc(p.id)+'\')">Pedir ajuste</button><button class="btn btn-primary" onclick="approveLegacyProject(\''+esc(p.id)+'\')">Aprovar projeto</button></div>';
+    if(p.status==='analysis')footer='<div class="legacy-admin-review-actions"><button class="btn btn-outline" onclick="openLegacyAdjustment(\\''+esc(p.id)+'\\')">Pedir ajuste</button><button class="btn btn-primary" onclick="approveLegacyProject(\\''+esc(p.id)+'\\')">Aprovar projeto</button></div>';
     const modalSubtitle=p.status==='analysis'
       ?'Revise a proposta enviada pelo voluntário.'
       :p.status==='in_progress'
@@ -212,6 +211,7 @@
   };
   window.approveLegacyProject=function(id){if(window.OleiroProjects?.isPreview!==true)return;window.OleiroProjects.update(id,{status:'approved',reviewNote:'',approvedAt:new Date().toISOString()});closeModal();render();showToast('Projeto aprovado.')};
   window.openLegacyAdjustment=function(id){
+    if(window.OleiroProjects?.isPreview!==true)return;
     closeModal();
     openModal('Pedir ajuste','Explique de forma clara o que precisa ser revisto.',`<div class="field"><label for="legacyReviewNote">Orientação para o voluntário</label><textarea id="legacyReviewNote" class="textarea" maxlength="600" placeholder="Ex.: detalhe melhor os materiais necessários e como a composteira será mantida."></textarea></div>`,`<button class="btn btn-primary btn-block" onclick="requestLegacyAdjustment('${esc(id)}')">Enviar ajuste</button>`);
   };
