@@ -71,7 +71,7 @@
       node.textContent=label;
       node.hidden=!label||!enabled;
     });
-    document.querySelectorAll('[data-release-latest-version]').forEach(node=>node.textContent=label? `Última atualização · ${label}`:'Última atualização');
+    document.querySelectorAll('[data-release-latest-version]').forEach(node=>node.textContent=label.replace(/^Versão\\s*/,'')||'—');
     document.querySelectorAll('[data-release-latest-summary]').forEach(node=>node.textContent=ANNOUNCEMENT.summary||'Nenhuma descrição disponível.');
   }
   async function loadReleaseMeta(){
@@ -477,12 +477,16 @@
     };
   }
 
-  const baseReleaseInformationHtml=typeof window.releaseInformationHtml==='function'?window.releaseInformationHtml:null;
-  if(baseReleaseInformationHtml){
+  if(typeof window.releaseInformationHtml==='function'){
     window.releaseInformationHtml=function(){
-      const base=baseReleaseInformationHtml();
-      const summary=`<div class="release-info-latest"><strong data-release-latest-version>Última atualização · Versão ${esc(ANNOUNCEMENT.version||releaseMeta?.build||'—')}</strong><p data-release-latest-summary>${esc(ANNOUNCEMENT.summary||'Nenhuma descrição disponível.')}</p><button class="info-action-link" type="button" onclick="openPortalReleaseNotes()"><i class="fa-solid fa-wand-magic-sparkles"></i>Ver o que mudou</button></div>`;
-      return base+summary;
+      const version=ANNOUNCEMENT.version||releaseMeta?.build||'—';
+      const published=fmtNoticeDate(ANNOUNCEMENT.publishedAt||releaseMeta?.publishedAt);
+      return `<div class="release-info release-info-latest">
+        <p><strong>Versão:</strong> <span data-release-latest-version>${esc(version)}</span></p>
+        <p><strong>Última atualização:</strong> <span data-release-latest-summary>${esc(ANNOUNCEMENT.summary||'Nenhuma descrição disponível.')}</span></p>
+        ${published?`<small>Publicado em ${esc(published)}</small>`:''}
+        <button class="info-action-link" type="button" onclick="openPortalReleaseNotes()"><i class="fa-solid fa-wand-magic-sparkles"></i>Ver detalhes</button>
+      </div>`;
     };
   }
 
