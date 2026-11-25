@@ -71,7 +71,7 @@
       node.textContent=label;
       node.hidden=!label||!enabled;
     });
-    document.querySelectorAll('[data-release-latest-version]').forEach(node=>node.textContent=label.replace(/^Versão\\s*/,'')||'—');
+    document.querySelectorAll('[data-release-latest-version]').forEach(node=>node.textContent=(label.startsWith('Versão ')?label.slice(7):label)||'—');
     document.querySelectorAll('[data-release-latest-summary]').forEach(node=>node.textContent=ANNOUNCEMENT.summary||'Nenhuma descrição disponível.');
   }
   async function loadReleaseMeta(){
