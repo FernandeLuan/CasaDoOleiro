@@ -34,15 +34,45 @@
   let releaseMeta=null;
   let metaPromise=null;
   let homeSlideIndex=0;
+  let pendingReleasePopupId=null;
   let releaseDismissedInSession=false;
+  let releaseDismissedInSessionId=null;
   const hiddenHomeNoticeIds=new Set();
   let homeNoticeRefreshAt=0;
   let homeNoticeRefreshPromise=null;
 
   function uid(){return String(state?.currentSession?.uid||'anon')}
   function releaseSeenKey(){return `oleiro.portal.release-notes.seen.v1:${uid()}`}
-  function releaseSeen(){if(ALWAYS_SHOW_HOME_NOTICES)return false;if(releaseDismissedInSession)return true;try{return localStorage.getItem(releaseSeenKey())===ANNOUNCEMENT.id}catch{return false}}
-  function markReleaseSeen(){if(ALWAYS_SHOW_HOME_NOTICES)return;releaseDismissedInSession=true;try{localStorage.setItem(releaseSeenKey(),ANNOUNCEMENT.id)}catch{}}
+  function releaseSeen(){if(ALWAYS_SHOW_HOME_NOTICES)return false;if(releaseDismissedInSession&&releaseDismissedInSessionId===ANNOUNCEMENT.id)return true;try{return localStorage.getItem(releaseSeenKey())===ANNOUNCEMENT.id}catch{return false}}
+  function markReleaseSeen(){if(ALWAYS_SHOW_HOME_NOTICES)return;releaseDismissedInSession=true;releaseDismissedInSessionId=ANNOUNCEMENT.id;try{localStorage.setItem(releaseSeenKey(),ANNOUNCEMENT.id)}catch{}}
+  function maybeOpenPendingReleasePopup(){
+    const pendingId=pendingReleasePopupId;
+    if(!pendingId||pendingId!==ANNOUNCEMENT.id)return;
+    const demoProject=String(window.OLEIRO_FIREBASE_CONFIG?.projectId||'').startsWith('demo-');
+    if(demoProject){pendingReleasePopupId=null;return}
+    if(state?.volunteerPage!=='home')return;
+    if(releaseSeen()){pendingReleasePopupId=null;return}
+    pendingReleasePopupId=null;
+    setTimeout(()=>{
+      if(state?.volunteerPage==='home'&&ANNOUNCEMENT.id===pendingId&&!releaseSeen())window.openPortalReleaseNotes?.();
+      else if(state?.volunteerPage!=='home'&&ANNOUNCEMENT.id===pendingId)pendingReleasePopupId=pendingId;
+    },420);
+  }
+  function dismissedHomeNoticeKey(){return `oleiro.portal.home-notices.dismissed.v1:${uid()}`}
+  let dismissedHomeNoticesUid='';
+  function ensureDismissedHomeNotices(){
+    const currentUid=uid();
+    if(currentUid===dismissedHomeNoticesUid)return;
+    hiddenHomeNoticeIds.clear();
+    dismissedHomeNoticesUid=currentUid;
+    try{const ids=JSON.parse(localStorage.getItem(dismissedHomeNoticeKey())||'[]');if(Array.isArray(ids))ids.slice(-100).forEach(id=>hiddenHomeNoticeIds.add(String(id)))}catch{}
+  }
+  function hideHomeNotice(id){
+    if(!id)return;
+    ensureDismissedHomeNotices();
+    hiddenHomeNoticeIds.add(id);
+    try{localStorage.setItem(dismissedHomeNoticeKey(),JSON.stringify([...hiddenHomeNoticeIds].slice(-100)))}catch{}
+  }
 
   function metaLabel(){
     const build=String(ANNOUNCEMENT.version||releaseMeta?.build||'').trim();
@@ -55,6 +85,8 @@
       node.textContent=label;
       node.hidden=!label||!enabled;
     });
+    document.querySelectorAll('[data-release-latest-version]').forEach(node=>node.textContent=(label.startsWith('Versão ')?label.slice(7):label)||'—');
+    document.querySelectorAll('[data-release-latest-summary]').forEach(node=>node.textContent=ANNOUNCEMENT.summary||'Nenhuma descrição disponível.');
   }
   async function loadReleaseMeta(){
     if(releaseMeta)return releaseMeta;
@@ -74,7 +106,11 @@
           ANNOUNCEMENT.items=Array.isArray(latest.items)?latest.items:[];
         }
         updateMetaLabels();
-        if(previousId!==ANNOUNCEMENT.id&&state?.volunteerPage==='home'&&typeof render==='function')render();
+        if(previousId!==ANNOUNCEMENT.id){
+          pendingReleasePopupId=ANNOUNCEMENT.id;
+          if(state?.volunteerPage==='home'&&typeof render==='function')render();
+          maybeOpenPendingReleasePopup();
+        }
         return releaseMeta;
       })
       .catch(()=>null)
@@ -249,11 +285,11 @@
     })).filter(slide=>!hiddenHomeNoticeIds.has(slide.id));
   }
   function homeSlides(){
+    ensureDismissedHomeNotices();
     const slides=[];
     const projectSlide=currentProjectAdjustmentSlide();
     if(projectSlide)slides.push(projectSlide);
     slides.push(...activityAdjustmentSlides());
-    if(!releaseSeen())slides.push(...releaseSlides());
     return slides;
   }
   function homeSlide(){
@@ -355,13 +391,13 @@
     const slide=homeSlide();
     if(!slide)return;
     if(slide.type==='project_adjustment'){
-      hiddenHomeNoticeIds.add(slide.id);
+      hideHomeNotice(slide.id);
       window.dismissLegacyProjectAdjustmentNotice?.();
     }else if(slide.type==='day_adjustment'||slide.type==='activity_adjustment'){
-      hiddenHomeNoticeIds.add(slide.id);
+      hideHomeNotice(slide.id);
     }else{
       markReleaseSeen();
-      releaseSlides().forEach(item=>hiddenHomeNoticeIds.add(item.id));
+      releaseSlides().forEach(item=>hideHomeNotice(item.id));
     }
     const slides=homeSlides();
     if(!slides.length){
@@ -377,7 +413,7 @@
     const slide=homeSlide();
     if(!slide)return;
     if(slide.type==='project_adjustment'){
-      hiddenHomeNoticeIds.add(slide.id);
+      hideHomeNotice(slide.id);
       renderReleaseSlide('next');
       return window.openLegacyProjectAdjustmentNotice?.();
     }
@@ -401,6 +437,7 @@
   };
 
   window.dismissPortalReleaseAnnouncement=function(){
+    pendingReleasePopupId=null;
     markReleaseSeen();
     const card=document.querySelector('[data-release-announcement]');
     if(card){
@@ -410,6 +447,7 @@
   };
 
   window.openPortalReleaseNotes=function(){
+    pendingReleasePopupId=null;
     markReleaseSeen();
     releaseSlides().forEach(item=>hiddenHomeNoticeIds.add(item.id));
     const card=document.querySelector('[data-release-announcement]');
@@ -431,7 +469,7 @@
       <div class="release-notes-list">${ANNOUNCEMENT.items.map(itemHtml).join('')}</div>
       ${RELEASE_HISTORY.length>1?'<div class="release-history-list"><strong>Atualizações anteriores</strong>'+RELEASE_HISTORY.slice(1).map(release=>'<details class="release-history-entry"><summary><span>Versão '+esc(release.version||'')+' · '+esc(release.title||'Atualização')+'</span><i class="fa-solid fa-chevron-down"></i></summary><p>'+esc(release.summary||'')+'</p><div class="release-notes-list">'+(Array.isArray(release.items)?release.items.map(itemHtml).join(''):'')+'</div></details>').join('')+'</div>':''}
     </div>`;
-    const footer=`<div class="release-notes-actions"><button class="btn btn-outline" type="button" onclick="closeModal()">Fechar</button><button class="btn btn-primary" type="button" onclick="closeModal();navigateVolunteer('${ANNOUNCEMENT.ctaPage}')"><i class="fa-solid fa-seedling"></i>${esc(ANNOUNCEMENT.ctaLabel)}</button></div>`;
+    const footer=`<div class="release-notes-actions"><button class="btn btn-primary" type="button" onclick="closeModal()">Entendi</button></div>`;
     openModal('O que mudou?','',body,footer);
     modalRoot.querySelector('.modal')?.classList.add('modal-wide');
     updateMetaLabels();
@@ -441,7 +479,7 @@
   if(baseNavigateVolunteer){
     window.navigateVolunteer=navigateVolunteer=function(page){
       const result=baseNavigateVolunteer(page);
-      if(String(page)==='home')setTimeout(()=>refreshHomeNoticeData(),60);
+      if(String(page)==='home')setTimeout(()=>{refreshHomeNoticeData();maybeOpenPendingReleasePopup()},60);
       return result;
     };
   }
@@ -456,16 +494,16 @@
     };
   }
 
-  const baseVolunteerInfo=typeof window.volunteerInfo==='function'?window.volunteerInfo:null;
-  if(baseVolunteerInfo){
-    window.volunteerInfo=volunteerInfo=function(){
-      const html=baseVolunteerInfo();
-      if(html.includes('release-history-card'))return html;
-      const card=`<div class="card release-history-card">
-        <div class="release-history-copy"><span class="release-history-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span><div><small>Novidades da versão</small><strong>${esc(ANNOUNCEMENT.title)}</strong><p>Veja novamente o que mudou nesta atualização.</p><span data-release-meta hidden></span></div></div>
-        <button class="btn btn-soft" type="button" onclick="openPortalReleaseNotes()">Ver novidades</button>
+  if(typeof window.releaseInformationHtml==='function'){
+    window.releaseInformationHtml=function(){
+      const version=ANNOUNCEMENT.version||releaseMeta?.build||'—';
+      const published=fmtNoticeDate(ANNOUNCEMENT.publishedAt||releaseMeta?.publishedAt);
+      return `<div class="release-info release-info-latest">
+        <p><strong>Versão:</strong> <span data-release-latest-version>${esc(version)}</span></p>
+        <p><strong>Última atualização:</strong> <span data-release-latest-summary>${esc(ANNOUNCEMENT.summary||'Nenhuma descrição disponível.')}</span></p>
+        ${published?`<small>Publicado em ${esc(published)}</small>`:''}
+        <button class="info-action-link" type="button" onclick="openPortalReleaseNotes()"><i class="fa-solid fa-wand-magic-sparkles"></i>Ver detalhes</button>
       </div>`;
-      return html.replace(/<\/section>\s*$/,`${card}</section>`);
     };
   }
 
