@@ -144,3 +144,13 @@
 @media(max-width:360px){
   .release-notes-actions{grid-template-columns:1fr}
 }
+
+.release-history-list{display:grid;gap:8px;margin-top:4px}
+.release-history-list>strong{font-size:.7rem;color:var(--text)}
+.release-history-entry{border:1px solid var(--border);border-radius:13px;padding:10px 12px;background:var(--surface)}
+.release-history-entry summary{display:flex;justify-content:space-between;gap:10px;align-items:center;cursor:pointer;font-size:.66rem;font-weight:600;list-style:none}
+.release-history-entry summary::-webkit-details-marker{display:none}
+.release-history-entry summary i{color:var(--muted);font-size:.58rem}
+.release-history-entry[open] summary{margin-bottom:8px}
+.release-history-entry>p{font-size:.61rem;line-height:1.45;color:var(--muted);margin-bottom:8px}
+.release-history-entry .release-notes-list{margin-top:8px}
