@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 const release=readFileSync('js/portal/release-notes.js','utf8');
 const ui=readFileSync('js/shared/ui.js','utf8');
 const build=readFileSync('scripts/build-site.mjs','utf8');
+const deploy=readFileSync('.github/workflows/deploy-pages.yml','utf8');
 const notes=JSON.parse(readFileSync('release-notes.json','utf8'));
 
 test('activity notice dismissal is persisted per authenticated volunteer',()=>{
@@ -26,6 +27,8 @@ test('a new release opens the existing change-summary modal once and is dismisse
 test('software version accordion contains the latest release summary and link to details',()=>{
   assert.ok(ui.includes('id="info-software"'));
   assert.ok(release.includes('release-info-latest'));
+  assert.ok(release.includes('data-release-latest-version'));
+  assert.ok(release.includes('data-release-latest-summary'));
   assert.ok(release.includes('Última atualização'));
   assert.ok(release.includes('openPortalReleaseNotes()'));
   assert.ok(!release.includes('release-history-card'));
@@ -33,6 +36,9 @@ test('software version accordion contains the latest release summary and link to
 
 test('release notes are included in the canonical production build and preserve a versioned history',()=>{
   assert.ok(build.includes("'release-notes.json'"));
+  assert.ok(deploy.includes('test -e _site/release-notes.json'));
+  assert.ok(deploy.includes('name: github-pages-${{ github.run_attempt }}'));
+  assert.ok(deploy.includes('artifact_name: github-pages-${{ github.run_attempt }}'));
   assert.ok(Array.isArray(notes.releases));
   assert.ok(notes.releases.length>0);
   for(const row of notes.releases){
