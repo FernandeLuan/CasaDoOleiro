@@ -154,3 +154,8 @@
 .release-history-entry[open] summary{margin-bottom:8px}
 .release-history-entry>p{font-size:.61rem;line-height:1.45;color:var(--muted);margin-bottom:8px}
 .release-history-entry .release-notes-list{margin-top:8px}
+
+.release-info-latest{margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.release-info-latest strong{display:block;font-size:.66rem;color:var(--text)}
+.release-info-latest p{margin:4px 0 8px;color:var(--muted);font-size:.61rem;line-height:1.45}
+.release-info-latest .info-action-link{display:inline-flex;align-items:center;gap:7px;border:0;background:none;padding:0;color:var(--primary);font:inherit;font-size:.62rem;font-weight:600;cursor:pointer}
