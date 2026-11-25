@@ -18,7 +18,7 @@ test('preview capability is fail-closed unless the build explicitly enables homo
   assert.ok(service.includes('if(!PREVIEW_ENABLED)return {};'));
   assert.ok(!service.includes('isPreview:true'));
   assert.ok(build.includes("const previewEnabled=environment==='homologation';"));
-  assert.ok(build.includes('window.OLEIRO_PREVIEW_ENABLED = \${previewEnabled}'));
+  assert.ok(build.includes('window.OLEIRO_PREVIEW_ENABLED = ' + '${previewEnabled}'));
 });
 
 test('admin dashboard simulated pending cards require the preview capability',()=>{
