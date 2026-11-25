@@ -44,8 +44,10 @@ test('release notes are included in the canonical production build and preserve 
   assert.ok(deploy.includes('test -e _site/release-notes.json'));
   assert.ok(deploy.includes('name: github-pages'));
   assert.ok(deploy.includes('artifact_name: github-pages'));
-  assert.ok(deploy.includes('Remove stale Pages artifacts from previous attempts'));
-  assert.ok(deploy.includes('actions: write'));
+  assert.ok(deploy.includes('actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b'));
+  assert.ok(deploy.includes('actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346'));
+  assert.ok(!deploy.includes('Remove stale Pages artifacts from previous attempts'));
+  assert.ok(deploy.includes('artifact_name: github-pages'));
   assert.ok(Array.isArray(notes.releases));
   assert.ok(notes.releases.length>0);
   for(const row of notes.releases){
