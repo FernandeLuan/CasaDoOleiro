@@ -1,23 +1,6 @@
 name: Browser E2E
 
 on:
-  pull_request:
-    branches: [main]
-    paths:
-      - 'index.html'
-      - 'admin/**'
-      - 'portal/**'
-      - 'js/**'
-      - 'css/**'
-      - 'firestore.rules'
-      - 'firestore.indexes.json'
-      - 'firebase.json'
-      - 'tests/e2e/**'
-      - 'tests/emulator/**'
-      - 'playwright.config.js'
-      - 'package.json'
-      - 'package-lock.json'
-      - '.github/workflows/e2e.yml'
   workflow_dispatch:
 
 concurrency:
