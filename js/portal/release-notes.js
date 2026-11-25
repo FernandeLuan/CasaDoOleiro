@@ -71,6 +71,8 @@
       node.textContent=label;
       node.hidden=!label||!enabled;
     });
+    document.querySelectorAll('[data-release-latest-version]').forEach(node=>node.textContent=label? `Última atualização · ${label}`:'Última atualização');
+    document.querySelectorAll('[data-release-latest-summary]').forEach(node=>node.textContent=ANNOUNCEMENT.summary||'Nenhuma descrição disponível.');
   }
   async function loadReleaseMeta(){
     if(releaseMeta)return releaseMeta;
@@ -479,7 +481,7 @@
   if(baseReleaseInformationHtml){
     window.releaseInformationHtml=function(){
       const base=baseReleaseInformationHtml();
-      const summary=`<div class="release-info-latest"><strong>Última atualização · Versão ${esc(ANNOUNCEMENT.version||releaseMeta?.build||'—')}</strong><p>${esc(ANNOUNCEMENT.summary||'Nenhuma descrição disponível.')}</p><button class="info-action-link" type="button" onclick="openPortalReleaseNotes()"><i class="fa-solid fa-wand-magic-sparkles"></i>Ver o que mudou</button></div>`;
+      const summary=`<div class="release-info-latest"><strong data-release-latest-version>Última atualização · Versão ${esc(ANNOUNCEMENT.version||releaseMeta?.build||'—')}</strong><p data-release-latest-summary>${esc(ANNOUNCEMENT.summary||'Nenhuma descrição disponível.')}</p><button class="info-action-link" type="button" onclick="openPortalReleaseNotes()"><i class="fa-solid fa-wand-magic-sparkles"></i>Ver o que mudou</button></div>`;
       return base+summary;
     };
   }
