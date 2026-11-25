@@ -43,15 +43,20 @@
   function releaseSeen(){if(ALWAYS_SHOW_HOME_NOTICES)return false;try{return localStorage.getItem(releaseSeenKey())===ANNOUNCEMENT.id}catch{return false}}
   function markReleaseSeen(){if(ALWAYS_SHOW_HOME_NOTICES)return;try{localStorage.setItem(releaseSeenKey(),ANNOUNCEMENT.id)}catch{}}
   function dismissedHomeNoticeKey(){return `oleiro.portal.home-notices.dismissed.v1:${uid()}`}
-  function loadDismissedHomeNotices(){
+  let dismissedHomeNoticesUid='';
+  function ensureDismissedHomeNotices(){
+    const currentUid=uid();
+    if(currentUid===dismissedHomeNoticesUid)return;
+    hiddenHomeNoticeIds.clear();
+    dismissedHomeNoticesUid=currentUid;
     try{const ids=JSON.parse(localStorage.getItem(dismissedHomeNoticeKey())||'[]');if(Array.isArray(ids))ids.slice(-100).forEach(id=>hiddenHomeNoticeIds.add(String(id)))}catch{}
   }
   function hideHomeNotice(id){
     if(!id)return;
+    ensureDismissedHomeNotices();
     hiddenHomeNoticeIds.add(id);
     try{localStorage.setItem(dismissedHomeNoticeKey(),JSON.stringify([...hiddenHomeNoticeIds].slice(-100)))}catch{}
   }
-  loadDismissedHomeNotices();
 
   function metaLabel(){
     const build=String(ANNOUNCEMENT.version||releaseMeta?.build||'').trim();
@@ -261,6 +266,7 @@
     })).filter(slide=>!hiddenHomeNoticeIds.has(slide.id));
   }
   function homeSlides(){
+    ensureDismissedHomeNotices();
     const slides=[];
     const projectSlide=currentProjectAdjustmentSlide();
     if(projectSlide)slides.push(projectSlide);
@@ -442,7 +448,7 @@
       <div class="release-notes-list">${ANNOUNCEMENT.items.map(itemHtml).join('')}</div>
       ${RELEASE_HISTORY.length>1?'<div class="release-history-list"><strong>Atualizações anteriores</strong>'+RELEASE_HISTORY.slice(1).map(release=>'<details class="release-history-entry"><summary><span>Versão '+esc(release.version||'')+' · '+esc(release.title||'Atualização')+'</span><i class="fa-solid fa-chevron-down"></i></summary><p>'+esc(release.summary||'')+'</p><div class="release-notes-list">'+(Array.isArray(release.items)?release.items.map(itemHtml).join(''):'')+'</div></details>').join('')+'</div>':''}
     </div>`;
-    const footer=`<div class="release-notes-actions"><button class="btn btn-outline" type="button" onclick="closeModal()">Fechar</button><button class="btn btn-primary" type="button" onclick="closeModal();navigateVolunteer('${ANNOUNCEMENT.ctaPage}')"><i class="fa-solid fa-seedling"></i>${esc(ANNOUNCEMENT.ctaLabel)}</button></div>`;
+    const footer=`<div class="release-notes-actions"><button class="btn btn-primary" type="button" onclick="closeModal()">Entendi</button></div>`;
     openModal('O que mudou?','',body,footer);
     modalRoot.querySelector('.modal')?.classList.add('modal-wide');
     updateMetaLabels();
