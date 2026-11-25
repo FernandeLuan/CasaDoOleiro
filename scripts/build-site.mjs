@@ -154,7 +154,7 @@ await mkdir(out,{recursive:true});
 for(const dir of ['admin','portal','css','js','icons']){
   const source=path.join(root,dir);await access(source);await cp(source,path.join(out,dir),{recursive:true});
 }
-for(const file of ['index.html','manifest.webmanifest','.nojekyll']){
+for(const file of ['index.html','manifest.webmanifest','.nojekyll','release-notes.json']){
   const source=path.join(root,file);if(await exists(source))await copyFile(source,path.join(out,file));
 }
 await copyFile(path.join(root,'index.html'),path.join(out,'login.html'));

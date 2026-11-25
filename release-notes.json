@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "releases": [
+    {
+      "id": "2026-11-25-portal-release-382",
+      "version": "382",
+      "eyebrow": "Nova atualização",
+      "title": "Tem novidade por aqui ✨",
+      "summary": "Deixamos o portal mais simples e adicionamos novas formas de acompanhar sua experiência.",
+      "homeSlides": [
+        {
+          "title": "Tem novidade por aqui ✨",
+          "summary": "Deixamos o portal mais simples e adicionamos novas formas de acompanhar sua experiência."
+        },
+        {
+          "title": "Projeto Legado",
+          "summary": "Conheça a proposta e acesse a nova área Projeto pelo menu."
+        },
+        {
+          "title": "Tudo mais simples de encontrar",
+          "summary": "Conta, Projeto e Informações da Casa ficaram mais organizados e fáceis de acessar."
+        }
+      ],
+      "items": [
+        {
+          "icon": "fa-seedling",
+          "title": "Projeto Legado",
+          "text": "Conheça a proposta e acesse a nova área Projeto pelo menu."
+        },
+        {
+          "icon": "fa-user",
+          "title": "Conta mais organizada",
+          "text": "Idioma, aparência e contato de emergência ficaram reunidos em um só lugar."
+        },
+        {
+          "icon": "fa-compass",
+          "title": "Navegação mais simples",
+          "text": "Projeto, Conta e Informações da Casa agora estão mais fáceis de encontrar."
+        }
+      ],
+      "ctaLabel": "Experimentar Projeto",
+      "ctaPage": "project",
+      "publishedAt": "2026-11-25"
+    }
+  ]
+}
