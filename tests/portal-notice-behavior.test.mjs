@@ -18,7 +18,8 @@ test('activity notice dismissal is persisted per authenticated volunteer',()=>{
 });
 
 test('a new release opens the existing change-summary modal once and is dismissed by release ID',()=>{
-  assert.ok(release.includes("setTimeout(()=>{if(state?.volunteerPage==='home'&&!releaseSeen())window.openPortalReleaseNotes?.()},420)"));
+  assert.ok(release.includes("const demoProject=String(window.OLEIRO_FIREBASE_CONFIG?.projectId||'').startsWith('demo-')"));
+  assert.ok(release.includes("if(!demoProject&&state?.volunteerPage==='home'&&!releaseSeen())window.openPortalReleaseNotes?.()"));
   assert.ok(release.includes("localStorage.getItem(releaseSeenKey())===ANNOUNCEMENT.id"));
   assert.ok(release.includes("onclick=" + '"closeModal()">Entendi'));
   assert.ok(!release.includes("if(!releaseSeen())slides.push(...releaseSlides())"));
