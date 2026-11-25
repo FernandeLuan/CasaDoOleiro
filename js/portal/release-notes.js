@@ -34,6 +34,7 @@
   let releaseMeta=null;
   let metaPromise=null;
   let homeSlideIndex=0;
+  let pendingReleasePopupId=null;
   let releaseDismissedInSession=false;
   let releaseDismissedInSessionId=null;
   const hiddenHomeNoticeIds=new Set();
@@ -44,6 +45,19 @@
   function releaseSeenKey(){return `oleiro.portal.release-notes.seen.v1:${uid()}`}
   function releaseSeen(){if(ALWAYS_SHOW_HOME_NOTICES)return false;if(releaseDismissedInSession&&releaseDismissedInSessionId===ANNOUNCEMENT.id)return true;try{return localStorage.getItem(releaseSeenKey())===ANNOUNCEMENT.id}catch{return false}}
   function markReleaseSeen(){if(ALWAYS_SHOW_HOME_NOTICES)return;releaseDismissedInSession=true;releaseDismissedInSessionId=ANNOUNCEMENT.id;try{localStorage.setItem(releaseSeenKey(),ANNOUNCEMENT.id)}catch{}}
+  function maybeOpenPendingReleasePopup(){
+    const pendingId=pendingReleasePopupId;
+    if(!pendingId||pendingId!==ANNOUNCEMENT.id)return;
+    const demoProject=String(window.OLEIRO_FIREBASE_CONFIG?.projectId||'').startsWith('demo-');
+    if(demoProject){pendingReleasePopupId=null;return}
+    if(state?.volunteerPage!=='home')return;
+    if(releaseSeen()){pendingReleasePopupId=null;return}
+    pendingReleasePopupId=null;
+    setTimeout(()=>{
+      if(state?.volunteerPage==='home'&&ANNOUNCEMENT.id===pendingId&&!releaseSeen())window.openPortalReleaseNotes?.();
+      else if(state?.volunteerPage!=='home'&&ANNOUNCEMENT.id===pendingId)pendingReleasePopupId=pendingId;
+    },420);
+  }
   function dismissedHomeNoticeKey(){return `oleiro.portal.home-notices.dismissed.v1:${uid()}`}
   let dismissedHomeNoticesUid='';
   function ensureDismissedHomeNotices(){
@@ -92,9 +106,10 @@
           ANNOUNCEMENT.items=Array.isArray(latest.items)?latest.items:[];
         }
         updateMetaLabels();
-        if(previousId!==ANNOUNCEMENT.id&&state?.volunteerPage==='home'){
-          if(typeof render==='function')render();
-          setTimeout(()=>{const demoProject=String(window.OLEIRO_FIREBASE_CONFIG?.projectId||'').startsWith('demo-');if(!demoProject&&state?.volunteerPage==='home'&&!releaseSeen())window.openPortalReleaseNotes?.()},420);
+        if(previousId!==ANNOUNCEMENT.id){
+          pendingReleasePopupId=ANNOUNCEMENT.id;
+          if(state?.volunteerPage==='home'&&typeof render==='function')render();
+          maybeOpenPendingReleasePopup();
         }
         return releaseMeta;
       })
@@ -422,6 +437,7 @@
   };
 
   window.dismissPortalReleaseAnnouncement=function(){
+    pendingReleasePopupId=null;
     markReleaseSeen();
     const card=document.querySelector('[data-release-announcement]');
     if(card){
@@ -431,6 +447,7 @@
   };
 
   window.openPortalReleaseNotes=function(){
+    pendingReleasePopupId=null;
     markReleaseSeen();
     releaseSlides().forEach(item=>hiddenHomeNoticeIds.add(item.id));
     const card=document.querySelector('[data-release-announcement]');
@@ -462,7 +479,7 @@
   if(baseNavigateVolunteer){
     window.navigateVolunteer=navigateVolunteer=function(page){
       const result=baseNavigateVolunteer(page);
-      if(String(page)==='home')setTimeout(()=>refreshHomeNoticeData(),60);
+      if(String(page)==='home')setTimeout(()=>{refreshHomeNoticeData();maybeOpenPendingReleasePopup()},60);
       return result;
     };
   }
