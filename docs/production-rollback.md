@@ -3,7 +3,7 @@
 ## Branch roles
 
 - `main`: production source of truth.
-- `backup/production-2026-11-25`: immutable snapshot of the production commit used as the baseline for the 25 November 2026 maintenance.
+- `backup/production-2026-11-25`: point-in-time snapshot intended to remain unchanged of the production commit used as the baseline for the 25 November 2026 maintenance.
 - `fix/production-readiness-2026-11-25`: isolated maintenance branch. It must never deploy directly to production.
 
 The backup branch is a point-in-time source snapshot. It does not automatically replace `main` and should not be merged as a normal feature branch.
