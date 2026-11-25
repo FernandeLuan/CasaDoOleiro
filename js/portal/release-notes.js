@@ -45,7 +45,7 @@
   function markReleaseSeen(){if(ALWAYS_SHOW_HOME_NOTICES)return;releaseDismissedInSession=true;try{localStorage.setItem(releaseSeenKey(),ANNOUNCEMENT.id)}catch{}}
 
   function metaLabel(){
-    const build=String(releaseMeta?.build||'').trim();
+    const build=String(ANNOUNCEMENT.version||releaseMeta?.build||'').trim();
     return build?`Versão ${build}`:'';
   }
   function updateMetaLabels(){
