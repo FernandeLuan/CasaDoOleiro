@@ -18,7 +18,7 @@ test('preview capability is fail-closed unless the build explicitly enables homo
   assert.ok(service.includes('if(!PREVIEW_ENABLED)return {};'));
   assert.ok(!service.includes('isPreview:true'));
   assert.ok(build.includes("const previewEnabled=environment==='homologation';"));
-  assert.ok(build.includes('window.OLEIRO_PREVIEW_ENABLED = ${previewEnabled}'));
+  assert.ok(build.includes('window.OLEIRO_PREVIEW_ENABLED = \${previewEnabled}'));
 });
 
 test('admin dashboard simulated pending cards require the preview capability',()=>{
@@ -26,22 +26,23 @@ test('admin dashboard simulated pending cards require the preview capability',()
   const end=dashboard.indexOf('function managerHomePendingSlidesVisible',start);
   assert.ok(start>=0&&end>start);
   const source=dashboard.slice(start,end);
-  assert.match(source,/if\\(window\\.OleiroProjects\\?\\.isPreview!==true\\)return \\[\\];/);
-  assert.match(source,/preview-volunteer-analysis/);
-  assert.match(source,/preview-project-adjustments/);
+  assert.ok(source.includes('if(window.OleiroProjects?.isPreview!==true)return [];'));
+  assert.ok(source.includes('preview-volunteer-analysis'));
+  assert.ok(source.includes('preview-project-adjustments'));
 });
 
-test('legacy project administration is unavailable outside homologation',()=>{
-  assert.match(projects,/if\\(window\\.OleiroProjects\\?\\.isPreview!==true\\)return `<section/);
-  assert.match(projects,/window\\.openLegacyProjectAdmin=function\\(id\\)\\{\\s*if\\(window\\.OleiroProjects\\?\\.isPreview!==true\\)return;/);
-  assert.match(projects,/window\\.approveLegacyProject=function\\(id\\)\\{if\\(window\\.OleiroProjects\\?\\.isPreview!==true\\)return;/);
-  assert.match(projects,/window\\.openLegacyAdjustment=function\\(id\\)\\{\\s*if\\(window\\.OleiroProjects\\?\\.isPreview!==true\\)return;/);
-  assert.match(service,/if\\(!PREVIEW_ENABLED\\)throw new Error\\('Projetos de legado estão disponíveis somente em homologação\\.'\\)/);
+test('legacy project administration and every modal/write action are unavailable outside homologation',()=>{
+  assert.ok(projects.includes('if(window.OleiroProjects?.isPreview!==true)return \`<section'));
+  assert.ok(projects.includes('window.openLegacyProjectAdmin=function(id){\n    if(window.OleiroProjects?.isPreview!==true)return;'));
+  assert.ok(projects.includes('window.approveLegacyProject=function(id){if(window.OleiroProjects?.isPreview!==true)return;'));
+  assert.ok(projects.includes('window.openLegacyAdjustment=function(id){\n    if(window.OleiroProjects?.isPreview!==true)return;'));
+  assert.ok(projects.includes('window.requestLegacyAdjustment=function(id){if(window.OleiroProjects?.isPreview!==true)return;'));
+  assert.ok(service.includes("if(!PREVIEW_ENABLED)throw new Error('Projetos de legado estão disponíveis somente em homologação.')"));
 });
 
 test('production and homologation deploy workflows set explicit build environments',()=>{
-  assert.match(productionWorkflow,/APP_ENV:\\s*production/);
-  assert.match(homologationWorkflow,/APP_ENV:\\s*homologation/);
+  assert.ok(productionWorkflow.includes('APP_ENV: production'));
+  assert.ok(homologationWorkflow.includes('APP_ENV: homologation'));
 });
 
 test('production build artifact explicitly disables preview in the admin entry point and bundled runtime',()=>{
@@ -54,10 +55,11 @@ test('production build artifact explicitly disables preview in the admin entry p
     });
     const adminHtml=readFileSync(path.join(output,'admin/index.html'),'utf8');
     const adminBundle=readFileSync(path.join(output,'js/admin.bundle.js'),'utf8');
-    assert.match(adminHtml,/window\\.OLEIRO_PREVIEW_ENABLED = false/);
-    assert.match(adminBundle,/const PREVIEW_ENABLED=window\\.OLEIRO_PREVIEW_ENABLED===true/);
-    assert.match(adminBundle,/managerHomePreviewPendingSlides/);
-    assert.match(adminBundle,/if\\(window\\.OleiroProjects\\?\\.isPreview!==true\\)return \\[\\];/);
+    assert.ok(adminHtml.includes('window.OLEIRO_PREVIEW_ENABLED = false'));
+    assert.ok(adminBundle.includes('const PREVIEW_ENABLED=window.OLEIRO_PREVIEW_ENABLED===true'));
+    assert.ok(adminBundle.includes('function managerHomePreviewPendingSlides()'));
+    assert.ok(adminBundle.includes('if(window.OleiroProjects?.isPreview!==true)return [];'));
+    assert.ok(adminBundle.includes('window.openLegacyAdjustment=function(id){\n    if(window.OleiroProjects?.isPreview!==true)return;'));
   }finally{
     rmSync(output,{recursive:true,force:true});
   }
