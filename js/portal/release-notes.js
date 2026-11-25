@@ -94,7 +94,7 @@
         updateMetaLabels();
         if(previousId!==ANNOUNCEMENT.id&&state?.volunteerPage==='home'){
           if(typeof render==='function')render();
-          setTimeout(()=>{if(state?.volunteerPage==='home'&&!releaseSeen())window.openPortalReleaseNotes?.()},420);
+          setTimeout(()=>{const demoProject=String(window.OLEIRO_FIREBASE_CONFIG?.projectId||'').startsWith('demo-');if(!demoProject&&state?.volunteerPage==='home'&&!releaseSeen())window.openPortalReleaseNotes?.()},420);
         }
         return releaseMeta;
       })
