@@ -150,6 +150,7 @@
     </button>`;
   }
   window.managerProjects=function(){
+    if(window.OleiroProjects?.isPreview!==true)return `<section class="section legacy-admin-page compact-page-top"><div class="empty"><i class="fa-solid fa-seedling"></i>Gestão de projetos de legado disponível somente em homologação.</div></section>`;
     state.projectFilter=normalizeProjectFilter(state.projectFilter);
     state.projectUnit=normalizeProjectUnit(state.projectUnit);
     const list=rows(),activeFilter=state.projectFilter!=='all'||state.projectUnit!=='all';
@@ -175,6 +176,7 @@
   window.clearLegacyProjectFilters=function(){state.projectFilter='all';state.projectUnit='all';closeModal();render();afterNavigation?.()};
   window.setLegacyProjectFilter=function(value){state.projectFilter=normalizeProjectFilter(value);render();afterNavigation?.()};
   window.openLegacyProjectAdmin=function(id){
+    if(window.OleiroProjects?.isPreview!==true)return;
     const p=(window.OleiroProjects?.list?.()||[]).find(x=>String(x.id)===String(id));if(!p)return;
     const tracking=['in_progress','completed'].includes(p.status);
     const body=`<div class="legacy-admin-detail legacy-admin-detail-v4 ${tracking?'has-tracking':''}">
@@ -208,10 +210,11 @@
     openModal(p.title||'Projeto de legado',modalSubtitle,body,footer);
     modalRoot.querySelector('.modal')?.classList.add('modal-wide');
   };
-  window.approveLegacyProject=function(id){window.OleiroProjects.update(id,{status:'approved',reviewNote:'',approvedAt:new Date().toISOString()});closeModal();render();showToast('Projeto aprovado.')};
+  window.approveLegacyProject=function(id){if(window.OleiroProjects?.isPreview!==true)return;window.OleiroProjects.update(id,{status:'approved',reviewNote:'',approvedAt:new Date().toISOString()});closeModal();render();showToast('Projeto aprovado.')};
   window.openLegacyAdjustment=function(id){
+    if(window.OleiroProjects?.isPreview!==true)return;
     closeModal();
     openModal('Pedir ajuste','Explique de forma clara o que precisa ser revisto.',`<div class="field"><label for="legacyReviewNote">Orientação para o voluntário</label><textarea id="legacyReviewNote" class="textarea" maxlength="600" placeholder="Ex.: detalhe melhor os materiais necessários e como a composteira será mantida."></textarea></div>`,`<button class="btn btn-primary btn-block" onclick="requestLegacyAdjustment('${esc(id)}')">Enviar ajuste</button>`);
   };
-  window.requestLegacyAdjustment=function(id){const note=document.getElementById('legacyReviewNote')?.value.trim()||'';if(!note)return showToast('Escreva a orientação do ajuste.');window.OleiroProjects.update(id,{status:'adjustments',reviewNote:note,reviewedAt:new Date().toISOString()});closeModal();render();showToast('Ajuste solicitado.')};
+  window.requestLegacyAdjustment=function(id){if(window.OleiroProjects?.isPreview!==true)return;const note=document.getElementById('legacyReviewNote')?.value.trim()||'';if(!note)return showToast('Escreva a orientação do ajuste.');window.OleiroProjects.update(id,{status:'adjustments',reviewNote:note,reviewedAt:new Date().toISOString()});closeModal();render();showToast('Ajuste solicitado.')};
 })();

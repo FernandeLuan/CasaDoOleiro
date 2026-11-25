@@ -5,11 +5,14 @@
   const STORE='oleiro.legacy-projects.preview.v1';
   const ONBOARD='oleiro.legacy-project-onboarding.preview.v1';
   const DELETE_COMPOSTEIRA_TEST='oleiro.legacy-projects.preview.delete-composteira-v1';
+  const PREVIEW_ENABLED=window.OLEIRO_PREVIEW_ENABLED===true;
 
   function readStore(){
+    if(!PREVIEW_ENABLED)return {};
     try{return JSON.parse(localStorage.getItem(STORE)||'{}')||{}}catch{return {}}
   }
   function writeStore(rows){
+    if(!PREVIEW_ENABLED)throw new Error('Projetos de legado estão disponíveis somente em homologação.');
     localStorage.setItem(STORE,JSON.stringify(rows||{}));
   }
   function now(){return new Date().toISOString()}
@@ -33,7 +36,7 @@
     }catch{}
   }
 
-  deleteComposteiraForTest();
+  if(PREVIEW_ENABLED)deleteComposteiraForTest();
 
   function getOwn(){
     const id=ownId();if(!id)return null;
@@ -44,6 +47,7 @@
       .sort((a,b)=>String(b.updatedAt||'').localeCompare(String(a.updatedAt||'')));
   }
   function saveOwn(patch={}){
+    if(!PREVIEW_ENABLED)throw new Error('Projetos de legado estão disponíveis somente em homologação.');
     const id=ownId();if(!id)throw new Error('Sessão do voluntário indisponível.');
     const rows=readStore(),existing=rows[id]||{};
     if(existing.status==='completed')return {...existing,id};
@@ -65,18 +69,20 @@
     rows[id]=next;writeStore(rows);return {...next};
   }
   function update(id,patch={}){
+    if(!PREVIEW_ENABLED)throw new Error('Projetos de legado estão disponíveis somente em homologação.');
     const rows=readStore(),existing=rows[String(id)];
     if(!existing)throw new Error('Projeto não encontrado.');
     rows[String(id)]={...existing,...patch,updatedAt:now()};
     writeStore(rows);return {...rows[String(id)],id:String(id)};
   }
   function removeOwn(){
+    if(!PREVIEW_ENABLED)return;
     const id=ownId(),rows=readStore();if(id&&rows[id]){delete rows[id];writeStore(rows)}
   }
   function onboardingKey(){return `${ONBOARD}:${uid()||'anon'}`}
-  function onboardingDone(){try{return localStorage.getItem(onboardingKey())==='1'}catch{return false}}
-  function completeOnboarding(){try{localStorage.setItem(onboardingKey(),'1')}catch{}}
-  function resetOnboarding(){try{localStorage.removeItem(onboardingKey())}catch{}}
+  function onboardingDone(){if(!PREVIEW_ENABLED)return false;try{return localStorage.getItem(onboardingKey())==='1'}catch{return false}}
+  function completeOnboarding(){if(!PREVIEW_ENABLED)return;try{localStorage.setItem(onboardingKey(),'1')}catch{}}
+  function resetOnboarding(){if(!PREVIEW_ENABLED)return;try{localStorage.removeItem(onboardingKey())}catch{}}
 
-  window.OleiroProjects={getOwn,list,saveOwn,update,removeOwn,onboardingDone,completeOnboarding,resetOnboarding,isPreview:true};
+  window.OleiroProjects={getOwn,list,saveOwn,update,removeOwn,onboardingDone,completeOnboarding,resetOnboarding,isPreview:PREVIEW_ENABLED};
 })();

@@ -160,6 +160,13 @@ for(const file of ['index.html','manifest.webmanifest','.nojekyll']){
 await copyFile(path.join(root,'index.html'),path.join(out,'login.html'));
 await rm(path.join(out,'js','demo'),{recursive:true,force:true});
 
+// Preview-only legacy projects and simulated dashboard cards are enabled only in homologation builds.
+const previewEnabled=environment==='homologation';
+await rewrite('admin/index.html',source=>{
+  if(source.includes('OLEIRO_PREVIEW_ENABLED'))throw new Error('Preview build flag already exists in Admin entry point.');
+  return source.replace('</head>',`<script>window.OLEIRO_PREVIEW_ENABLED = ${previewEnabled};</script></head>`);
+});
+
 const admin=await readFile(path.join(out,'admin/index.html'),'utf8');
 const portal=await readFile(path.join(out,'portal/index.html'),'utf8');
 if(!admin.includes('data-clean-ui-admin="1"')||!admin.includes('../js/admin/admin-shell.js'))throw new Error('Admin Clean UI não está declarado diretamente na fonte.');
