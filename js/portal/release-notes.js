@@ -34,15 +34,24 @@
   let releaseMeta=null;
   let metaPromise=null;
   let homeSlideIndex=0;
-  let releaseDismissedInSession=false;
   const hiddenHomeNoticeIds=new Set();
   let homeNoticeRefreshAt=0;
   let homeNoticeRefreshPromise=null;
 
   function uid(){return String(state?.currentSession?.uid||'anon')}
   function releaseSeenKey(){return `oleiro.portal.release-notes.seen.v1:${uid()}`}
-  function releaseSeen(){if(ALWAYS_SHOW_HOME_NOTICES)return false;if(releaseDismissedInSession)return true;try{return localStorage.getItem(releaseSeenKey())===ANNOUNCEMENT.id}catch{return false}}
-  function markReleaseSeen(){if(ALWAYS_SHOW_HOME_NOTICES)return;releaseDismissedInSession=true;try{localStorage.setItem(releaseSeenKey(),ANNOUNCEMENT.id)}catch{}}
+  function releaseSeen(){if(ALWAYS_SHOW_HOME_NOTICES)return false;try{return localStorage.getItem(releaseSeenKey())===ANNOUNCEMENT.id}catch{return false}}
+  function markReleaseSeen(){if(ALWAYS_SHOW_HOME_NOTICES)return;try{localStorage.setItem(releaseSeenKey(),ANNOUNCEMENT.id)}catch{}}
+  function dismissedHomeNoticeKey(){return `oleiro.portal.home-notices.dismissed.v1:${uid()}`}
+  function loadDismissedHomeNotices(){
+    try{const ids=JSON.parse(localStorage.getItem(dismissedHomeNoticeKey())||'[]');if(Array.isArray(ids))ids.slice(-100).forEach(id=>hiddenHomeNoticeIds.add(String(id)))}catch{}
+  }
+  function hideHomeNotice(id){
+    if(!id)return;
+    hiddenHomeNoticeIds.add(id);
+    try{localStorage.setItem(dismissedHomeNoticeKey(),JSON.stringify([...hiddenHomeNoticeIds].slice(-100)))}catch{}
+  }
+  loadDismissedHomeNotices();
 
   function metaLabel(){
     const build=String(ANNOUNCEMENT.version||releaseMeta?.build||'').trim();
@@ -74,7 +83,10 @@
           ANNOUNCEMENT.items=Array.isArray(latest.items)?latest.items:[];
         }
         updateMetaLabels();
-        if(previousId!==ANNOUNCEMENT.id&&state?.volunteerPage==='home'&&typeof render==='function')render();
+        if(previousId!==ANNOUNCEMENT.id&&state?.volunteerPage==='home'){
+          if(typeof render==='function')render();
+          setTimeout(()=>{if(state?.volunteerPage==='home'&&!releaseSeen())window.openPortalReleaseNotes?.()},420);
+        }
         return releaseMeta;
       })
       .catch(()=>null)
@@ -253,7 +265,6 @@
     const projectSlide=currentProjectAdjustmentSlide();
     if(projectSlide)slides.push(projectSlide);
     slides.push(...activityAdjustmentSlides());
-    if(!releaseSeen())slides.push(...releaseSlides());
     return slides;
   }
   function homeSlide(){
@@ -355,13 +366,13 @@
     const slide=homeSlide();
     if(!slide)return;
     if(slide.type==='project_adjustment'){
-      hiddenHomeNoticeIds.add(slide.id);
+      hideHomeNotice(slide.id);
       window.dismissLegacyProjectAdjustmentNotice?.();
     }else if(slide.type==='day_adjustment'||slide.type==='activity_adjustment'){
-      hiddenHomeNoticeIds.add(slide.id);
+      hideHomeNotice(slide.id);
     }else{
       markReleaseSeen();
-      releaseSlides().forEach(item=>hiddenHomeNoticeIds.add(item.id));
+      releaseSlides().forEach(item=>hideHomeNotice(item.id));
     }
     const slides=homeSlides();
     if(!slides.length){
@@ -377,7 +388,7 @@
     const slide=homeSlide();
     if(!slide)return;
     if(slide.type==='project_adjustment'){
-      hiddenHomeNoticeIds.add(slide.id);
+      hideHomeNotice(slide.id);
       renderReleaseSlide('next');
       return window.openLegacyProjectAdjustmentNotice?.();
     }
@@ -456,16 +467,12 @@
     };
   }
 
-  const baseVolunteerInfo=typeof window.volunteerInfo==='function'?window.volunteerInfo:null;
-  if(baseVolunteerInfo){
-    window.volunteerInfo=volunteerInfo=function(){
-      const html=baseVolunteerInfo();
-      if(html.includes('release-history-card'))return html;
-      const card=`<div class="card release-history-card">
-        <div class="release-history-copy"><span class="release-history-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span><div><small>Novidades da versão</small><strong>${esc(ANNOUNCEMENT.title)}</strong><p>Veja novamente o que mudou nesta atualização.</p><span data-release-meta hidden></span></div></div>
-        <button class="btn btn-soft" type="button" onclick="openPortalReleaseNotes()">Ver novidades</button>
-      </div>`;
-      return html.replace(/<\/section>\s*$/,`${card}</section>`);
+  const baseReleaseInformationHtml=typeof window.releaseInformationHtml==='function'?window.releaseInformationHtml:null;
+  if(baseReleaseInformationHtml){
+    window.releaseInformationHtml=function(){
+      const base=baseReleaseInformationHtml();
+      const summary=`<div class="release-info-latest"><strong>Última atualização · Versão ${esc(ANNOUNCEMENT.version||releaseMeta?.build||'—')}</strong><p>${esc(ANNOUNCEMENT.summary||'Nenhuma descrição disponível.')}</p><button class="info-action-link" type="button" onclick="openPortalReleaseNotes()"><i class="fa-solid fa-wand-magic-sparkles"></i>Ver o que mudou</button></div>`;
+      return base+summary;
     };
   }
 
