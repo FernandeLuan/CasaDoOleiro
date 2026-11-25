@@ -12,7 +12,8 @@ test('activity notice dismissal is persisted per authenticated volunteer',()=>{
   assert.ok(release.includes('ensureDismissedHomeNotices()'));
   assert.ok(release.includes('localStorage.setItem(dismissedHomeNoticeKey()'));
   assert.ok(release.includes('hideHomeNotice(slide.id)'));
-  assert.ok(!release.includes('releaseDismissedInSession'));
+  assert.ok(release.includes('releaseDismissedInSessionId===ANNOUNCEMENT.id'));
+  assert.ok(release.includes('releaseDismissedInSessionId=ANNOUNCEMENT.id'));
 });
 
 test('a new release opens the existing change-summary modal once and is dismissed by release ID',()=>{
