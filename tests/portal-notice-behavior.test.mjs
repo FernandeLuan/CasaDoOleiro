@@ -42,8 +42,10 @@ test('software version accordion contains the latest release summary and link to
 test('release notes are included in the canonical production build and preserve a versioned history',()=>{
   assert.ok(build.includes("'release-notes.json'"));
   assert.ok(deploy.includes('test -e _site/release-notes.json'));
-  assert.ok(deploy.includes('name: github-pages-${{ github.run_attempt }}'));
-  assert.ok(deploy.includes('artifact_name: github-pages-${{ github.run_attempt }}'));
+  assert.ok(deploy.includes('name: github-pages'));
+  assert.ok(deploy.includes('artifact_name: github-pages'));
+  assert.ok(deploy.includes('Remove stale Pages artifacts from previous attempts'));
+  assert.ok(deploy.includes('actions: write'));
   assert.ok(Array.isArray(notes.releases));
   assert.ok(notes.releases.length>0);
   for(const row of notes.releases){
