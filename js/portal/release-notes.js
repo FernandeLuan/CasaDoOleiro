@@ -34,14 +34,16 @@
   let releaseMeta=null;
   let metaPromise=null;
   let homeSlideIndex=0;
+  let releaseDismissedInSession=false;
+  let releaseDismissedInSessionId=null;
   const hiddenHomeNoticeIds=new Set();
   let homeNoticeRefreshAt=0;
   let homeNoticeRefreshPromise=null;
 
   function uid(){return String(state?.currentSession?.uid||'anon')}
   function releaseSeenKey(){return `oleiro.portal.release-notes.seen.v1:${uid()}`}
-  function releaseSeen(){if(ALWAYS_SHOW_HOME_NOTICES)return false;try{return localStorage.getItem(releaseSeenKey())===ANNOUNCEMENT.id}catch{return false}}
-  function markReleaseSeen(){if(ALWAYS_SHOW_HOME_NOTICES)return;try{localStorage.setItem(releaseSeenKey(),ANNOUNCEMENT.id)}catch{}}
+  function releaseSeen(){if(ALWAYS_SHOW_HOME_NOTICES)return false;if(releaseDismissedInSession&&releaseDismissedInSessionId===ANNOUNCEMENT.id)return true;try{return localStorage.getItem(releaseSeenKey())===ANNOUNCEMENT.id}catch{return false}}
+  function markReleaseSeen(){if(ALWAYS_SHOW_HOME_NOTICES)return;releaseDismissedInSession=true;releaseDismissedInSessionId=ANNOUNCEMENT.id;try{localStorage.setItem(releaseSeenKey(),ANNOUNCEMENT.id)}catch{}}
   function dismissedHomeNoticeKey(){return `oleiro.portal.home-notices.dismissed.v1:${uid()}`}
   let dismissedHomeNoticesUid='';
   function ensureDismissedHomeNotices(){
