@@ -244,6 +244,32 @@ test('administrators retain global access across both units',async()=>{
   await assertSucceeds(updateDoc(docRef(db,'applications','application-rodeio'),{unitId:'indaial'}));
 });
 
+test('administrators persist profile lifecycle changes and actor email in the same batch',async()=>{
+  const db=dbFor('admin');
+  const batch=writeBatch(db),now=serverTimestamp();
+  batch.update(docRef(db,'applications','application-rodeio'),{active:false,status:'rejected',updatedAt:now});
+  batch.update(docRef(db,'users','volunteer-rodeio'),{active:false,updatedAt:now});
+  batch.set(docRef(db,'applications/application-rodeio/history','profile-inactivated'),{
+    applicationId:'application-rodeio',type:'profile_inactivated',unitId:'rodeio',
+    actorUid:'admin',actorRole:'admin',actorLabel:'admin@example.test',actorEmail:'admin@example.test',
+    metadata:{source:'lifecycle'},createdAt:now
+  });
+  await assertSucceeds(batch.commit());
+  const events=await getDocs(collection(db,'applications','application-rodeio','history'));
+  assert.equal(events.size,1);
+  assert.equal(events.docs[0].data().actorEmail,'admin@example.test');
+
+  const reactivate=writeBatch(db),reactivatedAt=serverTimestamp();
+  reactivate.update(docRef(db,'applications','application-rodeio'),{active:true,status:'approved',updatedAt:reactivatedAt});
+  reactivate.update(docRef(db,'users','volunteer-rodeio'),{active:true,updatedAt:reactivatedAt});
+  reactivate.set(docRef(db,'applications/application-rodeio/history','profile-reactivated'),{
+    applicationId:'application-rodeio',type:'profile_reactivated',unitId:'rodeio',
+    actorUid:'admin',actorRole:'admin',actorLabel:'admin@example.test',actorEmail:'admin@example.test',
+    metadata:{source:'lifecycle'},createdAt:reactivatedAt
+  });
+  await assertSucceeds(reactivate.commit());
+});
+
 test('participants can edit a requested session adjustment and resubmit the plan',async()=>{
   await testEnv.withSecurityRulesDisabled(async context=>{
     const db=context.firestore(),now=Timestamp.now();
