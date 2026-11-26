@@ -188,6 +188,7 @@ test('Portal behavior is implemented by its canonical feature owners, not app bo
   assert.match(stay,/function portalDateRange\(/);
   assert.match(planning,/function openActivityModal\(/);
   assert.match(planning,/if\(!approved&&!candidatePlanningEditable\(state\.volunteerPlanStatus\|\|'draft'\)\)/,'The activity modal must reuse the canonical planning editability predicate.');
+  assert.doesNotMatch(planning,/const candidateEditable=window\.OleiroRules/,'The modal must not duplicate the shared editability rule.');
   assert.match(planning,/function portalStoredOption\(/);
 });
 
