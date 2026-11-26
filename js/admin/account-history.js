@@ -154,7 +154,6 @@
   }
   async function openHistory(id){
     const p=typeof candidateById==='function'?candidateById(id):null;if(!p)return;
-    const sameHistory=state.managerPage==='planning'&&String(state.managerPlanningPersonId||'')===String(p.id)&&state.managerPlanningTab==='history';
     /* Reabrir Histórico sempre atualiza os dados; o cache serve apenas como prévia imediata. */
     const previousTab=String(state.managerPlanningTab||'plan');
     state.adminHistoryCache=state.adminHistoryCache||{};
