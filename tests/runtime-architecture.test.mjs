@@ -225,12 +225,13 @@ test('Admin planning failures leave the spinner and expose an explicit retry act
 test('Lifecycle mutations are persisted in the candidate audit history with the acting account',()=>{
   const hooks=readFileSync('js/services/history-hooks.js','utf8');
   const service=readFileSync('js/services/history-service.js','utf8');
-  assert.match(hooks,/wrap\(services\.applications,'updateLifecycle'/);
-  assert.match(hooks,/record\(id,'profile_inactivated'/);
-  assert.match(hooks,/record\(id,'profile_reactivated'/);
+  const applications=readFileSync('js/services/application-service.js','utf8');
+  assert.match(applications,/async updateLifecycle/);
+  assert.match(applications,/profile_inactivated/);
+  assert.match(applications,/profile_reactivated/);
+  assert.match(applications,/delete window\.state\?\.adminHistoryCache\[historyKey\]/);
   assert.match(hooks,/await after\(args,result\)/);
   assert.match(service,/actorEmail:String\(session\?\.email\|\|user\.email/);
-  assert.match(service,/delete state\.adminHistoryCache\[key\]/);
 });
 
 test('Admin projects page explicitly loads Firestore records and exposes permission failures',()=>{
