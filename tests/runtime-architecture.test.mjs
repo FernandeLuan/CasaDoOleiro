@@ -200,7 +200,7 @@ test('release announcement modals keep only the compact summary and full-width a
 
 test('Portal planning accepts ISO calendar dates for shareable sessions',()=>{
   const planning=readFileSync('js/portal/planejamento.js','utf8');
-  assert.match(planning,/!\^\\\\d\{4\}-\\\\d\{2\}-\\\\d\{2\}\$\/\.test\(String\(row\.date\|\|''\)\)/);
+  assert.ok(planning.includes(String.raw`!/^\d{4}-\d{2}-\d{2}$/`),'ISO dates must use a real digit matcher, not a literal backslash');
 });
 
 test('Portal WhatsApp sharing requires at least one valid session and enforces a one-minute resend cooldown',()=>{
