@@ -137,7 +137,9 @@ test('volunteer account offers System Light and Dark appearance and persists the
   await page.setViewportSize({width:390,height:844});
   test.setTimeout(90_000);
   await login(page,'voluntario@oleiro.test','Volunteer123!','portal');
+  await page.waitForFunction(()=>state.role==='volunteer'&&state.currentApplication?.id&&state.projectLoading===false&&state.volunteerPlanningLoadedFor===String(state.currentApplication.id),undefined,{timeout:30_000});
   await page.evaluate(()=>window.navigateVolunteer('profile'));
+  await expect(page.locator('#app .volunteer-profile-page')).toBeVisible({timeout:20_000});
   await expect(page.getByRole('button',{name:/Sistema/})).toBeVisible({timeout:20_000});
   const system=page.getByRole('button',{name:/Sistema/});
   await expect(system).toBeVisible();
