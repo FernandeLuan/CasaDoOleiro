@@ -337,11 +337,12 @@ test('Admin bootstrap delegates data orchestration to its data module',()=>{
 test('Portal experience summary behavior has one canonical feature owner',()=>{
   const home=readFileSync('js/portal/home.js','utf8');
   const planning=readFileSync('js/portal/planejamento.js','utf8');
+  const agenda=readFileSync('js/portal/agenda.js','utf8');
   const stay=readFileSync('js/portal/estadia.js','utf8');
   const html=readFileSync('portal/index.html','utf8');
   assert.match(home,/function volunteerHome\s*\(/);
   assert.match(planning,/async function submitPlan\s*\(/);
-  assert.match(planning,/function volunteerDayAdjustment\s*\(/);
+  assert.match(agenda,/function volunteerDayAdjustment\s*\(/);
   assert.match(stay,/function volunteerStay\s*\(/);
   assert.doesNotMatch(html,/experience-summary\.js/);
   assert.ok(retiredNotLoaded.has('js/portal/experience-summary.js'));
