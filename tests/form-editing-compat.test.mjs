@@ -15,6 +15,9 @@ test('iOS editing compatibility preserves text selection and contextual paste on
   assert.match(compatibilityCss, /-webkit-user-select:\s*text\s*!important/);
   assert.match(compatibilityCss, /user-select:\s*text\s*!important/);
   assert.match(compatibilityCss, /-webkit-touch-callout:\s*default\s*!important/);
+  assert.match(compatibilityCss, /touch-action:\s*auto\s*!important/);
+  const baseCss = await readFile(new URL('../css/base.css', import.meta.url), 'utf8');
+  assert.match(baseCss, /input:not\(\[type="hidden"\]\).*touch-action:auto!important/);
 });
 
 for (const [entry, href] of [
