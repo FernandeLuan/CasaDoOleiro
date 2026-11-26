@@ -14,7 +14,7 @@
     return {
       actorUid:String(session?.uid||''),
       actorRole:role==='manager'?String(user.role||'admin'):role||'volunteer',
-      actorLabel:String(user.name||user.displayName||session?.email||'').slice(0,120)
+      actorLabel:String(session?.email||user.email||user.name||user.displayName||'').trim().slice(0,120)
     };
   }
   services.history={
