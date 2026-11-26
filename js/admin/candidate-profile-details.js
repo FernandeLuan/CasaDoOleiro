@@ -97,7 +97,7 @@
       const uid=(p.participantUids||[])[Number(index)];if(uid)batch.set(firestore.doc(context.db,'volunteer_profiles',String(uid)),{gender,updatedAt:now},{merge:true});
       if(typeof window.OleiroServices.history?.appendToBatch!=='function')throw new Error('Serviço de histórico indisponível; a alteração não foi aplicada.');
       window.OleiroServices.history.appendToBatch(batch,context,p.id,'profile_updated',{unitId:String(p.unitId||p.unit||''),metadata:{field:'gender',participantIndex:Number(index)+1},createdAt:now});
-      await batch.commit();p.participantGenders=genders;if(count===1)p.gender=gender;
+      await batch.commit();window.OleiroUI?.invalidateHistoryCache?.(p.id);p.participantGenders=genders;if(count===1)p.gender=gender;
       (state.occupancyCandidates||[]).forEach(row=>{if(String(row.id)===String(p.id)){row.participantGenders=[...genders];if(count===1)row.gender=gender}});state.occupancyScreenCache={};if(state.occupancyMonthCache)state.occupancyMonthCache={};
       renderPersonModal(p,'account');showToast('Gênero atualizado.');
     }catch(error){console.error(error);showToast(error?.message||'Não foi possível atualizar o gênero.');if(button?.isConnected){button.disabled=false;button.textContent='Salvar'}}
@@ -115,7 +115,7 @@
       batch.update(firestore.doc(context.db,'applications',String(p.id)),{registrationLink:link,updatedAt:now});
       if(typeof window.OleiroServices.history?.appendToBatch!=='function')throw new Error('Serviço de histórico indisponível; a alteração não foi aplicada.');
       window.OleiroServices.history.appendToBatch(batch,context,p.id,'profile_updated',{unitId:String(p.unitId||p.unit||''),metadata:{field:'registrationLink'},createdAt:now});
-      await batch.commit();p.registrationLink=link;renderPersonModal(p,'account');showToast('Link do cadastro atualizado.')
+      await batch.commit();window.OleiroUI?.invalidateHistoryCache?.(p.id);p.registrationLink=link;renderPersonModal(p,'account');showToast('Link do cadastro atualizado.')
     }catch(error){console.error(error);showToast(error?.message||'Não foi possível atualizar o link.');if(button?.isConnected){button.disabled=false;button.textContent='Salvar'}}
   };
 
