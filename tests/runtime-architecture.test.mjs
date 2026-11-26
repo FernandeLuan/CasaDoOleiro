@@ -90,7 +90,7 @@ test('delete confirmation uses only the canonical Cloud Shell flow',()=>{
 });
 
 test('analysis copy never says editing is blocked',()=>{
-  const home=readFileSync('js/portal/experience-summary.js','utf8');
+  const home=readFileSync('js/portal/home.js','utf8');
   assert.ok(!home.includes('edição fica bloqueada'));
   assert.ok(home.includes('continuar adicionando e ajustando atividades'));
 });
@@ -181,6 +181,8 @@ test('Portal experience-summary override is retired and Home/Agenda/Stay/Plannin
   assert.match(home,/function volunteerHome\(/);
   assert.match(agenda,/function volunteerAgendaContent\(/);
   assert.match(agenda,/function sessionCardVolunteer\(/);
+  assert.equal((agenda.match(/function volunteerAgendaContent\(/g)||[]).length,1,'Agenda must have exactly one renderer.');
+  assert.equal((agenda.match(/function sessionCardVolunteer\(/g)||[]).length,1,'Agenda must have exactly one session-card renderer.');
   assert.match(stay,/function volunteerStay\(/);
   assert.match(planning,/function submitPlan\(/);
   assert.doesNotMatch(product,/volunteerHome\s*=\s*function|volunteerAgendaContent\s*=\s*function|sessionCardVolunteer\s*=\s*function|openActivityModal\s*=\s*function/);
