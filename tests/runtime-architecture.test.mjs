@@ -124,10 +124,10 @@ test('desktop volunteer sidebar is localized after dynamic insertion',()=>{
 test('submitted candidate uses autosync status instead of fake resend control',()=>{
   const planning=readFileSync('js/portal/planejamento.js','utf8');
   const i18n=readFileSync('js/shared/i18n-keyed.js','utf8');
-  const product=readFileSync('js/portal/product-current.js','utf8');
+  const agenda=readFileSync('js/portal/agenda.js','utf8');
   assert.ok(planning.includes('candidate-plan-sync-state'));
   assert.ok(planning.includes("t('portal.home.submittedBody')"));
-  assert.ok(product.includes("badge(t('portal.profile.analysis'),'info')"));
+  assert.ok(agenda.includes("badge(t('portal.profile.analysis'),'info')"));
   assert.ok(!i18n.includes('edição fica bloqueada'));
 });
 
