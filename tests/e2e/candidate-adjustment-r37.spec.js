@@ -108,6 +108,7 @@ test('analysis remains editable; requested adjustment can add new drafts and res
 });
 
 test('new volunteer form preserves native text selection and paste gestures on iOS and desktop',async({page})=>{
+  await page.setViewportSize({width:390,height:844});
   test.setTimeout(90_000);
   await login(page,'admin@oleiro.test','Admin123!','admin');
   const volunteerNav=page.getByRole('button',{name:/Voluntariado/}).first();
@@ -133,6 +134,7 @@ test('new volunteer form preserves native text selection and paste gestures on i
 });
 
 test('volunteer account offers System Light and Dark appearance and persists the selection',async({page})=>{
+  await page.setViewportSize({width:390,height:844});
   test.setTimeout(90_000);
   await login(page,'voluntario@oleiro.test','Volunteer123!','portal');
   const account=page.getByRole('button',{name:/Conta/}).first();
