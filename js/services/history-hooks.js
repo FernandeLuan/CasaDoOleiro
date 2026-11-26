@@ -29,7 +29,6 @@
   wrap(services.applications,'scheduleSelectionMeeting',([id,meeting])=>record(id,'meeting_scheduled',{metadata:{date:String(meeting?.date||''),time:String(meeting?.time||'')}}));
   wrap(services.applications,'completeSelectionMeeting',([id])=>record(id,'meeting_completed'));
   wrap(services.applications,'finalizeSelection',([id,options])=>record(id,options?.decision==='approve'?'candidate_approved':'candidate_rejected'));
-  wrap(services.applications,'reactivateCandidatePlanning',([id])=>record(id,'profile_reactivated'));
   /* updateLifecycle grava o evento no mesmo batch da alteração no Firestore.
      Não duplicar o evento aqui: o estado local pode já ter sido atualizado quando o wrapper executa. */
   wrap(services.planning,'saveActivity',([args],result)=>record(args?.applicationId,args?.activityId?'activity_updated':'activity_created',{unitId:args?.unitId,metadata:{activityId:String(result?.activityId||args?.activityId||''),activityName:String(args?.data?.name||'')}}));
