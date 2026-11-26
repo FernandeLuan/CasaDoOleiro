@@ -51,3 +51,36 @@ test('project read permissions remain scoped to active users and their own proje
   assert.match(rules, /activeUser\(\) && projectId\.matches\('\.\*__' \+ request\.auth\.uid\)/);
   assert.match(rules, /allow delete: if false/);
 });
+
+
+test('profile activation and inactivation persist actor history atomically',async()=>{
+  const lifecycle=await read('../js/services/application-service.js');
+  const reactivation=await read('../js/services/candidate-reactivation-service.js');
+  const history=await read('../js/services/history-service.js');
+  const admin=await read('../js/admin/candidate-lifecycle.js');
+  assert.match(lifecycle,/services\.history\.appendToBatch\(batch,context,id,eventType/);
+  assert.match(lifecycle,/await batch\.commit\(\)/);
+  assert.doesNotMatch(lifecycle,/A alteração foi salva, mas o histórico não pôde ser registrado/);
+  assert.match(reactivation,/appendToBatch\(batch,context,applicationId,'profile_reactivated'/);
+  assert.match(history,/actorEmail:String\(session\?\.email\|\|user\.email\|\|''\)/);
+  assert.match(admin,/participantAccessCache\[String\(p\.id\)\]=Object\.fromEntries/);
+  assert.match(admin,/adminAccountReadAt\[String\(p\.id\)\]=Date\.now\(\)/);
+});
+
+test('volunteer planning cannot remain indefinitely in a loading state',async()=>{
+  const app=await read('../js/portal/app.js');
+  const account=await read('../js/admin/candidate-detail-data.js');
+  assert.match(app,/portalPlanningWithDeadline/);
+  assert.match(app,/state\.volunteerPlanningFailedFor=applicationId/);
+  assert.match(app,/Serviço de planejamento indisponível/);
+  assert.match(account,/Promise\.race\(\[window\.OleiroServices\.users\.getByIds\(uids\),timeout\]\)/);
+});
+
+test('WhatsApp planning share requires active dated sessions and an active application',async()=>{
+  const planning=await read('../js/portal/planejamento.js');
+  assert.match(planning,/function portalShareableSession/);
+  assert.match(planning,/!String\(row\.activityId\|\|'\)\.trim\(\)\|\|!String\(row\.date\|\|'\)\.trim\(\)/);
+  assert.match(planning,/return application\.status!=='rejected'&&application\.active!==false&&!application\.inactive/);
+  assert.match(planning,/const sessions=activeCandidateSessions\(\)/);
+  assert.match(planning,/disabled aria-disabled="true"/);
+});
