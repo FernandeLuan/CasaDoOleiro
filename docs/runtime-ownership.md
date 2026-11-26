@@ -11,6 +11,10 @@ Critical invariant: candidate planning in `submitted` (application status `analy
 
 ## Portal
 
+- `js/portal/home.js`: canonical Home renderer and Home-specific presentation decisions.
+- `js/portal/estadia.js`: stay-date normalization, date-range selection and Stay screen renderer.
+- `js/portal/planejamento.js`: canonical Planning renderer, activity modal and planning interactions.
+- `js/portal/app.js`: bootstrap, authentication/session hydration and route rendering only; it must not replace feature functions.
 - `js/portal/planejamento.js`: canonical Planning screen and candidate planning controls.
 - `js/portal/app.js`: portal boot/render and modal form composition; it consumes shared domain rules.
 - `js/portal/planning-enhancements.js`: presentation refinements only. It must not replace the Planning page renderer.
