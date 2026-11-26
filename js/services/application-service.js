@@ -221,8 +221,7 @@
     async previewStayDateChange(id,{stayStart,stayEnd,sessions=null,excludeBoundaryDays=false}={}) {
       if(!stayStart||!stayEnd||stayEnd<stayStart)throw new Error('Período inválido.');
       return services.run(async()=>{
-        const context=await services.firebase();
-        const rows=Array.isArray(sessions)?sessions:await applicationSessions(context,id);
+        const rows=Array.isArray(sessions)?sessions:await (async()=>{const context=await services.firebase();return applicationSessions(context,id)})();
         const outside=rows.filter(session=>sessionOutsideStay(session,stayStart,stayEnd,excludeBoundaryDays));
         const key=stayPreviewKey(id,stayStart,stayEnd,excludeBoundaryDays);
         clearStayPreview(id);stayPreviewCache.set(key,{at:Date.now(),sessions:rows});
