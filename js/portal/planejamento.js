@@ -38,7 +38,7 @@ window.sharePortalPlanningWhatsApp=function(){
 };
 
 function volunteerPlan(){
-  const acts=volunteerActivities(),status=state.volunteerPlanStatus||'draft',approved=state.volunteerMode==='approved',editable=!approved&&candidatePlanningEditable(status);
+  const acts=volunteerActivities(),status=state.volunteerPlanStatus||'draft',approved=state.volunteerMode==='approved',editable=approved||candidatePlanningEditable(status);
   const dates=volunteerStayDates(),periodLabel=dates.length?`${fmtDate(dates[0],true)}–${fmtDate(dates[dates.length-1],true)}`:t('portal.home.periodConfirm');
   const hours=((state.sessions||[]).reduce((sum,row)=>sum+(Number(row.duration)||60),0)/60).toFixed(1).replace('.',',');
 
