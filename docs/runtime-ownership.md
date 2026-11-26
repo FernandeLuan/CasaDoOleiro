@@ -24,6 +24,8 @@ Feature wrappers for review, meeting, and adjustment flows may decorate activity
 
 - `js/admin/planning-page.js`: canonical Planning list/detail/profile renderer.
 - `js/admin/admin-shell.js`: shell/sidebar/layout only. It delegates Planning markup to `window.adminPlanningPageHtml`.
+- `js/admin/admin-data.js`: Admin cache, candidate pagination, schedule/dashboard hydration and group data orchestration.
+- `js/admin/app.js`: render composition, manager session bootstrap and visibility refresh wiring only.
 - Account, History, Occupancy, Groups, House Info, and Account Settings remain in their named route modules.
 
 ## Dead-code and ownership checks
