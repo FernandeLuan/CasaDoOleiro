@@ -19,6 +19,17 @@
     };
   }
   services.history={
+    appendToBatch(batch,context,applicationId,type,{unitId='',metadata={},createdAt=null}={}){
+      if(!batch||!context||!applicationId||!type)throw new Error('Não foi possível preparar o evento de histórico.');
+      const {firestore}=context.modules,a=actor();
+      if(!a.actorUid)throw new Error('Sessão administrativa não identificada para registrar o histórico.');
+      const ref=firestore.doc(firestore.collection(context.db,'applications',String(applicationId),'history'));
+      batch.set(ref,{
+        applicationId:String(applicationId),type:String(type),unitId:String(unitId||''),
+        ...a,metadata:cleanMetadata(metadata),createdAt:createdAt||firestore.serverTimestamp()
+      });
+      return ref.id;
+    },
     async append(applicationId,type,{unitId='',metadata={}}={}){
       if(!applicationId||!type)return false;
       return services.run(async()=>{
