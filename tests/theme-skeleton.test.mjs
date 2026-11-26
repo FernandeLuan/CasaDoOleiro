@@ -35,3 +35,15 @@ test('skeleton component supports dashboard and card placeholders and reduced mo
   assert.match(css, /oleiro-skeleton-shimmer/);
   assert.match(css, /prefers-reduced-motion:reduce/);
 });
+
+test('volunteer account exposes System, Light and Dark appearance controls', () => {
+  const profile = read('../js/portal/info.js');
+  const theme = read('../js/shared/theme-preference.js');
+  const portalCss = read('../css/portal.css');
+  assert.match(profile, /setVolunteerTheme/);
+  assert.match(profile, /setVolunteerTheme\\('system'\\)/);
+  assert.match(profile, /setVolunteerTheme\\('light'\\)/);
+  assert.match(profile, /setVolunteerTheme\\('dark'\\)/);
+  assert.match(theme, /prefers-color-scheme: dark/);
+  assert.match(portalCss, /grid-template-columns:repeat\\(3,minmax\\(0,1fr\\)\\)/);
+});
