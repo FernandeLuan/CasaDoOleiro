@@ -11,7 +11,8 @@
     if(from||to)constraints.push(firestore.orderBy('date','asc'));
     const started=Date.now();
     try{
-      const snapshot=await firestore.getDocs(firestore.query(collection,...constraints));
+      const query=firestore.query(collection,...constraints),read=firestore.getDocsFromServer||firestore.getDocs;
+      const snapshot=await read(query);
       services.recordQuery?.('activity_sessions/application',started,snapshot.size,{applicationId:appId,from:from||'',to:to||''});
       return snapshot.docs.map(doc=>({id:doc.id,...doc.data()}));
     }catch(error){
@@ -35,12 +36,14 @@
   }
 
   services.planning={
-    async listSessions({applicationId,from,to}={}){
+    async listSessions({applicationId,from,to,fresh=false}={}){
       if(!applicationId)return [];
       return services.run(async()=>{
         const context=await services.firebase();
         const key=JSON.stringify(['activity_sessions',String(applicationId),from||null,to||null]);
-        const rows=await services.shareQuery(context,key,()=>applicationSessions(context,applicationId,{from,to}));
+        const rows=fresh
+          ?await applicationSessions(context,applicationId,{from,to})
+          :await services.shareQuery(context,key,()=>applicationSessions(context,applicationId,{from,to}));
         return rows.sort(typeof activityScheduleCompare==='function'?activityScheduleCompare:(a,b)=>String(a.date||'').localeCompare(String(b.date||'')));
       },{loading:false});
     },
