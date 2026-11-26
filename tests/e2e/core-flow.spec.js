@@ -197,7 +197,7 @@ test('Approved volunteer can propose a new activity without editing confirmed ac
   await login(page,'approved@oleiro.test','Approved123!','portal');
   await page.waitForFunction(()=>window.state?.role==='volunteer'&&window.state?.currentSession?.uid==='e2e-approved'&&window.state?.currentApplication?.id==='e2e-approved-application'&&window.state?.currentApplication?.status==='approved'&&window.state?.volunteerMode==='approved'&&window.state?.volunteerPlanningLoadedFor==='e2e-approved-application',{},{timeout:20_000});
   await navAction(page,'Agenda').click();
-  const add=page.getByRole('button',{name:/Adicionar atividade$/}).first();
+  const add=page.locator('.day-block').getByRole('button',{name:/Adicionar atividade$/}).first();
   await expect(add).toBeVisible({timeout:20_000});
   await add.click();
   await expect(page.locator('#actName')).toBeVisible();
