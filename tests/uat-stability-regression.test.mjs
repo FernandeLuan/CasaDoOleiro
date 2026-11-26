@@ -144,6 +144,16 @@ test('Admin share button restores the WhatsApp icon and clears the loading state
   assert.ok(planning.includes("button.classList.toggle('is-complete',status.cooldownActive)"));
 });
 
+test('Admin share eligibility bypasses cached planning sessions for a fresh server read', async () => {
+  const planning = await read('../js/admin/planning-page.js');
+  const service = await read('../js/services/planning-service.js');
+  assert.ok(planning.includes('listSessions({applicationId:id,fresh:true})'));
+  assert.ok(planning.includes('fresh:true'));
+  assert.ok(service.includes('async listSessions({applicationId,from,to,fresh=false})'));
+  assert.ok(service.includes('?await applicationSessions(context,applicationId,{from,to})'));
+  assert.ok(service.includes('getDocsFromServer||firestore.getDocs'));
+});
+
 test('Admin lifecycle writes the audit event atomically and invalidates history caches', async () => {
   const application = await read('../js/services/application-service.js');
   assert.ok(application.includes('getDocFromServer||firestore.getDoc'));
