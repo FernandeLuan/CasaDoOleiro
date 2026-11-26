@@ -10,6 +10,12 @@
   const seen=()=>{try{return localStorage.getItem(seenKey())===String(latest?.id||'')}catch{return false}};
   const markSeen=()=>{try{localStorage.setItem(seenKey(),String(latest?.id||''))}catch{}};
   const dateLabel=value=>{if(!value)return '';const date=String(value).slice(0,10);const parsed=new Date(date+'T12:00:00');return Number.isNaN(parsed.getTime())?date:new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'long',year:'numeric'}).format(parsed)};
+  const publishedAtLabel=value=>{
+    if(!value)return '';
+    const date=new Date(value);
+    if(Number.isNaN(date.getTime()))return '';
+    return new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(date);
+  };
   const version=()=>String(latest?.version||meta?.build||'—');
   const itemHtml=item=>`<div class="admin-release-item"><span><i class="fa-solid ${esc(item.icon||'fa-check')}"></i></span><div><strong>${esc(item.title||'Atualização')}</strong><p>${esc(item.text||'')}</p></div></div>`;
   function installStyles(){
@@ -41,11 +47,17 @@
   }
   function releaseInformationHtml(){
     if(!loaded)return '<div class="release-info"><p>Carregando informações da versão...</p></div>';
-    const published=dateLabel(latest?.publishedAt||meta?.publishedAt);
+    const published=publishedAtLabel(meta?.publishedAt||latest?.publishedAt);
+    const commit=String(meta?.commit||'').trim();
+    const shortCommit=/^[a-f0-9]{7,40}$/i.test(commit)?commit.slice(0,7):'';
+    const environment=String(meta?.environment||'').toLowerCase();
+    const environmentLabel=environment==='production'?'Produção':environment==='homologation'?'Homologação':environment==='development'?'Desenvolvimento':'—';
     return `<div class="release-info">
       <p><strong>Versão:</strong> ${esc(version())}</p>
-      <p><strong>Última atualização:</strong> ${esc(latest?.summary||'Informações da versão disponíveis.')}</p>
+      <p><strong>Ambiente:</strong> ${esc(environmentLabel)}</p>
       ${published?`<p><strong>Publicado em:</strong> ${esc(published)}</p>`:''}
+      ${shortCommit?`<p><strong>Commit:</strong> <code title="${esc(commit)}">${esc(shortCommit)}</code></p>`:''}
+      <p><strong>Última atualização:</strong> ${esc(latest?.summary||'Informações da versão disponíveis.')}</p>
     </div>`;
   }
   function modalBody(){
@@ -78,8 +90,7 @@
       fetch('../release-notes.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null)
     ]).then(([releaseMeta,notes])=>{
       meta=releaseMeta||null;releases=Array.isArray(notes?.releases)?notes.releases:[];latest=releases[0]||null;loaded=true;
-      if(typeof window.releaseInformationHtml==='function')window.releaseInformationHtml=releaseInformationHtml;
-      else window.releaseInformationHtml=releaseInformationHtml;
+      window.releaseInformationHtml=releaseInformationHtml;
       maybeAnnounce();return latest;
     }).finally(()=>{loading=null});
     return loading;
