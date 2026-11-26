@@ -159,20 +159,24 @@
     async updateLifecycle(id,{applicationPatch={},participantUids=[],participantActive=null}={}){
       occupancyCache.clear();
       return services.run(async()=>{
-        const context=await services.firebase();const {firestore}=context.modules;const batch=firestore.writeBatch(context.db);const now=firestore.serverTimestamp();
-        batch.update(firestore.doc(context.db,'applications',String(id)),{...applicationPatch,updatedAt:now});
+        const context=await services.firebase();const {firestore}=context.modules,applicationRef=firestore.doc(context.db,'applications',String(id));
+        const beforeSnapshot=await firestore.getDoc(applicationRef);
+        if(!beforeSnapshot.exists())throw new Error('Candidatura não encontrada.');
+        const before=beforeSnapshot.data(),wasActive=before.active!==false;
+        const nextActive=applicationPatch?.active;
+        const eventType=nextActive===false&&wasActive?'profile_inactivated':nextActive===true&&!wasActive?'profile_reactivated':'';
+        const batch=firestore.writeBatch(context.db),now=firestore.serverTimestamp();
+        batch.update(applicationRef,{...applicationPatch,updatedAt:now});
         if(participantActive!==null){
           [...new Set((participantUids||[]).filter(Boolean).map(String))].forEach(uid=>batch.update(firestore.doc(context.db,'users',uid),{active:participantActive===true,updatedAt:now}));
         }
-        await batch.commit();
-        const before=(window.state?.candidates||[]).find(row=>String(row.id)===String(id))||window.state?.currentApplication||null;
-        const wasActive=before?.active!==false&&before?.inactive!==true;
-        const nextActive=applicationPatch?.active;
-        const eventType=nextActive===false&&wasActive?'profile_inactivated':nextActive===true&&!wasActive?'profile_reactivated':'';
-        if(eventType&&services.history?.append){
-          try{await services.history.append(id,eventType,{unitId:String(before?.unitId||before?.unit||'').toLowerCase(),metadata:{source:'lifecycle'}})}
-          catch(error){console.warn('A alteração foi salva, mas o histórico não pôde ser registrado:',error)}
+        if(eventType){
+          if(typeof services.history?.appendToBatch!=='function')throw new Error('Serviço de histórico indisponível; a alteração não foi aplicada.');
+          services.history.appendToBatch(batch,context,id,eventType,{unitId:String(before.unitId||''),metadata:{source:'lifecycle'},createdAt:now});
         }
+        await batch.commit();
+        const cached=(window.state?.candidates||[]).find(row=>String(row.id)===String(id));
+        if(cached){Object.assign(cached,applicationPatch);if('active' in applicationPatch)cached.inactive=applicationPatch.active===false}
         return true;
       },{loading:false});
     },

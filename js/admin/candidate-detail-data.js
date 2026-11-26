@@ -145,8 +145,12 @@
        sem deixar a tela presa em loading caso uma leitura individual falhe. */
     try{
       if(window.OleiroServices?.users?.getByIds&&uids.length){
-        const rows=await window.OleiroServices.users.getByIds(uids),map={};
-        (rows||[]).forEach(row=>map[String(row.id)]=row);
+        let timeoutId;
+        const timeout=new Promise((_,reject)=>{timeoutId=setTimeout(()=>reject(new Error('A consulta de acesso excedeu o tempo limite.')),6000)});
+        let rows=[];
+        try{rows=await Promise.race([window.OleiroServices.users.getByIds(uids),timeout])}
+        finally{clearTimeout(timeoutId)}
+        const map={};(rows||[]).forEach(row=>map[String(row.id)]=row);
         uids.forEach(uid=>{if(!map[uid])map[uid]={id:uid,missing:true}});
         state.participantAccessCache[key]=map;
       }else state.participantAccessCache[key]=Object.fromEntries(uids.map(uid=>[uid,{id:uid,missing:true}]));

@@ -5,7 +5,12 @@ async function refreshCandidateFromBackend(id){const fresh=await window.OleiroSe
 function applyCandidateLocalPatch(p,patch){Object.assign(p,patch);if('active' in patch)p.inactive=patch.active===false;if('planningDeadlineAt' in patch)p.pendingUntil=patch.planningDeadlineAt instanceof Date?patch.planningDeadlineAt.toISOString():patch.planningDeadlineAt||null;deriveAdminNotifications?.();}
 async function rejectCandidateRecord(id,reason,autoRejected=false){
   const p=candidateById(id);if(!p)return null;const patch={status:'rejected',active:false,inactivePreviousStatus:p.status||'pending',planningDeadlineAt:null,rejectedReason:reason,rejectedAt:new Date(),autoRejected:!!autoRejected,needsAdminAttention:false};
-  await window.OleiroServices.applications.updateLifecycle(p.id,{applicationPatch:patch,participantUids:p.participantUids,participantActive:false});applyCandidateLocalPatch(p,patch);return p;
+  await window.OleiroServices.applications.updateLifecycle(p.id,{applicationPatch:patch,participantUids:p.participantUids,participantActive:false});applyCandidateLocalPatch(p,patch);
+  const uids=[...(p.participantUids||[])].map(String).filter(Boolean);
+  state.participantAccessCache=state.participantAccessCache||{};
+  state.participantAccessCache[String(p.id)]=Object.fromEntries(uids.map(uid=>[uid,{id:uid,active:false}]));
+  state.adminAccountReadAt=state.adminAccountReadAt||{};state.adminAccountReadAt[String(p.id)]=Date.now();
+  return p;
 }
 async function processExpiredCandidatesOnStartup(){const now=Date.now();const expired=state.candidates.filter(p=>p.status==='pending'&&p.pendingUntil&&new Date(p.pendingUntil).getTime()<now);for(const p of expired){try{await rejectCandidateRecord(p.id,'Prazo de 7 dias para envio do planejamento expirado.',true)}catch(error){console.error('Falha ao processar prazo expirado:',p.id,error)}}}
 function candidateDeadlineMeta(p){if(!p?.pendingUntil)return null;const deadline=new Date(p.pendingUntil);const days=Math.max(0,Math.ceil((deadline.getTime()-Date.now())/86400000));const locale=typeof currentLocale==='function'?currentLocale():'pt-BR';const date=new Intl.DateTimeFormat(locale,{day:'numeric',month:'long'}).format(deadline);return {days,date,label:days===0?'Vence hoje':days===1?'1 dia restante':`${days} dias restantes`};}
@@ -21,7 +26,11 @@ async function reactivateCandidate(id){
     try{
       await window.OleiroServices.applications.updateLifecycle(p.id,{applicationPatch:{status:'approved',active:true,inactivePreviousStatus:null,planningDeadlineAt:null,autoRejected:false,rejectedReason:'',rejectedAt:null,needsAdminAttention:false},participantUids:p.participantUids||[],participantActive:true});
       const patch={status:'approved',active:true,inactive:false,inactivePreviousStatus:null,planningDeadlineAt:null,pendingUntil:null,autoRejected:false,rejectedReason:'',rejectedAt:null,needsAdminAttention:false};
-      applyCandidateLocalPatch(p,patch);closeModal();render();showToast(`${p.name} foi reativado e manteve o planejamento aprovado.`);return;
+      applyCandidateLocalPatch(p,patch);
+      state.participantAccessCache=state.participantAccessCache||{};
+      state.participantAccessCache[String(p.id)]=Object.fromEntries((p.participantUids||[]).map(uid=>[String(uid),{id:String(uid),active:true}]));
+      state.adminAccountReadAt=state.adminAccountReadAt||{};state.adminAccountReadAt[String(p.id)]=Date.now();
+      closeModal();render();showToast(`${p.name} foi reativado e manteve o planejamento aprovado.`);return;
     }catch(error){console.error(error);showToast(error?.message||'Não foi possível reativar o perfil.');return}
   }
   const service=window.OleiroServices?.applications?.reactivateCandidatePlanning;if(typeof service!=='function')return showToast('Atualize a página antes de reativar este perfil.');
@@ -36,7 +45,11 @@ async function reactivateCandidate(id){
       meetingStatus:null,meetingDate:null,meetingTime:'',meetingDuration:30,meetingLink:'',meetingNotes:'',
       finalDecision:null,finalDecisionAt:null,finalDecisionByUid:'',sessionCount:Number(result.sessionCount)||0,activityCount:Number(result.activityCount)||0
     };
-    applyCandidateLocalPatch(p,patch);p.submitted='—';p.activities=patch.activityCount;p.sessions=patch.sessionCount;
+    applyCandidateLocalPatch(p,patch);
+    state.participantAccessCache=state.participantAccessCache||{};
+    state.participantAccessCache[String(p.id)]=Object.fromEntries((p.participantUids||[]).map(uid=>[String(uid),{id:String(uid),active:true}]));
+    state.adminAccountReadAt=state.adminAccountReadAt||{};state.adminAccountReadAt[String(p.id)]=Date.now();
+    p.submitted='—';p.activities=patch.activityCount;p.sessions=patch.sessionCount;
     invalidateCandidatePlanning?.(p.id);invalidateManagerScheduleCache?.();invalidateManagerPendingChanges?.();
     closeModal();state.candidateFilter='pending';render();scrollPageTop();showToast(`${p.name} foi reativado e o planejamento voltou para edição.`)
   }catch(error){

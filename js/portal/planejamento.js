@@ -1,10 +1,16 @@
 function candidatePlanningEditable(status=state.volunteerPlanStatus||'draft'){
   return window.OleiroRules?.candidatePlanningEditable?.(status)??['draft','submitted','adjustments'].includes(String(status||'draft'));
 }
-function activeCandidateSessions(){
-  return (state.sessions||[]).filter(row=>row.status!=='rejected'&&row.reviewStatus!=='rejected');
+function portalShareableSession(row){
+  if(!row||!String(row.activityId||'').trim()||!String(row.date||'').trim())return false;
+  const status=String(row.status||'proposed').toLowerCase(),review=String(row.reviewStatus||'').toLowerCase();
+  return !['rejected','cancelled','canceled','deleted','inactive','removed'].includes(status)
+    && !['rejected','cancelled','canceled','deleted','inactive','removed'].includes(review);
 }
-function portalPlanningShareAllowed(){const application=state.currentApplication||{};return application.status!=='rejected'&&!application.inactive}
+function activeCandidateSessions(){
+  return (state.sessions||[]).filter(portalShareableSession);
+}
+function portalPlanningShareAllowed(){const application=state.currentApplication||{};return application.status!=='rejected'&&application.active!==false&&!application.inactive}
 function portalPlanningShareStatus(){
   const application=state.currentApplication||{},status=String(application.status||''),plan=String(state.volunteerPlanStatus||'draft');
   if(state.volunteerMode==='approved'||status==='approved')return t('portal.profile.approved');
@@ -25,7 +31,8 @@ function portalPlanningShareBar(){
   return `<div class="planning-share-bar portal-planning-share-bar"><button class="planning-share-action" type="button" onclick="sharePortalPlanningWhatsApp()" ${hasActive?'':'disabled aria-disabled="true"'}><i class="fa-brands fa-whatsapp"></i><span>${escapeHtml(t('planning.share.whatsapp'))}</span></button>${hasActive?'':'<small class="planning-share-disabled-hint">Adicione uma atividade para habilitar o compartilhamento.</small>'}</div>`;
 }
 window.sharePortalPlanningWhatsApp=function(){
-  const sessions=(state.sessions||[]).filter(row=>row.status!=='rejected'&&row.reviewStatus!=='rejected');
+  if(!portalPlanningShareAllowed())return showToast(t('planning.share.none'));
+  const sessions=activeCandidateSessions();
   if(!sessions.length)return showToast(t('planning.share.none'));
   const application=state.currentApplication||{},profile=state.currentSession?.profile||{},name=typeof volunteerProfileName==='function'?volunteerProfileName():(profile.name||state.currentSession?.email||t('role.volunteer'));
   const unit=application.unitName||String(application.unitId||'').replace(/^./,c=>c.toUpperCase());
