@@ -303,10 +303,10 @@ test('Portal screen modules own their functions without bootstrap overrides',()=
   const home=readFileSync('js/portal/home.js','utf8');
   const stay=readFileSync('js/portal/estadia.js','utf8');
   const planning=readFileSync('js/portal/planejamento.js','utf8');
-  assert.ok(!/^\\s*(?:volunteerHome|volunteerStayDates|openActivityModal)\\s*=\\s*function/gm.test(app));
-  assert.match(home,/function volunteerHome\\s*\\(/);
-  assert.match(stay,/function volunteerStayDates\\s*\\(/);
-  assert.match(planning,/function openActivityModal\\s*\\(/);
+  assert.ok(!/^\s*(?:volunteerHome|volunteerStayDates|openActivityModal)\s*=\s*function/gm.test(app));
+  assert.match(home,/function volunteerHome\s*\(/);
+  assert.match(stay,/function volunteerStayDates\s*\(/);
+  assert.match(planning,/function openActivityModal\s*\(/);
   assert.ok(!home.includes('function volunteerStayDates()'));
   assert.ok(!app.includes('window.volunteerHome=volunteerHome'));
 });
