@@ -1,0 +1,17 @@
+/* Compatibilidade de edição em Safari/iOS e navegadores móveis.
+   Não bloquear seleção, menu contextual, colagem nem preenchimento automático nos controles. */
+:where(input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]):not([type="reset"]),
+textarea,
+select,
+[contenteditable="true"],
+[contenteditable=""],
+[role="textbox"][aria-multiline="true"]) {
+  -webkit-user-select: text !important;
+  user-select: text !important;
+  -webkit-touch-callout: default !important;
+  caret-color: auto;
+}
+:where(input[type="email"], input[autocomplete="email"], input[inputmode="email"]) {
+  text-align: start;
+  text-transform: none;
+}
