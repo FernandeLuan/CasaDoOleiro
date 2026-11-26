@@ -105,7 +105,7 @@
   const HISTORY_BROWSER_PREFIX='oleiro.admin.history.v1.';
   const asDate=value=>{if(!value)return null;if(typeof value?.toDate==='function')return value.toDate();const d=new Date(value);return Number.isNaN(d.getTime())?null:d};
   function when(value){const d=asDate(value);if(!d)return '—';const locale=typeof currentLocale==='function'?currentLocale():'pt-BR';return new Intl.DateTimeFormat(locale,{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(d)}
-  function eventLabel(type){const map={candidate_created:'Perfil criado',planning_submitted:'Planejamento enviado',planning_approved:'Planejamento aprovado',meeting_scheduled:'Reunião agendada',meeting_completed:'Reunião realizada',candidate_approved:'Candidato aprovado',candidate_rejected:'Candidato não aprovado',activity_created:'Atividade criada',activity_updated:'Atividade atualizada',activity_feedback_added:'Feedback adicionado',activity_feedback_updated:'Feedback atualizado',session_moved:'Atividade movida',adjustment_requested:'Ajuste solicitado',stay_dates_changed:'Período alterado',post_proposal_reviewed:'Proposta revisada',profile_inactivated:'Perfil inativado',profile_reactivated:'Perfil reativado'};const key=String(type||'');return map[key]||key.replaceAll('_',' ').replace(/^./,c=>c.toUpperCase())||'Evento'}
+  function eventLabel(type){const map={candidate_created:'Perfil criado',planning_submitted:'Planejamento enviado',planning_approved:'Planejamento aprovado',meeting_scheduled:'Reunião agendada',meeting_completed:'Reunião realizada',candidate_approved:'Candidato aprovado',candidate_rejected:'Candidato não aprovado',activity_created:'Atividade criada',activity_updated:'Atividade atualizada',activity_feedback_added:'Feedback adicionado',activity_feedback_updated:'Feedback atualizado',session_moved:'Atividade movida',adjustment_requested:'Ajuste solicitado',stay_dates_changed:'Período alterado',post_proposal_reviewed:'Proposta revisada',profile_inactivated:'Perfil inativado',profile_reactivated:'Perfil reativado',profile_updated:'Dados do perfil atualizados'};const key=String(type||'');return map[key]||key.replaceAll('_',' ').replace(/^./,c=>c.toUpperCase())||'Evento'}
   function usableActorName(value){const actor=String(value||'').trim();return !!actor&&actor!=='Registro anterior'}
   function historyAuthor(row){const email=String(row?.actorEmail||'').trim().toLowerCase();if(email)return email;const actor=String(row?.actorLabel||'').trim();if(usableActorName(actor))return actor;if(String(row?.actorRole||'').toLowerCase()==='system'&&!row?.actorUid)return 'Sistema';return 'Autor não registrado'}
   async function resolveHistoryActors(rows){
@@ -117,7 +117,7 @@
     }catch(error){console.warn('Não foi possível resolver os autores do histórico:',error)}
     return source;
   }
-  function metadata(row){const m=row?.metadata||{};if(row?.type==='meeting_scheduled')return [m.date,m.time].filter(Boolean).join(' • ');if(row?.type==='session_moved')return [m.date,m.period].filter(Boolean).join(' • ');if(row?.type==='stay_dates_changed')return m.stayStart&&m.stayEnd?`${m.stayStart} → ${m.stayEnd}`:'';return m.activityName||m.date||''}
+  function metadata(row){const m=row?.metadata||{};if(row?.type==='profile_updated'){const fields={gender:'Gênero',registrationLink:'Link de cadastro',emergencyContact:'Contato de emergência'};return fields[m.field]||'Dados atualizados'}if(row?.type==='meeting_scheduled')return [m.date,m.time].filter(Boolean).join(' • ');if(row?.type==='session_moved')return [m.date,m.period].filter(Boolean).join(' • ');if(row?.type==='stay_dates_changed')return m.stayStart&&m.stayEnd?`${m.stayStart} → ${m.stayEnd}`:'';return m.activityName||m.date||''}
   function legacyRows(p){const rows=[],push=(type,date)=>{if(date)rows.push({id:`legacy-${type}`,type,createdAt:date,actorRole:'',actorLabel:'Autor não registrado',metadata:{}})};push('candidate_created',p?.createdAt);push('planning_submitted',p?.planningSubmittedAt);push('planning_approved',p?.planningApprovedAt);push('meeting_scheduled',p?.meetingScheduledAt);push('meeting_completed',p?.meetingCompletedAt);if(p?.finalDecisionAt)push(p.finalDecision==='approved'?'candidate_approved':'candidate_rejected',p.finalDecisionAt);return rows}
   function mergeRows(p,rows){const persisted=rows||[],types=new Set(persisted.map(row=>row.type));return [...persisted,...legacyRows(p).filter(row=>!types.has(row.type))].sort((a,b)=>(asDate(b.createdAt)?.getTime()||0)-(asDate(a.createdAt)?.getTime()||0))}
   function browserHistoryKey(id){return HISTORY_BROWSER_PREFIX+String(id||'')}
@@ -154,9 +154,7 @@
   }
   async function openHistory(id){
     const p=typeof candidateById==='function'?candidateById(id):null;if(!p)return;
-    const sameHistory=state.managerPage==='planning'&&String(state.managerPlanningPersonId||'')===String(p.id)&&state.managerPlanningTab==='history';
-    /* Aba ativa: absolutamente nada acontece. */
-    if(sameHistory)return;
+    /* Reabrir Histórico sempre atualiza os dados; o cache serve apenas como prévia imediata. */
     const previousTab=String(state.managerPlanningTab||'plan');
     state.adminHistoryCache=state.adminHistoryCache||{};
     let cached=state.adminHistoryCache[String(p.id)];
@@ -165,7 +163,7 @@
       if(browser){cached={items:browser.items,loadedAt:browser.loadedAt,cursor:null,hasMore:false,loading:false,error:''};state.adminHistoryCache[String(p.id)]=cached}
     }
     const cachedRows=mergeRows(p,Array.isArray(cached?.items)?cached.items:[]);
-    const fresh=!!cached?.loadedAt&&Date.now()-Number(cached.loadedAt)<HISTORY_BROWSER_CACHE_MS;
+    const fresh=false;
     window.OleiroUI?.prepareTabTransition?.(previousTab,'history');
     renderHistory(p,cachedRows,{loading:!cached?.loadedAt});
     window.OleiroUI?.finishTabTransition?.();

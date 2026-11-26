@@ -12,10 +12,10 @@
     const session=typeof state!=='undefined'?state.currentSession:null,user=session?.user||{};
     const role=String(user.role||session?.role||state?.role||'').toLowerCase();
     return {
-      actorUid:String(session?.uid||''),
+      actorUid:String(session?.uid||user.uid||window.OleiroFirebase?.auth?.currentUser?.uid||''),
       actorRole:role==='manager'?String(user.role||'admin'):role||'volunteer',
-      actorLabel:String(session?.email||user.email||user.name||user.displayName||'').trim().slice(0,120),
-      actorEmail:String(session?.email||user.email||'').trim().toLowerCase().slice(0,254)
+      actorLabel:String(session?.email||user.email||user.name||user.displayName||window.OleiroFirebase?.auth?.currentUser?.email||'').trim().slice(0,120),
+      actorEmail:String(session?.email||user.email||window.OleiroFirebase?.auth?.currentUser?.email||'').trim().toLowerCase().slice(0,254)
     };
   }
   services.history={

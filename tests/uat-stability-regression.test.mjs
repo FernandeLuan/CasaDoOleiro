@@ -8,7 +8,7 @@ test('history events persist the authenticated email and render it as the author
   const service = await read('../js/services/history-service.js');
   const history = await read('../js/admin/account-history.js');
   const applications = await read('../js/services/application-service.js');
-  assert.match(service, /actorEmail:String\(session\?\.email\|\|user\.email\|\|''\)/);
+  assert.match(service, /actorEmail:String\(session\?\.email\|\|user\.email\|\|window\.OleiroFirebase\?\.auth\?\.currentUser\?\.email\|\|''\)/);
   assert.match(history, /row\?\.actorEmail/);
   assert.match(applications, /async updateLifecycle/);
   assert.match(applications, /profile_inactivated/);
@@ -66,7 +66,7 @@ test('profile activation and inactivation persist actor history atomically',asyn
   assert.match(lifecycle,/await batch\.commit\(\)/);
   assert.doesNotMatch(lifecycle,/A alteração foi salva, mas o histórico não pôde ser registrado/);
   assert.match(reactivation,/appendToBatch\(batch,context,applicationId,'profile_reactivated'/);
-  assert.match(history,/actorEmail:String\(session\?\.email\|\|user\.email\|\|''\)/);
+  assert.match(history,/actorEmail:String\(session\?\.email\|\|user\.email\|\|window\.OleiroFirebase\?\.auth\?\.currentUser\?\.email\|\|''\)/);
   assert.match(admin,/participantAccessCache\[String\(p\.id\)\]=Object\.fromEntries/);
   assert.match(admin,/adminAccountReadAt\[String\(p\.id\)\]=Date\.now\(\)/);
   assert.match(admin,/\.\.\.\(previousAccess\[key\]\|\|\{\}\)/,'Lifecycle cache updates must preserve firstPortalAccessAt and other access metadata');
@@ -99,4 +99,35 @@ test('reactivating a rejected volunteer records the lifecycle event in the same 
   const service=await read('../js/services/candidate-reactivation-service.js');
   assert.match(service,/appendToBatch\(batch,context,applicationId,'profile_reactivated'/);
   assert.match(service,/await batch\.commit\(\)/);
+});
+
+
+test('admin WhatsApp sharing accepts valid ISO dates when filtering sessions', async () => {
+  const planning = await read('../js/admin/planning-page.js');
+  assert.ok(planning.includes("/^\\d{4}-\\d{2}-\\d{2}$/"), 'Date validation must use digit classes, not a literal backslash');
+  assert.ok(!planning.includes("/^\\\\d{4}-\\\\d{2}-\\\\d{2}$/"), 'Double-escaped date validation would reject every real date');
+});
+
+
+test('volunteer profile edits are recorded atomically in application history', async () => {
+  const profile = await read('../js/admin/candidate-profile-details.js');
+  const history = await read('../js/admin/account-history.js');
+  assert.equal((profile.match(/history\.appendToBatch\(batch,context,p\.id,'profile_updated'/g)||[]).length, 2);
+  assert.equal((profile.match(/invalidateHistoryCache\?\.\(p\.id\)/g)||[]).length, 2);
+  assert.match(history, /profile_updated:'Dados do perfil atualizados'/);
+  assert.ok(history.includes('fields[m.field]'));
+  const emergency = await read('../js/services/volunteer-profile-service.js');
+  const emergencyUi = await read('../js/admin/emergency-contact.js');
+  assert.match(emergency, /appendToBatch\(batch,context,applicationId,'profile_updated'/);
+  assert.match(emergencyUi, /participantIndex:i\+1/);
+});
+
+
+test('admin WhatsApp visibility considers sessions across all cached planning pages', async () => {
+  const planning = await read('../js/admin/planning-page.js');
+  assert.match(planning, /function adminHasShareablePlan\(p\)/);
+  assert.match(planning, /state\.adminPlanPageCache\|\|\{\}/);
+  assert.match(planning, /Number\(p\?\.sessionCount\|\|0\)>0/);
+  assert.match(planning, /!adminHasShareablePlan\(p\)/);
+  assert.match(planning, /setTimeout\(function\(\)\{syncAdminShareCooldown\(p\.id\)\},0\)/);
 });

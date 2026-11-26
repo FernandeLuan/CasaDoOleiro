@@ -95,7 +95,9 @@
       const batch=firestore.writeBatch(context.db),now=firestore.serverTimestamp(),appPatch={participantGenders:genders,updatedAt:now};if(count===1)appPatch.gender=gender;
       batch.update(firestore.doc(context.db,'applications',String(p.id)),appPatch);
       const uid=(p.participantUids||[])[Number(index)];if(uid)batch.set(firestore.doc(context.db,'volunteer_profiles',String(uid)),{gender,updatedAt:now},{merge:true});
-      await batch.commit();p.participantGenders=genders;if(count===1)p.gender=gender;
+      if(typeof window.OleiroServices.history?.appendToBatch!=='function')throw new Error('Serviço de histórico indisponível; a alteração não foi aplicada.');
+      window.OleiroServices.history.appendToBatch(batch,context,p.id,'profile_updated',{unitId:String(p.unitId||p.unit||''),metadata:{field:'gender',participantIndex:Number(index)+1},createdAt:now});
+      await batch.commit();window.OleiroUI?.invalidateHistoryCache?.(p.id);p.participantGenders=genders;if(count===1)p.gender=gender;
       (state.occupancyCandidates||[]).forEach(row=>{if(String(row.id)===String(p.id)){row.participantGenders=[...genders];if(count===1)row.gender=gender}});state.occupancyScreenCache={};if(state.occupancyMonthCache)state.occupancyMonthCache={};
       renderPersonModal(p,'account');showToast('Gênero atualizado.');
     }catch(error){console.error(error);showToast(error?.message||'Não foi possível atualizar o gênero.');if(button?.isConnected){button.disabled=false;button.textContent='Salvar'}}
@@ -108,7 +110,13 @@
   window.saveRegistrationLink=async function(encodedId){
     const id=decodeURIComponent(encodedId),p=candidateById(id),raw=document.getElementById('editRegistrationLink')?.value.trim()||'',link=raw?httpUrl(raw):'',button=document.getElementById('saveRegistrationLinkButton');if(!p)return;if(raw&&!link)return showToast('Informe um link válido.');
     if(button){button.disabled=true;button.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Salvando...'}
-    try{await window.OleiroServices.applications.update(p.id,{registrationLink:link});p.registrationLink=link;renderPersonModal(p,'account');showToast('Link do cadastro atualizado.')}catch(error){console.error(error);showToast(error?.message||'Não foi possível atualizar o link.');if(button?.isConnected){button.disabled=false;button.textContent='Salvar'}}
+    try{
+      const context=await window.OleiroServices.firebase(),{firestore}=context.modules,batch=firestore.writeBatch(context.db),now=firestore.serverTimestamp();
+      batch.update(firestore.doc(context.db,'applications',String(p.id)),{registrationLink:link,updatedAt:now});
+      if(typeof window.OleiroServices.history?.appendToBatch!=='function')throw new Error('Serviço de histórico indisponível; a alteração não foi aplicada.');
+      window.OleiroServices.history.appendToBatch(batch,context,p.id,'profile_updated',{unitId:String(p.unitId||p.unit||''),metadata:{field:'registrationLink'},createdAt:now});
+      await batch.commit();window.OleiroUI?.invalidateHistoryCache?.(p.id);p.registrationLink=link;renderPersonModal(p,'account');showToast('Link do cadastro atualizado.')
+    }catch(error){console.error(error);showToast(error?.message||'Não foi possível atualizar o link.');if(button?.isConnected){button.disabled=false;button.textContent='Salvar'}}
   };
 
   window.candidateParticipantFields=candidateParticipantFields;window.candidateFormParticipant=candidateFormParticipant;window.syncNewCandidateSubmit=syncNewCandidateSubmit;window.openNewCandidate=openNewCandidate;window.occupancyGender=occupancyGender;window.adminPlanningDayCard=adminPlanningDayCard;window.renderPersonModal=renderPersonModal;

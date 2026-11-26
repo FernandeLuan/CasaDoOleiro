@@ -17,7 +17,7 @@
     return `<div class="agenda-page-nav"><button class="icon-btn" type="button" onclick="changeVolunteerPlanPage(${index-1})" ${index<=0?'disabled':''} aria-label="${escapeHtml(t('portal.nav.planning'))} ${Math.max(1,index)}"><i class="fa-solid fa-chevron-left"></i></button><strong>${fmtDate(dates[0],true)}–${fmtDate(dates[dates.length-1],true)}</strong><span>${index+1}/${pages}</span><button class="icon-btn" type="button" onclick="changeVolunteerPlanPage(${index+1})" ${index>=pages-1?'disabled':''} aria-label="${escapeHtml(t('portal.nav.planning'))} ${Math.min(pages,index+2)}"><i class="fa-solid fa-chevron-right"></i></button></div>`;
   }
   function calendarStrip(dates){return `<div class="calendar-strip">${dates.map(d=>`<button class="date-chip" onclick="scrollToVolunteerDay('${d}')"><span>${dayName(d)}</span><strong>${new Date(d+'T12:00:00').getDate()}</strong><span>${calendarMonthLabel(d)}</span></button>`).join('')}</div>`}
-  function loadingState(){return `<div class="empty compact-loading agenda-inline-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>${escapeHtml(t('common.loadingActivities'))}</div>`}
+  function loadingState(){return `<div class="oleiro-skeleton agenda-inline-loading" aria-label="${escapeHtml(t('common.loadingActivities'))}"><div class="oleiro-skeleton-card"><span class="oleiro-skeleton-line medium"></span><span class="oleiro-skeleton-block tall"></span><span class="oleiro-skeleton-line short"></span></div></div>`}
   function applyLoadedSessions(application,sessions){
     state.sessions=sessions||[];state.activities=portalPlanActivities(application,state.sessions);state.sessionStatus={};state.sessionGroups={};
     state.sessions.forEach(session=>{if(session.activityId&&session.date){state.sessionStatus[`${session.activityId}-${session.date}`]=session.status||'proposed';state.sessionGroups[`${session.activityId}-${session.date}`]=session.groupId||'A definir'}});
@@ -26,7 +26,7 @@
 
   volunteerAgendaContent=function(editable=false){
     const stay=volunteerStayDates();if(!stay.length)return `<div class="empty"><i class="fa-regular fa-calendar-xmark"></i>${escapeHtml(t('portal.plan.noPeriod'))}</div>`;
-    const all=planningDates();if(!all.length)return `<div class="empty"><i class="fa-regular fa-calendar-check"></i>${escapeHtml(t('portal.plan.noActivity'))}</div>`;
+    const all=planningDates();if(!all.length)return `<div class="empty planning-empty-state"><i class="fa-regular fa-calendar-check"></i>${escapeHtml(t('portal.plan.noActivity'))}</div>`;
     const dates=currentDates(),applicationId=String(state.currentApplication?.id||''),top=`${calendarStrip(dates)}${pageNav()}`;
     if(state.volunteerAgendaLoading===true||(!state.volunteerPlanningFailedFor&&state.volunteerPlanningLoadedFor!==applicationId))return top+loadingState();
     if(state.volunteerPlanningFailedFor===applicationId)return `${top}<div class="empty"><i class="fa-solid fa-triangle-exclamation"></i>${escapeHtml(t('portal.agenda.loadError'))}<button class="btn btn-soft" style="margin-top:10px" type="button" onclick="hydrateVolunteerPlanning(state.currentApplication,{force:true}).then(()=>render()).catch(()=>showToast(t('portal.agenda.loadError')))">${escapeHtml(t('common.retry'))}</button></div>`;

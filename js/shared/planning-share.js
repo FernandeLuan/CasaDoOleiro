@@ -39,8 +39,8 @@
     });
     return lines.join('\n').trim();
   }
-  function reservePopup(){try{const popup=window.open('about:blank','_blank');if(popup)popup.opener=null;return popup}catch{return null}}
-  function openWhatsApp(text,{popup=null}={}){if(!text)return false;const url=`https://wa.me/?text=${encodeURIComponent(text)}`;if(popup&&!popup.closed){popup.location.replace(url);return true}const opened=window.open(url,'_blank','noopener,noreferrer');if(!opened)location.href=url;return true}
+  function reservePopup(){try{return window.open('about:blank','_blank')}catch{return null}}
+  function openWhatsApp(text,{popup=null}={}){if(!String(text||'').trim())return false;const url=`https://wa.me/?text=${encodeURIComponent(text)}`;try{if(popup&&!popup.closed){popup.location.href=url;popup.opener=null;return true}const opened=window.open(url,'_blank');if(opened){opened.opener=null;return true}return false}catch(error){console.warn('Não foi possível abrir o WhatsApp:',error);return false}}
   function closePopup(popup){try{if(popup&&!popup.closed)popup.close()}catch{}}
   installStyles();
   window.OleiroPlanningShare={buildText,openWhatsApp,reservePopup,closePopup};
