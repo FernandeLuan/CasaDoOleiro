@@ -82,8 +82,19 @@ test('volunteer planning cannot remain indefinitely in a loading state',async()=
 test('WhatsApp planning share requires active dated sessions and an active application',async()=>{
   const planning=await read('../js/portal/planejamento.js');
   assert.match(planning,/function portalShareableSession/);
-  assert.match(planning,/!String\(row\.activityId\|\|''\)\.trim\(\)\|\|!String\(row\.date\|\|''\)\.trim\(\)/);
+  assert.match(planning,/!String\(row\.activityId\|\|''\)\.trim\(\)/);
+  assert.ok(planning.includes('row.date'));
+  assert.ok(planning.includes('PORTAL_SHARE_COOLDOWN_MS=60*1000'));
+  assert.ok(planning.includes('sessionStorage.setItem'));
+  assert.match(planning,/Aguarde um minuto para compartilhar novamente/);
   assert.match(planning,/return application\.status!=='rejected'&&application\.active!==false&&!application\.inactive/);
   assert.match(planning,/const sessions=activeCandidateSessions\(\)/);
   assert.match(planning,/disabled aria-disabled="true"/);
+});
+
+
+test('reactivating a rejected volunteer records the lifecycle event in the same Firestore batch',async()=>{
+  const service=await read('../js/services/candidate-reactivation-service.js');
+  assert.match(service,/appendToBatch\(batch,context,applicationId,'profile_reactivated'/);
+  assert.match(service,/await batch\.commit\(\)/);
 });

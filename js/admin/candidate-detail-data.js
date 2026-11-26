@@ -57,11 +57,21 @@
     if(!p?.id||!window.OleiroServices?.planning?.listSessions)return null;
     const dates=pageDates(p,index),key=pageKey(p,index),cached=state.adminPlanPageCache[key];
     state.adminPlanPageIndex[String(p.id)]=index;
+    state.adminPlanErrors=state.adminPlanErrors||{};
+    delete state.adminPlanErrors[String(p.id)];
     if(!force&&cached&&Date.now()-cached.at<PLAN_CACHE_MS){applyPageCache(p,cached);return cached}
     if(state.adminPlanLoading[String(p.id)])return state.adminPlanLoading[String(p.id)];
     if(!dates.length){const empty={at:Date.now(),pageIndex:index,dates:[],sessions:[],activities:[]};state.adminPlanPageCache[key]=empty;applyPageCache(p,empty);return empty}
-    state.adminPlanLoading[String(p.id)]=window.OleiroServices.planning.listSessions({applicationId:p.id,from:dates[0],to:dates[dates.length-1]}).then(rows=>{
+    let timeoutId;
+    const request=Promise.race([
+      window.OleiroServices.planning.listSessions({applicationId:p.id,from:dates[0],to:dates[dates.length-1]}),
+      new Promise((_,reject)=>{timeoutId=setTimeout(()=>reject(new Error('A consulta do planejamento excedeu 12 segundos. Verifique a conexão e tente novamente.')),12000)})
+    ]).finally(()=>clearTimeout(timeoutId));
+    state.adminPlanLoading[String(p.id)]=request.then(rows=>{
       const normalized=normalizePlanRows(p,rows),cache={...normalized,at:Date.now(),pageIndex:index,dates:[...dates]};state.adminPlanPageCache[key]=cache;applyPageCache(p,cache);return cache;
+    }).catch(error=>{
+      state.adminPlanErrors[String(p.id)]=String(error?.message||'Não foi possível carregar o planejamento.');
+      throw error;
     }).finally(()=>{delete state.adminPlanLoading[String(p.id)]});
     return state.adminPlanLoading[String(p.id)];
   }
@@ -90,8 +100,9 @@
     return `<div class="admin-plan-review-footer"><button class="btn btn-primary" type="button" onclick="approveCandidate(decodeURIComponent('${id}'))"><i class="fa-solid fa-check"></i>Aprovar planejamento</button><button class="btn btn-soft" type="button" onclick="openGeneralPlanningAdjustment('${id}')"><i class="fa-solid fa-rotate"></i>Solicitar ajustes</button><button class="btn btn-danger-soft" type="button" onclick="rejectCandidate(decodeURIComponent('${id}'))"><i class="fa-solid fa-xmark"></i>Recusar</button></div>`;
   }
   function planningContent(p){
-    const dates=pageDates(p),key=pageKey(p),cache=state.adminPlanPageCache[key],loading=!!state.adminPlanLoading[String(p.id)];
+    const dates=pageDates(p),key=pageKey(p),cache=state.adminPlanPageCache[key],loading=!!state.adminPlanLoading[String(p.id)],error=state.adminPlanErrors?.[String(p.id)];
     if(!eligibleDates(p).length)return `${planHeader(p)}<div class="empty"><i class="fa-regular fa-calendar-xmark"></i>Não há dias úteis de atividade entre chegada e saída.</div>`;
+    if(error&&!loading)return `${planHeader(p)}<div class="notice danger"><i class="fa-solid fa-triangle-exclamation"></i><div><strong>Não foi possível carregar o planejamento.</strong><br>${escapeHtml(error)}</div></div><button class="btn btn-primary btn-block" type="button" onclick="retryAdminPlanning('${safe(p.id)}')">Tentar novamente</button>`;
     if(!cache||loading)return `${planHeader(p)}${planPageNav(p)}<div class="empty compact-loading admin-plan-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando planejamento...</div>`;
     applyPageCache(p,cache);
     const byDate=new Map();cache.sessions.forEach(session=>{const rows=byDate.get(session.date)||[];rows.push(session);byDate.set(session.date,rows)});
@@ -162,11 +173,12 @@
   openPerson=async function(id,tab='plan'){
     let p=candidateById(id);if(!p)return;tab=tab==='plan'?'plan':'account';renderPersonModal(p,tab);
     if(tab==='plan'){
-      try{await hydrateAdminPlanPage(p,pageIndex(p));if(modalRoot.dataset.personId===String(p.id)&&modalRoot.dataset.personTab==='plan')renderPersonModal(candidateById(p.id)||p,'plan')}catch(error){console.error(error);showToast('Não foi possível carregar o planejamento.')}
+      try{await hydrateAdminPlanPage(p,pageIndex(p));if(modalRoot.dataset.personId===String(p.id)&&modalRoot.dataset.personTab==='plan')renderPersonModal(candidateById(p.id)||p,'plan')}catch(error){console.error(error);if(modalRoot.dataset.personId===String(p.id)&&modalRoot.dataset.personTab==='plan')renderPersonModal(candidateById(p.id)||p,'plan');showToast('Não foi possível carregar o planejamento.')}
     }else{
       try{await ensureAccountData(p);if(modalRoot.dataset.personId===String(p.id)&&modalRoot.dataset.personTab==='account')renderPersonModal(candidateById(p.id)||p,'account')}catch(error){console.error(error);showToast('Não foi possível atualizar os dados da conta.')}
     }
   };
+  window.retryAdminPlanning=async function(encodedId){const id=decodeURIComponent(encodedId),p=candidateById(id);if(!p)return;delete (state.adminPlanErrors||{})[String(id)];renderPersonModal(p,'plan');try{await hydrateAdminPlanPage(p,pageIndex(p),{force:true})}catch(error){console.error(error)}finally{if(modalRoot.dataset.personId===String(id)&&modalRoot.dataset.personTab==='plan')renderPersonModal(candidateById(id)||p,'plan')}};
   window.loadAdminPlanningPage=async function(encodedId,index){
     const id=decodeURIComponent(encodedId),p=candidateById(id);if(!p)return;const max=pageCount(p)-1,next=Math.max(0,Math.min(Number(index)||0,max));state.adminPlanPageIndex[String(p.id)]=next;renderPersonModal(p,'plan');
     try{await hydrateAdminPlanPage(p,next);if(modalRoot.dataset.personId===String(p.id)&&modalRoot.dataset.personTab==='plan')renderPersonModal(p,'plan')}catch(error){console.error(error);showToast('Não foi possível carregar estes dias.')}
