@@ -1,3 +1,6 @@
+function portalIsoDate(value){if(!value)return null;if(typeof value==='string')return value.slice(0,10);if(typeof value.toDate==='function')return value.toDate().toISOString().slice(0,10);return null}
+function portalDateRange(start,end){if(!start||!end||end<start)return [];const rows=[];let current=start;for(let i=0;i<370&&current<=end;i++){rows.push(current);current=addDays(current,1)}return rows}
+function volunteerStayDates(){const application=state.currentApplication||{};return portalDateRange(portalIsoDate(application.stayStart),portalIsoDate(application.stayEnd))}
 function stayFullDate(value){const iso=typeof portalIsoDate==='function'?portalIsoDate(value):String(value||'').slice(0,10);if(!iso)return '—';const locale=typeof currentLocale==='function'?currentLocale():'pt-BR';return new Intl.DateTimeFormat(locale,{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(iso+'T12:00:00'))}
 function volunteerStay(){
   const application=state.currentApplication||{};const unit=application.unitName||String(application.unitId||'—').replace(/^./,c=>c.toUpperCase());
