@@ -7,13 +7,13 @@ const read = path => readFile(new URL(path, import.meta.url), 'utf8');
 test('history events persist the authenticated email and render it as the author', async () => {
   const service = await read('../js/services/history-service.js');
   const history = await read('../js/admin/account-history.js');
-  const hooks = await read('../js/services/history-hooks.js');
-  assert.match(service, /actorEmail:String\(session\?\.email\|\|user\.email\|\|''\)/);
-  assert.match(history, /row\?\.actorEmail/);
-  assert.match(hooks, /createCandidate/);
-  assert.match(hooks, /candidate_created/);
-  assert.match(hooks, /profile_inactivated/);
-  assert.match(hooks, /profile_reactivated/);
+  const applications = await read('../js/services/application-service.js');
+  assert.match(service, /actorEmail:String\\(session\\?\\.email\\|\\|user\\.email\\|\\|''\\)/);
+  assert.match(history, /row\\?\\.actorEmail/);
+  assert.match(applications, /async updateLifecycle/);
+  assert.match(applications, /profile_inactivated/);
+  assert.match(applications, /profile_reactivated/);
+  assert.match(applications, /services\\.history\\.append\\(id,eventType/);
 });
 
 test('WhatsApp sharing is disabled without active sessions and does not open a blank tab', async () => {
