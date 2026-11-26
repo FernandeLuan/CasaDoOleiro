@@ -63,7 +63,7 @@ async function auditRuntimeSources(siteRoot){
   if(legacyRounds.length)throw new Error('Módulos runtime com nome legado round*: '+legacyRounds.join(', '));
   const retiredConfigPath=path.join(siteRoot,'docs/runtime-retired-modules.json');
   const retiredConfig=JSON.parse(await readFile(retiredConfigPath,'utf8'));
-  const retired=new Set((retiredConfig.retired||[]).map(file=>String(file).replaceAll('\\\\','/')));
+  const retired=new Set((retiredConfig.retired||[]).map(file=>String(file).replaceAll('\\','/')));
   const invalidRetired=[...retired].filter(file=>!runtime.includes(file)||referenced.has(file));
   if(invalidRetired.length)throw new Error('Módulos aposentados ausentes ou ainda carregados: '+invalidRetired.join(', '));
   const orphaned=runtime.filter(file=>!referenced.has(file)&&!retired.has(file));
