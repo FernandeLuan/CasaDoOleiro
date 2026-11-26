@@ -12,6 +12,26 @@ const build=readFileSync('scripts/build-site.mjs','utf8');
 const productionWorkflow=readFileSync('.github/workflows/deploy-pages.yml','utf8');
 const homologationWorkflow=readFileSync('.github/workflows/deploy-homologacao.yml','utf8');
 
+test('production legacy projects use Firestore rather than the local preview store',()=>{
+  const service=readFileSync('js/services/project-preview-service.js','utf8');
+  const portal=readFileSync('js/portal/project.js','utf8');
+  const admin=readFileSync('js/admin/projects.js','utf8');
+  const navigation=readFileSync('js/shared/navigation.js','utf8');
+  const rules=readFileSync('firestore.rules','utf8');
+  assert.match(service,/collection\\(ctx\\.db,'legacy_projects'\\)/);
+  assert.match(service,/firestore\\.setDoc/);
+  assert.match(service,/firestore\\.updateDoc/);
+  assert.match(service,/firestore\\.getDocs/);
+  assert.doesNotMatch(service,/readStore|writeStore|localStorage\\.getItem\\(STORE/);
+  assert.match(portal,/OleiroProjects\\?\\.loadOwn/);
+  assert.match(portal,/await window\\.OleiroProjects\\.saveOwn/);
+  assert.doesNotMatch(admin,/isPreview!==true/);
+  assert.match(navigation,/OleiroProjects\\?\\.loadAll/);
+  assert.match(rules,/match \\/legacy_projects\\/\\{projectId\\}/);
+  assert.match(rules,/participantUpdatesLegacyProject/);
+  assert.match(rules,/managerReviewsLegacyProject/);
+});
+
 test('preview capability is fail-closed unless the build explicitly enables homologation',()=>{
   assert.ok(service.includes('const PREVIEW_ENABLED=window.OLEIRO_PREVIEW_ENABLED===true;'));
   assert.ok(service.includes('isPreview:PREVIEW_ENABLED'));
