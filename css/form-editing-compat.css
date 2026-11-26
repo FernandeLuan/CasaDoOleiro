@@ -11,14 +11,6 @@ select,
   -webkit-touch-callout: default !important;
   caret-color: auto;
 }
-:where(input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]):not([type="reset"]),
-textarea,
-[contenteditable="true"],
-[contenteditable=""],
-[role="textbox"][aria-multiline="true"]) {
-  -webkit-appearance: none;
-  appearance: none;
-}
 :where(input[type="email"], input[autocomplete="email"], input[inputmode="email"]) {
   text-align: start;
   text-transform: none;
