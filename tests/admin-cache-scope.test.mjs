@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 
 test('admin browser cache cannot cross users or permission scopes',()=>{
-  const source=readFileSync('js/admin/app.js','utf8').split('function managerDatePlusDays')[0];
+  const source=readFileSync('js/admin/admin-data.js','utf8').split('function managerDatePlusDays')[0];
   const storage=new Map();
   const state={role:'manager',currentSession:{uid:'a',user:{role:'admin',unitIds:['rodeio']}}};
   const context={state,_oleiroToday:'2026-09-15',sessionStorage:{getItem:key=>storage.get(key),setItem:(key,value)=>storage.set(key,value),removeItem:key=>storage.delete(key)}};
