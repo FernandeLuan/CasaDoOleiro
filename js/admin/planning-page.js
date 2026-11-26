@@ -71,7 +71,7 @@
   const ADMIN_SHARE_COOLDOWN_MS=60*1000;
   function adminShareKey(id){return 'oleiro.admin.whatsapp.'+String(id||'')}
   function adminShareUntil(id){try{return Number(sessionStorage.getItem(adminShareKey(id))||0)||0}catch{return 0}}
-  function adminShareRows(id){return (Array.isArray(state.sessions)?state.sessions:[]).filter(row=>String(row.applicationId||'')===String(id)&&String(row.activityId||'').trim()&&/^\\d{4}-\\d{2}-\\d{2}$/.test(String(row.date||''))&&!['rejected','cancelled','canceled','deleted','inactive','removed'].includes(String(row.status||'').toLowerCase())&&!['rejected','cancelled','canceled','deleted','inactive','removed'].includes(String(row.reviewStatus||'').toLowerCase()))}
+  function adminShareRows(id){return (Array.isArray(state.sessions)?state.sessions:[]).filter(row=>String(row.applicationId||'')===String(id)&&String(row.activityId||'').trim()&&/^\d{4}-\d{2}-\d{2}$/.test(String(row.date||''))&&!['rejected','cancelled','canceled','deleted','inactive','removed'].includes(String(row.status||'').toLowerCase())&&!['rejected','cancelled','canceled','deleted','inactive','removed'].includes(String(row.reviewStatus||'').toLowerCase()))}
   function adminPlanningShareBar(p){
     if(!adminPlanningShareAllowed(p)||String(state.managerPlanningTab||'plan')!=='plan'||!adminShareRows(p.id).length)return '';
     const action=typeof t==='function'?t('planning.share.whatsapp'):'Compartilhar no WhatsApp',remaining=Math.max(0,adminShareUntil(p.id)-Date.now()),disabled=remaining>0,seconds=Math.ceil(remaining/1000),label=disabled?`Compartilhado · ${seconds}s`:action;
