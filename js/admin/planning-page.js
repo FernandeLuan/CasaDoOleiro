@@ -71,11 +71,13 @@
   const ADMIN_SHARE_COOLDOWN_MS=60*1000;
   function adminShareKey(id){return 'oleiro.admin.whatsapp.'+String(id||'')}
   function adminShareUntil(id){try{return Number(sessionStorage.getItem(adminShareKey(id))||0)||0}catch{return 0}}
+  function syncAdminShareCooldown(id){const button=document.querySelector(`.admin-planning-share-bar .planning-share-action[data-application-id="${CSS.escape(String(id))}"]`);if(!button)return;const update=()=>{const left=Math.max(0,Math.ceil((adminShareUntil(id)-Date.now())/1000));button.disabled=left>0;button.setAttribute('aria-disabled',String(left>0));button.querySelector('span').textContent=left>0?`Compartilhado · ${left}s`:'Compartilhar no WhatsApp';return left};if(window.__oleiroAdminShareTimer)clearInterval(window.__oleiroAdminShareTimer);if(update()>0)window.__oleiroAdminShareTimer=setInterval(()=>{if(!button.isConnected||update()<=0){clearInterval(window.__oleiroAdminShareTimer);window.__oleiroAdminShareTimer=null}},1000)}
   function adminShareRows(id){return (Array.isArray(state.sessions)?state.sessions:[]).filter(row=>String(row.applicationId||'')===String(id)&&String(row.activityId||'').trim()&&/^\d{4}-\d{2}-\d{2}$/.test(String(row.date||''))&&!['rejected','cancelled','canceled','deleted','inactive','removed'].includes(String(row.status||'').toLowerCase())&&!['rejected','cancelled','canceled','deleted','inactive','removed'].includes(String(row.reviewStatus||'').toLowerCase()))}
   function adminPlanningShareBar(p){
     if(!adminPlanningShareAllowed(p)||String(state.managerPlanningTab||'plan')!=='plan'||!adminShareRows(p.id).length)return '';
     const action=typeof t==='function'?t('planning.share.whatsapp'):'Compartilhar no WhatsApp',remaining=Math.max(0,adminShareUntil(p.id)-Date.now()),disabled=remaining>0,seconds=Math.ceil(remaining/1000),label=disabled?`Compartilhado · ${seconds}s`:action;
     return `<div class="planning-share-bar admin-planning-share-bar"><button class="planning-share-action" type="button" data-application-id="${escapeHtml(String(p.id))}" onclick="shareAdminPlanningWhatsApp('${encodeURIComponent(String(p.id))}')" ${disabled?'disabled aria-disabled="true"':''}><i class="fa-brands fa-whatsapp"></i><span>${escapeHtml(label)}</span></button></div>`;
+    setTimeout(()=>syncAdminShareCooldown(p.id),0);
   }
   window.shareAdminPlanningWhatsApp=async function(encodedId){
     const id=decodeURIComponent(String(encodedId||'')),p=candidateById(id);if(!adminPlanningShareAllowed(p))return;
