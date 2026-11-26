@@ -839,6 +839,7 @@ service cloud.firestore {
     match /legacy_projects/{projectId} {
       allow read: if isAdmin()
         || (isCoordinator() && managerHasUnit(resource.data.unitId))
+        || (activeUser() && projectId.matches('.*__' + request.auth.uid))
         || (
           activeUser()
           && resource.data.ownerUid == request.auth.uid
