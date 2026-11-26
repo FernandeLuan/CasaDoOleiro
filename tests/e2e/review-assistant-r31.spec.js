@@ -13,7 +13,7 @@ async function login(page,email,password,target){
   await page.locator('#email').fill(email);await page.locator('#password').fill(password);await page.locator('#loginButton').click();await expect(page).toHaveURL(new RegExp(`/${target}/`),{timeout:30_000});
   await page.waitForFunction(targetName=>{if(typeof window.render!=='function')return false;return targetName==='portal'?typeof window.navigateVolunteer==='function':targetName==='admin'?typeof window.navigateManager==='function':true},target,{timeout:20_000});await expect(page.getByRole('navigation').getByRole('button',{name:/Planejamento|Agenda/})).toBeVisible({timeout:30_000});const dismiss=page.getByRole('button',{name:'Agora não',exact:true});if(await dismiss.isVisible().catch(()=>false))await dismiss.press('Enter');if(target==='portal')await page.waitForFunction(()=>state.role==='volunteer'&&state.currentApplication?.id&&state.volunteerPlanningLoadedFor===String(state.currentApplication.id),undefined,{timeout:30_000});
 }
-async function relogin(page,email,password,target){await page.evaluate(()=>window.OleiroAuth?.signOut?.());await login(page,email,password,target)}
+async function relogin(page,email,password,target){await page.evaluate(async()=>{await window.OleiroAuth?.signOut?.()});await login(page,email,password,target)}
 const navAction=(page,label)=>page.getByRole('navigation').getByRole('button',{name:label,exact:false});
 async function openVolunteerByStatus(page,status,name){
   const list=page.locator('#candidateList');
@@ -37,7 +37,7 @@ async function expectDecisionMenu(card){
 test.beforeEach(async()=>{await seedEmulators()});
 
 test('Admin adjustment stays on one activity and volunteer resubmits that session',async({page})=>{
-  await login(page,'voluntario@oleiro.test','Volunteer123!','portal');await navAction(page,'Planejamento').click();await page.getByRole('button',{name:/Enviar planejamento/}).click();await expect.poll(()=>page.evaluate(()=>state.currentApplication?.status),{timeout:20_000}).toBe('analysis');
+  await login(page,'voluntario@oleiro.test','Volunteer123!','portal');await navAction(page,'Planejamento').click();await page.getByRole('button',{name:/Enviar planejamento/}).click();await expect.poll(()=>page.evaluate(()=>state.currentApplication?.status),{timeout:20_000}).toBe('analysis');await expect.poll(()=>page.evaluate(async()=>{const row=await window.OleiroServices.applications.getById('e2e-application',{enrichProfiles:false,server:true});return row?.status||null}),{timeout:20_000}).toBe('analysis');
   await relogin(page,'admin@oleiro.test','Admin123!','admin');const modal=await openVolunteerByStatus(page,'analysis','Voluntário E2E');
   await expect(modal.locator('.person-refactor-tabs button.active')).toContainText('Planejamento');
   await openPlanning(modal);
