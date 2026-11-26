@@ -52,7 +52,8 @@
         const constraints=[firestore.orderBy('createdAt','desc')];if(cursor)constraints.push(firestore.startAfter(cursor));constraints.push(firestore.limit(max));
         const started=Date.now();
         try{
-          const snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'applications',String(applicationId),'history'),...constraints));
+          const query=firestore.query(firestore.collection(context.db,'applications',String(applicationId),'history'),...constraints),read=firestore.getDocsFromServer||firestore.getDocs;
+          const snapshot=await read(query);
           services.recordQuery?.('applications/history',started,snapshot.size,{applicationId:String(applicationId),limit:max,append:!!cursor});
           const items=snapshot.docs.map(doc=>({id:doc.id,...doc.data()})),last=snapshot.docs.at(-1)||null;
           return {items,nextCursor:snapshot.size===max?last:null,hasMore:snapshot.size===max};
