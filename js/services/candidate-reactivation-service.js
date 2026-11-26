@@ -9,7 +9,8 @@
 
     return services.run(async()=>{
       const context=await services.firebase(),{firestore}=context.modules,applicationId=String(id),started=Date.now();
-      const [sessionsSnapshot,activitiesSnapshot]=await Promise.all([
+      const [applicationSnapshot,sessionsSnapshot,activitiesSnapshot]=await Promise.all([
+        firestore.getDoc(firestore.doc(context.db,'applications',applicationId)),
         firestore.getDocs(firestore.query(
           firestore.collection(context.db,'activity_sessions'),
           firestore.where('applicationId','==',applicationId)
@@ -19,6 +20,9 @@
           firestore.where('applicationId','==',applicationId)
         ))
       ]);
+      if(!applicationSnapshot.exists())throw new Error('Candidatura não encontrada.');
+      if(applicationSnapshot.data().active!==false)throw new Error('Este perfil já está ativo. Atualize a lista antes de reativar.');
+
       services.recordQuery?.('candidate/reactivation-planning',started,sessionsSnapshot.size+activitiesSnapshot.size,{applicationId,queries:2});
 
       const uids=[...new Set((participantUids||[]).filter(Boolean).map(String))];
@@ -50,6 +54,10 @@
         });
       });
       uids.forEach(uid=>batch.update(firestore.doc(context.db,'users',uid),{active:true,updatedAt:now}));
+      if(typeof services.history?.appendToBatch!=='function')throw new Error('Serviço de histórico indisponível; a reativação não foi aplicada.');
+      services.history.appendToBatch(batch,context,applicationId,'profile_reactivated',{
+        unitId:String(applicationSnapshot.data().unitId||''),metadata:{source:'lifecycle'},createdAt:now
+      });
 
       await batch.commit();
       return {status:'pending',active:true,sessionCount:sessionsSnapshot.size,activityCount:activitiesSnapshot.size,planningDeadlineAt};
