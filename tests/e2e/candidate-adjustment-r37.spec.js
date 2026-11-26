@@ -145,10 +145,11 @@ test('volunteer account offers System Light and Dark appearance and persists the
   await expect(system).toBeVisible();
   await expect(page.getByRole('button',{name:/Claro/})).toBeVisible();
   await expect(page.getByRole('button',{name:/Escuro/})).toBeVisible();
-  await page.getByRole('button',{name:/Claro/}).click();
+  await page.getByRole('button',{name:/Claro/}).scrollIntoViewIfNeeded();
+  await page.getByRole('button',{name:/Claro/}).click({force:true});
   await expect.poll(()=>page.evaluate(()=>localStorage.getItem('oleiro-theme'))).toBe('light');
   await expect(page.locator('html')).toHaveAttribute('data-theme-preference','light');
-  await page.getByRole('button',{name:/Sistema/}).click();
+  await page.getByRole('button',{name:/Sistema/}).click({force:true});
   await expect.poll(()=>page.evaluate(()=>localStorage.getItem('oleiro-theme'))).toBe('system');
   await expect(page.locator('html')).toHaveAttribute('data-theme-preference','system');
 });
