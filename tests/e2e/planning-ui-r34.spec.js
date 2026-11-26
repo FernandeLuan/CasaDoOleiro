@@ -12,6 +12,17 @@ async function signIn(page,email,password,target){
   await page.locator('#email').fill(email);await page.locator('#password').fill(password);await page.locator('#loginButton').click();await expect(page).toHaveURL(new RegExp(`/${target}/`),{timeout:30_000});
 }
 async function login(page){await signIn(page,'admin@oleiro.test','Admin123!','admin')}
+async function openPlanningBoardVolunteer(page,name){
+  await navAction(page,'Planejamento').click();
+  await expect(page.locator('.planning-board-page')).toBeVisible({timeout:20_000});
+  await page.getByRole('textbox',{name:'Data inicial'}).fill('2026-09-01');
+  await page.getByRole('textbox',{name:'Data final'}).fill('2026-09-30');
+  await page.getByRole('button',{name:'Por voluntário'}).click();
+  const card=page.locator('.planning-board-person-card').filter({hasText:name}).first();
+  await expect(card).toBeVisible({timeout:20_000});
+  await card.getByRole('button',{name:/Abrir planejamento/}).click();
+  await expect(page.locator('.planning-detail-page')).toBeVisible({timeout:20_000});
+}
 const navAction=(page,label)=>page.getByRole('navigation').getByRole('button',{name:new RegExp(`^.{0,3}${label}$`)});
 async function openPendingVolunteer(page){
   await navAction(page,'Voluntariado').click();const list=page.locator('#candidateList');await expect(list).toBeVisible({timeout:20_000});
@@ -46,10 +57,7 @@ test('Editar Mover e Excluir stay on the same row in candidate portal planning',
 
 
 test('Admin WhatsApp remains disabled when the volunteer has no valid activity',async({page})=>{
-  await login(page);await navAction(page,'Planejamento').click();
-  const item=page.locator('#planningCandidateList .list-item.clickable').filter({hasText:'Indaial E2E'}).first();
-  await expect(item).toBeVisible({timeout:20_000});await item.click();
-  await expect(page.locator('.planning-detail-page')).toBeVisible({timeout:20_000});
+  await login(page);await openPlanningBoardVolunteer(page,'Indaial E2E');
   const button=page.locator('.admin-planning-share-bar .planning-share-action');
   await expect(button).toBeVisible();await expect(button).toBeDisabled({timeout:20_000});
   await expect(button).toContainText('Sem atividades para compartilhar');
@@ -59,9 +67,7 @@ test('Admin WhatsApp remains disabled when the volunteer has no valid activity',
 test('Admin WhatsApp button exits spinner after opening the share target',async({page})=>{
   await login(page);
   await page.route('https://wa.me/**',route=>route.fulfill({status:200,contentType:'text/html',body:'<title>WhatsApp mock</title>'}));
-  await navAction(page,'Planejamento').click();
-  const item=page.locator('#planningCandidateList .list-item.clickable').filter({hasText:'Voluntário E2E'}).first();
-  await expect(item).toBeVisible({timeout:20_000});await item.click();
+  await openPlanningBoardVolunteer(page,'Voluntário E2E');
   const button=page.locator('.admin-planning-share-bar .planning-share-action');
   await expect(button).toBeEnabled({timeout:20_000});
   const popupPromise=page.waitForEvent('popup');await button.click();const popup=await popupPromise;
@@ -72,10 +78,7 @@ test('Admin WhatsApp button exits spinner after opening the share target',async(
 });
 
 test('Admin inactivation is persisted in History with the actor email',async({page})=>{
-  await login(page);await navAction(page,'Planejamento').click();
-  const item=page.locator('#planningCandidateList .list-item.clickable').filter({hasText:'Aprovado E2E'}).first();
-  await expect(item).toBeVisible({timeout:20_000});await item.click();
-  await expect(page.locator('.planning-detail-page')).toBeVisible({timeout:20_000});
+  await login(page);await openPlanningBoardVolunteer(page,'Aprovado E2E');
   await page.evaluate(()=>window.requestInactivateApprovedVolunteer(encodeURIComponent('e2e-approved-application')));
   await expect(page.locator('#modalRoot')).toContainText('Inativar perfil?');
   await page.locator('#modalRoot').getByRole('button',{name:'Inativar',exact:true}).click();
