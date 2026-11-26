@@ -29,6 +29,11 @@
   wrap(services.applications,'scheduleSelectionMeeting',([id,meeting])=>record(id,'meeting_scheduled',{metadata:{date:String(meeting?.date||''),time:String(meeting?.time||'')}}));
   wrap(services.applications,'completeSelectionMeeting',([id])=>record(id,'meeting_completed'));
   wrap(services.applications,'finalizeSelection',([id,options])=>record(id,options?.decision==='approve'?'candidate_approved':'candidate_rejected'));
+  wrap(services.applications,'updateLifecycle',([id,options])=>{
+    const patch=options?.applicationPatch||{},active=patch.active;
+    if(active===false||patch.status==='rejected')record(id,'profile_inactivated',{metadata:{status:String(patch.status||''),reason:String(patch.rejectedReason||'')}});
+    else if(active===true)record(id,'profile_reactivated',{metadata:{status:String(patch.status||'')}});
+  });
   wrap(services.applications,'reactivateCandidatePlanning',([id])=>record(id,'profile_reactivated'));
   wrap(services.planning,'saveActivity',([args],result)=>record(args?.applicationId,args?.activityId?'activity_updated':'activity_created',{unitId:args?.unitId,metadata:{activityId:String(result?.activityId||args?.activityId||''),activityName:String(args?.data?.name||'')}}));
   wrap(services.planning,'deleteSession',([sessionId,options],result)=>record(options?.applicationId,'activity_deleted',{metadata:{activityId:String(options?.activityId||''),sessionId:String(sessionId||''),deletedActivity:result?.deletedActivity===true}}));
