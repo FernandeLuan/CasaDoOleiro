@@ -130,7 +130,7 @@ test('admin WhatsApp visibility is verified against all persisted sessions, neve
   const planning = await read('../js/admin/planning-page.js');
   assert.ok(planning.includes('function adminShareableRows(rows)'));
   assert.ok(planning.includes('refreshAdminShareEligibility(p'));
-  assert.ok(planning.includes('listSessions({applicationId:id})'));
+  assert.ok(planning.includes('listSessions({applicationId:id,fresh:true})'));
   assert.ok(!planning.includes('Number(p?.sessionCount||0)>0'));
   assert.ok(planning.includes('eligibility?.valid!==true'));
   assert.ok(planning.includes('button.disabled=status.disabled'));
@@ -149,7 +149,7 @@ test('Admin share eligibility bypasses cached planning sessions for a fresh serv
   const service = await read('../js/services/planning-service.js');
   assert.ok(planning.includes('listSessions({applicationId:id,fresh:true})'));
   assert.ok(planning.includes('fresh:true'));
-  assert.ok(service.includes('async listSessions({applicationId,from,to,fresh=false})'));
+  assert.ok(service.includes('async listSessions({applicationId,from,to,fresh=false}={})'));
   assert.ok(service.includes('?await applicationSessions(context,applicationId,{from,to})'));
   assert.ok(service.includes('getDocsFromServer||firestore.getDocs'));
 });
