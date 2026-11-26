@@ -326,7 +326,7 @@ test('Admin bootstrap delegates data orchestration to its data module',()=>{
   const data=readFileSync('js/admin/admin-data.js','utf8');
   const html=readFileSync('admin/index.html','utf8');
   for(const symbol of ['hydrateManagerSchedule','hydrateManagerPendingChanges','loadManagerCandidates','hydrateManagerDashboardData','hydrateManagerBaseData','ensureManagerGroups']){
-    assert.match(data,new RegExp('function '+symbol+'\s*\('),symbol+' must be owned by Admin data orchestration');
+    assert.match(data,new RegExp('function '+symbol+'\\s*\\('),symbol+' must be owned by Admin data orchestration');
   }
   assert.doesNotMatch(app,/function (?:hydrateManagerSchedule|hydrateManagerPendingChanges|loadManagerCandidates|hydrateManagerDashboardData|hydrateManagerBaseData|ensureManagerGroups)\s*\(/);
   assert.ok(html.indexOf('admin-data.js')<html.indexOf('admin/app.js'),'Admin data module must load before the bootstrap');
