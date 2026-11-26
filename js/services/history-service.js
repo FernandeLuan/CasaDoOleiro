@@ -57,11 +57,7 @@
           const items=snapshot.docs.map(doc=>({id:doc.id,...doc.data()})),last=snapshot.docs.at(-1)||null;
           return {items,nextCursor:snapshot.size===max?last:null,hasMore:snapshot.size===max};
         }catch(error){
-          const detail=`${error?.code||''} ${error?.message||''}`;
-          if(/permission-denied|missing or insufficient permissions|failed-precondition|index/i.test(detail)){
-            console.warn('Histórico detalhado indisponível; usando eventos do registro principal.',error);
-            return {items:[],nextCursor:null,hasMore:false,fallback:true};
-          }
+          console.error('Falha ao consultar o histórico persistido da candidatura:',applicationId,error);
           throw error;
         }
       },{loading:false});

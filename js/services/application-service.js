@@ -161,7 +161,7 @@
       occupancyCache.clear();
       return services.run(async()=>{
         const context=await services.firebase();const {firestore}=context.modules,applicationRef=firestore.doc(context.db,'applications',String(id));
-        const beforeSnapshot=await firestore.getDoc(applicationRef);
+        const readApplication=firestore.getDocFromServer||firestore.getDoc;const beforeSnapshot=await readApplication(applicationRef);
         if(!beforeSnapshot.exists())throw new Error('Candidatura não encontrada.');
         const before=beforeSnapshot.data(),wasActive=before.active!==false;
         const nextActive=applicationPatch?.active;
@@ -179,6 +179,7 @@
         const historyKey=String(id);
         if(window.state?.adminHistoryCache)delete window.state.adminHistoryCache[historyKey];
         try{sessionStorage.removeItem('oleiro.admin.history.v1.'+historyKey)}catch{}
+        window.OleiroUI?.invalidateHistoryCache?.(historyKey);
         const cached=(window.state?.candidates||[]).find(row=>String(row.id)===String(id));
         if(cached){Object.assign(cached,applicationPatch);if('active' in applicationPatch)cached.inactive=applicationPatch.active===false}
         return true;
