@@ -105,7 +105,7 @@
   }
 
   function boardBodyHtml(){
-    if(state.planningBoardLoading&&!state.planningBoardSessions.length)return '<div class="empty planning-board-loading"><div><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando planejamentos...</div></div>';
+    if(state.planningBoardLoading&&!state.planningBoardSessions.length)return '<div class="oleiro-skeleton planning-board-loading" aria-label="Carregando planejamentos"><div class="oleiro-skeleton-grid"><section class="oleiro-skeleton-card"><span class="oleiro-skeleton-line medium"></span><span class="oleiro-skeleton-block tall"></span><span class="oleiro-skeleton-line short"></span></section><section class="oleiro-skeleton-card"><span class="oleiro-skeleton-line medium"></span><span class="oleiro-skeleton-block tall"></span></section></div></div>';
     if(state.planningBoardError&&!state.planningBoardSessions.length)return `<div class="empty planning-board-empty"><div><i class="fa-solid fa-triangle-exclamation"></i>${escapeHtml(state.planningBoardError)}</div></div>`;
     if(state.planningBoardView==='volunteer'){
       const groups=personGroups();if(!groups.length)return '<div class="empty planning-board-empty"><div><i class="fa-regular fa-calendar-xmark"></i>Nenhum voluntário encontrado com estes filtros.</div></div>';
