@@ -91,3 +91,10 @@ test('WhatsApp planning share requires active dated sessions and an active appli
   assert.match(planning,/const sessions=activeCandidateSessions\(\)/);
   assert.match(planning,/disabled aria-disabled="true"/);
 });
+
+
+test('reactivating a rejected volunteer records the lifecycle event in the same Firestore batch',async()=>{
+  const service=await read('../js/services/candidate-reactivation-service.js');
+  assert.match(service,/appendToBatch\(batch,context,applicationId,'profile_reactivated'/);
+  assert.match(service,/await batch\.commit\(\)/);
+});
