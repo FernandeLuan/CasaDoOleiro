@@ -125,7 +125,7 @@
     const eligibility=state.adminShareEligibility?.[String(p.id)];
     if(!eligibility&&!adminShareEligibilityRequests[String(p.id)])setTimeout(()=>refreshAdminShareEligibility(p),0);
     const status=adminShareButtonState(p.id),hint=eligibility?.error?'Não foi possível verificar as atividades. Tente novamente.':eligibility?.loading||!eligibility?'Verificando se há atividades válidas...':!eligibility.valid?'Adicione uma atividade válida ao planejamento para habilitar o compartilhamento.':'';
-    return '<div class="planning-share-bar admin-planning-share-bar"><button class="planning-share-action '+(status.cooldownActive?'is-complete':'')+'" type="button" data-application-id="'+escapeHtml(String(p.id))+'" onclick="shareAdminPlanningWhatsApp(\\''+encodeURIComponent(String(p.id))+'\\')" '+(status.disabled?'disabled aria-disabled="true"':'')+'><i class="fa-brands fa-whatsapp"></i><span>'+escapeHtml(status.label)+'</span></button>'+(hint?'<small class="planning-share-disabled-hint">'+escapeHtml(hint)+'</small>':'')+'</div>';
+    return '<div class="planning-share-bar admin-planning-share-bar"><button class="planning-share-action '+(status.cooldownActive?'is-complete':'')+'" type="button" data-application-id="'+escapeHtml(String(p.id))+'" onclick="shareAdminPlanningWhatsApp(\''+encodeURIComponent(String(p.id))+'\')" '+(status.disabled?'disabled aria-disabled="true"':'')+'><i class="fa-brands fa-whatsapp"></i><span>'+escapeHtml(status.label)+'</span></button>'+(hint?'<small class="planning-share-disabled-hint">'+escapeHtml(hint)+'</small>':'')+'</div>';
   }
   window.shareAdminPlanningWhatsApp=async function(encodedId){
     const id=decodeURIComponent(String(encodedId||'')),p=candidateById(id);if(!adminPlanningShareAllowed(p))return;
