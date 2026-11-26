@@ -44,23 +44,34 @@ function portalPlanningShareBar(){
   const button=portalShareButtonState(),disabled=button.disabled;
   const label=button.label;
   const hint=button.hint;
+  /* O HTML é inserido depois desta função; sincronizar no próximo ciclo evita
+     perder o cooldown quando a tela é reconstruída ou restaurada pelo BFCache. */
+  setTimeout(syncPortalShareCooldownTimer,0);
   return `<div class="planning-share-bar portal-planning-share-bar"><button id="portalPlanningShareButton" class="planning-share-action ${button.disabled?'is-complete':''}" type="button" onclick="sharePortalPlanningWhatsApp()" ${disabled?'disabled aria-disabled="true"':''}><i class="fa-brands fa-whatsapp"></i><span>${escapeHtml(label)}</span></button>${hint?`<small class="planning-share-disabled-hint">${escapeHtml(hint)}</small>`:''}</div>`;
 }
 function syncPortalShareCooldownTimer(){
-  if(window.__oleiroPortalShareTimer)clearInterval(window.__oleiroPortalShareTimer);
+  if(window.__oleiroPortalShareTimer){clearInterval(window.__oleiroPortalShareTimer);window.__oleiroPortalShareTimer=null}
   const update=()=>{
     const button=document.getElementById('portalPlanningShareButton');
-    if(!button){clearInterval(window.__oleiroPortalShareTimer);window.__oleiroPortalShareTimer=null;return}
+    if(!button)return false;
     const status=portalShareButtonState();
     button.disabled=status.disabled;button.setAttribute('aria-disabled',String(status.disabled));
     const label=button.querySelector('span');if(label)label.textContent=status.label;
     let hint=button.parentElement?.querySelector('.planning-share-disabled-hint');
     if(status.hint){if(!hint){hint=document.createElement('small');hint.className='planning-share-disabled-hint';button.parentElement.appendChild(hint)}hint.textContent=status.hint}
     else if(hint)hint.remove();
-    if(portalShareCooldownUntil()<=Date.now()){button.classList.remove('is-complete');clearInterval(window.__oleiroPortalShareTimer);window.__oleiroPortalShareTimer=null}
+    button.classList.toggle('is-complete',status.disabled&&activeCandidateSessions().length>0);
+    return true;
   };
-  if(portalShareCooldownUntil()<=Date.now())return;
-  update();window.__oleiroPortalShareTimer=setInterval(update,1000);
+  /* Sempre recalcula imediatamente: ao voltar do WhatsApp/Safari, o navegador
+     pode ter congelado o interval e o prazo pode já ter expirado. */
+  if(!update())return;
+  if(portalShareCooldownUntil()>Date.now())window.__oleiroPortalShareTimer=setInterval(()=>{
+    if(!update()||portalShareCooldownUntil()<=Date.now()){
+      if(window.__oleiroPortalShareTimer)clearInterval(window.__oleiroPortalShareTimer);
+      window.__oleiroPortalShareTimer=null;
+    }
+  },1000);
 }
 function startPortalShareCooldown(){
   const until=Date.now()+PORTAL_SHARE_COOLDOWN_MS;
@@ -68,6 +79,10 @@ function startPortalShareCooldown(){
   syncPortalShareCooldownTimer();
 }
 window.syncPortalShareCooldownTimer=syncPortalShareCooldownTimer;
+/* Retorno de app externo, troca de aba e restauração de página congelada. */
+window.addEventListener('pageshow',syncPortalShareCooldownTimer);
+window.addEventListener('focus',syncPortalShareCooldownTimer);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncPortalShareCooldownTimer()});
 window.sharePortalPlanningWhatsApp=function(){
   if(!portalPlanningShareAllowed())return showToast(t('planning.share.none'));
   const sessions=activeCandidateSessions();

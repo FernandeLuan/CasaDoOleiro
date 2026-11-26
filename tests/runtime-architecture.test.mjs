@@ -249,3 +249,15 @@ test('WhatsApp cooldown never re-enables sharing when no valid sessions remain',
   assert.match(planning,/OleiroPlanningShare\?\.openWhatsApp/);
   assert.ok(!planning.includes('window.location.assign(url)'),'Sharing must open WhatsApp without navigating the portal into a persistent loading state.');
 });
+
+
+test('Portal WhatsApp cooldown refreshes immediately after app return and page restoration',()=>{
+  const portal=readFileSync('js/portal/planejamento.js','utf8');
+  assert.match(portal,/window\.addEventListener\('pageshow',syncPortalShareCooldownTimer\)/);
+  assert.match(portal,/window\.addEventListener\('focus',syncPortalShareCooldownTimer\)/);
+  assert.match(portal,/document\.addEventListener\('visibilitychange',[^\n]*syncPortalShareCooldownTimer/);
+  assert.match(portal,/setTimeout\(syncPortalShareCooldownTimer,0\)/);
+  const sync=portal.match(/function syncPortalShareCooldownTimer\(\)\{([\s\S]*?)\n\}/)?.[1]||'';
+  assert.ok(sync.indexOf('if(!update())return')>=0,'button state must be recalculated immediately, even if cooldown already expired');
+  assert.ok(sync.indexOf('if(portalShareCooldownUntil()>Date.now())')>sync.indexOf('if(!update())return'),'timer must only be restarted after immediate state refresh');
+});
