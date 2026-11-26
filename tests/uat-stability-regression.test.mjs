@@ -48,6 +48,8 @@ test('admin version panel removes the details link and waits for authenticated h
 test('project read permissions remain scoped to active users and their own project IDs', async () => {
   const rules = await read('../firestore.rules');
   assert.match(rules, /match \/legacy_projects\/\{projectId\}/);
-  assert.match(rules, /activeUser\(\) && projectId\.matches\('\.\*__' \+ request\.auth\.uid\)/);
+  assert.match(rules, /allow get: if isAdmin\(\)/);
+  assert.match(rules, /projectId\.matches\('\.\*__' \+ request\.auth\.uid\)/);
+  assert.match(rules, /allow list: if isAdmin\(\)[\s\S]*isCoordinator\(\) && managerHasUnit\(resource\.data\.unitId\)/);
   assert.match(rules, /allow delete: if false/);
 });
