@@ -50,8 +50,8 @@ test('Firestore rules isolate project reads by owner or assigned unit and enforc
 
 test('release announcement popup stays out of local browser regression sessions',()=>{
   const release=read('js/portal/release-notes.js');
-  assert.match(release,/localTestHost=\['localhost','127\\.0\\.0\\.1'\]\.includes\(location\.hostname\)/);
-  assert.match(release,/if\(demoProject\|\|localTestHost\|\|previewBuild\)/);
+  assert.ok(release.includes("const localTestHost=['localhost','127.0.0.1'].includes(location.hostname);"));
+  assert.ok(release.includes('if(demoProject||localTestHost||previewBuild)'));
 });
 
 test('production and homologation deploy workflows set explicit build environments',()=>{
