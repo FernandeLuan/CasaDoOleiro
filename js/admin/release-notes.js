@@ -86,7 +86,14 @@
   window.releaseInformationHtml=releaseInformationHtml;
   load();
   let attempts=0;
-  const waitForSession=()=>{if(state?.role==='manager'&&state?.currentSession?.uid){maybeAnnounce();return}if(++attempts<80)setTimeout(waitForSession,500)};
+  const waitForSession=()=>{
+    if(state?.role==='manager'&&state?.currentSession?.uid){
+      if(state?.managerPage==='home'){maybeAnnounce();if(popupOpened||seen())return}
+      if(++attempts<120)setTimeout(waitForSession,250);
+      return;
+    }
+    if(++attempts<120)setTimeout(waitForSession,250);
+  };
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',waitForSession,{once:true});else setTimeout(waitForSession,500);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden){if(!loaded)load();maybeAnnounce()}});
 })();
