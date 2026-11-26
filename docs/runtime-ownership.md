@@ -11,17 +11,22 @@ Critical invariant: candidate planning in `submitted` (application status `analy
 
 ## Portal
 
-- `js/portal/planejamento.js`: canonical Planning screen and candidate planning controls.
-- `js/portal/app.js`: portal boot/render and modal form composition; it consumes shared domain rules.
+- `js/portal/app.js`: authentication boot, data hydration, route rendering and startup orchestration only. It must not replace screen functions or own feature forms.
+- `js/portal/estadia.js`: canonical stay date normalization, date-range selection and stay rendering.
+- `js/portal/planejamento.js`: canonical Planning screen, candidate planning controls, activity modal/form composition, `submitPlan` and day-adjustment guidance.
+- `js/portal/home.js`: canonical `volunteerHome` renderer.
+- `js/portal/experience-summary.js`: retired from runtime on 2026-11-26 after its duplicate `volunteerHome`, `volunteerStay`, `submitPlan` and day-adjustment behavior was merged into the canonical Home, Stay and Planning modules.
 - `js/portal/planning-enhancements.js`: presentation refinements only. It must not replace the Planning page renderer.
 - `js/portal/candidate-view.js`: retired from runtime on 2026-09-15 after its behavior was merged into `planejamento.js`. It is intentionally kept for one rollback cycle and tracked by the runtime architecture test.
 
-Feature wrappers for review, meeting, and adjustment flows may decorate activity cards and contextual actions, but they must not redefine candidate planning editability.
+Feature wrappers for review, meeting, and adjustment flows may decorate activity cards and contextual actions, but they must not replace canonical screen functions or redefine candidate planning editability.
 
 ## Admin
 
 - `js/admin/planning-page.js`: canonical Planning list/detail/profile renderer.
 - `js/admin/admin-shell.js`: shell/sidebar/layout only. It delegates Planning markup to `window.adminPlanningPageHtml`.
+- `js/admin/admin-data.js`: Admin cache, candidate pagination, schedule/dashboard hydration and group data orchestration.
+- `js/admin/app.js`: render composition, manager session bootstrap and visibility refresh wiring only.
 - Account, History, Occupancy, Groups, House Info, and Account Settings remain in their named route modules.
 
 ## Dead-code and ownership checks
@@ -30,6 +35,7 @@ Feature wrappers for review, meeting, and adjustment flows may decorate activity
 1. every Admin/Portal screen module is loaded or explicitly retired;
 2. candidate Planning has one canonical page owner;
 3. the Admin shell does not duplicate Planning markup;
-4. all local script references exist.
+4. Portal screen functions are declared by their owning modules, not replaced by the bootstrap;
+5. all local script references exist.
 
 Do not delete a retired module in the same change that stops loading it. First merge its behavior into the canonical owner, keep it explicitly retired for a rollback cycle, and remove it only in a later cleanup after regression passes.

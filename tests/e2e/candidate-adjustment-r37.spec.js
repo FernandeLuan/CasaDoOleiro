@@ -14,7 +14,7 @@ async function login(page,email,password,target){
 }
 async function waitForPortalNavigation(page){await expect(page.getByRole('navigation').getByRole('button',{name:/Planejamento/})).toBeVisible({timeout:30_000});const dismiss=page.getByRole('button',{name:'Agora não',exact:true});if(await dismiss.isVisible().catch(()=>false))await dismiss.press('Enter')}
 async function relogin(page,email,password,target){await page.evaluate(()=>window.OleiroAuth?.signOut?.());await login(page,email,password,target)}
-const navAction=(page,label)=>page.getByRole('button',{name:new RegExp(`^.{0,3}${label}$`)});
+const navAction=(page,label)=>page.getByRole('navigation').getByRole('button',{name:new RegExp(`^.{0,3}${label}$`)});
 async function openVolunteerByStatus(page,status,name){
   const list=page.locator('#candidateList');await navAction(page,'Voluntariado').click();
   try{await expect(list).toBeVisible({timeout:10_000})}catch{await navAction(page,'Voluntariado').click();await expect(list).toBeVisible({timeout:20_000})}

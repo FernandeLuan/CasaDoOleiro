@@ -149,8 +149,10 @@ The current `js/` tree should not be moved wholesale in one change. Keep the dep
 
 ## Phase 1 progress — first guarded contract
 
-The first executable contract is now recorded in `docs/runtime-contract-overrides.json`. It inventories the four currently observed Portal function replacements in `js/portal/app.js` (two assignments to `volunteerHome`, one to `volunteerStayDates`, and one to `openActivityModal`). The ownership intent and exit criteria are recorded per symbol.
+The executable contract remains in `docs/runtime-contract-overrides.json`; the Portal bootstrap now has zero function replacements. The four previously observed assignments (two to `volunteerHome`, one to `volunteerStayDates`, and one to `openActivityModal`) were removed and their behavior returned to canonical owners: `home.js`, `estadia.js`, and `planejamento.js`.
 
-`tests/runtime-architecture.test.mjs` now compares the source assignments with that explicit contract. An unreviewed addition, removal, or count change fails the architecture test and requires a deliberate contract review. This is intentionally a narrow first guard, not a claim that every global write in Admin and Portal has been inventoried.
+`tests/runtime-architecture.test.mjs` verifies module ownership and rejects new bootstrap overrides. `scripts/check-real-data-contracts.sh` now follows the activity-modal owner in `planejamento.js`. The planning projection functions (`planStatusFromApplication`, `portalPlanActivities`, `applyVolunteerPlanningRows`) also moved out of the Portal bootstrap into the Planning module. A stale E2E assertion was corrected to check the canonical owner rather than `app.js`.
 
-Next migration target: move the two `volunteerHome` presentation adapters into the canonical home feature, then move the date selector and activity-modal orchestration behind explicit feature APIs. Each move must preserve current behavior and pass Portal E2E before the compatibility assignments are removed.
+A general `Runtime Architecture` workflow now runs on relevant pull requests rather than relying on the special homologation-only workflow. `npm run audit:runtime` inventories state readers/writers, service consumers, global function assignments, direct Firestore access in screen modules, and Admin/Portal script order. The ownership rules and migration sequence are recorded in `docs/runtime-boundaries.md`.
+
+The audit is diagnostic; it does not claim all state is encapsulated. Remaining runtime debt includes shared mutable state, ordered classic scripts, broad Admin bootstrap orchestration, service modules that invalidate UI caches, and runtime service decorators. The next changes should be selected from the inventory and migrated one owner at a time.

@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, normalize } from 'node:path';
 
-const retiredNotLoaded=new Set();
+const retiredConfig=JSON.parse(readFileSync('docs/runtime-retired-modules.json','utf8'));
+const retiredNotLoaded=new Set(retiredConfig.retired||[]);
 
 function localScripts(htmlPath){
   const html=readFileSync(htmlPath,'utf8');
@@ -123,10 +124,10 @@ test('desktop volunteer sidebar is localized after dynamic insertion',()=>{
 test('submitted candidate uses autosync status instead of fake resend control',()=>{
   const planning=readFileSync('js/portal/planejamento.js','utf8');
   const i18n=readFileSync('js/shared/i18n-keyed.js','utf8');
-  const product=readFileSync('js/portal/product-current.js','utf8');
+  const agenda=readFileSync('js/portal/agenda.js','utf8');
   assert.ok(planning.includes('candidate-plan-sync-state'));
   assert.ok(planning.includes("t('portal.home.submittedBody')"));
-  assert.ok(product.includes("badge(t('portal.profile.analysis'),'info')"));
+  assert.ok(agenda.includes("badge(t('portal.profile.analysis'),'info')"));
   assert.ok(!i18n.includes('edição fica bloqueada'));
 });
 
@@ -260,4 +261,90 @@ test('Portal WhatsApp cooldown refreshes immediately after app return and page r
   const sync=portal.match(/function syncPortalShareCooldownTimer\(\)\{([\s\S]*?)\n\}/)?.[1]||'';
   assert.ok(sync.indexOf('if(!update())return')>=0,'button state must be recalculated immediately, even if cooldown already expired');
   assert.ok(sync.indexOf('if(portalShareCooldownUntil()>Date.now())')>sync.indexOf('if(!update())return'),'timer must only be restarted after immediate state refresh');
+});
+
+
+test('Portal screen modules own their functions without bootstrap overrides',()=>{
+  const app=readFileSync('js/portal/app.js','utf8');
+  const home=readFileSync('js/portal/home.js','utf8');
+  const stay=readFileSync('js/portal/estadia.js','utf8');
+  const planning=readFileSync('js/portal/planejamento.js','utf8');
+  assert.doesNotMatch(app,/^\s*(?:volunteerHome|volunteerStayDates|openActivityModal)\s*=\s*function/gm);
+  assert.match(home,/function volunteerHome\s*\(/);
+  assert.match(stay,/function volunteerStayDates\s*\(/);
+  assert.match(planning,/function openActivityModal\s*\(/);
+  assert.doesNotMatch(home,/function volunteerStayDates\s*\(/);
+  assert.doesNotMatch(app,/window\.volunteerHome=volunteerHome/);
+});
+
+test('approved volunteer home hides candidate-only information in its canonical renderer',()=>{
+  const home=readFileSync('js/portal/home.js','utf8');
+  assert.ok(home.includes("${approved?'':"));
+});
+
+
+test('Portal planning data projection belongs to the Planning module',()=>{
+  const app=readFileSync('js/portal/app.js','utf8');
+  const planning=readFileSync('js/portal/planejamento.js','utf8');
+  for(const symbol of ['planStatusFromApplication','portalPlanActivities','applyVolunteerPlanningRows']){
+    assert.match(planning,new RegExp('function '+symbol+'\\s*\\('),symbol+' must be owned by Planning');
+    assert.doesNotMatch(app,new RegExp('function '+symbol+'\\s*\\('),symbol+' must not live in bootstrap');
+  }
+});
+
+test('Portal bootstrap only composes screen modules and does not reassign feature functions',()=>{
+  const app=readFileSync('js/portal/app.js','utf8');
+  assert.doesNotMatch(app,/^\s*(?:volunteerHome|volunteerStayDates|openActivityModal|volunteerPlan)\s*=\s*function/gm);
+  assert.doesNotMatch(app,/window\.(?:volunteerHome|volunteerPlan)\s*=/);
+});
+
+
+test('Admin screen modules delegate Firestore operations to services',()=>{
+  const files=[...screenFiles('js/admin'),...screenFiles('js/portal')];
+  const direct=/\b(?:getFirestore|initializeFirestore)\s*\(|\bfirestore\.(?:getDocs|getDoc|setDoc|updateDoc|deleteDoc|writeBatch|runTransaction|collection|doc)\s*\(|\bdb\.(?:collection|doc)\s*\(/;
+  const offenders=files.filter(path=>direct.test(readFileSync(path,'utf8')));
+  assert.deepEqual(offenders,[],'Screen modules must use service APIs instead of accessing Firestore directly');
+});
+
+test('application service owns profile metadata writes and stay-date transactions',()=>{
+  const service=readFileSync('js/services/application-service.js','utf8');
+  const profile=readFileSync('js/admin/candidate-profile-details.js','utf8');
+  const product=readFileSync('js/admin/product-current.js','utf8');
+  assert.match(service,/async updateParticipantGender\s*\(/);
+  assert.match(service,/async updateRegistrationLink\s*\(/);
+  assert.match(service,/async changeStayDates\s*\(id,\{[^}]*excludeBoundaryDays/);
+  assert.match(profile,/applications\.updateParticipantGender/);
+  assert.match(profile,/applications\.updateRegistrationLink/);
+  assert.match(product,/applications\.changeStayDates/);
+  assert.match(service,/excludeBoundaryDays\?\(session\.date<=stayStart\|\|session\.date>=stayEnd\)/);
+  assert.match(product,/excludeBoundaryDays:true/);
+  assert.match(service,/remainingSessions:remaining/);
+});
+
+
+test('Admin bootstrap delegates data orchestration to its data module',()=>{
+  const app=readFileSync('js/admin/app.js','utf8');
+  const data=readFileSync('js/admin/admin-data.js','utf8');
+  const html=readFileSync('admin/index.html','utf8');
+  for(const symbol of ['hydrateManagerSchedule','hydrateManagerPendingChanges','loadManagerCandidates','hydrateManagerDashboardData','hydrateManagerBaseData','ensureManagerGroups']){
+    assert.match(data,new RegExp('function '+symbol+'\\s*\\('),symbol+' must be owned by Admin data orchestration');
+  }
+  assert.doesNotMatch(app,/function (?:hydrateManagerSchedule|hydrateManagerPendingChanges|loadManagerCandidates|hydrateManagerDashboardData|hydrateManagerBaseData|ensureManagerGroups)\s*\(/);
+  assert.ok(html.indexOf('admin-data.js')<html.indexOf('admin/app.js'),'Admin data module must load before the bootstrap');
+});
+
+
+test('Portal experience summary behavior has one canonical feature owner',()=>{
+  const home=readFileSync('js/portal/home.js','utf8');
+  const planning=readFileSync('js/portal/planejamento.js','utf8');
+  const agenda=readFileSync('js/portal/agenda.js','utf8');
+  const stay=readFileSync('js/portal/estadia.js','utf8');
+  const html=readFileSync('portal/index.html','utf8');
+  assert.match(home,/function volunteerHome\s*\(/);
+  assert.match(planning,/async function submitPlan\s*\(/);
+  assert.match(agenda,/function volunteerDayAdjustment\s*\(/);
+  assert.match(stay,/function volunteerStay\s*\(/);
+  assert.doesNotMatch(html,/experience-summary\.js/);
+  assert.ok(retiredNotLoaded.has('js/portal/experience-summary.js'));
+  assert.match(planning,/if\(wasAdjustment\)application\.dayAdjustments=\{\}/);
 });

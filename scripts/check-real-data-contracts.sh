@@ -10,7 +10,7 @@ no_match(){ if grep -RInE -- "$1" "${@:2}"; then echo "Forbidden source pattern:
 css_has(){ grep -RFq -- "$1" css || { echo "Missing CSS contract: $1" >&2; exit 1; }; }
 
 # Bounded queries, pagination, and service-owned Firestore access.
-for token in 'limit:10' 'candidateHasMore'; do has js/admin/app.js "$token"; done
+for token in 'limit:10' 'candidateHasMore'; do has js/admin/admin-data.js "$token"; done
 has js/admin/voluntariado.js 'Ver mais 10'
 for token in startAfter getCountFromServer listUpcoming listOccupancyMonth stayPreviewCache cachedStayPreview; do has js/services/application-service.js "$token"; done
 has js/services/application-maintenance-service.js processExpiredPending
@@ -72,7 +72,7 @@ has js/services/onboarding-service.js firstPortalAccessAt
 has js/services/auth-service.js markFirstPortalAccess
 has firestore.rules participantMarksFirstAccess
 no_match 'firebase-functions|ensureFunctions|httpsCallable|adminUpdateVolunteerEmail|adminDeleteVolunteerApplication' firebase.json functions/package.json js/firebase js/services/admin-access-service.js js/admin/access-management.js
-for token in groupUnitId groupsUnitId changeManagerGroupUnit; do has js/admin/app.js "$token"; done
+for token in groupUnitId groupsUnitId changeManagerGroupUnit; do has js/admin/admin-data.js "$token"; done
 has js/admin/grupos.js managerGroupUnit
 has js/admin/grupos.js 'independentes por unidade'
 has js/services/group-service.js "where('unitId','==',normalized)"
@@ -107,7 +107,7 @@ has firestore.indexes.json '"status"'
 for file in admin portal; do has "$file/index.html" '../js/services/selection-flow-service.js'; has "$file/index.html" "../js/$file/selection-flow.js"; done
 for token in postApprovalProposal reviewPostApprovalProposal; do has js/services/planning-service.js "$token"; done
 regex js/services/planning-service.js 'reviewStatus.*analysis'
-has js/portal/app.js portal.activity.newProposal
+has js/portal/planejamento.js portal.activity.newProposal
 has js/portal/post-approval.js portal.session.reviewing
 has js/portal/post-approval.js action.adjust
 for token in 'Nova atividade' Aprovar Recusar; do has js/admin/post-approval.js "$token"; done
@@ -131,7 +131,8 @@ has js/admin/candidate-form.js 'Digite para buscar o país'
 has js/services/onboarding-service.js participantGenders
 has js/services/onboarding-service.js registrationLink
 for token in review-day-warning 'Voltar ao calendário'; do has js/admin/candidate-profile-details.js "$token"; done
-for token in home-unit-support-link managerCreated; do has js/portal/planning-enhancements.js "$token"; done
+has js/portal/home.js home-unit-support-link
+has js/portal/agenda.js managerCreated
 has js/portal/planejamento.js portal.plan.addBeforeSend
 has firestore.rules participantMayResetEmptyAdjustment
 for file in admin portal; do has "$file/index.html" '../js/shared/i18n-flow-compat.js'; has "$file/index.html" format-detection; done
