@@ -203,6 +203,19 @@ test('Portal experience-summary override is retired and Home/Agenda/Stay/Plannin
   assert.doesNotMatch(product,/volunteerHome\s*=\s*function|volunteerAgendaContent\s*=\s*function|sessionCardVolunteer\s*=\s*function|openActivityModal\s*=\s*function/);
 });
 
+test('Portal workflow decorators match the explicit runtime contract',()=>{
+  const contract=JSON.parse(readFileSync('docs/runtime-contract-overrides.json','utf8'));
+  assert.equal(contract.policy.featureDecoratorChangesRequireContractUpdate,true);
+  for(const entry of contract.featureDecorators||[]){
+    const source=readFileSync(entry.file,'utf8');
+    for(const symbol of entry.symbols){
+      const pattern=new RegExp('^\\\\s*(?:window\\\\.)?'+symbol+'\\\\s*=\\\\s*(?:async\\\\s*)?function\\\\b','gm');
+      const count=[...source.matchAll(pattern)].length;
+      assert.equal(count,1,`${entry.file} must have exactly one reviewed ${symbol} decorator.`);
+    }
+  }
+});
+
 test('Portal compatibility overrides match the reviewed runtime contract',()=>{
   const contract=JSON.parse(readFileSync('docs/runtime-contract-overrides.json','utf8'));
   const source=readFileSync(contract.scope,'utf8');
