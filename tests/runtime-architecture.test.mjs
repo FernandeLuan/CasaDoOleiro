@@ -296,3 +296,23 @@ test('Portal bootstrap only composes screen modules and does not reassign featur
   assert.doesNotMatch(app,/^\s*(?:volunteerHome|volunteerStayDates|openActivityModal|volunteerPlan)\s*=\s*function/gm);
   assert.doesNotMatch(app,/window\.(?:volunteerHome|volunteerPlan)\s*=/);
 });
+
+
+test('Admin screen modules delegate Firestore operations to services',()=>{
+  const files=[...screenFiles('js/admin'),...screenFiles('js/portal')];
+  const direct=/\b(?:getFirestore|initializeFirestore)\s*\(|\bfirestore\.(?:getDocs|getDoc|setDoc|updateDoc|deleteDoc|writeBatch|runTransaction|collection|doc)\s*\(|\bdb\.(?:collection|doc)\s*\(/;
+  const offenders=files.filter(path=>direct.test(readFileSync(path,'utf8')));
+  assert.deepEqual(offenders,[],'Screen modules must use service APIs instead of accessing Firestore directly');
+});
+
+test('application service owns profile metadata writes and stay-date transactions',()=>{
+  const service=readFileSync('js/services/application-service.js','utf8');
+  const profile=readFileSync('js/admin/candidate-profile-details.js','utf8');
+  const product=readFileSync('js/admin/product-current.js','utf8');
+  assert.match(service,/async updateParticipantGender\s*\(/);
+  assert.match(service,/async updateRegistrationLink\s*\(/);
+  assert.match(service,/async changeStayDates\s*\(id,\{[^}]*excludeBoundaryDays/);
+  assert.match(profile,/applications\.updateParticipantGender/);
+  assert.match(profile,/applications\.updateRegistrationLink/);
+  assert.match(product,/applications\.changeStayDates/);
+});
