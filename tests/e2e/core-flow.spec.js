@@ -236,12 +236,13 @@ for(const locale of [
 ]){
   test(`Volunteer critical information, profile and activity placeholders render in ${locale.lang}`,async({page})=>{
     await login(page,'voluntario@oleiro.test','Volunteer123!','portal',locale.lang);
+    await page.waitForFunction(()=>window.state?.role==='volunteer'&&window.state?.currentSession?.uid==='e2e-volunteer'&&window.state?.currentApplication?.id==='e2e-application'&&window.state?.currentApplication?.status==='pending'&&window.state?.volunteerMode==='candidate'&&window.state?.volunteerPlanningLoadedFor==='e2e-application',{},{timeout:20_000});
     await page.evaluate(()=>window.navigateVolunteer?.('info'));
     await expect(page.locator('#app')).toContainText(locale.arrival,{timeout:20_000});
     await expect(page.locator('#app')).toContainText(locale.lang==='en'?'Accommodation':'Alojamiento');
     await expect(page.locator('#app')).toContainText(locale.lang==='en'?'Meals':'Comidas');
 
-    await page.evaluate(()=>window.navigateVolunteer?.('plan'));
+    await navAction(page,locale.planning).click();
     const addActivity=page.getByRole('button',{name:new RegExp(`${locale.add}$`)}).first();
     await expect(addActivity).toBeVisible({timeout:20_000});
     await addActivity.click();
