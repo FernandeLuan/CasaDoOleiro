@@ -67,6 +67,7 @@ test('profile activation and inactivation persist actor history atomically',asyn
   assert.match(history,/actorEmail:String\(session\?\.email\|\|user\.email\|\|''\)/);
   assert.match(admin,/participantAccessCache\[String\(p\.id\)\]=Object\.fromEntries/);
   assert.match(admin,/adminAccountReadAt\[String\(p\.id\)\]=Date\.now\(\)/);
+  assert.match(admin,/\.\.\.\(previousAccess\[key\]\|\|\{\}\)/,'Lifecycle cache updates must preserve firstPortalAccessAt and other access metadata');
 });
 
 test('volunteer planning cannot remain indefinitely in a loading state',async()=>{
