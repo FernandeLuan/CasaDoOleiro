@@ -154,3 +154,16 @@ The first executable contract is now recorded in `docs/runtime-contract-override
 `tests/runtime-architecture.test.mjs` now compares the source assignments with that explicit contract. An unreviewed addition, removal, or count change fails the architecture test and requires a deliberate contract review. This is intentionally a narrow first guard, not a claim that every global write in Admin and Portal has been inventoried.
 
 Next migration target: move the two `volunteerHome` presentation adapters into the canonical home feature, then move the date selector and activity-modal orchestration behind explicit feature APIs. Each move must preserve current behavior and pass Portal E2E before the compatibility assignments are removed.
+
+
+## Phase 1 progress — Portal ownership consolidation
+
+The first runtime ownership migration is complete on the working branch:
+
+- Home presentation rules now live in `js/portal/home.js`; the bootstrap no longer rewrites the Home HTML after rendering.
+- Stay-date normalization and date-range selection now live in `js/portal/estadia.js`, alongside the Stay feature.
+- Activity-modal composition now lives in `js/portal/planejamento.js`, alongside Planning.
+- `js/portal/app.js` retains bootstrap, session hydration and route rendering; it no longer replaces `volunteerHome`, `volunteerStayDates` or `openActivityModal`.
+- The reviewed override contract is now empty, and a regression test verifies canonical ownership.
+
+This is a behavior-preserving extraction: the existing approved-mode Home rule, date range cap, editability checks, post-approval edit guard and modal fields are retained. The next high-priority debt is the History middleware in `js/services/history-hooks.js`, which decorates service methods at runtime; it remains explicitly tracked rather than being silently conflated with this Portal change.
