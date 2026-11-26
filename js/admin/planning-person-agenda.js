@@ -213,7 +213,7 @@
     if(changed&&typeof applyI18n==='function')applyI18n(planning);
     window.OleiroUI?.restoreViewAnchor?.(anchor);
   }
-  function mountLoading(root){const planning=ensurePlanningContainer(root);if(planning)planning.innerHTML='<div class="empty compact-loading planning-person-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando planejamento...</div>'}
+  function mountLoading(root){const planning=ensurePlanningContainer(root);if(planning)planning.innerHTML='<div class="oleiro-skeleton planning-person-loading" aria-label="Carregando planejamento"><div class="oleiro-skeleton-card"><span class="oleiro-skeleton-line medium"></span><span class="oleiro-skeleton-block tall"></span><span class="oleiro-skeleton-line short"></span></div><div class="oleiro-skeleton-card"><span class="oleiro-skeleton-line medium"></span><span class="oleiro-skeleton-block tall"></span></div></div>'}
   function mountError(root,error){const planning=ensurePlanningContainer(root);if(planning)planning.innerHTML=`<div class="notice danger planning-person-error"><i class="fa-solid fa-triangle-exclamation"></i><div>${escapeHtml(error?.message||'Não foi possível carregar o planejamento.')}</div></div>`}
 
   function enhancePlanningPerson(){
