@@ -128,10 +128,10 @@ test('volunteer profile edits are recorded atomically in application history', a
 
 test('admin WhatsApp visibility is verified against all persisted sessions, never a stale sessionCount', async () => {
   const planning = await read('../js/admin/planning-page.js');
-  assert.match(planning, /function adminShareableRows\\(rows\\)/);
-  assert.match(planning, /refreshAdminShareEligibility\\(p/);
-  assert.match(planning, /listSessions\\(\\{applicationId:id\\}\\)/);
-  assert.doesNotMatch(planning, /Number\\(p\\?\\.sessionCount\\|\\|0\\)>0/);
-  assert.match(planning, /eligibility\\?\\.valid!==true/);
-  assert.match(planning, /button\\.disabled=status\\.disabled/);
+  assert.ok(planning.includes('function adminShareableRows(rows)'));
+  assert.ok(planning.includes('refreshAdminShareEligibility(p'));
+  assert.ok(planning.includes('listSessions({applicationId:id})'));
+  assert.ok(!planning.includes('Number(p?.sessionCount||0)>0'));
+  assert.ok(planning.includes('eligibility?.valid!==true'));
+  assert.ok(planning.includes('button.disabled=status.disabled'));
 });
