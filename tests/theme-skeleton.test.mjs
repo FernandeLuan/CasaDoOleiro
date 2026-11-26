@@ -41,9 +41,9 @@ test('volunteer account exposes System, Light and Dark appearance controls', () 
   const theme = read('../js/shared/theme-preference.js');
   const portalCss = read('../css/portal.css');
   assert.match(profile, /setVolunteerTheme/);
-  assert.match(profile, /setVolunteerTheme\\('system'\\)/);
-  assert.match(profile, /setVolunteerTheme\\('light'\\)/);
-  assert.match(profile, /setVolunteerTheme\\('dark'\\)/);
+  assert.ok(profile.includes("setVolunteerTheme('system')"));
+  assert.ok(profile.includes("setVolunteerTheme('light')"));
+  assert.ok(profile.includes("setVolunteerTheme('dark')"));
   assert.match(theme, /prefers-color-scheme: dark/);
-  assert.match(portalCss, /grid-template-columns:repeat\\(3,minmax\\(0,1fr\\)\\)/);
+  assert.ok(portalCss.includes('grid-template-columns:repeat(3,minmax(0,1fr))'));
 });
