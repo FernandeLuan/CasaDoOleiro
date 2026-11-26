@@ -6,7 +6,6 @@
 
   function safe(value){return encodeURIComponent(String(value??''))}
   const safeHtml=typeof window.escapeHtml==='function'?window.escapeHtml:(value=>String(value??'').replace(/[&<>'\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[c]||c)));
-  const safeStatusMeta=status=>typeof window.statusMeta==='function'?window.statusMeta(status):[String(status||''),''];
   function iso(value){if(!value)return '';if(typeof value==='string')return value.slice(0,10);if(typeof value.toDate==='function')return value.toDate().toISOString().slice(0,10);return ''}
   function profileStatus(){const application=state.currentApplication||{};if(state.volunteerMode==='approved')return [t('portal.profile.approved'),'success'];if(state.volunteerPlanStatus==='submitted')return [t('portal.profile.analysis'),'info'];if(state.volunteerPlanStatus==='adjustments')return [t('portal.profile.adjustments'),'warning'];if(application.status==='rejected')return [t('portal.profile.rejected'),'danger'];const days=portalDeadlineDays(),label=days===null?t('portal.profile.preparing'):`${t('portal.profile.preparing')} · ${days===1?t('portal.profile.remainingOne'):t('portal.profile.remainingMany',{days})}`;return [label,'warning']}
 
