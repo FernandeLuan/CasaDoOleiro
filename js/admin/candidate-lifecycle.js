@@ -4,7 +4,7 @@ function candidateById(id){return state.candidates.find(x=>String(x.id)===String
 async function refreshCandidateFromBackend(id){const fresh=await window.OleiroServices?.applications?.getById(id);if(!fresh)return null;const index=state.candidates.findIndex(x=>String(x.id)===String(id));if(index>=0)state.candidates[index]=fresh;else state.candidates.unshift(fresh);deriveAdminNotifications?.();return fresh;}
 function applyCandidateLocalPatch(p,patch){Object.assign(p,patch);if('active' in patch)p.inactive=patch.active===false;if('planningDeadlineAt' in patch)p.pendingUntil=patch.planningDeadlineAt instanceof Date?patch.planningDeadlineAt.toISOString():patch.planningDeadlineAt||null;deriveAdminNotifications?.();}
 async function rejectCandidateRecord(id,reason,autoRejected=false){
-  const p=candidateById(id);if(!p)return null;const patch={status:'rejected',active:false,planningDeadlineAt:null,rejectedReason:reason,rejectedAt:new Date(),autoRejected:!!autoRejected,needsAdminAttention:false};
+  const p=candidateById(id);if(!p)return null;const patch={status:'rejected',active:false,inactivePreviousStatus:p.status||'pending',planningDeadlineAt:null,rejectedReason:reason,rejectedAt:new Date(),autoRejected:!!autoRejected,needsAdminAttention:false};
   await window.OleiroServices.applications.updateLifecycle(p.id,{applicationPatch:patch,participantUids:p.participantUids,participantActive:false});applyCandidateLocalPatch(p,patch);return p;
 }
 async function processExpiredCandidatesOnStartup(){const now=Date.now();const expired=state.candidates.filter(p=>p.status==='pending'&&p.pendingUntil&&new Date(p.pendingUntil).getTime()<now);for(const p of expired){try{await rejectCandidateRecord(p.id,'Prazo de 7 dias para envio do planejamento expirado.',true)}catch(error){console.error('Falha ao processar prazo expirado:',p.id,error)}}}
@@ -16,7 +16,14 @@ async function confirmRejectPendingCandidate(id){const p=candidateById(id);if(!p
 function rejectCandidate(id){const p=candidateById(id);if(!p||!['analysis','adjustments'].includes(p.status))return showToast('Este perfil não pode ser recusado neste status.');const arg=candidateActionArg(p.id);openModal('Recusar perfil?',`A ação será aplicada somente a ${p.name}.`,`<div class="confirm-delete-content"><div class="confirm-person"><i class="fa-solid fa-user-slash"></i><strong>${p.name}</strong></div><p class="compact-hint">O planejamento será recusado e o acesso ficará inativo.</p></div>`,`<div class="confirm-delete-actions"><button class="btn btn-outline" type="button" onclick="openPerson(decodeURIComponent('${arg}'),'overview')">Cancelar</button><button class="btn btn-danger" type="button" onclick="confirmRejectCandidate(decodeURIComponent('${arg}'))">Recusar</button></div>`);modalRoot.querySelector('.modal')?.classList.add('confirm-delete-modal');}
 async function confirmRejectCandidate(id){const p=candidateById(id);if(!p||!['analysis','adjustments'].includes(p.status))return closeModal();try{await rejectCandidateRecord(p.id,'Planejamento recusado pela gestão.',false);closeModal();state.candidateFilter='rejected';render();scrollPageTop();showToast(`${p.name} foi recusado e inativado.`)}catch(error){console.error(error);showToast('Não foi possível recusar o perfil.')}}
 async function reactivateCandidate(id){
-  const p=candidateById(id);if(!p||p.status!=='rejected')return showToast('Este perfil não está inativo.');
+  const p=candidateById(id);if(!p||!(p.status==='rejected'||p.inactive===true||p.active===false))return showToast('Este perfil não está inativo.');
+  if(p.inactivePreviousStatus==='approved'){
+    try{
+      await window.OleiroServices.applications.updateLifecycle(p.id,{applicationPatch:{status:'approved',active:true,inactivePreviousStatus:null,planningDeadlineAt:null,autoRejected:false,rejectedReason:'',rejectedAt:null,needsAdminAttention:false},participantUids:p.participantUids||[],participantActive:true});
+      const patch={status:'approved',active:true,inactive:false,inactivePreviousStatus:null,planningDeadlineAt:null,pendingUntil:null,autoRejected:false,rejectedReason:'',rejectedAt:null,needsAdminAttention:false};
+      applyCandidateLocalPatch(p,patch);closeModal();render();showToast(`${p.name} foi reativado e manteve o planejamento aprovado.`);return;
+    }catch(error){console.error(error);showToast(error?.message||'Não foi possível reativar o perfil.');return}
+  }
   const service=window.OleiroServices?.applications?.reactivateCandidatePlanning;if(typeof service!=='function')return showToast('Atualize a página antes de reativar este perfil.');
   const next=new Date(candidateDeadlineFrom(new Date(),7)),button=modalRoot?.querySelector?.('button[onclick*="reactivateCandidate"]'),original=button?.innerHTML||'';
   if(button?.disabled)return;
