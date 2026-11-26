@@ -17,7 +17,7 @@ function rejectCandidate(id){const p=candidateById(id);if(!p||!['analysis','adju
 async function confirmRejectCandidate(id){const p=candidateById(id);if(!p||!['analysis','adjustments'].includes(p.status))return closeModal();try{await rejectCandidateRecord(p.id,'Planejamento recusado pela gestão.',false);closeModal();state.candidateFilter='rejected';render();scrollPageTop();showToast(`${p.name} foi recusado e inativado.`)}catch(error){console.error(error);showToast('Não foi possível recusar o perfil.')}}
 async function reactivateCandidate(id){
   const p=candidateById(id);if(!p||!(p.status==='rejected'||p.inactive===true||p.active===false))return showToast('Este perfil não está inativo.');
-  if(p.inactivePreviousStatus==='approved'){
+  if(p.status==='approved'||p.inactivePreviousStatus==='approved'){
     try{
       await window.OleiroServices.applications.updateLifecycle(p.id,{applicationPatch:{status:'approved',active:true,inactivePreviousStatus:null,planningDeadlineAt:null,autoRejected:false,rejectedReason:'',rejectedAt:null,needsAdminAttention:false},participantUids:p.participantUids||[],participantActive:true});
       const patch={status:'approved',active:true,inactive:false,inactivePreviousStatus:null,planningDeadlineAt:null,pendingUntil:null,autoRejected:false,rejectedReason:'',rejectedAt:null,needsAdminAttention:false};
