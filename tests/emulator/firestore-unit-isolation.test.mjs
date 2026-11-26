@@ -164,6 +164,7 @@ test('legacy projects persist in Firestore with owner and unit scoped lifecycle 
     expectedResult:'Composto para a horta.',materials:'Madeira e ferramentas.',allowContinuation:true
   };
   await assertSucceeds(getDoc(project)); // owner can check for an absent project before creating it
+  await assertFails(getDocs(collection(volunteer,'legacy_projects'))); // volunteers cannot enumerate other projects
   await assertSucceeds(setDoc(project,draft));
   await assertSucceeds(getDoc(project));
   await assertFails(getDoc(docRef(dbFor('volunteer-indaial'),'legacy_projects','application-rodeio__volunteer-rodeio')));
@@ -172,6 +173,8 @@ test('legacy projects persist in Firestore with owner and unit scoped lifecycle 
   const scoped=await getDocs(query(collection(dbFor('coordinator-rodeio'),'legacy_projects'),where('unitId','==','rodeio')));
   assert.deepEqual(scoped.docs.map(row=>row.id),['application-rodeio__volunteer-rodeio']);
   await assertFails(getDocs(collection(dbFor('coordinator-rodeio'),'legacy_projects')));
+  const allForAdmin=await getDocs(collection(dbFor('admin'),'legacy_projects'));
+  assert.deepEqual(allForAdmin.docs.map(row=>row.id),['application-rodeio__volunteer-rodeio']);
   await assertFails(setDoc(docRef(volunteer,'legacy_projects','forged-foreign-project'),{
     ...draft,unitId:'indaial',unitName:'Indaial'
   }));
