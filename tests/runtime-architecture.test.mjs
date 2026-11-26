@@ -177,6 +177,19 @@ test('Portal compatibility overrides match the reviewed runtime contract',()=>{
   assert.equal(contract.policy.newOverridesRequireContractUpdate,true);
 });
 
+test('Portal behavior is implemented by its canonical feature owners, not app bootstrap',()=>{
+  const bootstrap=readFileSync('js/portal/app.js','utf8');
+  const home=readFileSync('js/portal/home.js','utf8');
+  const stay=readFileSync('js/portal/estadia.js','utf8');
+  const planning=readFileSync('js/portal/planejamento.js','utf8');
+  assert.doesNotMatch(bootstrap,/\b(?:volunteerHome|volunteerStayDates|openActivityModal)\s*=\s*function/);
+  assert.match(home,/\$\{approved\?'':/,'Approved-mode Home visibility belongs to the Home renderer.');
+  assert.match(stay,/function volunteerStayDates\(/);
+  assert.match(stay,/function portalDateRange\(/);
+  assert.match(planning,/function openActivityModal\(/);
+  assert.match(planning,/function portalStoredOption\(/);
+});
+
 
 test('release announcement modals keep only the compact summary and full-width acknowledgement',()=>{
   const portal=readFileSync('js/portal/release-notes.js','utf8');
