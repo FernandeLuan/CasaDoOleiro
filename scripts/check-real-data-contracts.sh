@@ -10,7 +10,7 @@ no_match(){ if grep -RInE -- "$1" "${@:2}"; then echo "Forbidden source pattern:
 css_has(){ grep -RFq -- "$1" css || { echo "Missing CSS contract: $1" >&2; exit 1; }; }
 
 # Bounded queries, pagination, and service-owned Firestore access.
-for token in 'limit:10' 'candidateHasMore'; do has js/admin/app.js "$token"; done
+for token in 'limit:10' 'candidateHasMore'; do has js/admin/admin-data.js "$token"; done
 has js/admin/voluntariado.js 'Ver mais 10'
 for token in startAfter getCountFromServer listUpcoming listOccupancyMonth stayPreviewCache cachedStayPreview; do has js/services/application-service.js "$token"; done
 has js/services/application-maintenance-service.js processExpiredPending
