@@ -31,9 +31,10 @@
   wrap(services.applications,'finalizeSelection',([id,options])=>record(id,options?.decision==='approve'?'candidate_approved':'candidate_rejected'));
   wrap(services.applications,'reactivateCandidatePlanning',([id])=>record(id,'profile_reactivated'));
   wrap(services.applications,'updateLifecycle',([id,options])=>{
-    const patch=options?.applicationPatch||{};
-    if(patch.active===false)record(id,'profile_inactivated',{metadata:{reason:String(patch.rejectedReason||'')}});
-    else if(patch.active===true)record(id,'profile_reactivated');
+    const patch=options?.applicationPatch||{},before=appFromState(id);
+    const wasActive=before?.active!==false;
+    if(patch.active===false&&wasActive)record(id,'profile_inactivated',{metadata:{reason:String(patch.rejectedReason||'')}});
+    else if(patch.active===true&&!wasActive)record(id,'profile_reactivated');
   });
 
   wrap(services.planning,'saveActivity',([args],result)=>record(args?.applicationId,args?.activityId?'activity_updated':'activity_created',{unitId:args?.unitId,metadata:{activityId:String(result?.activityId||args?.activityId||''),activityName:String(args?.data?.name||'')}}));
