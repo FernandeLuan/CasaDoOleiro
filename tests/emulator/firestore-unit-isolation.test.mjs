@@ -163,6 +163,7 @@ test('legacy projects persist in Firestore with owner and unit scoped lifecycle 
     category:'Sustentabilidade',description:'Montar uma composteira.',why:'Reduzir resíduos.',
     expectedResult:'Composto para a horta.',materials:'Madeira e ferramentas.',allowContinuation:true
   };
+  await assertSucceeds(getDoc(project)); // owner can check for an absent project before creating it
   await assertSucceeds(setDoc(project,draft));
   await assertSucceeds(getDoc(project));
   await assertFails(getDoc(docRef(dbFor('volunteer-indaial'),'legacy_projects','application-rodeio__volunteer-rodeio')));
