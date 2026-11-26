@@ -1,6 +1,6 @@
 /* Atualizações administrativas: mesma fonte de releases do Portal, com público explícito. */
 (function adminReleaseNotes(){
-  if(!/\\/admin\\//.test(location.pathname)||window.__OLEIRO_ADMIN_RELEASE_NOTES__)return;
+  if(!location.pathname.includes('/admin/')||window.__OLEIRO_ADMIN_RELEASE_NOTES__)return;
   window.__OLEIRO_ADMIN_RELEASE_NOTES__=true;
   const esc=value=>typeof escapeHtml==='function'?escapeHtml(value):String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   let meta=null,releases=[],latest=null,loaded=false,loading=null,popupOpened=false;
