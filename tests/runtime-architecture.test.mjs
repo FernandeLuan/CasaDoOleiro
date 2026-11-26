@@ -280,3 +280,19 @@ test('approved volunteer home hides candidate-only information in its canonical 
   const home=readFileSync('js/portal/home.js','utf8');
   assert.ok(home.includes("${approved?'':"));
 });
+
+
+test('Portal planning data projection belongs to the Planning module',()=>{
+  const app=readFileSync('js/portal/app.js','utf8');
+  const planning=readFileSync('js/portal/planejamento.js','utf8');
+  for(const symbol of ['planStatusFromApplication','portalPlanActivities','applyVolunteerPlanningRows']){
+    assert.match(planning,new RegExp('function '+symbol+'\\s*\\('),symbol+' must be owned by Planning');
+    assert.doesNotMatch(app,new RegExp('function '+symbol+'\\s*\\('),symbol+' must not live in bootstrap');
+  }
+});
+
+test('Portal bootstrap only composes screen modules and does not reassign feature functions',()=>{
+  const app=readFileSync('js/portal/app.js','utf8');
+  assert.doesNotMatch(app,/^\\s*(?:volunteerHome|volunteerStayDates|openActivityModal|volunteerPlan)\\s*=\\s*function/gm);
+  assert.doesNotMatch(app,/window\\.(?:volunteerHome|volunteerPlan)\\s*=/);
+});
