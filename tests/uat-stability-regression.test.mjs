@@ -100,3 +100,10 @@ test('reactivating a rejected volunteer records the lifecycle event in the same 
   assert.match(service,/appendToBatch\(batch,context,applicationId,'profile_reactivated'/);
   assert.match(service,/await batch\.commit\(\)/);
 });
+
+
+test('admin WhatsApp sharing accepts valid ISO dates when filtering sessions', async () => {
+  const planning = await read('../js/admin/planning-page.js');
+  assert.ok(planning.includes("/^\\d{4}-\\d{2}-\\d{2}$/"), 'Date validation must use digit classes, not a literal backslash');
+  assert.ok(!planning.includes("/^\\\\d{4}-\\\\d{2}-\\\\d{2}$/"), 'Double-escaped date validation would reject every real date');
+});
