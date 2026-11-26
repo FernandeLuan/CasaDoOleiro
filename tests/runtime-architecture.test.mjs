@@ -166,3 +166,21 @@ test('release dismissal does not depend on browser storage',()=>{
   assert.ok(releaseNotes.includes('releaseDismissedInSession=true'),'Dismissal must take effect in memory even when localStorage is unavailable.');
   assert.ok(releaseNotes.includes("filter(slide=>!hiddenHomeNoticeIds.has(slide.id))"),'Dismissed release slides must be removed from the current Home carousel immediately.');
 });
+
+
+test('release announcement modals keep only the compact summary and full-width acknowledgement',()=>{
+  const portal=readFileSync('js/portal/release-notes.js','utf8');
+  const admin=readFileSync('js/admin/release-notes.js','utf8');
+  const css=readFileSync('css/release-notes.css','utf8');
+  const portalModal=portal.slice(portal.indexOf('window.openPortalReleaseNotes=function'),portal.indexOf('const baseNavigateVolunteer'));
+  const adminModal=admin.slice(admin.indexOf('function modalBody()'),admin.indexOf('window.openAdminReleaseNotes=function'));
+  for(const modal of [portalModal,adminModal]){
+    assert.ok(modal.includes('ANNOUNCEMENT.summary')||modal.includes('latest?.summary'));
+    assert.ok(!modal.includes('Atualizações anteriores'));
+    assert.ok(!modal.includes('release-history-list'));
+    assert.ok(!modal.includes('admin-release-history'));
+    assert.ok(!modal.includes('release-notes-list'));
+    assert.ok(modal.includes('btn-block'));
+  }
+  assert.match(css,/\.release-notes-actions\s*\{[^}]*grid-template-columns:\s*1fr/s);
+});
