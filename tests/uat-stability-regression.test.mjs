@@ -120,3 +120,13 @@ test('volunteer profile edits are recorded atomically in application history', a
   assert.match(emergency, /appendToBatch\(batch,context,applicationId,'profile_updated'/);
   assert.match(emergencyUi, /participantIndex:i\+1/);
 });
+
+
+test('admin WhatsApp visibility considers sessions across all cached planning pages', async () => {
+  const planning = await read('../js/admin/planning-page.js');
+  assert.match(planning, /function adminHasShareablePlan\(p\)/);
+  assert.match(planning, /state\.adminPlanPageCache\|\|\{\}/);
+  assert.match(planning, /Number\(p\?\.sessionCount\|\|0\)>0/);
+  assert.match(planning, /!adminHasShareablePlan\(p\)/);
+  assert.match(planning, /setTimeout\(function\(\)\{syncAdminShareCooldown\(p\.id\)\},0\)/);
+});
