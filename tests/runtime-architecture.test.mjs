@@ -168,6 +168,21 @@ test('release dismissal does not depend on browser storage',()=>{
 });
 
 
+test('Portal Home is composed through explicit providers, not chained Home replacements',()=>{
+  const home=readFileSync('js/portal/home.js','utf8');
+  const selection=readFileSync('js/portal/selection-flow.js','utf8');
+  const guidance=readFileSync('js/portal/experience-guidance.js','utf8');
+  const enhancements=readFileSync('js/portal/planning-enhancements.js','utf8');
+  const release=readFileSync('js/portal/release-notes.js','utf8');
+  assert.match(home,/window\.portalMeetingHomeCard\(application\)/);
+  assert.match(home,/window\.portalReleaseHomeNoticeHtml\(\)/);
+  for(const [name,source] of [['selection-flow',selection],['experience-guidance',guidance],['planning-enhancements',enhancements],['release-notes',release]]){
+    assert.doesNotMatch(source,/volunteerHome\s*=\s*function/,name+' must not replace the Home renderer.');
+  }
+  assert.match(guidance,/volunteerProfile\s*=\s*function/,'Profile-only copy remains isolated to the guidance module.');
+  assert.match(enhancements,/confirmVolunteerLogout/);
+});
+
 test('Portal experience-summary override is retired and Home/Agenda/Stay/Planning have canonical owners',()=>{
   const portalHtml=readFileSync('portal/index.html','utf8');
   const experience=readFileSync('js/portal/experience-summary.js','utf8');
@@ -229,6 +244,7 @@ test('Portal behavior is implemented by its canonical feature owners, not app bo
   assert.match(stay,/function portalDateRange\(/);
   assert.match(planning,/function openActivityModal\(/);
   assert.match(planning,/blockedDayReason\(date\)/,'Planning modal must use the canonical agenda day-blocking rule.');
+  assert.match(planning,/group-definition-note/,'Group assignment guidance belongs to the activity modal owner.');
   assert.match(planning,/if\(!approved&&!candidatePlanningEditable\(state\.volunteerPlanStatus\|\|'draft'\)\)/,'The activity modal must reuse the canonical planning editability predicate.');
   assert.doesNotMatch(planning,/const candidateEditable=window\.OleiroRules/,'The modal must not duplicate the shared editability rule.');
   assert.match(planning,/function portalStoredOption\(/);
