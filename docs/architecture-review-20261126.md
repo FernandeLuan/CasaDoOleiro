@@ -192,3 +192,15 @@ The working branch now moves the effective runtime behavior into the actual feat
 - `portal/product-current.js` no longer replaces Home, Agenda or activity-modal functions; its remaining profile/navigation/session-refresh composition is still technical debt.
 
 This is why script load order must be treated as part of the runtime contract. The new ownership test checks that these functions are declared by their canonical feature modules and are not replaced by the remaining composition file.
+
+
+## Phase 1 progress — explicit Home composition
+
+Three additional Home decorators were removed:
+- Meeting-specific Home content is now exposed by `selection-flow.js` as `portalMeetingHomeCard(application)`.
+- Release announcements are now exposed by `release-notes.js` as `portalReleaseHomeNoticeHtml()`.
+- Home owns its support link and planning-deadline label directly. The profile-only guidance module no longer rewrites Home.
+
+The activity-modal group-definition note now belongs to `planejamento.js`; manager-created session edit restrictions now belong to the canonical session card in `agenda.js`. This removes the corresponding wrappers from `experience-guidance.js` and `planning-enhancements.js`.
+
+Some workflow-specific wrappers remain in review, meeting, post-approval, pagination and feedback modules. They are not being removed blindly: they encode distinct workflows and must first be mapped to explicit extension points with regression coverage.
