@@ -30,7 +30,7 @@ Run `npm run audit:runtime` to inspect:
 - state fields with multiple writer modules;
 - feature-to-service references;
 - global function assignments;
-- Firestore SDK access from screen modules;
+- Firestore SDK access from screen modules (the two known Admin write paths were migrated to the application service);
 - exact Admin and Portal script load order.
 
 The inventory is diagnostic, not a permission to mass-refactor. Multi-writer state fields are reported first; they are not automatically prohibited because Admin and Portal run in separate entry points and some fields intentionally have multiple collaborators.
