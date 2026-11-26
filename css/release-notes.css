@@ -83,7 +83,7 @@
 }
 .release-notes-actions{
   display:grid;
-  grid-template-columns:1fr 1fr;
+  grid-template-columns:1fr;
   gap:8px;
   width:100%;
 }
@@ -160,3 +160,6 @@
 .release-info-latest small{display:block;margin:4px 0 8px;color:var(--muted);font-size:.56rem}
 .release-info-latest p{margin:4px 0 8px;color:var(--muted);font-size:.61rem;line-height:1.45}
 .release-info-latest .info-action-link{display:inline-flex;align-items:center;gap:7px;border:0;background:none;padding:0;color:var(--primary);font:inherit;font-size:.62rem;font-weight:600;cursor:pointer}
+
+/* A confirmação da atualização ocupa toda a largura do rodapé. */
+.release-notes-actions .btn{width:100%;}
