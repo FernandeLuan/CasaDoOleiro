@@ -19,9 +19,10 @@ Critical invariant: candidate planning in `submitted` (application status `analy
 - `js/portal/estadia.js`: stay-date normalization, date-range selection and Stay screen renderer.
 - `js/portal/planejamento.js`: canonical Planning renderer, activity modal and planning interactions.
 - `js/portal/app.js`: bootstrap, authentication/session hydration and route rendering only; it must not replace feature functions.
-- `js/portal/planejamento.js`: canonical Planning screen and candidate planning controls.
-- `js/portal/app.js`: portal boot/render and modal form composition; it consumes shared domain rules.
+- `js/portal/agenda.js`: canonical volunteer agenda renderer, session cards and blocked-day presentation.
 - `js/portal/planning-enhancements.js`: presentation refinements only. It must not replace the Planning page renderer.
+- `js/portal/product-current.js`: temporary navigation, profile and session-refresh composition only; it must not replace Home, Agenda or Planning feature functions.
+- `js/portal/experience-summary.js`: retired from runtime after its Home, Stay, day-adjustment and submit behavior moved to canonical feature owners.
 - `js/portal/candidate-view.js`: retired from runtime on 2026-09-15 after its behavior was merged into `planejamento.js`. It is intentionally kept for one rollback cycle and tracked by the runtime architecture test.
 
 Feature wrappers for review, meeting, and adjustment flows may decorate activity cards and contextual actions, but they must not redefine candidate planning editability.
