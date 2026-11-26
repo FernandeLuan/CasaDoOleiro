@@ -26,12 +26,18 @@
         return ids.map(uid=>rows.get(uid)||{id:uid,missing:true});
       },{loading:false});
     },
-    async updateEmergencyContact(uid,value){
+    async updateEmergencyContact(uid,value,{applicationId='',unitId='',participantIndex=null}={}){
       const id=String(uid||'').trim();if(!id)throw new Error('Perfil do voluntário não encontrado.');const emergencyContact=normalizeEmergencyContact(value);
       if((emergencyContact.name||emergencyContact.relationship||emergencyContact.phone)&&(!emergencyContact.name||!emergencyContact.phone))throw new Error('Informe pelo menos o nome e o telefone do contato de emergência.');
       return services.run(async()=>{
-        const context=await services.firebase();const {firestore}=context.modules;
-        await firestore.updateDoc(firestore.doc(context.db,'volunteer_profiles',id),{emergencyContact,updatedAt:firestore.serverTimestamp()});
+        const context=await services.firebase();const {firestore}=context.modules,now=firestore.serverTimestamp(),batch=firestore.writeBatch(context.db);
+        batch.set(firestore.doc(context.db,'volunteer_profiles',id),{emergencyContact,updatedAt:now},{merge:true});
+        if(applicationId){
+          if(typeof services.history?.appendToBatch!=='function')throw new Error('Serviço de histórico indisponível; a alteração não foi aplicada.');
+          services.history.appendToBatch(batch,context,applicationId,'profile_updated',{unitId:String(unitId||'').toLowerCase(),metadata:{field:'emergencyContact',participantIndex:Number(participantIndex)||null},createdAt:now});
+        }
+        await batch.commit();
+        if(applicationId){const key=String(applicationId);if(typeof state!=='undefined'&&state.adminHistoryCache)delete state.adminHistoryCache[key];try{sessionStorage.removeItem('oleiro.admin.history.v1.'+key)}catch{}}
         const previous=cached(id);if(previous&&!previous.missing)remember(id,{...previous,emergencyContact});else cache.delete(id);return emergencyContact;
       },{loading:false});
     },
