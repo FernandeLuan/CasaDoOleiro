@@ -82,7 +82,7 @@
     if(!force&&current?.checkedAt&&Date.now()-current.checkedAt<30000)return Promise.resolve(current);
     if(adminShareEligibilityRequests[id])return adminShareEligibilityRequests[id];
     state.adminShareEligibility[id]={loading:true,valid:false,checkedAt:0,error:''};
-    const request=window.OleiroServices.planning.listSessions({applicationId:id}).then(sessions=>{
+    const request=window.OleiroServices.planning.listSessions({applicationId:id,fresh:true}).then(sessions=>{
       const rows=adminShareableRows(sessions),result={loading:false,valid:rows.length>0,sessions:rows,checkedAt:Date.now(),error:''};
       state.adminShareEligibility[id]=result;
       if(state.managerPage==='planning'&&String(state.managerPlanningPersonId)===id&&state.managerPlanningTab==='plan')render();
@@ -137,7 +137,7 @@
     if(button){button.disabled=true;button.setAttribute('aria-busy','true');button.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i><span>Preparando compartilhamento...</span>'}
     try{
       const start=p.from||p.stayStart||'',end=p.to||p.stayEnd||'';
-      const sessions=await window.OleiroServices.planning.listSessions({applicationId:p.id,...(start&&end?{from:start,to:end}:{})});
+      const sessions=await window.OleiroServices.planning.listSessions({applicationId:p.id,...(start&&end?{from:start,to:end}:{}),fresh:true});
       const rows=adminShareableRows(sessions);
       if(!rows.length){
         state.adminShareEligibility=state.adminShareEligibility||{};state.adminShareEligibility[id]={loading:false,valid:false,sessions:[],checkedAt:Date.now(),error:''};
