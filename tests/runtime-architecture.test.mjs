@@ -177,6 +177,26 @@ test('Portal compatibility overrides match the reviewed runtime contract',()=>{
   assert.equal(contract.policy.newOverridesRequireContractUpdate,true);
 });
 
+test('Firestore persistence is owned by services, not Admin or Portal UI modules',()=>{
+  for(const directory of ['js/admin','js/portal']){
+    for(const name of readdirSync(directory).filter(file=>file.endsWith('.js'))){
+      const source=readFileSync(join(directory,name),'utf8');
+      assert.doesNotMatch(source,/\b(?:getDocs|getDoc|setDoc|updateDoc|deleteDoc|addDoc|runTransaction|writeBatch)\s*\(/, `${directory}/${name} must not call the Firestore SDK directly.`);
+      assert.doesNotMatch(source,/OleiroServices\.firebase\s*\(/, `${directory}/${name} must use a domain service instead of opening Firebase directly.`);
+    }
+  }
+});
+
+test('Admin stay-date editing delegates persistence and boundary rules to the application service',()=>{
+  const admin=readFileSync('js/admin/product-current.js','utf8');
+  const service=readFileSync('js/services/application-service.js','utf8');
+  assert.match(admin,/applications\.previewStayDateChange\(/);
+  assert.match(admin,/applications\.changeStayDates\(/);
+  assert.match(service,/function sessionOutsideStay\(/);
+  assert.match(service,/excludeBoundaryDays/);
+  assert.doesNotMatch(admin,/firestore\.writeBatch|OleiroServices\.firebase/);
+});
+
 test('Portal behavior is implemented by its canonical feature owners, not app bootstrap',()=>{
   const bootstrap=readFileSync('js/portal/app.js','utf8');
   const home=readFileSync('js/portal/home.js','utf8');
