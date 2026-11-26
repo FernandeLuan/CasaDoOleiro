@@ -84,10 +84,12 @@
       if(!rows.length){window.OleiroPlanningShare?.closePopup?.(popup);showToast(typeof t==='function'?t('planning.share.none'):'Não há planejamento para compartilhar.');return}
       const labels={status:typeof t==='function'?t('planning.share.status'):'Status',unit:typeof t==='function'?t('planning.share.unit'):'Unidade',period:typeof t==='function'?t('planning.share.period'):'Período',observation:typeof t==='function'?t('planning.share.observation'):'Obs.'};
       const text=window.OleiroPlanningShare.buildText({heading:adminPlanningShareHeading(p),name:p.name||'Voluntário',statusLabel:adminPlanningShareStatus(p),unit:p.unit||p.unitName||'',start,end,sessions:rows,labels});
-      window.OleiroPlanningShare.openWhatsApp(text,{popup});
+      const opened=window.OleiroPlanningShare.openWhatsApp(text,{popup})===true;
+      if(!opened){window.OleiroPlanningShare?.closePopup?.(popup);throw new Error('Não foi possível abrir o WhatsApp.')}
+      if(button?.isConnected){button.disabled=false;button.removeAttribute('aria-busy');button.innerHTML='<i class="fa-brands fa-whatsapp"></i><span>Compartilhar no WhatsApp</span>'}
     }catch(error){
       console.error('Falha ao preparar compartilhamento do planejamento:',error);window.OleiroPlanningShare?.closePopup?.(popup);showToast(typeof t==='function'?t('planning.share.error'):'Não foi possível preparar o compartilhamento.');
-      if(button?.isConnected){button.disabled=false;button.innerHTML='<i class="fa-brands fa-whatsapp"></i><span>Compartilhar no WhatsApp</span>'}
+      if(button?.isConnected){button.disabled=false;button.removeAttribute('aria-busy');button.innerHTML='<i class="fa-brands fa-whatsapp"></i><span>Compartilhar no WhatsApp</span>'}
     }
   };
 
@@ -149,7 +151,7 @@
 
   openPerson=async function(id,tab='plan'){
     const p=candidateById(id);if(!p)return;
-    tab=isActivityAssistant()?'plan':(tab==='account'?'account':'plan');
+    tab=isActivityAssistant()?'plan':(['account','history'].includes(tab)?tab:'plan');
     const samePerson=state.managerPage==='planning'&&String(state.managerPlanningPersonId||'')===String(id);
     const sameTab=samePerson&&String(state.managerPlanningTab||'plan')===tab;
     /* Tocar na aba que já está ativa não busca dados, não renderiza e não anima. */
