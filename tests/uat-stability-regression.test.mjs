@@ -168,3 +168,16 @@ test('Admin history reads from Firestore server and surfaces query failures', as
   assert.ok(history.includes('Falha ao consultar o histórico persistido da candidatura'));
   assert.ok(!history.includes('fallback:true'));
 });
+
+
+test('Admin Projects uses the Planning empty-state frame and skeleton loading',async()=>{
+  const projects=await read('../js/admin/projects.js');
+  const styles=await read('../css/projects.css');
+  const adminHtml=await read('../admin/index.html');
+  assert.ok(projects.includes('oleiro-skeleton-grid'));
+  assert.ok(projects.includes('planning-board-empty project-ui-empty'));
+  assert.ok(projects.includes('state.projectLoaded=true'));
+  assert.ok(styles.includes('.project-ui-empty{width:100%;min-height:188px!important'));
+  assert.ok(styles.includes('.legacy-admin-page-clean{max-width:1180px}'));
+  assert.ok(adminHtml.includes('projects-empty-skeleton-align-1'));
+});
