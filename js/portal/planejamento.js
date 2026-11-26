@@ -20,8 +20,9 @@ function portalPlanningShareHeading(){
   return t('planning.share.heading');
 }
 function portalPlanningShareBar(){
-  if(!portalPlanningShareAllowed()||!activeCandidateSessions().length)return '';
-  return `<div class="planning-share-bar portal-planning-share-bar"><button class="planning-share-action" type="button" onclick="sharePortalPlanningWhatsApp()"><i class="fa-brands fa-whatsapp"></i><span>${escapeHtml(t('planning.share.whatsapp'))}</span></button></div>`;
+  if(!portalPlanningShareAllowed())return '';
+  const hasActive=activeCandidateSessions().length>0;
+  return `<div class="planning-share-bar portal-planning-share-bar"><button class="planning-share-action" type="button" onclick="sharePortalPlanningWhatsApp()" ${hasActive?'':'disabled aria-disabled="true"'}><i class="fa-brands fa-whatsapp"></i><span>${escapeHtml(t('planning.share.whatsapp'))}</span></button>${hasActive?'':'<small class="planning-share-disabled-hint">Adicione uma atividade para habilitar o compartilhamento.</small>'}</div>`;
 }
 window.sharePortalPlanningWhatsApp=function(){
   const sessions=(state.sessions||[]).filter(row=>row.status!=='rejected'&&row.reviewStatus!=='rejected');
@@ -30,7 +31,10 @@ window.sharePortalPlanningWhatsApp=function(){
   const unit=application.unitName||String(application.unitId||'').replace(/^./,c=>c.toUpperCase());
   const text=window.OleiroPlanningShare?.buildText({heading:portalPlanningShareHeading(),name,statusLabel:portalPlanningShareStatus(),unit,start:application.stayStart,end:application.stayEnd,sessions,labels:{status:t('planning.share.status'),unit:t('planning.share.unit'),period:t('planning.share.period'),observation:t('planning.share.observation')}})||'';
   if(!text)return showToast(t('planning.share.none'));
-  closeModal();window.OleiroPlanningShare.openWhatsApp(text);
+  closeModal();
+  const url='https://wa.me/?text='+encodeURIComponent(text);
+  /* Navegação direta evita abrir uma aba about:blank no Safari/iOS. */
+  window.location.assign(url);
 };
 
 function volunteerPlan(){
