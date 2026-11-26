@@ -38,7 +38,7 @@
       .admin-account-preference-copy small{font-size:.5rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
       .admin-account-preference-copy strong{font-size:.66rem;color:var(--text)}
       .admin-account-preference-copy span{font-size:.52rem;line-height:1.35;color:var(--muted)}
-      .admin-account-theme-switch{display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:3px;border:1px solid var(--border);border-radius:11px;background:var(--surface)}
+      .admin-account-theme-switch{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;padding:3px;border:1px solid var(--border);border-radius:11px;background:var(--surface)}
       .admin-account-theme-switch button{min-height:32px;border:0;border-radius:8px;background:transparent;color:var(--muted);font-size:.56rem;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer}
       .admin-account-theme-switch button:hover{background:var(--surface-2);color:var(--text)}
       .admin-account-theme-switch button.active{background:var(--primary);color:#fff}
@@ -82,14 +82,12 @@
   }
 
   window.setAdminTheme=function(target){
-    const desired=target==='dark'?'dark':'light';
-    if(String(state.theme||'light')===desired)return;
-    if(typeof toggleTheme==='function')toggleTheme();
+    window.setThemePreference?.(target);
     setTimeout(()=>window.openMyAccount?.(),0);
   };
 
   window.openMyAccount=function(){
-    const session=state.currentSession||{},dark=String(state.theme||'light')==='dark';
+    const session=state.currentSession||{},preference=state.themePreference||'system';
     const body=`<div class="modal-body admin-account-settings-body"><div class="admin-account-settings">
       <div class="admin-account-top">
         <section class="admin-account-panel admin-account-profile">
@@ -100,9 +98,10 @@
         </section>
         <section class="admin-account-panel admin-account-preference">
           <div class="admin-account-preference-copy"><small>Aparência</small><strong>Tema do painel</strong><span>Preferência salva neste dispositivo.</span></div>
-          <div class="admin-account-theme-switch" role="group" aria-label="Tema do painel">
-            <button class="${!dark?'active':''}" type="button" aria-pressed="${!dark?'true':'false'}" onclick="setAdminTheme('light')"><i class="fa-solid fa-sun"></i>Claro</button>
-            <button class="${dark?'active':''}" type="button" aria-pressed="${dark?'true':'false'}" onclick="setAdminTheme('dark')"><i class="fa-solid fa-moon"></i>Escuro</button>
+          <div class="admin-account-theme-switch" role="group" aria-label="Aparência">
+            <button class="${preference==='system'?'active':''}" type="button" aria-pressed="${preference==='system'}" onclick="setAdminTheme('system')"><i class="fa-solid fa-circle-half-stroke"></i>Sistema</button>
+            <button class="${preference==='light'?'active':''}" type="button" aria-pressed="${preference==='light'}" onclick="setAdminTheme('light')"><i class="fa-solid fa-sun"></i>Claro</button>
+            <button class="${preference==='dark'?'active':''}" type="button" aria-pressed="${preference==='dark'}" onclick="setAdminTheme('dark')"><i class="fa-solid fa-moon"></i>Escuro</button>
           </div>
         </section>
       </div>
