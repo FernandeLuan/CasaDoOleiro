@@ -96,6 +96,27 @@
     }).finally(()=>{delete adminShareEligibilityRequests[id]});
     adminShareEligibilityRequests[id]=request;return request;
   }
+  function invalidateAdminShareEligibility(id){
+    const key=String(id||'');if(!key)return;
+    if(state.adminShareEligibility)delete state.adminShareEligibility[key];
+    if(state.managerPage==='planning'&&String(state.managerPlanningPersonId)===key&&state.managerPlanningTab==='plan')render();
+  }
+  const adminShareInvalidationWrappers=window.__oleiroAdminShareInvalidationWrappers||(window.__oleiroAdminShareInvalidationWrappers=new Set());
+  function wrapAdminShareInvalidation(method,resolveId){
+    const service=window.OleiroServices?.planning,original=service?.[method];
+    if(typeof original!=='function'||adminShareInvalidationWrappers.has(method))return;
+    const wrapped=async function(...args){
+      const result=await original.apply(this,args);
+      const id=resolveId(args);
+      if(id)invalidateAdminShareEligibility(id);
+      return result;
+    };
+    wrapped.__adminShareEligibilityWrapped=true;service[method]=wrapped;adminShareInvalidationWrappers.add(method);
+  }
+  wrapAdminShareInvalidation('saveActivity',args=>args[0]?.applicationId);
+  wrapAdminShareInvalidation('deleteSession',args=>args[1]?.applicationId||state.currentPlanningApplicationId||state.managerPlanningPersonId);
+  wrapAdminShareInvalidation('updateSession',args=>args[1]?.applicationId||state.currentPlanningApplicationId||state.managerPlanningPersonId);
+  wrapAdminShareInvalidation('reviewPostApprovalProposal',args=>args[0]?.applicationId);
   function adminShareButtonState(id){
     const remaining=Math.max(0,adminShareUntil(id)-Date.now()),seconds=Math.ceil(remaining/1000),minutes=Math.floor(seconds/60),rest=String(seconds%60).padStart(2,'0');
     const eligibility=state.adminShareEligibility?.[String(id)]||null,valid=eligibility?.valid===true;
