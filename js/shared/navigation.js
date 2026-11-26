@@ -27,6 +27,7 @@ function navigateManager(page){
   }
   render();afterNavigation();
   if(page==='volunteer'&&typeof refreshManagerApplications==='function')refreshManagerApplications().catch(error=>console.error('Não foi possível atualizar os voluntários:',error));
+  if(page==='projects'&&window.OleiroProjects?.loadAll){state.projectLoading=true;render();window.OleiroProjects.loadAll({force:true}).then(()=>{state.projectLoading=false;if(state.managerPage==='projects')render()}).catch(error=>{state.projectLoading=false;console.error('Não foi possível carregar os projetos:',error);if(state.managerPage==='projects')render();showToast(error?.message||'Não foi possível carregar os projetos.')})}
   if(page==='groups'&&typeof ensureManagerGroups==='function'&&!state.groupsLoaded)ensureManagerGroups().then(()=>{if(state.managerPage==='groups')render()}).catch(error=>{console.error(error);showToast('Não foi possível carregar os grupos.')});
   if(page==='agenda'&&typeof hydrateManagerSchedule==='function')hydrateManagerSchedule(state.agendaFrom,state.agendaTo,{force:true}).then(()=>{if(state.managerPage==='agenda')render()}).catch(error=>{console.error(error);showToast('Não foi possível atualizar a agenda.')});
   if(page==='home'){
