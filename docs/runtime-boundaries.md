@@ -18,7 +18,7 @@ The application uses separate Admin and Portal HTML entry points, but both still
 
 1. **Global state is an implicit dependency.** `js/shared/state.js` defines one mutable object. Admin and Portal modules read and write it directly. This is convenient but makes the owner of a field and the side effects of a change hard to discover.
 2. **The Portal bootstrap had function replacement.** PR #73 returns Home, stay-date selection and the activity modal to their feature modules. The planning projection helpers (`planStatusFromApplication`, `portalPlanActivities`, `applyVolunteerPlanningRows`) are also owned by `planejamento.js`.
-3. **Admin bootstrap is an oversized coordinator.** `js/admin/app.js` currently combines schedule caching, browser-cache serialization, candidate pagination, dashboard hydration, group loading, route rendering and startup. These are separable responsibilities, but moving them without a call-site inventory would risk breaking the many existing feature modules.
+3. **Admin data orchestration had been mixed into bootstrap.** The schedule cache, browser-cache serialization, candidate pagination, dashboard hydration and group loading were extracted to `js/admin/admin-data.js`. The bootstrap now keeps route rendering, session startup and visibility-refresh wiring. This preserves the existing global API and classic-script order while establishing a clearer owner boundary.
 4. **Services are not yet fully independent of UI state.** For example, `application-service.js` owns queries and lifecycle transactions but also updates selected global caches/state after a transaction. That coupling should be removed only after callers are migrated to explicit invalidation results.
 5. **Planning service composition is implicit.** `planning-operations-service.js` extends `services.planning` at runtime. This is a deliberate extension today, but its public API and load order need an explicit composition contract.
 6. **History hooks decorate service methods.** `history-hooks.js` wraps service functions and appends audit events. This is useful middleware, but it must not double-log operations that already append history in the same Firestore batch.
@@ -48,8 +48,8 @@ The inventory is diagnostic, not a permission to mass-refactor. Multi-writer sta
 - Migrate one feature at a time; do not replace the entire state object or introduce a framework.
 
 ### 3. Admin orchestration
-- Split `admin/app.js` only after inventorying every caller of its cache, hydration and navigation functions.
-- Keep startup sequencing explicit and expose a small `OleiroAdminData` API rather than creating additional globals.
+- The first extraction is in place: `admin-data.js` owns cache and hydration; `admin/app.js` owns startup and route composition.
+- The current global functions are retained for compatibility. The next step is to introduce a small `OleiroAdminData` facade after callers are migrated, not to add another layer of aliases.
 
 ### 4. Service boundaries
 - Separate read/query functions from command/transaction functions where a service currently owns both.
