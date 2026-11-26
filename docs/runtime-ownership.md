@@ -4,6 +4,10 @@ This project keeps screen rendering, shared business rules, and persistence sepa
 
 ## Shared business rules
 
+- Admin and Portal feature modules do not call the Firebase SDK or open Firebase contexts directly. Firestore reads/writes belong to `js/services/*`; the UI passes intent and renders results.
+- `js/services/application-service.js`: application mutations, participant profile fields, stay-date previews and persistence.
+- `js/services/volunteer-profile-service.js`: volunteer profile reads and emergency-contact persistence.
+
 - `js/shared/domain-rules.js`: pure workflow predicates. It does not render UI and does not access Firebase.
 - Firestore remains the server-side authority for permissions. Client rules mirror the UX but never replace Firestore Rules.
 
