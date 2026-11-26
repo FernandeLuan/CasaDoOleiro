@@ -177,6 +177,11 @@ test('legacy projects persist in Firestore with owner and unit scoped lifecycle 
   }));
   await assertSucceeds(updateDoc(project,{status:'analysis',submittedAt:new Date().toISOString(),updatedAt:serverTimestamp()}));
   await assertSucceeds(updateDoc(docRef(dbFor('admin'),'legacy_projects','application-rodeio__volunteer-rodeio'),{
+    status:'adjustments',reviewNote:'Detalhar a manutenção.',reviewedAt:new Date().toISOString(),updatedAt:serverTimestamp()
+  }));
+  await assertSucceeds(updateDoc(project,{status:'adjustments',description:'Montar e documentar a composteira.',updatedAt:serverTimestamp()}));
+  await assertSucceeds(updateDoc(project,{status:'analysis',submittedAt:new Date().toISOString(),reviewNote:'',updatedAt:serverTimestamp()}));
+  await assertSucceeds(updateDoc(docRef(dbFor('admin'),'legacy_projects','application-rodeio__volunteer-rodeio'),{
     status:'approved',reviewNote:'',approvedAt:new Date().toISOString(),updatedAt:serverTimestamp()
   }));
   await assertSucceeds(updateDoc(project,{status:'in_progress',startedAt:new Date().toISOString(),updatedAt:serverTimestamp()}));
