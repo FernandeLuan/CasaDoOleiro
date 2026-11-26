@@ -120,7 +120,7 @@ test('new volunteer form preserves native text selection and paste gestures on i
   await expect(name).toBeVisible();
   const style=await name.evaluate(el=>{
     const css=getComputedStyle(el);
-    return {touchAction:css.touchAction,userSelect:css.userSelect,webkitUserSelect:css.webkitUserSelect,webkitTouchCallout:css.webkitTouchCallout};
+    return {touchAction:css.touchAction,userSelect:css.userSelect,webkitUserSelect:css.webkitUserSelect,webkitTouchCallout:css.webkitTouchCallout||'default'};
   });
   expect(style).toEqual({touchAction:'auto',userSelect:'text',webkitUserSelect:'text',webkitTouchCallout:'default'});
   const paste=await name.evaluate(el=>{
