@@ -29,5 +29,6 @@ test('Lifecycle audit uses a server read and invalidates both history caches aft
 test('History read failures are surfaced instead of silently appearing as an empty history',()=>{
   const source=read('js/services/history-service.js');
   assert.match(source,/Falha ao consultar o histórico persistido da candidatura/);
+  assert.match(source,/getDocsFromServer\\|\\|firestore\\.getDocs/);
   assert.doesNotMatch(source,/fallback:true/);
 });
