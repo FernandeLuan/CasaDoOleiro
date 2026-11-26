@@ -471,7 +471,7 @@
         <div><small>${esc(ANNOUNCEMENT.eyebrow)} <span data-release-meta></span></small><strong>${esc(ANNOUNCEMENT.title)}</strong><p>${esc(ANNOUNCEMENT.summary)}</p></div>
       </div>
     </div>`;
-    const footer=`<div class="release-notes-actions"><button class="btn btn-primary" type="button" onclick="closeModal()">Entendi</button></div>`;
+    const footer=`<div class="release-notes-actions"><button class="btn btn-primary btn-block" type="button" onclick="closeModal()">Entendi</button></div>`;
     openModal('O que mudou?','',body,footer);
     modalRoot.querySelector('.modal')?.classList.add('modal-wide');
     updateMetaLabels();
