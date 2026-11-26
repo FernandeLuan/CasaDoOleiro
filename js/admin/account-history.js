@@ -79,6 +79,11 @@
       .planning-history-r71-body p{margin:0;font-size:.66rem;color:var(--text);line-height:1.4}
       .planning-history-r71-body span{font-size:.62rem;color:var(--muted)}
       .planning-history-r71-state{min-height:150px;display:grid;place-items:center;color:var(--muted);font-size:.72rem}
+      .planning-history-r71-skeleton{display:grid;gap:0;padding:8px 18px;border:1px solid var(--border);border-radius:18px;background:var(--surface)}
+      .planning-history-r71-placeholder{display:grid;grid-template-columns:minmax(0,1fr) 92px;gap:10px 14px;padding:16px 0;border-bottom:1px solid var(--border)}
+      .planning-history-r71-placeholder:last-child{border-bottom:0}
+      .planning-history-r71-placeholder span,.planning-history-r71-placeholder i,.planning-history-r71-placeholder b{display:block;height:10px;border-radius:8px;background:linear-gradient(90deg,var(--surface-2) 20%,color-mix(in srgb,var(--surface-2) 55%,var(--surface)) 45%,var(--surface-2) 70%);background-size:220% 100%;animation:oleiro-skeleton-shimmer 1.35s ease-in-out infinite}
+      .planning-history-r71-placeholder span{width:64%}.planning-history-r71-placeholder i{width:82px;justify-self:end}.planning-history-r71-placeholder b{grid-column:1/-1;width:38%;height:8px}
 
       @media(max-width:900px){
         .planning-detail-page .account-contact-card-r70 .account-person-row.account-person-inline-r71{
@@ -133,7 +138,7 @@
   function historyTabs(p){const id=safe(p.id);return `<div class="person-refactor-tabs person-history-tabs planning-profile-tabs"><button type="button" onclick="openPerson(decodeURIComponent('${id}'),'plan')">Planejamento</button><button type="button" onclick="openPerson(decodeURIComponent('${id}'),'account')">Conta</button><button class="active" type="button" data-r71-history-tab="1">Histórico</button></div>`}
   function historyHtml(p,rows,{loading=false,error=''}={}){
     let content='';
-    if(loading)content='<div class="planning-history-r71-state"><span><i class="fa-solid fa-circle-notch fa-spin"></i> Carregando histórico...</span></div>';
+    if(loading)content='<div class="planning-history-r71-skeleton" aria-label="Carregando histórico"><article class="planning-history-r71-placeholder"><span></span><i></i><b></b></article><article class="planning-history-r71-placeholder"><span></span><i></i><b></b></article><article class="planning-history-r71-placeholder"><span></span><i></i><b></b></article></div>';
     else if(error)content=`<div class="notice danger"><i class="fa-solid fa-triangle-exclamation"></i><div>${escapeHtml(error)}</div></div>`;
     else if(!rows.length)content='<div class="planning-history-r71-state"><span><i class="fa-regular fa-clock"></i> Nenhum evento registrado ainda.</span></div>';
     else content=`<div class="planning-history-r71-list">${rows.map(row=>{const meta=metadata(row),who=historyAuthor(row);return `<article class="planning-history-r71-event"><div class="planning-history-r71-dot"></div><div class="planning-history-r71-body"><div class="planning-history-r71-head"><strong>${escapeHtml(eventLabel(row.type))}</strong><time>${escapeHtml(when(row.createdAt))}</time></div>${meta?`<p data-no-i18n>${escapeHtml(meta)}</p>`:''}<span>${escapeHtml(who)}</span></div></article>`}).join('')}</div>`;
