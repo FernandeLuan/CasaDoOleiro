@@ -82,7 +82,11 @@ test('volunteer planning cannot remain indefinitely in a loading state',async()=
 test('WhatsApp planning share requires active dated sessions and an active application',async()=>{
   const planning=await read('../js/portal/planejamento.js');
   assert.match(planning,/function portalShareableSession/);
-  assert.match(planning,/!String\(row\.activityId\|\|''\)\.trim\(\)\|\|!String\(row\.date\|\|''\)\.trim\(\)/);
+  assert.match(planning,/!String\(row\.activityId\|\|''\)\.trim\(\)/);
+  assert.match(planning,/\\^\\\\d\\{4\\}-\\\\d\\{2\\}-\\\\d\\{2\\}\\\$/);
+  assert.match(planning,/PORTAL_SHARE_COOLDOWN_MS=60\\*1000/);
+  assert.match(planning,/sessionStorage\\.setItem/);
+  assert.match(planning,/Aguarde um minuto para compartilhar novamente/);
   assert.match(planning,/return application\.status!=='rejected'&&application\.active!==false&&!application\.inactive/);
   assert.match(planning,/const sessions=activeCandidateSessions\(\)/);
   assert.match(planning,/disabled aria-disabled="true"/);
