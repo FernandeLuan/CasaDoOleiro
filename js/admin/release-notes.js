@@ -56,7 +56,7 @@
   window.openAdminReleaseNotes=function(){
     if(!loaded||!latest)return;
     markSeen();
-    const footer='<div class="release-notes-actions"><button class="btn btn-primary" type="button" onclick="closeModal()">Entendi</button></div>';
+    const footer='<div class="release-notes-actions"><button class="btn btn-primary btn-block" type="button" onclick="closeModal()">Entendi</button></div>';
     openModal('O que mudou?','',modalBody(),footer);
     modalRoot?.querySelector?.('.modal')?.classList.add('modal-wide');
   };
