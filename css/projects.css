@@ -2742,3 +2742,15 @@ button.project-ui-row{appearance:none}
     grid-template-columns:1fr;
   }
 }
+
+
+/* Admin Projetos: mesma largura, moldura vazia e linguagem de skeleton do Planejamento. */
+.legacy-admin-page-clean{max-width:1180px}
+.project-ui-empty{width:100%;min-height:188px!important;box-sizing:border-box}
+.project-ui-empty>div{max-width:100%;padding:0 8px}
+.project-ui-empty strong{font-size:.82rem;color:var(--text)}
+.project-ui-empty span{font-size:.68rem;line-height:1.45;color:var(--muted)}
+.project-ui-empty .btn{margin-top:4px}
+.projects-loading-skeleton{padding:0;min-height:188px}
+.projects-loading-skeleton .oleiro-skeleton-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:640px){.projects-loading-skeleton .oleiro-skeleton-grid{grid-template-columns:1fr}.projects-loading-skeleton .oleiro-skeleton-card{min-height:104px}}
