@@ -62,7 +62,12 @@
     if(!force&&cached&&Date.now()-cached.at<PLAN_CACHE_MS){applyPageCache(p,cached);return cached}
     if(state.adminPlanLoading[String(p.id)])return state.adminPlanLoading[String(p.id)];
     if(!dates.length){const empty={at:Date.now(),pageIndex:index,dates:[],sessions:[],activities:[]};state.adminPlanPageCache[key]=empty;applyPageCache(p,empty);return empty}
-    state.adminPlanLoading[String(p.id)]=window.OleiroServices.planning.listSessions({applicationId:p.id,from:dates[0],to:dates[dates.length-1]}).then(rows=>{
+    let timeoutId;
+    const request=Promise.race([
+      window.OleiroServices.planning.listSessions({applicationId:p.id,from:dates[0],to:dates[dates.length-1]}),
+      new Promise((_,reject)=>{timeoutId=setTimeout(()=>reject(new Error('A consulta do planejamento excedeu 12 segundos. Verifique a conexão e tente novamente.')),12000)})
+    ]).finally(()=>clearTimeout(timeoutId));
+    state.adminPlanLoading[String(p.id)]=request.then(rows=>{
       const normalized=normalizePlanRows(p,rows),cache={...normalized,at:Date.now(),pageIndex:index,dates:[...dates]};state.adminPlanPageCache[key]=cache;applyPageCache(p,cache);return cache;
     }).catch(error=>{
       state.adminPlanErrors[String(p.id)]=String(error?.message||'Não foi possível carregar o planejamento.');
