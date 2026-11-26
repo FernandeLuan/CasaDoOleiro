@@ -296,3 +296,22 @@ test('Portal WhatsApp cooldown refreshes immediately after app return and page r
   assert.ok(sync.indexOf('if(!update())return')>=0,'button state must be recalculated immediately, even if cooldown already expired');
   assert.ok(sync.indexOf('if(portalShareCooldownUntil()>Date.now())')>sync.indexOf('if(!update())return'),'timer must only be restarted after immediate state refresh');
 });
+
+
+test('Portal screen modules own their functions without bootstrap overrides',()=>{
+  const app=readFileSync('js/portal/app.js','utf8');
+  const home=readFileSync('js/portal/home.js','utf8');
+  const stay=readFileSync('js/portal/estadia.js','utf8');
+  const planning=readFileSync('js/portal/planejamento.js','utf8');
+  assert.ok(!/^\\s*(?:volunteerHome|volunteerStayDates|openActivityModal)\\s*=\\s*function/gm.test(app));
+  assert.match(home,/function volunteerHome\\s*\\(/);
+  assert.match(stay,/function volunteerStayDates\\s*\\(/);
+  assert.match(planning,/function openActivityModal\\s*\\(/);
+  assert.ok(!home.includes('function volunteerStayDates()'));
+  assert.ok(!app.includes('window.volunteerHome=volunteerHome'));
+});
+
+test('approved volunteer home hides candidate-only information in its canonical renderer',()=>{
+  const home=readFileSync('js/portal/home.js','utf8');
+  assert.ok(home.includes("${approved?'':`"));
+});
