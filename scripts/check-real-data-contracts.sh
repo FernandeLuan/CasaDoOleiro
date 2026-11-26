@@ -107,7 +107,7 @@ has firestore.indexes.json '"status"'
 for file in admin portal; do has "$file/index.html" '../js/services/selection-flow-service.js'; has "$file/index.html" "../js/$file/selection-flow.js"; done
 for token in postApprovalProposal reviewPostApprovalProposal; do has js/services/planning-service.js "$token"; done
 regex js/services/planning-service.js 'reviewStatus.*analysis'
-has js/portal/app.js portal.activity.newProposal
+has js/portal/planejamento.js portal.activity.newProposal
 has js/portal/post-approval.js portal.session.reviewing
 has js/portal/post-approval.js action.adjust
 for token in 'Nova atividade' Aprovar Recusar; do has js/admin/post-approval.js "$token"; done
