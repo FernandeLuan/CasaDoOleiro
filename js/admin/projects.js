@@ -184,7 +184,7 @@
     state.projectUnit=normalizeProjectUnit(document.getElementById('legacyProjectUnitFilter')?.value);
     closeModal();render();afterNavigation?.();
   };
-  window.clearLegacyProjectFilters=function(){state.projectFilter='all';state.projectUnit='all';closeModal();render();afterNavigation?.()};
+  window.clearLegacyProjectFilters=function(){state.projectFilter='all';state.projectUnit='all';state.projectSearch='';closeModal();render();afterNavigation?.()};
   window.setLegacyProjectFilter=function(value){state.projectFilter=normalizeProjectFilter(value);render();afterNavigation?.()};
   window.openLegacyProjectAdmin=function(id){
     const p=(window.OleiroProjects?.list?.()||[]).find(x=>String(x.id)===String(id));if(!p)return;
