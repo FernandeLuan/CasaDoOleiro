@@ -5,7 +5,6 @@ test('submitted candidate planning stays editable and shared by application part
   const rules=fs.readFileSync('firestore.rules','utf8');
   const domainRules=fs.readFileSync('js/shared/domain-rules.js','utf8');
   const planning=fs.readFileSync('js/portal/planejamento.js','utf8');
-  const app=fs.readFileSync('js/portal/app.js','utf8');
   const portalHtml=fs.readFileSync('portal/index.html','utf8');
   const enhancements=fs.readFileSync('js/portal/planning-enhancements.js','utf8');
   const adjustment=fs.readFileSync('js/portal/candidate-adjustment.js','utf8');
@@ -16,7 +15,8 @@ test('submitted candidate planning stays editable and shared by application part
   expect(domainRules).toContain("['draft','submitted','adjustments']");
   expect(planning).toContain('candidatePlanningEditable(status)');
   expect(planning).toContain('volunteerAgendaContent(editable)');
-  expect(app).toContain('OleiroRules?.candidatePlanningEditable');
+  expect(planning).toContain('OleiroRules?.candidatePlanningEditable');
+  expect(planning).toContain('function openActivityModal(');
   expect(portalHtml).toContain('../js/shared/domain-rules.js');
   expect(portalHtml).not.toContain('../js/portal/candidate-view.js');
   expect(enhancements).not.toMatch(/volunteerPlan\s*=\s*function/);
