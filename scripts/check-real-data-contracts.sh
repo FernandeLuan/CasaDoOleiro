@@ -72,7 +72,7 @@ has js/services/onboarding-service.js firstPortalAccessAt
 has js/services/auth-service.js markFirstPortalAccess
 has firestore.rules participantMarksFirstAccess
 no_match 'firebase-functions|ensureFunctions|httpsCallable|adminUpdateVolunteerEmail|adminDeleteVolunteerApplication' firebase.json functions/package.json js/firebase js/services/admin-access-service.js js/admin/access-management.js
-for token in groupUnitId groupsUnitId changeManagerGroupUnit; do has js/admin/app.js "$token"; done
+for token in groupUnitId groupsUnitId changeManagerGroupUnit; do has js/admin/admin-data.js "$token"; done
 has js/admin/grupos.js managerGroupUnit
 has js/admin/grupos.js 'independentes por unidade'
 has js/services/group-service.js "where('unitId','==',normalized)"
