@@ -2,6 +2,51 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "id": "2026-11-25-portal-release-383",
+      "version": "383",
+      "audience": [
+        "volunteer",
+        "admin"
+      ],
+      "eyebrow": "Nova atualização",
+      "title": "Mais controle e projetos funcionando",
+      "summary": "O Portal agora respeita o tema do dispositivo, facilita a colagem de informações e permite acompanhar Projetos/Legados com dados salvos e protegidos.",
+      "homeSlides": [
+        {
+          "title": "Tema do seu jeito",
+          "summary": "Escolha Sistema, Claro ou Escuro na sua Conta."
+        },
+        {
+          "title": "Cadastro mais simples",
+          "summary": "A seleção de texto e a colagem voltaram a funcionar nos campos do cadastro, inclusive no iPhone."
+        },
+        {
+          "title": "Projetos com histórico real",
+          "summary": "Crie, envie, acompanhe ajustes, registre o progresso e conclua seu Projeto Legado."
+        }
+      ],
+      "items": [
+        {
+          "icon": "fa-palette",
+          "title": "Tema Sistema, Claro e Escuro",
+          "text": "O Portal acompanha automaticamente a aparência do dispositivo ou usa um tema fixo."
+        },
+        {
+          "icon": "fa-clipboard",
+          "title": "Colagem no cadastro",
+          "text": "Melhorias de edição e seleção de texto nos campos do cadastro de voluntários, inclusive em dispositivos iOS."
+        },
+        {
+          "icon": "fa-seedling",
+          "title": "Projetos/Legados",
+          "text": "Projetos agora são salvos no Firestore, com histórico de progresso, aprovação e ajustes por unidade."
+        }
+      ],
+      "ctaLabel": "Ver minha Conta",
+      "ctaPage": "profile",
+      "publishedAt": "2026-11-25"
+    },
+    {
       "id": "2026-11-25-portal-release-382",
       "version": "382",
       "eyebrow": "Nova atualização",
