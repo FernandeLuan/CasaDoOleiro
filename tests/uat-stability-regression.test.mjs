@@ -115,4 +115,8 @@ test('volunteer profile edits are recorded atomically in application history', a
   assert.equal((profile.match(/history\.appendToBatch\(batch,context,p\.id,'profile_updated'/g)||[]).length, 2);
   assert.match(history, /profile_updated:'Dados do perfil atualizados'/);
   assert.ok(history.includes('fields[m.field]'));
+  const emergency = await read('../js/services/volunteer-profile-service.js');
+  const emergencyUi = await read('../js/admin/emergency-contact.js');
+  assert.match(emergency, /appendToBatch\(batch,context,applicationId,'profile_updated'/);
+  assert.match(emergencyUi, /participantIndex:i\+1/);
 });
