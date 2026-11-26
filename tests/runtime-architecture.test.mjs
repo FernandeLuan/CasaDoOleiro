@@ -177,6 +177,41 @@ test('Portal compatibility overrides match the reviewed runtime contract',()=>{
   assert.equal(contract.policy.newOverridesRequireContractUpdate,true);
 });
 
+test('Firestore persistence is owned by services, not Admin or Portal UI modules',()=>{
+  for(const directory of ['js/admin','js/portal']){
+    for(const name of readdirSync(directory).filter(file=>file.endsWith('.js'))){
+      const source=readFileSync(join(directory,name),'utf8');
+      assert.doesNotMatch(source,/\b(?:getDocs|getDoc|setDoc|updateDoc|deleteDoc|addDoc|runTransaction|writeBatch)\s*\(/, `${directory}/${name} must not call the Firestore SDK directly.`);
+      assert.doesNotMatch(source,/OleiroServices\.firebase\s*\(/, `${directory}/${name} must use a domain service instead of opening Firebase directly.`);
+    }
+  }
+});
+
+test('Admin stay-date editing delegates persistence and boundary rules to the application service',()=>{
+  const admin=readFileSync('js/admin/product-current.js','utf8');
+  const service=readFileSync('js/services/application-service.js','utf8');
+  assert.match(admin,/applications\.previewStayDateChange\(/);
+  assert.match(admin,/applications\.changeStayDates\(/);
+  assert.match(service,/function sessionOutsideStay\(/);
+  assert.match(service,/excludeBoundaryDays/);
+  assert.doesNotMatch(admin,/firestore\.writeBatch|OleiroServices\.firebase/);
+});
+
+test('Portal behavior is implemented by its canonical feature owners, not app bootstrap',()=>{
+  const bootstrap=readFileSync('js/portal/app.js','utf8');
+  const home=readFileSync('js/portal/home.js','utf8');
+  const stay=readFileSync('js/portal/estadia.js','utf8');
+  const planning=readFileSync('js/portal/planejamento.js','utf8');
+  assert.doesNotMatch(bootstrap,/\b(?:volunteerHome|volunteerStayDates|openActivityModal)\s*=\s*function/);
+  assert.match(home,/\$\{approved\?'':/,'Approved-mode Home visibility belongs to the Home renderer.');
+  assert.match(stay,/function volunteerStayDates\(/);
+  assert.match(stay,/function portalDateRange\(/);
+  assert.match(planning,/function openActivityModal\(/);
+  assert.match(planning,/if\(!approved&&!candidatePlanningEditable\(state\.volunteerPlanStatus\|\|'draft'\)\)/,'The activity modal must reuse the canonical planning editability predicate.');
+  assert.doesNotMatch(planning,/const candidateEditable=window\.OleiroRules/,'The modal must not duplicate the shared editability rule.');
+  assert.match(planning,/function portalStoredOption\(/);
+});
+
 
 test('release announcement modals keep only the compact summary and full-width acknowledgement',()=>{
   const portal=readFileSync('js/portal/release-notes.js','utf8');
@@ -260,4 +295,23 @@ test('Portal WhatsApp cooldown refreshes immediately after app return and page r
   const sync=portal.match(/function syncPortalShareCooldownTimer\(\)\{([\s\S]*?)\n\}/)?.[1]||'';
   assert.ok(sync.indexOf('if(!update())return')>=0,'button state must be recalculated immediately, even if cooldown already expired');
   assert.ok(sync.indexOf('if(portalShareCooldownUntil()>Date.now())')>sync.indexOf('if(!update())return'),'timer must only be restarted after immediate state refresh');
+});
+
+
+test('Portal screen modules own their functions without bootstrap overrides',()=>{
+  const app=readFileSync('js/portal/app.js','utf8');
+  const home=readFileSync('js/portal/home.js','utf8');
+  const stay=readFileSync('js/portal/estadia.js','utf8');
+  const planning=readFileSync('js/portal/planejamento.js','utf8');
+  assert.ok(!/^\s*(?:volunteerHome|volunteerStayDates|openActivityModal)\s*=\s*function/gm.test(app));
+  assert.match(home,/function volunteerHome\s*\(/);
+  assert.match(stay,/function volunteerStayDates\s*\(/);
+  assert.match(planning,/function openActivityModal\s*\(/);
+  assert.ok(!home.includes('function volunteerStayDates()'));
+  assert.ok(!app.includes('window.volunteerHome=volunteerHome'));
+});
+
+test('approved volunteer home hides candidate-only information in its canonical renderer',()=>{
+  const home=readFileSync('js/portal/home.js','utf8');
+  assert.ok(home.includes("${approved?'':`"));
 });
