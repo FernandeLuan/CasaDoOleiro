@@ -13,7 +13,7 @@ test('history events persist the authenticated email and render it as the author
   assert.match(applications, /async updateLifecycle/);
   assert.match(applications, /profile_inactivated/);
   assert.match(applications, /profile_reactivated/);
-  assert.match(applications, /services\.history\.append\(id,eventType/);
+  assert.match(applications, /services\.history\.appendToBatch\(batch,context,id,eventType/);
 });
 
 test('WhatsApp sharing is disabled without active sessions and does not open a blank tab', async () => {
