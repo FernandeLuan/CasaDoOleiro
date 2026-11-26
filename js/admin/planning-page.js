@@ -72,7 +72,12 @@
   const adminShareTimers=window.__oleiroAdminShareTimers||(window.__oleiroAdminShareTimers={});
   function adminShareKey(id){return 'oleiro.admin.whatsapp.'+String(id||'')}
   function adminShareUntil(id){try{return Number(sessionStorage.getItem(adminShareKey(id))||0)||0}catch{return 0}}
-  function adminShareRows(id){return (Array.isArray(state.sessions)?state.sessions:[]).filter(row=>String(row.applicationId||'')===String(id)&&String(row.activityId||'').trim()&&/^\d{4}-\d{2}-\d{2}$/.test(String(row.date||''))&&!['rejected','cancelled','canceled','deleted','inactive','removed'].includes(String(row.status||'').toLowerCase())&&!['rejected','cancelled','canceled','deleted','inactive','removed'].includes(String(row.reviewStatus||'').toLowerCase()))}
+  function adminShareableSession(row){return !!row&&!!String(row.activityId||'').trim()&&/^\d{4}-\d{2}-\d{2}$/.test(String(row.date||''))&&!['rejected','cancelled','canceled','deleted','inactive','removed'].includes(String(row.status||'').toLowerCase())&&!['rejected','cancelled','canceled','deleted','inactive','removed'].includes(String(row.reviewStatus||'').toLowerCase())}
+  function adminHasShareablePlan(p){
+    const id=String(p?.id||''),cached=Object.entries(state.adminPlanPageCache||{}).filter(([key])=>key.startsWith(id+'|')).flatMap(([,page])=>Array.isArray(page?.sessions)?page.sessions:[]);
+    const current=String(state.currentPlanningApplicationId||'')===id&&Array.isArray(state.sessions)?state.sessions:[];
+    return cached.concat(current).some(adminShareableSession)||Number(p?.sessionCount||0)>0;
+  }
   function adminShareButtonState(id){
     const remaining=Math.max(0,adminShareUntil(id)-Date.now()),seconds=Math.ceil(remaining/1000),minutes=Math.floor(seconds/60),rest=String(seconds%60).padStart(2,'0');
     return {disabled:remaining>0,label:remaining>0?'Compartilhado · '+minutes+':'+rest:(typeof t==='function'?t('planning.share.whatsapp'):'Compartilhar no WhatsApp')};
@@ -95,7 +100,7 @@
   window.addEventListener('pageshow',syncVisibleAdminShareCooldowns);
   document.addEventListener('visibilitychange',function(){if(!document.hidden)syncVisibleAdminShareCooldowns()});
   function adminPlanningShareBar(p){
-    if(!adminPlanningShareAllowed(p)||String(state.managerPlanningTab||'plan')!=='plan'||!adminShareRows(p.id).length)return '';
+    if(!adminPlanningShareAllowed(p)||String(state.managerPlanningTab||'plan')!=='plan'||!adminHasShareablePlan(p))return '';
     const status=adminShareButtonState(p.id);
     setTimeout(function(){syncAdminShareCooldown(p.id)},0);
     return '<div class="planning-share-bar admin-planning-share-bar"><button class="planning-share-action '+(status.disabled?'is-complete':'')+'" type="button" data-application-id="'+escapeHtml(String(p.id))+'" onclick="shareAdminPlanningWhatsApp(\''+encodeURIComponent(String(p.id))+'\')" '+(status.disabled?'disabled aria-disabled="true"':'')+'><i class="fa-brands fa-whatsapp"></i><span>'+escapeHtml(status.label)+'</span></button></div>';
