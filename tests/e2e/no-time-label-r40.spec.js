@@ -4,9 +4,10 @@ import vm from 'node:vm';
 
 test('activity cards promote the title and never render an exact activity time', async () => {
   const planning = fs.readFileSync('js/portal/planejamento.js', 'utf8');
+  const agenda = fs.readFileSync('js/portal/agenda.js', 'utf8');
   const home = fs.readFileSync('js/portal/home.js', 'utf8');
 
-  expect(planning).toContain('<h4 data-no-i18n>${escapeHtml(s.activity.name');
+  expect(agenda).toContain('<h4 data-no-i18n>${escapeHtml(a.name||raw.activityName');
   expect(planning).not.toContain("escapeHtml(s.activity.time||'N/A')");
   expect(planning).not.toContain('id="actTime"');
 
