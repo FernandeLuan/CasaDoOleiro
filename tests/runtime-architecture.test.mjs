@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, normalize } from 'node:path';
 
-const retiredNotLoaded=new Set();
+const retiredNotLoaded=new Set(['js/portal/experience-summary.js']);
 
 function localScripts(htmlPath){
   const html=readFileSync(htmlPath,'utf8');
@@ -168,6 +168,24 @@ test('release dismissal does not depend on browser storage',()=>{
 });
 
 
+test('Portal experience-summary override is retired and Home/Agenda/Stay/Planning have canonical owners',()=>{
+  const portalHtml=readFileSync('portal/index.html','utf8');
+  const experience=readFileSync('js/portal/experience-summary.js','utf8');
+  const product=readFileSync('js/portal/product-current.js','utf8');
+  const home=readFileSync('js/portal/home.js','utf8');
+  const agenda=readFileSync('js/portal/agenda.js','utf8');
+  const stay=readFileSync('js/portal/estadia.js','utf8');
+  const planning=readFileSync('js/portal/planejamento.js','utf8');
+  assert.ok(!portalHtml.includes('experience-summary.js'));
+  assert.match(experience,/volunteerHome=function/,'Retired source is kept only for rollback, not runtime execution.');
+  assert.match(home,/function volunteerHome\(/);
+  assert.match(agenda,/function volunteerAgendaContent\(/);
+  assert.match(agenda,/function sessionCardVolunteer\(/);
+  assert.match(stay,/function volunteerStay\(/);
+  assert.match(planning,/function submitPlan\(/);
+  assert.doesNotMatch(product,/volunteerHome\s*=\s*function|volunteerAgendaContent\s*=\s*function|sessionCardVolunteer\s*=\s*function|openActivityModal\s*=\s*function/);
+});
+
 test('Portal compatibility overrides match the reviewed runtime contract',()=>{
   const contract=JSON.parse(readFileSync('docs/runtime-contract-overrides.json','utf8'));
   const source=readFileSync(contract.scope,'utf8');
@@ -203,10 +221,12 @@ test('Portal behavior is implemented by its canonical feature owners, not app bo
   const stay=readFileSync('js/portal/estadia.js','utf8');
   const planning=readFileSync('js/portal/planejamento.js','utf8');
   assert.doesNotMatch(bootstrap,/\b(?:volunteerHome|volunteerStayDates|openActivityModal)\s*=\s*function/);
-  assert.match(home,/\$\{approved\?'':/,'Approved-mode Home visibility belongs to the Home renderer.');
+  assert.match(home,/function volunteerHomeSupportCard\(/,'Home support card belongs to the Home renderer.');
+  assert.match(home,/function portalDeadlineDays\(/,'Planning deadline display belongs to the Home feature.');
   assert.match(stay,/function volunteerStayDates\(/);
   assert.match(stay,/function portalDateRange\(/);
   assert.match(planning,/function openActivityModal\(/);
+  assert.match(planning,/blockedDayReason\(date\)/,'Planning modal must use the canonical agenda day-blocking rule.');
   assert.match(planning,/if\(!approved&&!candidatePlanningEditable\(state\.volunteerPlanStatus\|\|'draft'\)\)/,'The activity modal must reuse the canonical planning editability predicate.');
   assert.doesNotMatch(planning,/const candidateEditable=window\.OleiroRules/,'The modal must not duplicate the shared editability rule.');
   assert.match(planning,/function portalStoredOption\(/);
