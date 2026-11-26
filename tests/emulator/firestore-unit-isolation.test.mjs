@@ -154,6 +154,37 @@ test('coordinators cannot cross units or change a session unit or application li
   await assertFails(deleteDoc(docRef(db,'activity_sessions','session-indaial')));
 });
 
+test('legacy projects persist in Firestore with owner and unit scoped lifecycle permissions',async()=>{
+  const volunteer=dbFor('volunteer-rodeio');
+  const project=docRef(volunteer,'legacy_projects','application-rodeio__volunteer-rodeio');
+  const draft={
+    applicationId:'application-rodeio',ownerUid:'volunteer-rodeio',ownerName:'Volunteer R',
+    unitId:'rodeio',unitName:'Rodeio',status:'draft',title:'Composteira comunitária',
+    category:'Sustentabilidade',description:'Montar uma composteira.',why:'Reduzir resíduos.',
+    expectedResult:'Composto para a horta.',materials:'Madeira e ferramentas.',allowContinuation:true
+  };
+  await assertSucceeds(setDoc(project,draft));
+  await assertSucceeds(getDoc(project));
+  await assertFails(getDoc(docRef(dbFor('volunteer-indaial'),'legacy_projects','application-rodeio__volunteer-rodeio')));
+  await assertSucceeds(getDoc(docRef(dbFor('coordinator-rodeio'),'legacy_projects','application-rodeio__volunteer-rodeio')));
+  await assertFails(getDoc(docRef(dbFor('coordinator-indaial'),'legacy_projects','application-rodeio__volunteer-rodeio')));
+  const scoped=await getDocs(query(collection(dbFor('coordinator-rodeio'),'legacy_projects'),where('unitId','==','rodeio')));
+  assert.deepEqual(scoped.docs.map(row=>row.id),['application-rodeio__volunteer-rodeio']);
+  await assertFails(getDocs(collection(dbFor('coordinator-rodeio'),'legacy_projects')));
+  await assertFails(setDoc(docRef(volunteer,'legacy_projects','forged-foreign-project'),{
+    ...draft,unitId:'indaial',unitName:'Indaial'
+  }));
+  await assertSucceeds(updateDoc(project,{status:'analysis',submittedAt:new Date().toISOString(),updatedAt:serverTimestamp()}));
+  await assertSucceeds(updateDoc(docRef(dbFor('admin'),'legacy_projects','application-rodeio__volunteer-rodeio'),{
+    status:'approved',reviewNote:'',approvedAt:new Date().toISOString(),updatedAt:serverTimestamp()
+  }));
+  await assertSucceeds(updateDoc(project,{status:'in_progress',startedAt:new Date().toISOString(),updatedAt:serverTimestamp()}));
+  await assertSucceeds(updateDoc(project,{progressEntries:[{id:'p1',text:'Base preparada',at:new Date().toISOString()}],updatedAt:serverTimestamp()}));
+  await assertSucceeds(updateDoc(project,{status:'completed',result:'Composteira entregue.',completedAt:new Date().toISOString(),updatedAt:serverTimestamp()}));
+  await assertFails(updateDoc(project,{result:'Alteração após conclusão',updatedAt:serverTimestamp()}));
+  await assertFails(deleteDoc(project));
+});
+
 test('activity assistants cannot create sessions that reference another application activity',async()=>{
   const db=dbFor('assistant-rodeio');
   await assertSucceeds(setDoc(docRef(db,'activity_sessions','assistant-local-session'),{applicationId:'application-rodeio',activityId:'activity-rodeio',unitId:'rodeio',status:'confirmed'}));
