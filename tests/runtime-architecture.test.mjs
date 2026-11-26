@@ -195,3 +195,22 @@ test('release announcement modals keep only the compact summary and full-width a
   assert.ok(admin.includes('btn-block'),'Admin acknowledgement must use a full-width button');
   assert.match(css,/\.release-notes-actions\s*\{[^}]*grid-template-columns:\s*1fr/s);
 });
+
+
+test('Portal WhatsApp sharing requires at least one valid session and enforces a one-minute resend cooldown',()=>{
+  const portal=readFileSync('js/portal/planejamento.js','utf8');
+  assert.match(portal,/const hasActive=activeCandidateSessions\(\)\.length>0/);
+  assert.match(portal,/if\(!sessions\.length\)return showToast/);
+  assert.match(portal,/PORTAL_SHARE_COOLDOWN_MS=60\*1000/);
+  assert.match(portal,/sessionStorage\.setItem\(portalShareCooldownKey\(\),String\(until\)\)/);
+  assert.match(portal,/Aguarde um minuto para compartilhar novamente/);
+  assert.match(portal,/button\.disabled=status\.disabled/);
+});
+
+test('Admin planning failures leave the spinner and expose an explicit retry action',()=>{
+  const detail=readFileSync('js/admin/candidate-detail-data.js','utf8');
+  assert.match(detail,/state\.adminPlanErrors\[String\(p\.id\)\]=String\(error/);
+  assert.match(detail,/Não foi possível carregar o planejamento/);
+  assert.match(detail,/window\.retryAdminPlanning=async function/);
+  assert.match(detail,/Tentar novamente/);
+});
