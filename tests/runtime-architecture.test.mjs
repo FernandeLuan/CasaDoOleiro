@@ -197,6 +197,12 @@ test('release announcement modals keep only the compact summary and full-width a
 });
 
 
+
+test('Portal planning accepts ISO calendar dates for shareable sessions',()=>{
+  const planning=readFileSync('js/portal/planejamento.js','utf8');
+  assert.match(planning,/!\^\\\\d\{4\}-\\\\d\{2\}-\\\\d\{2\}\$\/\.test\(String\(row\.date\|\|''\)\)/);
+});
+
 test('Portal WhatsApp sharing requires at least one valid session and enforces a one-minute resend cooldown',()=>{
   const portal=readFileSync('js/portal/planejamento.js','utf8');
   assert.match(portal,/const hasActive=activeCandidateSessions\(\)\.length>0/);
