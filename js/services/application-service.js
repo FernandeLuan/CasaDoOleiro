@@ -184,6 +184,33 @@
       },{loading:false});
     },
 
+    async updateParticipantGender(id,{participantGenders=[],participantIndex,gender,participantUid='',unitId=''}={}){
+      const index=Number(participantIndex);
+      if(!Number.isInteger(index)||index<0||!['male','female'].includes(String(gender)))throw new Error('Dados de gênero inválidos.');
+      const genders=Array.isArray(participantGenders)?[...participantGenders]:[];genders[index]=String(gender);
+      return services.run(async()=>{
+        const context=await services.firebase();const {firestore}=context.modules,batch=firestore.writeBatch(context.db),now=firestore.serverTimestamp();
+        const patch={participantGenders:genders,updatedAt:now};if(genders.length===1)patch.gender=String(gender);
+        batch.update(firestore.doc(context.db,'applications',String(id)),patch);
+        if(participantUid)batch.set(firestore.doc(context.db,'volunteer_profiles',String(participantUid)),{gender:String(gender),updatedAt:now},{merge:true});
+        if(typeof services.history?.appendToBatch!=='function')throw new Error('Serviço de histórico indisponível; a alteração não foi aplicada.');
+        services.history.appendToBatch(batch,context,id,'profile_updated',{unitId:String(unitId||'').toLowerCase(),metadata:{field:'gender',participantIndex:index+1},createdAt:now});
+        await batch.commit();return {participantGenders:genders,gender:String(gender)};
+      },{loading:false});
+    },
+
+    async updateRegistrationLink(id,{registrationLink='',unitId=''}={}){
+      const raw=String(registrationLink||'').trim();let link='';
+      if(raw){let url;try{url=new URL(raw)}catch{throw new Error('Informe um link válido.')}if(!['http:','https:'].includes(url.protocol))throw new Error('Informe um link HTTP ou HTTPS válido.');link=url.toString()}
+      return services.run(async()=>{
+        const context=await services.firebase();const {firestore}=context.modules,batch=firestore.writeBatch(context.db),now=firestore.serverTimestamp();
+        batch.update(firestore.doc(context.db,'applications',String(id)),{registrationLink:link,updatedAt:now});
+        if(typeof services.history?.appendToBatch!=='function')throw new Error('Serviço de histórico indisponível; a alteração não foi aplicada.');
+        services.history.appendToBatch(batch,context,id,'profile_updated',{unitId:String(unitId||'').toLowerCase(),metadata:{field:'registrationLink'},createdAt:now});
+        await batch.commit();return {registrationLink:link};
+      },{loading:false});
+    },
+
     async previewStayDateChange(id,{stayStart,stayEnd}={}){
       if(!stayStart||!stayEnd||stayEnd<stayStart)throw new Error('Período inválido.');
       return services.run(async()=>{
@@ -194,13 +221,13 @@
       },{loading:false});
     },
 
-    async changeStayDates(id,{stayStart,stayEnd,removeOutside=true}={}){
+    async changeStayDates(id,{stayStart,stayEnd,removeOutside=true,excludeBoundaryDays=false,knownSessions=null}={}){
       if(!stayStart||!stayEnd||stayEnd<stayStart)throw new Error('Período inválido.');
       occupancyCache.clear();
       return services.run(async()=>{
         const context=await services.firebase();const {firestore}=context.modules,cached=cachedStayPreview(id,stayStart,stayEnd);
-        const sessions=cached?.sessions||await applicationSessions(context,id);
-        const outside=sessions.filter(s=>!s.date||s.date<stayStart||s.date>stayEnd);
+        const sessions=Array.isArray(knownSessions)?knownSessions:(cached?.sessions||await applicationSessions(context,id));
+        const outside=sessions.filter(s=>!s.date||(excludeBoundaryDays?(s.date<=stayStart||s.date>=stayEnd):(s.date<stayStart||s.date>stayEnd)));
         if(outside.length&&!removeOutside)throw new Error('Existem sessões fora do novo período.');
         const outsideIds=new Set(outside.map(s=>String(s.id))),remaining=sessions.filter(s=>!outsideIds.has(String(s.id)));
         const allActivityIds=new Set(sessions.map(s=>String(s.activityId||'')).filter(Boolean)),remainingActivityIds=new Set(remaining.map(s=>String(s.activityId||'')).filter(Boolean));
@@ -211,7 +238,8 @@
         batch.update(firestore.doc(context.db,'applications',String(id)),{
           stayStart,stayEnd,stayMonths:stayMonths(stayStart,stayEnd),sessionCount:remaining.length,activityCount:remainingActivityIds.size,updatedAt:now
         });
-        await batch.commit();clearStayPreview(id);return {removedSessions:outside.length,sessionCount:remaining.length,activityCount:remainingActivityIds.size};
+        await batch.commit();clearStayPreview(id);
+        return {removedSessions:outside.length,sessionCount:remaining.length,activityCount:remainingActivityIds.size,remainingSessions:remaining};
       },{loading:false});
     },
 
