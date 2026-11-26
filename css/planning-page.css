@@ -64,6 +64,11 @@
 .planning-page-content .admin-plan-review-footer{position:sticky;bottom:18px;z-index:4;margin-top:18px;padding:12px;background:color-mix(in srgb,var(--surface) 94%,transparent);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow-md);backdrop-filter:blur(12px)}
 .planning-page-content .admin-account-refactor,.planning-page-content .candidate-history-panel{max-width:860px;margin-inline:auto}
 .planning-page-loading{min-height:180px}
+/* Estado vazio do Planejamento usa a mesma altura visual do quadro de Projetos. */
+.planning-board-empty{min-height:188px!important;box-sizing:border-box;display:grid!important;place-items:center;padding:24px!important;border:1px dashed var(--border-strong)!important;border-radius:24px!important;background:transparent!important;color:var(--muted)!important;text-align:center}
+.planning-board-empty>div{display:grid;justify-items:center;gap:12px}
+.planning-board-empty i{font-size:1.8rem;color:var(--primary)}
+.planning-person-loading{min-height:180px}
 
 /* Ações finais do planejamento: espaçamento aprovado na homologação. */
 .admin-review-actions-r24{
