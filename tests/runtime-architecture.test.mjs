@@ -180,7 +180,8 @@ test('release announcement modals keep only the compact summary and full-width a
     assert.ok(!modal.includes('release-history-list'));
     assert.ok(!modal.includes('admin-release-history'));
     assert.ok(!modal.includes('release-notes-list'));
-    assert.ok(modal.includes('btn-block'));
   }
+  assert.ok(portal.includes('btn-block'),'Portal acknowledgement must use a full-width button');
+  assert.ok(admin.includes('btn-block'),'Admin acknowledgement must use a full-width button');
   assert.match(css,/\.release-notes-actions\s*\{[^}]*grid-template-columns:\s*1fr/s);
 });
