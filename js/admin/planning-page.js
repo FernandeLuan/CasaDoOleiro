@@ -76,8 +76,8 @@
   function adminPlanningShareBar(p){
     if(!adminPlanningShareAllowed(p)||String(state.managerPlanningTab||'plan')!=='plan'||!adminShareRows(p.id).length)return '';
     const action=typeof t==='function'?t('planning.share.whatsapp'):'Compartilhar no WhatsApp',remaining=Math.max(0,adminShareUntil(p.id)-Date.now()),disabled=remaining>0,seconds=Math.ceil(remaining/1000),label=disabled?`Compartilhado · ${seconds}s`:action;
-    return `<div class="planning-share-bar admin-planning-share-bar"><button class="planning-share-action" type="button" data-application-id="${escapeHtml(String(p.id))}" onclick="shareAdminPlanningWhatsApp('${encodeURIComponent(String(p.id))}')" ${disabled?'disabled aria-disabled="true"':''}><i class="fa-brands fa-whatsapp"></i><span>${escapeHtml(label)}</span></button></div>`;
     setTimeout(()=>syncAdminShareCooldown(p.id),0);
+    return `<div class="planning-share-bar admin-planning-share-bar"><button class="planning-share-action" type="button" data-application-id="${escapeHtml(String(p.id))}" onclick="shareAdminPlanningWhatsApp('${encodeURIComponent(String(p.id))}')" ${disabled?'disabled aria-disabled="true"':''}><i class="fa-brands fa-whatsapp"></i><span>${escapeHtml(label)}</span></button></div>`;
   }
   window.shareAdminPlanningWhatsApp=async function(encodedId){
     const id=decodeURIComponent(String(encodedId||'')),p=candidateById(id);if(!adminPlanningShareAllowed(p))return;
