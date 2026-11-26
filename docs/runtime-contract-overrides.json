@@ -6,6 +6,98 @@
   "policy": {
     "newOverridesRequireContractUpdate": true,
     "runtimeBehaviorChangesRequireRegressionTests": true,
-    "doNotChangeFirestoreRulesAsPartOfThisMigration": true
-  }
+    "doNotChangeFirestoreRulesAsPartOfThisMigration": true,
+    "featureDecoratorChangesRequireContractUpdate": true
+  },
+  "featureDecorators": [
+    {
+      "file": "js/portal/activity-flow.js",
+      "symbols": [
+        "openActivityModal",
+        "sessionCardVolunteer"
+      ]
+    },
+    {
+      "file": "js/portal/candidate-adjustment.js",
+      "symbols": [
+        "sessionCardVolunteer"
+      ]
+    },
+    {
+      "file": "js/portal/consistency.js",
+      "symbols": [
+        "sessionCardVolunteer",
+        "volunteerAgendaContent"
+      ]
+    },
+    {
+      "file": "js/portal/feedback-visibility.js",
+      "symbols": [
+        "sessionCardVolunteer"
+      ]
+    },
+    {
+      "file": "js/portal/meeting-activity.js",
+      "symbols": [
+        "volunteerAgendaContent",
+        "sessionCardVolunteer",
+        "openActivityModal"
+      ]
+    },
+    {
+      "file": "js/portal/pending-change-state.js",
+      "symbols": [
+        "sessionCardVolunteer"
+      ]
+    },
+    {
+      "file": "js/portal/planning-days.js",
+      "symbols": [
+        "volunteerAgendaContent",
+        "openActivityModal"
+      ]
+    },
+    {
+      "file": "js/portal/planning-feedback.js",
+      "symbols": [
+        "volunteerAgendaContent",
+        "sessionCardVolunteer"
+      ]
+    },
+    {
+      "file": "js/portal/portal-ux.js",
+      "symbols": [
+        "volunteerAgendaContent",
+        "sessionCardVolunteer"
+      ]
+    },
+    {
+      "file": "js/portal/post-approval.js",
+      "symbols": [
+        "sessionCardVolunteer",
+        "volunteerAgendaContent"
+      ]
+    },
+    {
+      "file": "js/portal/review-flow.js",
+      "symbols": [
+        "sessionCardVolunteer",
+        "volunteerAgendaContent",
+        "submitPlan"
+      ]
+    },
+    {
+      "file": "js/portal/review-safeguards.js",
+      "symbols": [
+        "submitPlan"
+      ]
+    },
+    {
+      "file": "js/portal/session-review-ui.js",
+      "symbols": [
+        "sessionCardVolunteer",
+        "submitPlan"
+      ]
+    }
+  ]
 }
