@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, normalize } from 'node:path';
 
-const retiredNotLoaded=new Set();
+const retiredConfig=JSON.parse(readFileSync('docs/runtime-retired-modules.json','utf8'));
+const retiredNotLoaded=new Set(retiredConfig.retired||[]);
 
 function localScripts(htmlPath){
   const html=readFileSync(htmlPath,'utf8');
@@ -330,4 +331,19 @@ test('Admin bootstrap delegates data orchestration to its data module',()=>{
   }
   assert.doesNotMatch(app,/function (?:hydrateManagerSchedule|hydrateManagerPendingChanges|loadManagerCandidates|hydrateManagerDashboardData|hydrateManagerBaseData|ensureManagerGroups)\s*\(/);
   assert.ok(html.indexOf('admin-data.js')<html.indexOf('admin/app.js'),'Admin data module must load before the bootstrap');
+});
+
+
+test('Portal experience summary behavior has one canonical feature owner',()=>{
+  const home=readFileSync('js/portal/home.js','utf8');
+  const planning=readFileSync('js/portal/planejamento.js','utf8');
+  const stay=readFileSync('js/portal/estadia.js','utf8');
+  const html=readFileSync('portal/index.html','utf8');
+  assert.match(home,/function volunteerHome\s*\(/);
+  assert.match(planning,/async function submitPlan\s*\(/);
+  assert.match(planning,/function volunteerDayAdjustment\s*\(/);
+  assert.match(stay,/function volunteerStay\s*\(/);
+  assert.doesNotMatch(html,/experience-summary\.js/);
+  assert.ok(retiredNotLoaded.has('js/portal/experience-summary.js'));
+  assert.match(planning,/if\(wasAdjustment\)application\.dayAdjustments=\{\}/);
 });
