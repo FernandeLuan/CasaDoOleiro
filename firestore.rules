@@ -837,15 +837,25 @@ service cloud.firestore {
     }
 
     match /legacy_projects/{projectId} {
-      allow read: if isAdmin()
+      // Managers list only within their authorized scope. Volunteers read only
+      // their own project document; keeping get/list separate lets Firestore
+      // prove each query against the narrowest applicable rule.
+      allow get: if isAdmin()
         || (isCoordinator() && managerHasUnit(resource.data.unitId))
-        || (activeUser() && projectId.matches('.*__' + request.auth.uid))
         || (
           activeUser()
-          && resource.data.ownerUid == request.auth.uid
-          && hasApplicationId(resource.data)
-          && participantOf(resource.data.applicationId)
+          && (
+            projectId.matches('.*__' + request.auth.uid)
+            || (
+              resource.data.ownerUid == request.auth.uid
+              && hasApplicationId(resource.data)
+              && participantOf(resource.data.applicationId)
+            )
+          )
         );
+
+      allow list: if isAdmin()
+        || (isCoordinator() && managerHasUnit(resource.data.unitId));
 
       allow create: if projectOwnerMatchesApplication(request.resource.data)
         && request.resource.data.status == 'draft'
