@@ -9,9 +9,13 @@ select,
   -webkit-user-select: text !important;
   user-select: text !important;
   -webkit-touch-callout: default !important;
+  touch-action: auto !important;
   caret-color: auto;
 }
 :where(input[type="email"], input[autocomplete="email"], input[inputmode="email"]) {
   text-align: start;
   text-transform: none;
 }
+
+/* Modal de cadastro: o contêiner também não pode suprimir o menu contextual do Safari. */
+.modal,.modal-body,.new-candidate-form,.new-candidate-form .field{ -webkit-user-select:text!important; user-select:text!important; }
