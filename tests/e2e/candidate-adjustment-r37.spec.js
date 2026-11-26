@@ -106,3 +106,46 @@ test('analysis remains editable; requested adjustment can add new drafts and res
   await expect(page.getByRole('button',{name:/Adicionar atividade/}).first()).toBeVisible();await expect(page.locator('.activity-card').filter({hasText:'Nova no reajuste E2E'}).locator('.activity-actions')).toBeVisible();
   await expect.poll(()=>page.evaluate(async()=>{const rows=await window.OleiroServices.planning.listSessions({applicationId:'e2e-application'});return rows.some(row=>row.activityName==='Nova no reajuste E2E'&&row.status==='proposed')}),{timeout:20_000}).toBe(true);
 });
+
+test('new volunteer form preserves native text selection and paste gestures on iOS and desktop',async({page})=>{
+  test.setTimeout(90_000);
+  await login(page,'admin@oleiro.test','Admin123!','admin');
+  const volunteerNav=page.getByRole('button',{name:/Voluntariado/}).first();
+  await expect(volunteerNav).toBeVisible({timeout:30_000});
+  await volunteerNav.click();
+  const add=page.getByRole('button',{name:'Novo candidato'});
+  await expect(add).toBeVisible({timeout:20_000});
+  await add.click();
+  const name=page.locator('#ncName1');
+  await expect(name).toBeVisible();
+  const style=await name.evaluate(el=>{
+    const css=getComputedStyle(el);
+    return {touchAction:css.touchAction,userSelect:css.userSelect,webkitUserSelect:css.webkitUserSelect,webkitTouchCallout:css.webkitTouchCallout};
+  });
+  expect(style).toEqual({touchAction:'auto',userSelect:'text',webkitUserSelect:'text',webkitTouchCallout:'default'});
+  const paste=await name.evaluate(el=>{
+    const data=new DataTransfer();data.setData('text/plain','Texto de teste colado');
+    const event=new ClipboardEvent('paste',{bubbles:true,cancelable:true,clipboardData:data});
+    const allowed=el.dispatchEvent(event);
+    return {allowed,defaultPrevented:event.defaultPrevented};
+  });
+  expect(paste).toEqual({allowed:true,defaultPrevented:false});
+});
+
+test('volunteer account offers System Light and Dark appearance and persists the selection',async({page})=>{
+  test.setTimeout(90_000);
+  await login(page,'voluntario@oleiro.test','Volunteer123!','portal');
+  const account=page.getByRole('button',{name:/Conta/}).first();
+  await expect(account).toBeVisible({timeout:30_000});
+  await account.click();
+  const system=page.getByRole('button',{name:/Sistema/});
+  await expect(system).toBeVisible();
+  await expect(page.getByRole('button',{name:/Claro/})).toBeVisible();
+  await expect(page.getByRole('button',{name:/Escuro/})).toBeVisible();
+  await page.getByRole('button',{name:/Claro/}).click();
+  await expect.poll(()=>page.evaluate(()=>localStorage.getItem('oleiro-theme'))).toBe('light');
+  await expect(page.locator('html')).toHaveAttribute('data-theme-preference','light');
+  await page.getByRole('button',{name:/Sistema/}).click();
+  await expect.poll(()=>page.evaluate(()=>localStorage.getItem('oleiro-theme'))).toBe('system');
+  await expect(page.locator('html')).toHaveAttribute('data-theme-preference','system');
+});
