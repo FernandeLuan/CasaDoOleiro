@@ -32,6 +32,8 @@ jobs:
           find js -type f -name '*.js' -print0 | while IFS= read -r -d '' file; do
             node --check "$file"
           done
+      - name: Inventory runtime dependencies and shared state
+        run: npm run audit:runtime
       - name: Check runtime architecture contracts
         run: node --test tests/runtime-architecture.test.mjs
       - name: Check local asset integrity
