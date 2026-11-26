@@ -13,7 +13,7 @@ test('history events persist the authenticated email and render it as the author
   assert.match(applications, /async updateLifecycle/);
   assert.match(applications, /profile_inactivated/);
   assert.match(applications, /profile_reactivated/);
-  assert.match(applications, /services\.history\.append\(id,eventType/);
+  assert.match(applications, /services\.history\.appendToBatch\(batch,context,id,eventType/);
 });
 
 test('WhatsApp sharing is disabled without active sessions and does not open a blank tab', async () => {
@@ -48,7 +48,9 @@ test('admin version panel removes the details link and waits for authenticated h
 test('project read permissions remain scoped to active users and their own project IDs', async () => {
   const rules = await read('../firestore.rules');
   assert.match(rules, /match \/legacy_projects\/\{projectId\}/);
-  assert.match(rules, /activeUser\(\) && projectId\.matches\('\.\*__' \+ request\.auth\.uid\)/);
+  assert.match(rules, /allow get: if isAdmin\(\)/);
+  assert.match(rules, /projectId\.matches\('\.\*__' \+ request\.auth\.uid\)/);
+  assert.match(rules, /allow list: if isAdmin\(\)[\s\S]*isCoordinator\(\) && managerHasUnit\(resource\.data\.unitId\)/);
   assert.match(rules, /allow delete: if false/);
 });
 
@@ -65,6 +67,7 @@ test('profile activation and inactivation persist actor history atomically',asyn
   assert.match(history,/actorEmail:String\(session\?\.email\|\|user\.email\|\|''\)/);
   assert.match(admin,/participantAccessCache\[String\(p\.id\)\]=Object\.fromEntries/);
   assert.match(admin,/adminAccountReadAt\[String\(p\.id\)\]=Date\.now\(\)/);
+  assert.match(admin,/\.\.\.\(previousAccess\[key\]\|\|\{\}\)/,'Lifecycle cache updates must preserve firstPortalAccessAt and other access metadata');
 });
 
 test('volunteer planning cannot remain indefinitely in a loading state',async()=>{

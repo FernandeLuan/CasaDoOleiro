@@ -8,7 +8,8 @@ async function rejectCandidateRecord(id,reason,autoRejected=false){
   await window.OleiroServices.applications.updateLifecycle(p.id,{applicationPatch:patch,participantUids:p.participantUids,participantActive:false});applyCandidateLocalPatch(p,patch);
   const uids=[...(p.participantUids||[])].map(String).filter(Boolean);
   state.participantAccessCache=state.participantAccessCache||{};
-  state.participantAccessCache[String(p.id)]=Object.fromEntries(uids.map(uid=>[uid,{id:uid,active:false}]));
+  const previousAccess=state.participantAccessCache[String(p.id)]||{};
+  state.participantAccessCache[String(p.id)]=Object.fromEntries(uids.map(uid=>[uid,{...(previousAccess[uid]||{}),id:uid,active:false}]));
   state.adminAccountReadAt=state.adminAccountReadAt||{};state.adminAccountReadAt[String(p.id)]=Date.now();
   return p;
 }
@@ -28,7 +29,8 @@ async function reactivateCandidate(id){
       const patch={status:'approved',active:true,inactive:false,inactivePreviousStatus:null,planningDeadlineAt:null,pendingUntil:null,autoRejected:false,rejectedReason:'',rejectedAt:null,needsAdminAttention:false};
       applyCandidateLocalPatch(p,patch);
       state.participantAccessCache=state.participantAccessCache||{};
-      state.participantAccessCache[String(p.id)]=Object.fromEntries((p.participantUids||[]).map(uid=>[String(uid),{id:String(uid),active:true}]));
+      const previousAccess=state.participantAccessCache[String(p.id)]||{};
+      state.participantAccessCache[String(p.id)]=Object.fromEntries((p.participantUids||[]).map(uid=>{const key=String(uid);return [key,{...(previousAccess[key]||{}),id:key,active:true}]}));
       state.adminAccountReadAt=state.adminAccountReadAt||{};state.adminAccountReadAt[String(p.id)]=Date.now();
       closeModal();render();showToast(`${p.name} foi reativado e manteve o planejamento aprovado.`);return;
     }catch(error){console.error(error);showToast(error?.message||'Não foi possível reativar o perfil.');return}
@@ -47,7 +49,8 @@ async function reactivateCandidate(id){
     };
     applyCandidateLocalPatch(p,patch);
     state.participantAccessCache=state.participantAccessCache||{};
-    state.participantAccessCache[String(p.id)]=Object.fromEntries((p.participantUids||[]).map(uid=>[String(uid),{id:String(uid),active:true}]));
+    const previousAccess=state.participantAccessCache[String(p.id)]||{};
+    state.participantAccessCache[String(p.id)]=Object.fromEntries((p.participantUids||[]).map(uid=>{const key=String(uid);return [key,{...(previousAccess[key]||{}),id:key,active:true}]}));
     state.adminAccountReadAt=state.adminAccountReadAt||{};state.adminAccountReadAt[String(p.id)]=Date.now();
     p.submitted='—';p.activities=patch.activityCount;p.sessions=patch.sessionCount;
     invalidateCandidatePlanning?.(p.id);invalidateManagerScheduleCache?.();invalidateManagerPendingChanges?.();

@@ -49,18 +49,14 @@
     </div>`;
   }
   function modalBody(){
-    const items=Array.isArray(latest?.items)?latest.items:[];
-    const history=releases.slice(1);
     return `<div class="admin-release-modal">
       <div class="admin-release-intro"><span class="admin-release-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span><div><small>${esc(latest?.eyebrow||'Atualização do sistema')} <span>Versão ${esc(version())}</span></small><strong>${esc(latest?.title||'O que mudou?')}</strong><p>${esc(latest?.summary||'Confira as melhorias desta versão.')}</p></div></div>
-      ${items.length?`<div class="admin-release-items">${items.map(itemHtml).join('')}</div>`: '<p>Esta versão contém melhorias técnicas e ajustes de estabilidade.</p>'}
-      ${history.length?`<div class="admin-release-history"><strong>Atualizações anteriores</strong>${history.map(item=>`<details><summary>Versão ${esc(item.version||'')} · ${esc(item.title||'Atualização')}</summary><p>${esc(item.summary||'')}</p><div class="admin-release-items">${(Array.isArray(item.items)?item.items:[]).map(itemHtml).join('')}</div></details>`).join('')}</div>`:''}
     </div>`;
   }
   window.openAdminReleaseNotes=function(){
     if(!loaded||!latest)return;
     markSeen();
-    const footer='<div class="release-notes-actions"><button class="btn btn-primary" type="button" onclick="closeModal()">Entendi</button></div>';
+    const footer='<div class="release-notes-actions"><button class="btn btn-primary btn-block" type="button" onclick="closeModal()">Entendi</button></div>';
     openModal('O que mudou?','',modalBody(),footer);
     modalRoot?.querySelector?.('.modal')?.classList.add('modal-wide');
   };
