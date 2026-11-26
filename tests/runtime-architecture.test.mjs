@@ -316,7 +316,7 @@ test('application service owns profile metadata writes and stay-date transaction
   assert.match(profile,/applications\.updateParticipantGender/);
   assert.match(profile,/applications\.updateRegistrationLink/);
   assert.match(product,/applications\.changeStayDates/);
-  assert.match(service,/excludeBoundaryDays\?\(s\.date<=stayStart\|\|s\.date>=stayEnd\)/);
+  assert.match(service,/excludeBoundaryDays\?\(session\.date<=stayStart\|\|session\.date>=stayEnd\)/);
   assert.match(product,/excludeBoundaryDays:true/);
   assert.match(service,/remainingSessions:remaining/);
 });
