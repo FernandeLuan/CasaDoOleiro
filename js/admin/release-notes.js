@@ -46,7 +46,6 @@
       <p><strong>Versão:</strong> ${esc(version())}</p>
       <p><strong>Última atualização:</strong> ${esc(latest?.summary||'Informações da versão disponíveis.')}</p>
       ${published?`<p><strong>Publicado em:</strong> ${esc(published)}</p>`:''}
-      <button class="admin-release-details" type="button" onclick="openAdminReleaseNotes()"><i class="fa-solid fa-wand-magic-sparkles"></i>Ver detalhes</button>
     </div>`;
   }
   function modalBody(){
