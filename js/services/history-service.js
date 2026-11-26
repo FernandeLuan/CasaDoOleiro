@@ -39,6 +39,9 @@
           applicationId:String(applicationId),type:String(type),unitId:String(unitId||'').toLowerCase(),
           ...a,metadata:cleanMetadata(metadata),createdAt:firestore.serverTimestamp()
         });
+        const key=String(applicationId);
+        if(typeof state!=='undefined'&&state.adminHistoryCache)delete state.adminHistoryCache[key];
+        try{sessionStorage.removeItem('oleiro.admin.history.v1.'+key)}catch{}
         return {id:ref.id,type:String(type)};
       },{loading:false});
     },

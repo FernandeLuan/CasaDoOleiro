@@ -175,6 +175,9 @@
           services.history.appendToBatch(batch,context,id,eventType,{unitId:String(before.unitId||''),metadata:{source:'lifecycle'},createdAt:now});
         }
         await batch.commit();
+        const historyKey=String(id);
+        if(window.state?.adminHistoryCache)delete window.state.adminHistoryCache[historyKey];
+        try{sessionStorage.removeItem('oleiro.admin.history.v1.'+historyKey)}catch{}
         const cached=(window.state?.candidates||[]).find(row=>String(row.id)===String(id));
         if(cached){Object.assign(cached,applicationPatch);if('active' in applicationPatch)cached.inactive=applicationPatch.active===false}
         return true;

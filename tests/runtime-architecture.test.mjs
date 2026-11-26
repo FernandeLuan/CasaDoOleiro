@@ -220,3 +220,32 @@ test('Admin planning failures leave the spinner and expose an explicit retry act
   assert.match(detail,/window\.retryAdminPlanning=async function/);
   assert.match(detail,/Tentar novamente/);
 });
+
+
+test('Lifecycle mutations are persisted in the candidate audit history with the acting account',()=>{
+  const hooks=readFileSync('js/services/history-hooks.js','utf8');
+  const service=readFileSync('js/services/history-service.js','utf8');
+  const applications=readFileSync('js/services/application-service.js','utf8');
+  assert.match(applications,/async updateLifecycle/);
+  assert.match(applications,/profile_inactivated/);
+  assert.match(applications,/profile_reactivated/);
+  assert.match(applications,/delete window\.state\.adminHistoryCache\[historyKey\]/);
+  assert.match(hooks,/await after\(args,result\)/);
+  assert.match(service,/actorEmail:String\(session\?\.email\|\|user\.email/);
+});
+
+test('Admin projects page explicitly loads Firestore records and exposes permission failures',()=>{
+  const projects=readFileSync('js/admin/projects.js','utf8');
+  assert.match(projects,/window\.OleiroProjects\.loadAll\(\{force\}\)/);
+  assert.match(projects,/state\.projectLoaded=true/);
+  assert.match(projects,/state\.projectError/);
+  assert.match(projects,/window\.refreshLegacyProjects/);
+});
+
+test('WhatsApp cooldown never re-enables sharing when no valid sessions remain',()=>{
+  const planning=readFileSync('js/portal/planejamento.js','utf8');
+  assert.match(planning,/if\(!hasActive\)return \{disabled:true/);
+  assert.match(planning,/const status=portalShareButtonState\(\)/);
+  assert.match(planning,/OleiroPlanningShare\?\.openWhatsApp/);
+  assert.ok(!planning.includes('window.location.assign(url)'),'Sharing must open WhatsApp without navigating the portal into a persistent loading state.');
+});

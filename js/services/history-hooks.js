@@ -12,11 +12,11 @@
   function unitFor(id,fallback=''){const app=appFromState(id);return String(fallback||app?.unitId||app?.unit||'').toLowerCase()}
   function record(id,type,{unitId='',metadata={}}={}){
     if(!id||!type)return;
-    services.history.append(id,type,{unitId:unitFor(id,unitId),metadata}).catch(error=>console.warn('Histórico não pôde ser registrado:',type,error));
+    return services.history.append(id,type,{unitId:unitFor(id,unitId),metadata}).catch(error=>{console.warn('Histórico não pôde ser registrado:',type,error);return false});
   }
   function wrap(target,name,after){
     const original=target?.[name];if(typeof original!=='function'||original[wrapped])return;
-    const decorated=async function(...args){const result=await original.apply(this,args);try{after(args,result)}catch(error){console.warn('Falha ao preparar evento de histórico:',name,error)}return result};
+    const decorated=async function(...args){const result=await original.apply(this,args);try{await after(args,result)}catch(error){console.warn('Falha ao preparar evento de histórico:',name,error)}return result};
     decorated[wrapped]=true;target[name]=decorated;
   }
 

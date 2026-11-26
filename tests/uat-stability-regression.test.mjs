@@ -20,7 +20,9 @@ test('WhatsApp sharing is disabled without active sessions and does not open a b
   const planning = await read('../js/portal/planejamento.js');
   assert.match(planning, /const hasActive=activeCandidateSessions\(\)\.length>0/);
   assert.match(planning, /disabled aria-disabled="true"/);
-  assert.match(planning, /window\.location\.assign\(url\)/);
+  assert.match(planning, /OleiroPlanningShare\?\.openWhatsApp/);
+  assert.match(planning, /reservePopup\?\.\(\)/);
+  assert.doesNotMatch(planning, /window\.location\.assign\(url\)/);
   assert.doesNotMatch(planning, /window\.open\(url/);
 });
 
