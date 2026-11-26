@@ -15,18 +15,12 @@ async function login(page){await signIn(page,'admin@oleiro.test','Admin123!','ad
 async function openPlanningBoardVolunteer(page,name){
   await navAction(page,'Planejamento').click();
   await expect(page.locator('.planning-board-page')).toBeVisible({timeout:20_000});
-  await page.waitForFunction(()=>!!state.planningBoardLoadedRange&&!state.planningBoardLoading,{timeout:20_000});
-  await page.evaluate(async()=>{
-    state.planningBoardFrom='2026-09-01';state.planningBoardTo='2026-09-30';state.planningBoardLoadedRange='';
-    await window.refreshPlanningBoard();
-  });
-  await page.getByRole('button',{name:'Por voluntário'}).click();
+  await page.evaluate(()=>window.setPlanningBoardView('volunteer'));
   const card=page.locator('.planning-board-person-card').filter({hasText:name}).first();
   await expect(card).toBeVisible({timeout:20_000});
   await card.getByRole('button',{name:/Abrir planejamento/}).click();
   await expect(page.locator('.planning-detail-page')).toBeVisible({timeout:20_000});
-}
-const navAction=(page,label)=>page.getByRole('navigation').getByRole('button',{name:new RegExp(`^.{0,3}${label}$`)});
+}const navAction=(page,label)=>page.getByRole('navigation').getByRole('button',{name:new RegExp(`^.{0,3}${label}$`)});
 async function openPendingVolunteer(page){
   await navAction(page,'Voluntariado').click();const list=page.locator('#candidateList');await expect(list).toBeVisible({timeout:20_000});
   const apply=async()=>{await page.locator('#app').getByRole('button',{name:/Filtros/}).click();await page.locator('#candidateStatusFilter').selectOption('pending');await page.locator('#modalRoot').getByRole('button',{name:/Aplicar$/}).click();await expect(list.getByText(/Carregando voluntários/)).toHaveCount(0,{timeout:20_000})};
