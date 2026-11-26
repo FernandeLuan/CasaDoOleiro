@@ -22,6 +22,10 @@ Critical invariant: candidate planning in `submitted` (application status `analy
 - `js/portal/agenda.js`: canonical volunteer agenda renderer, session cards and blocked-day presentation.
 - `js/portal/planning-enhancements.js`: presentation refinements only. It must not replace the Planning page renderer.
 - `js/portal/product-current.js`: temporary navigation, profile and session-refresh composition only; it must not replace Home, Agenda or Planning feature functions.
+- `js/portal/selection-flow.js` exposes `portalMeetingHomeCard(application)` for the Home renderer; it does not replace Home.
+- `js/portal/release-notes.js` exposes `portalReleaseHomeNoticeHtml()` for the Home renderer; it does not replace Home.
+- `js/portal/experience-guidance.js` owns profile copy refinement only; it does not replace Home, day-adjustment rules or the activity modal.
+- `js/portal/planning-enhancements.js` owns logout presentation only; manager-created activity editability is enforced by `agenda.js`.
 - `js/portal/experience-summary.js`: retired from runtime after its Home, Stay, day-adjustment and submit behavior moved to canonical feature owners.
 - `js/portal/candidate-view.js`: retired from runtime on 2026-09-15 after its behavior was merged into `planejamento.js`. It is intentionally kept for one rollback cycle and tracked by the runtime architecture test.
 
