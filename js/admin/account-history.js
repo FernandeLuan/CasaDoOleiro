@@ -155,8 +155,7 @@
   async function openHistory(id){
     const p=typeof candidateById==='function'?candidateById(id):null;if(!p)return;
     const sameHistory=state.managerPage==='planning'&&String(state.managerPlanningPersonId||'')===String(p.id)&&state.managerPlanningTab==='history';
-    /* Aba ativa: absolutamente nada acontece. */
-    if(sameHistory)return;
+    /* Reabrir Histórico sempre atualiza os dados; o cache serve apenas como prévia imediata. */
     const previousTab=String(state.managerPlanningTab||'plan');
     state.adminHistoryCache=state.adminHistoryCache||{};
     let cached=state.adminHistoryCache[String(p.id)];
@@ -165,7 +164,7 @@
       if(browser){cached={items:browser.items,loadedAt:browser.loadedAt,cursor:null,hasMore:false,loading:false,error:''};state.adminHistoryCache[String(p.id)]=cached}
     }
     const cachedRows=mergeRows(p,Array.isArray(cached?.items)?cached.items:[]);
-    const fresh=!!cached?.loadedAt&&Date.now()-Number(cached.loadedAt)<HISTORY_BROWSER_CACHE_MS;
+    const fresh=false;
     window.OleiroUI?.prepareTabTransition?.(previousTab,'history');
     renderHistory(p,cachedRows,{loading:!cached?.loadedAt});
     window.OleiroUI?.finishTabTransition?.();
