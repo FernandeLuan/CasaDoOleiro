@@ -470,8 +470,6 @@
         <span class="release-notes-modal-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
         <div><small>${esc(ANNOUNCEMENT.eyebrow)} <span data-release-meta></span></small><strong>${esc(ANNOUNCEMENT.title)}</strong><p>${esc(ANNOUNCEMENT.summary)}</p></div>
       </div>
-      <div class="release-notes-list">${ANNOUNCEMENT.items.map(itemHtml).join('')}</div>
-      ${RELEASE_HISTORY.length>1?'<div class="release-history-list"><strong>Atualizações anteriores</strong>'+RELEASE_HISTORY.slice(1).map(release=>'<details class="release-history-entry"><summary><span>Versão '+esc(release.version||'')+' · '+esc(release.title||'Atualização')+'</span><i class="fa-solid fa-chevron-down"></i></summary><p>'+esc(release.summary||'')+'</p><div class="release-notes-list">'+(Array.isArray(release.items)?release.items.map(itemHtml).join(''):'')+'</div></details>').join('')+'</div>':''}
     </div>`;
     const footer=`<div class="release-notes-actions"><button class="btn btn-primary" type="button" onclick="closeModal()">Entendi</button></div>`;
     openModal('O que mudou?','',body,footer);
