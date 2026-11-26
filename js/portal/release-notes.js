@@ -49,7 +49,9 @@
     const pendingId=pendingReleasePopupId;
     if(!pendingId||pendingId!==ANNOUNCEMENT.id)return;
     const demoProject=String(window.OLEIRO_FIREBASE_CONFIG?.projectId||'').startsWith('demo-');
-    if(demoProject){pendingReleasePopupId=null;return}
+    const localTestHost=['localhost','127.0.0.1'].includes(location.hostname);
+    const previewBuild=window.OLEIRO_PREVIEW_ENABLED===true;
+    if(demoProject||localTestHost||previewBuild){pendingReleasePopupId=null;return}
     if(state?.volunteerPage!=='home')return;
     if(releaseSeen()){pendingReleasePopupId=null;return}
     pendingReleasePopupId=null;
