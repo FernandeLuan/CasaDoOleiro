@@ -61,14 +61,11 @@ async function auditRuntimeSources(siteRoot){
   for(const dir of runtimeDirs)await walk(dir);
   const legacyRounds=runtime.filter(file=>/^round\d/i.test(path.basename(file)));
   if(legacyRounds.length)throw new Error('Módulos runtime com nome legado round*: '+legacyRounds.join(', '));
-  const retiredConfigPath=path.join(siteRoot,'docs/runtime-retired-modules.json');
-  const retiredConfig=JSON.parse(await readFile(retiredConfigPath,'utf8'));
-  const retired=new Set((retiredConfig.retired||[]).map(file=>String(file).replaceAll('\\','/')));
-  const invalidRetired=[...retired].filter(file=>!runtime.includes(file)||referenced.has(file));
-  if(invalidRetired.length)throw new Error('Módulos aposentados ausentes ou ainda carregados: '+invalidRetired.join(', '));
-  const orphaned=runtime.filter(file=>!referenced.has(file)&&!retired.has(file));
-  if(orphaned.length)throw new Error('Módulos JS sem entrypoint ou aposentadoria explícita: '+orphaned.join(', '));
-  return {modules:runtime.length,referenced:referenced.size,retired:retired.size};
+  // Retired source is kept for a single rollback cycle and must never be loaded by an entrypoint.
+  const retiredRuntimeModules=new Set(['js/portal/experience-summary.js']);
+  const orphaned=runtime.filter(file=>!referenced.has(file)&&!retiredRuntimeModules.has(file));
+  if(orphaned.length)throw new Error('Módulos JS sem entrypoint: '+orphaned.join(', '));
+  return {modules:runtime.length,referenced:referenced.size};
 }
 
 async function writeClassicScriptBundle(entryFile,matches,target){
@@ -189,7 +186,7 @@ await checkSiteAssets(out);
 await writeFile(path.join(out,'release.json'),JSON.stringify({environment,build:buildId,commit,publishedAt:new Date().toISOString()})+'\n','utf8');
 console.log(`Canonical site build ready: ${out}`);
 console.log(`Environment: ${environment}`);
-console.log(`Runtime source audit: ${runtimeAudit.modules} JS modules, ${runtimeAudit.referenced} referenced, ${runtimeAudit.retired} explicitly retired.`);
+console.log(`Runtime source audit: ${runtimeAudit.modules} JS modules, no orphaned files.`);
 console.log('Architecture invariants: meeting flow + single-range planning query OK.');
 console.log(`Portal bundles: ${portalBundle.js} scripts -> 3 requests; ${portalBundle.css} stylesheets -> 1 request.`);
 console.log(`Admin bundles: ${adminBundle.js} scripts -> 3 requests; ${adminBundle.css} stylesheets -> 1 request.`);

@@ -111,12 +111,12 @@ test('admin WhatsApp sharing accepts valid ISO dates when filtering sessions', a
 
 test('volunteer profile edits are recorded atomically in application history', async () => {
   const profile = await read('../js/admin/candidate-profile-details.js');
-  const history = await read('../js/admin/account-history.js');
   const applicationService = await read('../js/services/application-service.js');
-  assert.equal((applicationService.match(/history\.appendToBatch\(batch,context,id,'profile_updated'/g)||[]).length, 2);
+  const history = await read('../js/admin/account-history.js');
+  assert.equal((applicationService.match(/appendToBatch\(batch,context,applicationId,'profile_updated'/g)||[]).length, 2);
+  assert.equal((profile.match(/invalidateHistoryCache\?\.\(p\.id\)/g)||[]).length, 2);
   assert.match(profile, /applications\.updateParticipantGender/);
   assert.match(profile, /applications\.updateRegistrationLink/);
-  assert.equal((profile.match(/invalidateHistoryCache\?\.\(p\.id\)/g)||[]).length, 2);
   assert.match(history, /profile_updated:'Dados do perfil atualizados'/);
   assert.ok(history.includes('fields[m.field]'));
   const emergency = await read('../js/services/volunteer-profile-service.js');

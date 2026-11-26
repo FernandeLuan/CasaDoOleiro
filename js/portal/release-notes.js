@@ -302,11 +302,7 @@
     homeSlideIndex=Math.max(0,Math.min(homeSlideIndex,slides.length-1));
     return slides[homeSlideIndex]||slides[0];
   }
-  function insertAfterHero(html,card){
-    if(!card)return html;
-    const heroEnd=html.indexOf('</section>');
-    return heroEnd>=0?html.slice(0,heroEnd+10)+card+html.slice(heroEnd+10):card+html;
-  }
+
   function releaseCarouselNavHtml(){
     const slides=homeSlides(),total=slides.length;
     if(!total)return '';
@@ -486,15 +482,7 @@
     };
   }
 
-  const baseVolunteerHome=typeof window.volunteerHome==='function'?window.volunteerHome:null;
-  if(baseVolunteerHome){
-    window.volunteerHome=volunteerHome=function(){
-      let html=baseVolunteerHome();
-      const card=releaseCardHtml();
-      if(!card||html.includes('data-release-announcement'))return html;
-      return insertAfterHero(html,card);
-    };
-  }
+  window.portalReleaseHomeNoticeHtml=function(){return releaseCardHtml()||''};
 
   if(typeof window.releaseInformationHtml==='function'){
     window.releaseInformationHtml=function(){

@@ -14,16 +14,11 @@
     return `<section class="section candidate-plan-refactor compact-page-top"><div class="candidate-plan-compact-head info"><strong>${escapeHtml(period)}</strong><span>${escapeHtml(t('portal.meeting.planApproved'))}</span></div><div class="notice" style="margin-bottom:14px"><i class="fa-solid fa-circle-check"></i><div>${escapeHtml(t('portal.meeting.planApprovedBody'))}</div></div><div class="candidate-plan-content">${volunteerAgendaContent(false)}</div></section>`;
   };
 
-  const baseVolunteerHome=volunteerHome;
-  volunteerHome=function(){
-    const application=state.currentApplication||{};if(state.volunteerMode==='approved'||application.status!=='meeting')return baseVolunteerHome();
-    const previous=state.volunteerPlanStatus;state.volunteerPlanStatus='submitted';let html=baseVolunteerHome();state.volunteerPlanStatus=previous;
-    html=html.replace(t('portal.home.planSubmitted'),t('portal.meeting.planApproved')).replace(t('portal.home.submittedBody'),t('portal.meeting.planApprovedBody'));
-    const status=String(application.meetingStatus||'pending');if(!['scheduled','completed'].includes(status))return html;
+  window.portalMeetingHomeCard=function(application){
+    const status=String(application?.meetingStatus||'pending');if(!['scheduled','completed'].includes(status))return '';
     const date=application.meetingDate?fmtDate(String(application.meetingDate).slice(0,10)):null,time=String(application.meetingTime||''),duration=Number(application.meetingDuration)||30,link=validUrl(application.meetingLink||''),notes=String(application.meetingNotes||'').trim();
     const meetingTitle=t('portal.meeting.definition');
-    const card=`<section class="section selection-portal-meeting"><div class="section-head"><div><h2>${escapeHtml(t('portal.meeting.next'))}</h2><p>${escapeHtml(meetingTitle)}</p></div></div><div class="card selection-meeting-card"><div class="selection-meeting-card-head"><div class="metric-icon"><i class="fa-solid fa-video"></i></div><div><strong>${escapeHtml(meetingTitle)}</strong><span>${escapeHtml([date,time].filter(Boolean).join(' • '))}</span></div><span class="badge ${status==='completed'?'success':'info'}">${escapeHtml(status==='completed'?tx('meeting.completed','Reunião realizada'):tx('meeting.scheduled','Reunião agendada'))}</span></div><div class="selection-meeting-card-meta"><span><i class="fa-regular fa-clock"></i>${duration} min</span></div>${notes?`<p><strong>${escapeHtml(tx('meeting.note','Observação:'))}</strong> <span data-no-i18n>${escapeHtml(notes)}</span></p>`:''}${link&&status!=='completed'?`<a class="btn btn-primary btn-block" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-video"></i>${escapeHtml(t('action.enterMeeting'))}</a>`:''}</div></section>`;
-    const marker=`<section class="section"><div class="section-head"><div><h2>${escapeHtml(t('portal.home.myStay'))}</h2>`;const at=html.indexOf(marker);return at>=0?`${html.slice(0,at)}${card}${html.slice(at)}`:`${card}${html}`;
+    return `<section class="section selection-portal-meeting"><div class="section-head"><div><h2>${escapeHtml(t('portal.meeting.next'))}</h2><p>${escapeHtml(meetingTitle)}</p></div></div><div class="card selection-meeting-card"><div class="selection-meeting-card-head"><div class="metric-icon"><i class="fa-solid fa-video"></i></div><div><strong>${escapeHtml(meetingTitle)}</strong><span>${escapeHtml([date,time].filter(Boolean).join(' • '))}</span></div><span class="badge ${status==='completed'?'success':'info'}">${escapeHtml(status==='completed'?tx('meeting.completed','Reunião realizada'):tx('meeting.scheduled','Reunião agendada'))}</span></div><div class="selection-meeting-card-meta"><span><i class="fa-regular fa-clock"></i>${duration} min</span></div>${notes?`<p><strong>${escapeHtml(tx('meeting.note','Observação:'))}</strong> <span data-no-i18n>${escapeHtml(notes)}</span></p>`:''}${link&&status!=='completed'?`<a class="btn btn-primary btn-block" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-video"></i>${escapeHtml(t('action.enterMeeting'))}</a>`:''}</div></section>`;
   };
 
   window.deletePlanningSession=async function(activityId,date){
@@ -76,6 +71,7 @@
     };window.saveMove=saveMove;
   }
 
-  window.planStatusFromApplication=planStatusFromApplication;window.volunteerPlan=volunteerPlan;window.volunteerHome=volunteerHome;
+
+  window.planStatusFromApplication=planStatusFromApplication;window.volunteerPlan=volunteerPlan;
   if(state.role==='volunteer'&&typeof render==='function')render();
 })();

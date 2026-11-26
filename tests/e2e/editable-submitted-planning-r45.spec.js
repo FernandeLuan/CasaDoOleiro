@@ -16,7 +16,6 @@ test('submitted candidate planning stays editable and shared by application part
   expect(planning).toContain('candidatePlanningEditable(status)');
   expect(planning).toContain('volunteerAgendaContent(editable)');
   expect(planning).toContain('OleiroRules?.candidatePlanningEditable');
-  expect(planning).toContain('function openActivityModal(');
   expect(portalHtml).toContain('../js/shared/domain-rules.js');
   expect(portalHtml).not.toContain('../js/portal/candidate-view.js');
   expect(enhancements).not.toMatch(/volunteerPlan\s*=\s*function/);

@@ -20,8 +20,9 @@
   function isoDateTime(value){if(!value)return null;if(typeof value==='string')return value;if(typeof value.toDate==='function')return value.toDate().toISOString();return null}
   function unitLabel(id){const value=String(id||'');return value?value.charAt(0).toUpperCase()+value.slice(1):'—'}
   function stayMonths(start,end){if(!start||!end)return [];const from=new Date(`${start}T12:00:00`),to=new Date(`${end}T12:00:00`);const out=[];let y=from.getFullYear(),m=from.getMonth();const ey=to.getFullYear(),em=to.getMonth();while(y<ey||(y===ey&&m<=em)){out.push(`${y}-${String(m+1).padStart(2,'0')}`);m+=1;if(m===12){m=0;y+=1}}return out}
-  function stayPreviewKey(id,start,end){return `${String(id)}|${String(start)}|${String(end)}`}
-  function cachedStayPreview(id,start,end){const key=stayPreviewKey(id,start,end),cached=stayPreviewCache.get(key);if(!cached||Date.now()-cached.at>STAY_PREVIEW_TTL){stayPreviewCache.delete(key);return null}return cached}
+  function stayPreviewKey(id,start,end,excludeBoundaryDays=false){return `${String(id)}|${String(start)}|${String(end)}|${excludeBoundaryDays?'exclusive':'inclusive'}`}
+  function cachedStayPreview(id,start,end,excludeBoundaryDays=false){const key=stayPreviewKey(id,start,end,excludeBoundaryDays),cached=stayPreviewCache.get(key);if(!cached||Date.now()-cached.at>STAY_PREVIEW_TTL){stayPreviewCache.delete(key);return null}return cached}
+  function sessionOutsideStay(session,stayStart,stayEnd,excludeBoundaryDays=false){return !session?.date||(excludeBoundaryDays?(session.date<=stayStart||session.date>=stayEnd):(session.date<stayStart||session.date>stayEnd))}
   function clearStayPreview(id){const prefix=`${String(id)}|`;for(const key of stayPreviewCache.keys())if(key.startsWith(prefix))stayPreviewCache.delete(key)}
   function occupancyKey(month,unitId){return `${String(month)}|${String(unitId||'all')}|${currentAccessKey()}`}
 
@@ -184,53 +185,60 @@
       },{loading:false});
     },
 
-    async updateParticipantGender(id,{participantGenders=[],participantIndex,gender,participantUid='',unitId=''}={}){
-      const index=Number(participantIndex);
+    async updateParticipantGender(id,{participantIndex=0,participantUid='',participantGenders=[],gender,unitId=''}={}) {
+      const applicationId=String(id||'').trim(),index=Number(participantIndex);
+      if(!applicationId)throw new Error('Candidatura não encontrada.');
       if(!Number.isInteger(index)||index<0||!['male','female'].includes(String(gender)))throw new Error('Dados de gênero inválidos.');
-      const genders=Array.isArray(participantGenders)?[...participantGenders]:[];genders[index]=String(gender);
+      const genders=Array.isArray(participantGenders)?[...participantGenders]:[];
+      if(index>=genders.length)throw new Error('Participante não encontrado.');
+      genders[index]=String(gender);
       return services.run(async()=>{
-        const context=await services.firebase();const {firestore}=context.modules,batch=firestore.writeBatch(context.db),now=firestore.serverTimestamp();
+        const context=await services.firebase(),{firestore}=context.modules,batch=firestore.writeBatch(context.db),now=firestore.serverTimestamp();
         const patch={participantGenders:genders,updatedAt:now};if(genders.length===1)patch.gender=String(gender);
-        batch.update(firestore.doc(context.db,'applications',String(id)),patch);
-        if(participantUid)batch.set(firestore.doc(context.db,'volunteer_profiles',String(participantUid)),{gender:String(gender),updatedAt:now},{merge:true});
+        batch.update(firestore.doc(context.db,'applications',applicationId),patch);
+        const uid=String(participantUid||'').trim();
+        if(uid)batch.set(firestore.doc(context.db,'volunteer_profiles',uid),{gender:String(gender),updatedAt:now},{merge:true});
         if(typeof services.history?.appendToBatch!=='function')throw new Error('Serviço de histórico indisponível; a alteração não foi aplicada.');
-        services.history.appendToBatch(batch,context,id,'profile_updated',{unitId:String(unitId||'').toLowerCase(),metadata:{field:'gender',participantIndex:index+1},createdAt:now});
-        await batch.commit();return {participantGenders:genders,gender:String(gender)};
+        services.history.appendToBatch(batch,context,applicationId,'profile_updated',{unitId:String(unitId||'').toLowerCase(),metadata:{field:'gender',participantIndex:index+1},createdAt:now});
+        await batch.commit();occupancyCache.clear();if(uid)services.profiles?.invalidate?.(uid);
+        return {participantGenders:genders,gender:String(gender)};
       },{loading:false});
     },
 
-    async updateRegistrationLink(id,{registrationLink='',unitId=''}={}){
-      const raw=String(registrationLink||'').trim();let link='';
-      if(raw){let url;try{url=new URL(raw)}catch{throw new Error('Informe um link válido.')}if(!['http:','https:'].includes(url.protocol))throw new Error('Informe um link HTTP ou HTTPS válido.');link=url.toString()}
+    async updateRegistrationLink(id,{registrationLink='',unitId=''}={}) {
+      const applicationId=String(id||'').trim(),link=String(registrationLink||'').trim();
+      if(!applicationId)throw new Error('Candidatura não encontrada.');
+      if(link.length>2048)throw new Error('O link informado é muito longo.');
       return services.run(async()=>{
-        const context=await services.firebase();const {firestore}=context.modules,batch=firestore.writeBatch(context.db),now=firestore.serverTimestamp();
-        batch.update(firestore.doc(context.db,'applications',String(id)),{registrationLink:link,updatedAt:now});
+        const context=await services.firebase(),{firestore}=context.modules,batch=firestore.writeBatch(context.db),now=firestore.serverTimestamp();
+        batch.update(firestore.doc(context.db,'applications',applicationId),{registrationLink:link,updatedAt:now});
         if(typeof services.history?.appendToBatch!=='function')throw new Error('Serviço de histórico indisponível; a alteração não foi aplicada.');
-        services.history.appendToBatch(batch,context,id,'profile_updated',{unitId:String(unitId||'').toLowerCase(),metadata:{field:'registrationLink'},createdAt:now});
+        services.history.appendToBatch(batch,context,applicationId,'profile_updated',{unitId:String(unitId||'').toLowerCase(),metadata:{field:'registrationLink'},createdAt:now});
         await batch.commit();return {registrationLink:link};
       },{loading:false});
     },
 
-    async previewStayDateChange(id,{stayStart,stayEnd}={}){
+    async previewStayDateChange(id,{stayStart,stayEnd,sessions=null,excludeBoundaryDays=false}={}) {
       if(!stayStart||!stayEnd||stayEnd<stayStart)throw new Error('Período inválido.');
       return services.run(async()=>{
-        const context=await services.firebase();const sessions=await applicationSessions(context,id);
-        const outside=sessions.filter(s=>!s.date||s.date<stayStart||s.date>stayEnd),key=stayPreviewKey(id,stayStart,stayEnd);
-        clearStayPreview(id);stayPreviewCache.set(key,{at:Date.now(),sessions});
-        return {outsideCount:outside.length,outsideDates:[...new Set(outside.map(s=>s.date).filter(Boolean))].sort(),sessionCount:sessions.length};
+        const rows=Array.isArray(sessions)?sessions:await (async()=>{const context=await services.firebase();return applicationSessions(context,id)})();
+        const outside=rows.filter(session=>sessionOutsideStay(session,stayStart,stayEnd,excludeBoundaryDays));
+        const key=stayPreviewKey(id,stayStart,stayEnd,excludeBoundaryDays);
+        clearStayPreview(id);stayPreviewCache.set(key,{at:Date.now(),sessions:rows});
+        return {outsideCount:outside.length,outsideDates:[...new Set(outside.map(s=>s.date).filter(Boolean))].sort(),sessionCount:rows.length};
       },{loading:false});
     },
 
-    async changeStayDates(id,{stayStart,stayEnd,removeOutside=true,excludeBoundaryDays=false,knownSessions=null}={}){
+    async changeStayDates(id,{stayStart,stayEnd,removeOutside=true,excludeBoundaryDays=false,sessions=null}={}) {
       if(!stayStart||!stayEnd||stayEnd<stayStart)throw new Error('Período inválido.');
       occupancyCache.clear();
       return services.run(async()=>{
-        const context=await services.firebase();const {firestore}=context.modules,cached=cachedStayPreview(id,stayStart,stayEnd);
-        const sessions=Array.isArray(knownSessions)?knownSessions:(cached?.sessions||await applicationSessions(context,id));
-        const outside=sessions.filter(s=>!s.date||(excludeBoundaryDays?(s.date<=stayStart||s.date>=stayEnd):(s.date<stayStart||s.date>stayEnd)));
+        const context=await services.firebase();const {firestore}=context.modules,cached=cachedStayPreview(id,stayStart,stayEnd,excludeBoundaryDays);
+        const rows=Array.isArray(sessions)?sessions:(cached?.sessions||await applicationSessions(context,id));
+        const outside=rows.filter(session=>sessionOutsideStay(session,stayStart,stayEnd,excludeBoundaryDays));
         if(outside.length&&!removeOutside)throw new Error('Existem sessões fora do novo período.');
-        const outsideIds=new Set(outside.map(s=>String(s.id))),remaining=sessions.filter(s=>!outsideIds.has(String(s.id)));
-        const allActivityIds=new Set(sessions.map(s=>String(s.activityId||'')).filter(Boolean)),remainingActivityIds=new Set(remaining.map(s=>String(s.activityId||'')).filter(Boolean));
+        const outsideIds=new Set(outside.map(s=>String(s.id))),remaining=rows.filter(s=>!outsideIds.has(String(s.id)));
+        const allActivityIds=new Set(rows.map(s=>String(s.activityId||'')).filter(Boolean)),remainingActivityIds=new Set(remaining.map(s=>String(s.activityId||'')).filter(Boolean));
         const orphanActivityIds=[...allActivityIds].filter(activityId=>!remainingActivityIds.has(activityId));
         const batch=firestore.writeBatch(context.db),now=firestore.serverTimestamp();
         outside.forEach(s=>batch.delete(firestore.doc(context.db,'activity_sessions',String(s.id))));
@@ -239,7 +247,7 @@
           stayStart,stayEnd,stayMonths:stayMonths(stayStart,stayEnd),sessionCount:remaining.length,activityCount:remainingActivityIds.size,updatedAt:now
         });
         await batch.commit();clearStayPreview(id);
-        return {removedSessions:outside.length,sessionCount:remaining.length,activityCount:remainingActivityIds.size,remainingSessions:remaining};
+        return {removedSessions:outside.length,sessionCount:remaining.length,activityCount:remainingActivityIds.size,remainingSessions:remaining,remainingActivityIds:[...remainingActivityIds]};
       },{loading:false});
     },
 

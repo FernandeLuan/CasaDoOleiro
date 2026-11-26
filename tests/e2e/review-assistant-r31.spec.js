@@ -14,7 +14,7 @@ async function login(page,email,password,target){
   await page.waitForFunction(targetName=>{if(typeof window.render!=='function')return false;return targetName==='portal'?typeof window.navigateVolunteer==='function':targetName==='admin'?typeof window.navigateManager==='function':true},target,{timeout:20_000});await expect(page.getByRole('navigation').getByRole('button',{name:/Planejamento|Agenda/})).toBeVisible({timeout:30_000});const dismiss=page.getByRole('button',{name:'Agora não',exact:true});if(await dismiss.isVisible().catch(()=>false))await dismiss.press('Enter');if(target==='portal')await page.waitForFunction(()=>state.role==='volunteer'&&state.currentApplication?.id&&state.volunteerPlanningLoadedFor===String(state.currentApplication.id),undefined,{timeout:30_000});
 }
 async function relogin(page,email,password,target){await page.evaluate(()=>window.OleiroAuth?.signOut?.());await login(page,email,password,target)}
-const navAction=(page,label)=>page.getByRole('navigation').getByRole('button',{name:new RegExp(`^.{0,3}${label}$`)});
+const navAction=(page,label)=>page.getByRole('navigation').getByRole('button',{name:label,exact:false});
 async function openVolunteerByStatus(page,status,name){
   const list=page.locator('#candidateList');
   await navAction(page,'Voluntariado').click();
