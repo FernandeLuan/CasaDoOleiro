@@ -52,7 +52,8 @@
     const localTestHost=['localhost','127.0.0.1'].includes(location.hostname);
     const previewBuild=window.OLEIRO_PREVIEW_ENABLED===true;
     const automatedBrowser=typeof navigator!=='undefined'&&navigator.webdriver===true;
-    if(demoProject||localTestHost||previewBuild||automatedBrowser){pendingReleasePopupId=null;return}
+    const emulatorSession=(()=>{try{return sessionStorage.getItem('oleiro-e2e')==='1'}catch{return false}})();
+    if(demoProject||localTestHost||previewBuild||automatedBrowser||emulatorSession){pendingReleasePopupId=null;return}
     if(state?.volunteerPage!=='home')return;
     if(releaseSeen()){pendingReleasePopupId=null;return}
     pendingReleasePopupId=null;
