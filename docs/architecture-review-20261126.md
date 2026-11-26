@@ -149,8 +149,8 @@ The current `js/` tree should not be moved wholesale in one change. Keep the dep
 
 ## Phase 1 progress — first guarded contract
 
-The first executable contract is now recorded in `docs/runtime-contract-overrides.json`. It inventories the four currently observed Portal function replacements in `js/portal/app.js` (two assignments to `volunteerHome`, one to `volunteerStayDates`, and one to `openActivityModal`). The ownership intent and exit criteria are recorded per symbol.
+The executable contract remains in `docs/runtime-contract-overrides.json`; the Portal bootstrap now has zero function replacements. The four previously observed assignments (two to `volunteerHome`, one to `volunteerStayDates`, and one to `openActivityModal`) were removed and their behavior returned to canonical owners: `home.js`, `estadia.js`, and `planejamento.js`.
 
-`tests/runtime-architecture.test.mjs` now compares the source assignments with that explicit contract. An unreviewed addition, removal, or count change fails the architecture test and requires a deliberate contract review. This is intentionally a narrow first guard, not a claim that every global write in Admin and Portal has been inventoried.
+`tests/runtime-architecture.test.mjs` now verifies module ownership and rejects new bootstrap overrides. `scripts/check-real-data-contracts.sh` was updated so the activity-modal source contract follows its new owner in `planejamento.js`. CI validates JavaScript syntax, source contracts, runtime architecture boundaries, canonical assets, production-shaped build, and browser flows.
 
-Next migration target: move the two `volunteerHome` presentation adapters into the canonical home feature, then move the date selector and activity-modal orchestration behind explicit feature APIs. Each move must preserve current behavior and pass Portal E2E before the compatibility assignments are removed.
+This is a narrow first migration, not a claim that every global write or shared-state dependency in Admin and Portal has been inventoried. Remaining architectural risks are shared global state, ordered classic-script loading, feature-to-service orchestration in UI modules, and incomplete dependency contracts. Next target: inventory cross-feature state reads/writes and service dependencies, then migrate one feature boundary at a time.
