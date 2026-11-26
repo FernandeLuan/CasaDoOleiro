@@ -114,7 +114,7 @@
   }
   function accountLifecycle(p){
     const id=safe(p.id);
-    if(p.status==='rejected')return `<button class="btn btn-soft btn-block" type="button" onclick="reactivateCandidate(decodeURIComponent('${id}'))"><i class="fa-solid fa-rotate-left"></i>Reativar perfil</button>`;
+    if(p.status==='rejected'||p.inactive===true||p.active===false)return `<button class="btn btn-soft btn-block" type="button" onclick="reactivateCandidate(decodeURIComponent('${id}'))"><i class="fa-solid fa-rotate-left"></i>Reativar perfil</button>`;
     if(p.status==='pending')return `<button class="btn btn-danger-soft btn-block" type="button" onclick="requestRejectPendingCandidate(decodeURIComponent('${id}'))"><i class="fa-solid fa-user-slash"></i>Inativar perfil</button>`;
     if(['analysis','adjustments'].includes(p.status))return `<button class="btn btn-danger-soft btn-block" type="button" onclick="rejectCandidate(decodeURIComponent('${id}'))"><i class="fa-solid fa-user-slash"></i>Inativar perfil</button>`;
     if(p.status==='approved')return `<button class="btn btn-danger-soft btn-block" type="button" onclick="requestInactivateApprovedVolunteer('${id}')"><i class="fa-solid fa-user-slash"></i>Inativar perfil</button>`;
