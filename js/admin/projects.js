@@ -17,19 +17,19 @@
     ['in_progress','Em execução'],
     ['completed','Concluídos']
   ];
-  const PROJECT_UNIT_OPTIONS=[['all','Todas as unidades'],['Rodeio','Rodeio'],['Indaial','Indaial']];
+  function projectUnitOptions(){return [['all','Todas as unidades'],...(state.units||[]).filter(unit=>unit?.id).map(unit=>[String(unit.id),String(unit.name||unit.id)])]}
   function normalizeProjectFilter(value){
     return PROJECT_STATUS_OPTIONS.some(([id])=>id===String(value))?String(value):'all';
   }
   function normalizeProjectUnit(value){
-    return PROJECT_UNIT_OPTIONS.some(([id])=>id===String(value))?String(value):'all';
+    return projectUnitOptions().some(([id])=>id===String(value))?String(value):'all';
   }
   function projectSearchValue(){return String(state.projectSearch||'').trim().toLowerCase()}
   function rows(){
     const all=window.OleiroProjects?.list?.()||[],filter=normalizeProjectFilter(state.projectFilter),unit=normalizeProjectUnit(state.projectUnit),search=projectSearchValue();
     return all.filter(p=>{
       if(filter!=='all'&&p.status!==filter)return false;
-      const projectUnit=String(p.unitName||p.unitId||'');
+      const projectUnit=String(p.unitId||p.unitName||'');
       if(unit!=='all'&&projectUnit!==unit)return false;
       if(!search)return true;
       const haystack=[p.title,p.ownerName,p.unitName,p.unitId,p.category].map(v=>String(v||'').toLowerCase()).join(' ');
@@ -150,7 +150,7 @@
     </button>`;
   }
   window.managerProjects=function(){
-    if(window.OleiroProjects?.isPreview!==true)return `<section class="section legacy-admin-page compact-page-top"><div class="empty"><i class="fa-solid fa-seedling"></i>Gestão de projetos de legado disponível somente em homologação.</div></section>`;
+    if(state.projectLoading)return `<section class="section legacy-admin-page compact-page-top"><div class="card" aria-busy="true"><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div></div></section>`;
     state.projectFilter=normalizeProjectFilter(state.projectFilter);
     state.projectUnit=normalizeProjectUnit(state.projectUnit);
     const list=rows(),activeFilter=state.projectFilter!=='all'||state.projectUnit!=='all';
@@ -165,7 +165,7 @@
   window.updateLegacyProjectSearch=function(value){state.projectSearch=String(value||'');render();afterNavigation?.()};
   window.openLegacyProjectFilters=function(){
     const filter=normalizeProjectFilter(state.projectFilter),unit=normalizeProjectUnit(state.projectUnit);
-    openModal('Filtros','Refine os projetos exibidos.',`<div class="filter-modal-content"><div class="field"><label>Status</label><select id="legacyProjectStatusFilter" class="select">${PROJECT_STATUS_OPTIONS.map(([id,label])=>`<option value="${id}" ${filter===id?'selected':''}>${label}</option>`).join('')}</select></div><div class="field"><label>Unidade</label><select id="legacyProjectUnitFilter" class="select">${PROJECT_UNIT_OPTIONS.map(([id,label])=>`<option value="${id}" ${unit===id?'selected':''}>${label}</option>`).join('')}</select></div><div class="filter-modal-actions"><button class="btn btn-outline" type="button" onclick="clearLegacyProjectFilters()">Limpar filtros</button><button class="btn btn-primary" type="button" onclick="applyLegacyProjectFilters()">Aplicar</button></div></div>`);
+    openModal('Filtros','Refine os projetos exibidos.',`<div class="filter-modal-content"><div class="field"><label>Status</label><select id="legacyProjectStatusFilter" class="select">${PROJECT_STATUS_OPTIONS.map(([id,label])=>`<option value="${id}" ${filter===id?'selected':''}>${label}</option>`).join('')}</select></div><div class="field"><label>Unidade</label><select id="legacyProjectUnitFilter" class="select">${projectUnitOptions().map(([id,label])=>`<option value="${id}" ${unit===id?'selected':''}>${label}</option>`).join('')}</select></div><div class="filter-modal-actions"><button class="btn btn-outline" type="button" onclick="clearLegacyProjectFilters()">Limpar filtros</button><button class="btn btn-primary" type="button" onclick="applyLegacyProjectFilters()">Aplicar</button></div></div>`);
     modalRoot.querySelector('.modal')?.classList.add('filter-modal');
   };
   window.applyLegacyProjectFilters=function(){
@@ -176,7 +176,6 @@
   window.clearLegacyProjectFilters=function(){state.projectFilter='all';state.projectUnit='all';closeModal();render();afterNavigation?.()};
   window.setLegacyProjectFilter=function(value){state.projectFilter=normalizeProjectFilter(value);render();afterNavigation?.()};
   window.openLegacyProjectAdmin=function(id){
-    if(window.OleiroProjects?.isPreview!==true)return;
     const p=(window.OleiroProjects?.list?.()||[]).find(x=>String(x.id)===String(id));if(!p)return;
     const tracking=['in_progress','completed'].includes(p.status);
     const body=`<div class="legacy-admin-detail legacy-admin-detail-v4 ${tracking?'has-tracking':''}">
@@ -210,11 +209,10 @@
     openModal(p.title||'Projeto de legado',modalSubtitle,body,footer);
     modalRoot.querySelector('.modal')?.classList.add('modal-wide');
   };
-  window.approveLegacyProject=function(id){if(window.OleiroProjects?.isPreview!==true)return;window.OleiroProjects.update(id,{status:'approved',reviewNote:'',approvedAt:new Date().toISOString()});closeModal();render();showToast('Projeto aprovado.')};
+  window.approveLegacyProject=async function(id){try{await window.OleiroProjects.update(id,{status:'approved',reviewNote:'',approvedAt:new Date().toISOString()});closeModal();render();showToast('Projeto aprovado.')}catch(error){console.error(error);showToast(error?.message||'Não foi possível aprovar o projeto.')}};
   window.openLegacyAdjustment=function(id){
-    if(window.OleiroProjects?.isPreview!==true)return;
     closeModal();
     openModal('Pedir ajuste','Explique de forma clara o que precisa ser revisto.',`<div class="field"><label for="legacyReviewNote">Orientação para o voluntário</label><textarea id="legacyReviewNote" class="textarea" maxlength="600" placeholder="Ex.: detalhe melhor os materiais necessários e como a composteira será mantida."></textarea></div>`,`<button class="btn btn-primary btn-block" onclick="requestLegacyAdjustment('${esc(id)}')">Enviar ajuste</button>`);
   };
-  window.requestLegacyAdjustment=function(id){if(window.OleiroProjects?.isPreview!==true)return;const note=document.getElementById('legacyReviewNote')?.value.trim()||'';if(!note)return showToast('Escreva a orientação do ajuste.');window.OleiroProjects.update(id,{status:'adjustments',reviewNote:note,reviewedAt:new Date().toISOString()});closeModal();render();showToast('Ajuste solicitado.')};
+  window.requestLegacyAdjustment=async function(id){const note=document.getElementById('legacyReviewNote')?.value.trim()||'';if(!note)return showToast('Escreva a orientação do ajuste.');try{await window.OleiroProjects.update(id,{status:'adjustments',reviewNote:note,reviewedAt:new Date().toISOString()});closeModal();render();showToast('Ajuste solicitado.')}catch(error){console.error(error);showToast(error?.message||'Não foi possível solicitar o ajuste.')}};
 })();

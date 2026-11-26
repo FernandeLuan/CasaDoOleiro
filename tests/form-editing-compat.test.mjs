@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 const compatibilityCss = await readFile(new URL('../css/form-editing-compat.css', import.meta.url), 'utf8');
 
-test('iOS editing compatibility preserves text selection and contextual paste on editable controls', () => {
+test('iOS editing compatibility preserves text selection and contextual paste on editable controls', async () => {
   for (const selector of [
     'input:not([type="hidden"])',
     'textarea',
@@ -15,6 +15,9 @@ test('iOS editing compatibility preserves text selection and contextual paste on
   assert.match(compatibilityCss, /-webkit-user-select:\s*text\s*!important/);
   assert.match(compatibilityCss, /user-select:\s*text\s*!important/);
   assert.match(compatibilityCss, /-webkit-touch-callout:\s*default\s*!important/);
+  assert.match(compatibilityCss, /touch-action:\s*auto\s*!important/);
+  const baseCss = await readFile(new URL('../css/base.css', import.meta.url), 'utf8');
+  assert.match(baseCss, /input:not\(\[type="hidden"\]\).*touch-action:auto!important/);
 });
 
 for (const [entry, href] of [
@@ -27,6 +30,13 @@ for (const [entry, href] of [
     assert.ok(html.includes(href), `missing ${href} in ${entry}`);
   });
 }
+
+test('shared navigation does not cancel native double-click text selection or contextual paste', async () => {
+  const navigation = await readFile(new URL('../js/shared/navigation.js', import.meta.url), 'utf8');
+  assert.ok(!navigation.includes("document.addEventListener('dblclick',e=>e.preventDefault()"));
+  assert.match(compatibilityCss, /-webkit-touch-callout:\s*default\s*!important/);
+  assert.match(compatibilityCss, /user-select:\s*text\s*!important/);
+});
 
 test('new-candidate fields expose native iOS email and phone input hints', async () => {
   const source = await readFile(new URL('../js/admin/candidate-form.js', import.meta.url), 'utf8');

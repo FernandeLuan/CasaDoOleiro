@@ -7,6 +7,7 @@ function volunteerProfileName(){
 }
 function volunteerProfileInitials(name){return String(name||'V').split(/\s+/).filter(Boolean).map(x=>x[0]).slice(0,2).join('').toUpperCase()||'V'}
 function volunteerApplicationDate(value){const iso=typeof portalIsoDate==='function'?portalIsoDate(value):String(value||'').slice(0,10);return iso?fmtDate(iso,true):'—'}
+
 function volunteerProfile(){
   const session=state.currentSession||{};
   const profile=session.profile||{};

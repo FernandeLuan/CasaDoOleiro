@@ -19,7 +19,9 @@ button{cursor:pointer}
 a{color:inherit}
 #app{width:100%;max-width:1080px;margin:0 auto;min-height:100vh;overflow-x:clip}
 html{touch-action:manipulation;-webkit-text-size-adjust:100%;overscroll-behavior-x:none}
-body,button,a,input,textarea,select,label,summary{touch-action:manipulation}
+body,button,a,label,summary{touch-action:manipulation}
+/* Campos editáveis preservam gestos nativos do navegador: seleção, cursor, menu de contexto e colagem. */
+input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]):not([type="reset"]),textarea,select,[contenteditable="true"]{touch-action:auto!important;-webkit-user-select:text!important;user-select:text!important;-webkit-touch-callout:default!important}
 
 /* Tipografia de destaque: títulos, headings e conteúdos enfatizados. */
 h1,h2,h3,h4,h5,h6,strong{font-family:var(--font-heading)}
