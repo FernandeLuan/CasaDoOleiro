@@ -107,3 +107,11 @@ test('admin WhatsApp sharing accepts valid ISO dates when filtering sessions', a
   assert.ok(planning.includes("/^\\d{4}-\\d{2}-\\d{2}$/"), 'Date validation must use digit classes, not a literal backslash');
   assert.ok(!planning.includes("/^\\\\d{4}-\\\\d{2}-\\\\d{2}$/"), 'Double-escaped date validation would reject every real date');
 });
+
+
+test('volunteer profile edits are recorded atomically in application history', async () => {
+  const profile = await read('../js/admin/candidate-profile-details.js');
+  const history = await read('../js/admin/account-history.js');
+  assert.equal((profile.match(/history\\.appendToBatch\\(batch,context,p\\.id,'profile_updated'/g)||[]).length, 2);
+  assert.match(history, /profile_updated:'Dados do perfil atualizados'/);
+});
