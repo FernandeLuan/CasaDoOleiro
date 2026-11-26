@@ -29,7 +29,7 @@ Critical invariant: candidate planning in `submitted` (application status `analy
 - `js/portal/experience-summary.js`: retired from runtime after its Home, Stay, day-adjustment and submit behavior moved to canonical feature owners.
 - `js/portal/candidate-view.js`: retired from runtime on 2026-09-15 after its behavior was merged into `planejamento.js`. It is intentionally kept for one rollback cycle and tracked by the runtime architecture test.
 
-Feature wrappers for review, meeting, and adjustment flows may decorate activity cards and contextual actions, but they must not redefine candidate planning editability.
+Workflow decorators remain temporarily allowed only when listed in `docs/runtime-contract-overrides.json`. They may add meeting, review, pagination, feedback or post-approval behavior, but may not change shared domain predicates. New decorators require an explicit contract update and regression coverage. The migration target is an explicit extension registry owned by Agenda and Planning, not another chain of global function reassignment.
 
 ## Admin
 
