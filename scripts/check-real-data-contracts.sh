@@ -10,7 +10,7 @@ no_match(){ if grep -RInE -- "$1" "${@:2}"; then echo "Forbidden source pattern:
 css_has(){ grep -RFq -- "$1" css || { echo "Missing CSS contract: $1" >&2; exit 1; }; }
 
 # Bounded queries, pagination, and service-owned Firestore access.
-for token in 'limit:10' 'candidateHasMore'; do has js/admin/app.js "$token"; done
+for token in 'limit:10' 'candidateHasMore'; do has js/admin/admin-data.js "$token"; done
 has js/admin/voluntariado.js 'Ver mais 10'
 for token in startAfter getCountFromServer listUpcoming listOccupancyMonth stayPreviewCache cachedStayPreview; do has js/services/application-service.js "$token"; done
 has js/services/application-maintenance-service.js processExpiredPending
@@ -72,7 +72,8 @@ has js/services/onboarding-service.js firstPortalAccessAt
 has js/services/auth-service.js markFirstPortalAccess
 has firestore.rules participantMarksFirstAccess
 no_match 'firebase-functions|ensureFunctions|httpsCallable|adminUpdateVolunteerEmail|adminDeleteVolunteerApplication' firebase.json functions/package.json js/firebase js/services/admin-access-service.js js/admin/access-management.js
-for token in groupUnitId groupsUnitId changeManagerGroupUnit; do has js/admin/app.js "$token"; done
+for token in groupUnitId groupsUnitId; do has js/admin/app.js "$token"; done
+has js/admin/admin-data.js changeManagerGroupUnit
 has js/admin/grupos.js managerGroupUnit
 has js/admin/grupos.js 'independentes por unidade'
 has js/services/group-service.js "where('unitId','==',normalized)"
