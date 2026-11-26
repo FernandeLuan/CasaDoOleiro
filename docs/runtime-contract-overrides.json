@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "scope": "js/portal/app.js",
+  "purpose": "Temporary compatibility overrides retained while Portal features are migrated to explicit composition.",
+  "overrides": [
+    {
+      "symbol": "volunteerHome",
+      "occurrences": 2,
+      "reason": "Two sequential presentation adapters rewrite legacy inline navigation and approved-mode home content.",
+      "targetOwner": "js/portal/home.js",
+      "exitCriteria": "Move both transformations into the canonical home renderer and replace inline navigation with delegated actions."
+    },
+    {
+      "symbol": "volunteerStayDates",
+      "occurrences": 1,
+      "reason": "Derives the stay date range from the current application while the Portal still consumes shared global state.",
+      "targetOwner": "js/portal/estadia.js",
+      "exitCriteria": "Expose a pure date-range selector/use case and inject its result into the activity editor."
+    },
+    {
+      "symbol": "openActivityModal",
+      "occurrences": 1,
+      "reason": "Composes activity form UI and enforces candidate/approved editability in the current global runtime.",
+      "targetOwner": "js/portal/planejamento.js",
+      "exitCriteria": "Move editability to shared domain rules/use case and keep the modal as a view adapter."
+    }
+  ],
+  "policy": {
+    "newOverridesRequireContractUpdate": true,
+    "runtimeBehaviorChangesRequireRegressionTests": true,
+    "doNotChangeFirestoreRulesAsPartOfThisMigration": true
+  }
+}
