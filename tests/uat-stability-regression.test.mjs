@@ -37,7 +37,7 @@ test('admin version panel removes the details link and waits for authenticated h
   assert.doesNotMatch(release, /Ver detalhes/);
   assert.match(release, /if\(state\?\.managerPage==='home'\)\{maybeAnnounce\(\)/);
   assert.match(release, /if\(popupOpened\|\|seen\(\)\)return/);
-  assert.match(release, /const demoProject=String\(window\.OLEIRO_FIREBASE_CONFIG\?\.projectId\|\|' '\)\.startsWith\('demo-'\)/);
+  assert.ok(release.includes("const demoProject=String(window.OLEIRO_FIREBASE_CONFIG?.projectId||'').startsWith('demo-')"));
   assert.match(release, /const automatedBrowser=typeof navigator!=='undefined'&&navigator\.webdriver===true/);
   const notes = JSON.parse(await read('../release-notes.json'));
   assert.equal(notes.releases[0].version, '383');
