@@ -229,7 +229,7 @@ test('Lifecycle mutations are persisted in the candidate audit history with the 
   assert.match(applications,/async updateLifecycle/);
   assert.match(applications,/profile_inactivated/);
   assert.match(applications,/profile_reactivated/);
-  assert.match(applications,/delete window\\.state\\.adminHistoryCache\\[historyKey\\]/);
+  assert.match(applications,/delete window\.state\.adminHistoryCache\[historyKey\]/);
   assert.match(hooks,/await after\(args,result\)/);
   assert.match(service,/actorEmail:String\(session\?\.email\|\|user\.email/);
 });
