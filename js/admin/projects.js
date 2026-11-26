@@ -25,6 +25,15 @@
     return projectUnitOptions().some(([id])=>id===String(value))?String(value):'all';
   }
   function projectSearchValue(){return String(state.projectSearch||'').trim().toLowerCase()}
+  function ensureProjectsLoaded({force=false}={}){
+    if(!window.OleiroProjects?.loadAll){state.projectError='Serviço de projetos indisponível.';return Promise.resolve([])}
+    if(state.projectLoadPromise&&!force)return state.projectLoadPromise;
+    if(state.projectLoaded&&!force)return Promise.resolve(window.OleiroProjects.list?.()||[]);
+    state.projectLoading=true;state.projectError='';
+    const task=Promise.resolve().then(()=>window.OleiroProjects.loadAll({force})).then(rows=>{state.projectLoaded=true;state.projectError='';return rows||[]}).catch(error=>{console.error('Falha ao carregar projetos do Firestore:',error);state.projectLoaded=false;state.projectError=error?.message||'Verifique as permissões do Firestore.';throw error}).finally(()=>{state.projectLoading=false;state.projectLoadPromise=null;if(state.managerPage==='projects')render()});
+    state.projectLoadPromise=task;return task;
+  }
+  window.refreshLegacyProjects=function(){state.projectLoaded=false;return ensureProjectsLoaded({force:true}).catch(()=>[])};
   function rows(){
     const all=window.OleiroProjects?.list?.()||[],filter=normalizeProjectFilter(state.projectFilter),unit=normalizeProjectUnit(state.projectUnit),search=projectSearchValue();
     return all.filter(p=>{
@@ -150,6 +159,8 @@
     </button>`;
   }
   window.managerProjects=function(){
+    if(!state.projectLoaded&&!state.projectLoading)ensureProjectsLoaded().catch(()=>{});
+    if(state.projectError)return '<section class="section legacy-admin-page compact-page-top"><div class="notice danger"><i class="fa-solid fa-triangle-exclamation"></i><div><strong>Não foi possível carregar os projetos.</strong><br>'+esc(state.projectError)+'</div></div><button class="btn btn-primary btn-block" type="button" onclick="refreshLegacyProjects()">Tentar novamente</button></section>';
     if(state.projectLoading)return `<section class="section legacy-admin-page compact-page-top"><div class="card" aria-busy="true"><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div></div></section>`;
     state.projectFilter=normalizeProjectFilter(state.projectFilter);
     state.projectUnit=normalizeProjectUnit(state.projectUnit);
