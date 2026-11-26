@@ -31,9 +31,10 @@ test('production projects use Firestore and do not store project data in localSt
   assert.match(service,/firestore\.updateDoc/);
   assert.match(service,/firestore\.getDocs/);
   assert.match(service,/isPreview:false/);
-  assert.match(service,/const PREVIEW_ENABLED=window\\.OLEIRO_PREVIEW_ENABLED===true/);
-  assert.match(service,/if\\(PREVIEW_ENABLED\\)\\{/);
-  assert.match(service,/isPreview:true/);
+  assert.ok(service.includes('const PREVIEW_ENABLED=window.OLEIRO_PREVIEW_ENABLED===true'));
+  assert.ok(service.includes('if(PREVIEW_ENABLED){'));
+  assert.ok(service.includes('isPreview:true'));
+  assert.ok(service.includes('isPreview:false'));
   assert.doesNotMatch(projects,/isPreview!==true/);
   assert.match(portal,/await window\.OleiroProjects\.saveOwn/);
   assert.match(navigation,/OleiroProjects\?\.loadAll/);
