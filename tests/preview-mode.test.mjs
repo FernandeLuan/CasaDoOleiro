@@ -51,7 +51,12 @@ test('Firestore rules isolate project reads by owner or assigned unit and enforc
 test('release announcement popup stays out of local browser regression sessions',()=>{
   const release=read('js/portal/release-notes.js');
   assert.ok(release.includes("const localTestHost=['localhost','127.0.0.1'].includes(location.hostname);"));
-  assert.ok(release.includes('if(demoProject||localTestHost||previewBuild)'));
+  assert.ok(release.includes("const automatedBrowser=typeof navigator!=='undefined'&&navigator.webdriver===true;"));
+  assert.ok(release.includes("sessionStorage.getItem('oleiro-e2e')==='1'"));
+  assert.ok(release.includes("const emulatorSession=(()=>{try{return sessionStorage.getItem('oleiro-e2e')==='1'}catch{return false}})();"));
+  assert.ok(release.includes('if(demoProject||localTestHost||previewBuild||automatedBrowser||emulatorSession)'));
+  const auth=read('js/services/auth-service.js');
+  assert.ok(auth.includes("sessionStorage.setItem('oleiro-e2e','1')"));
 });
 
 test('production and homologation deploy workflows set explicit build environments',()=>{
