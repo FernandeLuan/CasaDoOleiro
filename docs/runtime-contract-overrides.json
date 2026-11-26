@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "scope": "js/portal/app.js",
-  "purpose": "Temporary compatibility overrides are not currently required in the Portal bootstrap. New function replacement is prohibited unless explicitly reviewed.",
+  "purpose": "Temporary compatibility overrides are not currently required in the Portal runtime. Legacy experience-summary decorators are retired; canonical screen modules own their functions.",
   "overrides": [],
   "policy": {
     "newOverridesRequireContractUpdate": true,
