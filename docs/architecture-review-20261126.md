@@ -145,3 +145,12 @@ The current `js/` tree should not be moved wholesale in one change. Keep the dep
 - No deleting a compatibility module until all callers are migrated and regression tests pass.
 - No merge to `main` with required checks failing or skipped.
 - No deployment claim until the deployed commit and Pages deployment are confirmed.
+
+
+## Phase 1 progress — first guarded contract
+
+The first executable contract is now recorded in `docs/runtime-contract-overrides.json`. It inventories the four currently observed Portal function replacements in `js/portal/app.js` (two assignments to `volunteerHome`, one to `volunteerStayDates`, and one to `openActivityModal`). The ownership intent and exit criteria are recorded per symbol.
+
+`tests/runtime-architecture.test.mjs` now compares the source assignments with that explicit contract. An unreviewed addition, removal, or count change fails the architecture test and requires a deliberate contract review. This is intentionally a narrow first guard, not a claim that every global write in Admin and Portal has been inventoried.
+
+Next migration target: move the two `volunteerHome` presentation adapters into the canonical home feature, then move the date selector and activity-modal orchestration behind explicit feature APIs. Each move must preserve current behavior and pass Portal E2E before the compatibility assignments are removed.
