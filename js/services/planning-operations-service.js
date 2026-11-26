@@ -3,7 +3,6 @@
   const services=window.OleiroServices=window.OleiroServices||{};
   if(!services.planning)return;
 
-  const baseSubmitPlanning=services.applications?.submitPlanning?.bind(services.applications);
   function cleanGroup(value){const parts=String(value||'').split('+').map(item=>item.trim()).filter(Boolean);if(parts.includes('Livre'))return 'Livre';const valid=[...new Set(parts.filter(item=>['A','B','C','D'].includes(item)))];return valid.length?valid.join(' + '):null}
 
   services.planning.hasSessions=async function({applicationId}={}){
