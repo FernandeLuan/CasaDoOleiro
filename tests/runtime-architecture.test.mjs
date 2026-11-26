@@ -171,7 +171,7 @@ test('release dismissal does not depend on browser storage',()=>{
 test('Portal compatibility overrides match the reviewed runtime contract',()=>{
   const contract=JSON.parse(readFileSync('docs/runtime-contract-overrides.json','utf8'));
   const source=readFileSync(contract.scope,'utf8');
-  const actual=[...source.matchAll(/^\\s*([A-Za-z_$][\\w$]*)\\s*=\\s*function\\b/gm)].map(match=>match[1]);
+  const actual=[...source.matchAll(/^\s*([A-Za-z_$][\w$]*)\s*=\s*function\b/gm)].map(match=>match[1]);
   const expected=contract.overrides.flatMap(item=>Array(item.occurrences).fill(item.symbol));
   assert.deepEqual(actual,expected,'Portal global function overrides changed. Review ownership, migrate the behavior, and update the contract deliberately.');
   assert.equal(contract.policy.newOverridesRequireContractUpdate,true);
