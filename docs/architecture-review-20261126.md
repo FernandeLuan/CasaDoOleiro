@@ -204,3 +204,17 @@ Three additional Home decorators were removed:
 The activity-modal group-definition note now belongs to `planejamento.js`; manager-created session edit restrictions now belong to the canonical session card in `agenda.js`. This removes the corresponding wrappers from `experience-guidance.js` and `planning-enhancements.js`.
 
 Some workflow-specific wrappers remain in review, meeting, post-approval, pagination and feedback modules. They are not being removed blindly: they encode distinct workflows and must first be mapped to explicit extension points with regression coverage.
+
+
+## Remaining explicit Portal decorators
+
+After removing the Home/Stay/Agenda base replacements, the active Portal still has workflow-specific decorators. They are not yet consolidated because they encode distinct rules (activity repetition, meeting mode, pagination, adjustment review, post-approval changes, feedback and status visibility).
+
+The reviewed decorator contract is recorded in `docs/runtime-contract-overrides.json` and enforced by `tests/runtime-architecture.test.mjs`. Current active owners are:
+
+- `sessionCardVolunteer`: activity-flow, candidate-adjustment, consistency, feedback-visibility, meeting-activity, pending-change-state, planning-feedback, portal-ux, post-approval, review-flow and session-review-ui.
+- `volunteerAgendaContent`: consistency, meeting-activity, planning-days, planning-feedback, portal-ux, post-approval and review-flow.
+- `openActivityModal`: activity-flow, meeting-activity and planning-days.
+- `submitPlan`: review-flow, review-safeguards and session-review-ui.
+
+These decorators are a known architectural constraint, not evidence that the application is fully modular. The next phase should replace the implicit function-reassignment chain with explicit feature extension hooks, beginning with the session-card and agenda renderers. Each decorator must be migrated with a behavior-level regression test before its contract entry is removed.
