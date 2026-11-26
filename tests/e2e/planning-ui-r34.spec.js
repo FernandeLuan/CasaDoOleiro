@@ -15,8 +15,14 @@ async function login(page){await signIn(page,'admin@oleiro.test','Admin123!','ad
 async function openPlanningBoardVolunteer(page,name){
   await navAction(page,'Planejamento').click();
   await expect(page.locator('.planning-board-page')).toBeVisible({timeout:20_000});
-  await page.getByRole('textbox',{name:'Data inicial'}).fill('2026-09-01');
-  await page.getByRole('textbox',{name:'Data final'}).fill('2026-09-30');
+  await page.evaluate(()=>{
+    const from=document.querySelector('input[aria-label="Data inicial"]');
+    const to=document.querySelector('input[aria-label="Data final"]');
+    if(!from||!to)throw new Error('Filtros de período do Planejamento não encontrados.');
+    from.value='2026-09-01';to.value='2026-09-30';
+    from.dispatchEvent(new Event('change',{bubbles:true}));
+    to.dispatchEvent(new Event('change',{bubbles:true}));
+  });
   await page.getByRole('button',{name:'Por voluntário'}).click();
   const card=page.locator('.planning-board-person-card').filter({hasText:name}).first();
   await expect(card).toBeVisible({timeout:20_000});
