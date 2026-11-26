@@ -1,6 +1,36 @@
 /* Projetos/Legados — persistência real no Firestore. Preferências de onboarding são locais; dados do projeto nunca são gravados no navegador. */
 (function initLegacyProjectService(){
   const ONBOARD='oleiro.legacy-project-onboarding.v1';
+  const PREVIEW_ENABLED=window.OLEIRO_PREVIEW_ENABLED===true;
+
+  /* Homologação permanece isolada em localStorage; somente produção usa Firestore. */
+  if(PREVIEW_ENABLED){
+    const STORE='oleiro.legacy-projects.preview.v1';
+    const uid=()=>String(window.state?.currentSession?.uid||'');
+    const applicationId=()=>String(window.state?.currentApplication?.id||'');
+    const ownId=()=>[applicationId(),uid()].filter(Boolean).join('__');
+    const read=()=>{try{return JSON.parse(localStorage.getItem(STORE)||'{}')||{}}catch{return {}}};
+    const write=rows=>localStorage.setItem(STORE,JSON.stringify(rows||{}));
+    const now=()=>new Date().toISOString();
+    const getOwn=()=>{const id=ownId(),row=read()[id];return row?{...row,id}:null};
+    const list=()=>Object.entries(read()).map(([id,row])=>({...row,id})).sort((a,b)=>String(b.updatedAt||'').localeCompare(String(a.updatedAt||'')));
+    const saveOwn=async patch=>{
+      const id=ownId();if(!id)throw new Error('Sessão do voluntário indisponível.');
+      const rows=read(),existing=rows[id]||{};
+      if(existing.status==='completed')return {...existing,id};
+      const session=window.state?.currentSession||{},application=window.state?.currentApplication||{},profile=session.profile||{};
+      const next={id,applicationId:applicationId(),ownerUid:uid(),ownerName:profile.name||profile.fullName||session.email||'Voluntário',unitId:String(application.unitId||''),unitName:application.unitName||String(application.unitId||''),createdAt:existing.createdAt||now(),...existing,...patch,updatedAt:now()};
+      rows[id]=next;write(rows);return {...next};
+    };
+    const update=async(id,patch={})=>{
+      const rows=read(),key=String(id),existing=rows[key];if(!existing)throw new Error('Projeto não encontrado.');
+      rows[key]={...existing,...patch,updatedAt:now()};write(rows);return {...rows[key],id:key};
+    };
+    const onboardingKey=()=>ONBOARD+':'+(uid()||'anon');
+    window.OleiroProjects={getOwn,loadOwn:async()=>getOwn(),list,loadAll:async()=>list(),saveOwn,update,removeOwn:()=>false,onboardingDone:()=>{try{return localStorage.getItem(onboardingKey())==='1'}catch{return false}},completeOnboarding:()=>{try{localStorage.setItem(onboardingKey(),'1')}catch{}},resetOnboarding:()=>{try{localStorage.removeItem(onboardingKey())}catch{}},isPreview:true};
+    return;
+  }
+
   const cache=new Map();
   const services=window.OleiroServices=window.OleiroServices||{};
 
