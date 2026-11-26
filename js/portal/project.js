@@ -371,6 +371,7 @@
   }
 
   window.volunteerProject=function(){
+    if(state.projectLoading)return '<section class="section"><div class="card" aria-busy="true"><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div></div></section>';
     const p=project();
     if(state.volunteerMode==='approved'&&p?.status==='completed')return statusPage(p);
     if(!window.OleiroProjects?.onboardingDone?.())return onboardingPage();
@@ -597,34 +598,36 @@
     if(legacyProjectWizardStep<=0)return closeModal();
     legacyProjectWizardStep-=1;renderLegacyProjectWizard();
   };
-  window.legacyProjectWizardNext=function(){
-    if(legacyProjectWizardStep===8){window.saveLegacyProjectDraft();return}
+  window.legacyProjectWizardNext=async function(){
+    if(legacyProjectWizardStep===8){await window.saveLegacyProjectDraft();return}
     if(!validateLegacyWizardStep())return;
     if(legacyProjectWizardStep<7){legacyProjectWizardStep+=1;renderLegacyProjectWizard();return}
     legacyProjectWizardStep=8;renderLegacyProjectWizard();
   };
 
   function validDrive(url){if(!url)return true;try{const host=new URL(url).hostname.toLowerCase();return host==='drive.google.com'||host.endsWith('.drive.google.com')||host==='docs.google.com'}catch{return false}}
-  window.saveLegacyProjectDraft=function(){
+  window.saveLegacyProjectDraft=async function(){
     const draft=captureLegacyWizardStep(),{title,category,description,why,expectedResult,materials,driveUrl}=draft,allowContinuation=draft.allowContinuation!==false;
     if(!title||!category||!description||!why||!expectedResult)return showToast(tx('project.wizard.required'));
     if(!validDrive(driveUrl))return showToast(tx('project.wizard.drive.invalid'));
     const old=project();
     if(old&&!['draft','adjustments'].includes(old.status))return showToast(old.status==='completed'?'Este legado já foi concluído e não pode mais ser editado.':'Este projeto já avançou de etapa e não pode mais ser editado.');
-    window.OleiroProjects.saveOwn({title,category,description,why,expectedResult,materials,driveUrl,allowContinuation,status:old?.status==='adjustments'?'adjustments':'draft'});
-    legacyProjectWizardDraft=null;legacyProjectWizardStep=0;
-    legacyProjectWizardViewportCleanup?.();
-    closeModal();render();showToast(tx('project.wizard.saved'));
+    try{
+      await window.OleiroProjects.saveOwn({title,category,description,why,expectedResult,materials,driveUrl,allowContinuation,status:old?.status==='adjustments'?'adjustments':'draft'});
+      legacyProjectWizardDraft=null;legacyProjectWizardStep=0;
+      legacyProjectWizardViewportCleanup?.();
+      closeModal();render();showToast(tx('project.wizard.saved'));
+    }catch(error){console.error(error);showToast(error?.message||'Não foi possível salvar o projeto.');}
   };
-  window.submitLegacyProject=function(){
+  window.submitLegacyProject=async function(){
     const p=project();if(!p||!['draft','adjustments'].includes(p.status))return;
-    window.OleiroProjects.saveOwn({status:'analysis',submittedAt:new Date().toISOString(),reviewNote:''});render();showToast('Projeto enviado para análise.');
+    try{await window.OleiroProjects.saveOwn({status:'analysis',submittedAt:new Date().toISOString(),reviewNote:''});render();showToast('Projeto enviado para análise.')}
+    catch(error){console.error(error);showToast(error?.message||'Não foi possível enviar o projeto.')}
   };
-  window.startLegacyProject=function(){
+  window.startLegacyProject=async function(){
     const current=project();if(!current||current.status!=='approved')return;
-    window.OleiroProjects.saveOwn({status:'in_progress',startedAt:current.startedAt||new Date().toISOString()});
-    render();
-    showToast('Execução iniciada. Agora você pode registrar o progresso por aqui.');
+    try{await window.OleiroProjects.saveOwn({status:'in_progress',startedAt:current.startedAt||new Date().toISOString()});render();showToast('Execução iniciada. Agora você pode registrar o progresso por aqui.')}
+    catch(error){console.error(error);showToast(error?.message||'Não foi possível iniciar a execução.')}
   };
   window.openLegacyProgressUpdate=function(){
     const p=project();if(!p||p.status!=='in_progress')return;
@@ -638,29 +641,28 @@
     openModal('Comentar progresso','Registre um avanço, uma etapa concluída ou algo importante da execução.',body,'<button class="btn btn-primary btn-block" type="button" onclick="saveLegacyProgressUpdate()"><i class="fa-solid fa-plus"></i>Adicionar ao histórico</button>');
     setTimeout(()=>document.getElementById('legacyProgressText')?.focus(),80);
   };
-  window.saveLegacyProgressUpdate=function(){
+  window.saveLegacyProgressUpdate=async function(){
     const p=project();if(!p||p.status!=='in_progress')return;
     const text=document.getElementById('legacyProgressText')?.value.trim()||'';
     if(!text)return showToast('Escreva uma atualização do progresso.');
     const at=new Date().toISOString();
     const progressEntries=[...legacyProgressEntries(p),{id:'progress-'+Date.now(),text,at}];
-    window.OleiroProjects.saveOwn({progressEntries});
-    closeModal();
-    render();
-    showToast('Progresso adicionado ao histórico.');
+    try{await window.OleiroProjects.saveOwn({progressEntries});closeModal();render();showToast('Progresso adicionado ao histórico.')}
+    catch(error){console.error(error);showToast(error?.message||'Não foi possível salvar o progresso.')}
   };
   window.openLegacyCompletion=function(){
     const p=project();if(!p||p.status!=='in_progress')return;
     const body=`<div class="form-grid"><div class="field"><label for="legacyFinalResult">O que ficou para a comunidade?</label><textarea id="legacyFinalResult" class="textarea" maxlength="900" placeholder="Conte o que foi entregue e como a comunidade pode usar ou cuidar disso.">${esc(p.result||'')}</textarea></div><div class="field"><label for="legacyFinalDrive">Pasta pública do Google Drive <span class="legacy-optional">recomendado</span></label><input id="legacyFinalDrive" class="input" value="${esc(p.driveUrl||'')}" placeholder="https://drive.google.com/drive/folders/..."><small>Coloque fotos e vídeos do antes, durante e depois.</small></div><label class="check-card"><input id="legacyDrivePublic" type="checkbox"><span>Confirmei que qualquer pessoa com o link consegue visualizar a pasta</span></label></div>`;
     openModal('Concluir meu legado','Registre o resultado para que ele continue vivo na memória da Casa.',body,'<button class="btn btn-primary btn-block" type="button" onclick="completeLegacyProject()">Concluir projeto</button>');
   };
-  window.completeLegacyProject=function(){
+  window.completeLegacyProject=async function(){
     const current=project();if(!current||current.status!=='in_progress')return;
     const result=document.getElementById('legacyFinalResult')?.value.trim()||'',driveUrl=document.getElementById('legacyFinalDrive')?.value.trim()||'',confirmed=!!document.getElementById('legacyDrivePublic')?.checked;
     if(!result)return showToast('Conte o que ficou para a comunidade.');
     if(driveUrl&&!validDrive(driveUrl))return showToast('Use um link válido do Google Drive.');
     if(driveUrl&&!confirmed)return showToast('Confirme que o link do Drive está público.');
-    window.OleiroProjects.saveOwn({status:'completed',result,driveUrl,completedAt:new Date().toISOString()});closeModal();render();showToast('Seu legado foi concluído. Obrigado por deixar algo para a comunidade.');
+    try{await window.OleiroProjects.saveOwn({status:'completed',result,driveUrl,completedAt:new Date().toISOString()});closeModal();render();showToast('Seu legado foi concluído. Obrigado por deixar algo para a comunidade.')}
+    catch(error){console.error(error);showToast(error?.message||'Não foi possível concluir o projeto.')}
   };
   window.dismissLegacyProjectAdjustmentNotice=function(){
     const card=document.querySelector('[data-project-adjustment-update="1"]');
