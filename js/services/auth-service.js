@@ -1,3 +1,4 @@
+try{if(new URLSearchParams(window.location.search).get('emulator')==='1')sessionStorage.setItem('oleiro-e2e','1')}catch{}
 (function initAuthService(){
   async function firebaseContext(){if(!window.OleiroFirebase)throw new Error('Backend indisponível.');const context=await window.OleiroFirebase.ready;if(!context?.configured)throw new Error('Firebase ainda não foi configurado.');return context;}
   function normalizeRole(role){if(role==='admin'||role==='coordinator'||role==='activity_assistant')return 'manager';if(role==='volunteer')return 'volunteer';return 'inactive'}
