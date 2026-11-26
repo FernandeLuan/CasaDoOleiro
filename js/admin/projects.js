@@ -29,7 +29,7 @@
     const all=window.OleiroProjects?.list?.()||[],filter=normalizeProjectFilter(state.projectFilter),unit=normalizeProjectUnit(state.projectUnit),search=projectSearchValue();
     return all.filter(p=>{
       if(filter!=='all'&&p.status!==filter)return false;
-      const projectUnit=String(p.unitName||p.unitId||'');
+      const projectUnit=String(p.unitId||p.unitName||'');
       if(unit!=='all'&&projectUnit!==unit)return false;
       if(!search)return true;
       const haystack=[p.title,p.ownerName,p.unitName,p.unitId,p.category].map(v=>String(v||'').toLowerCase()).join(' ');
