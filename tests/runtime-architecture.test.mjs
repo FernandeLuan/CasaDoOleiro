@@ -278,5 +278,5 @@ test('Portal screen modules own their functions without bootstrap overrides',()=
 
 test('approved volunteer home hides candidate-only information in its canonical renderer',()=>{
   const home=readFileSync('js/portal/home.js','utf8');
-  assert.match(home,/\$\\{approved\\?'':/);
+  assert.match(home,/\$\{approved\\?'':/);
 });
