@@ -66,12 +66,12 @@ test('Admin WhatsApp remains disabled when the volunteer has no valid activity',
 
 test('Admin WhatsApp button exits spinner after opening the share target',async({page})=>{
   await login(page);
-  await page.route('https://wa.me/**',route=>route.fulfill({status:200,contentType:'text/html',body:'<title>WhatsApp mock</title>'}));
+  await page.route('https://api.whatsapp.com/**',route=>route.fulfill({status:200,contentType:'text/html',body:'<title>WhatsApp mock</title>'}));
   await openPlanningBoardVolunteer(page,'Voluntário E2E');
   const button=page.locator('.admin-planning-share-bar .planning-share-action');
   await expect(button).toBeEnabled({timeout:20_000});
   const popupPromise=page.waitForEvent('popup');await button.click();const popup=await popupPromise;
-  await popup.waitForURL(/wa\.me\//,{timeout:20_000});await page.bringToFront();
+  await popup.waitForURL(/api\.whatsapp\.com\/send/,{timeout:20_000});await page.bringToFront();
   await expect(button).toBeDisabled();await expect(button).toContainText('Compartilhado');
   const icon=button.locator('i');await expect(icon).toHaveClass(/fa-whatsapp/);await expect(icon).not.toHaveClass(/fa-spin/);
   await popup.close();
