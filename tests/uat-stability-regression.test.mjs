@@ -8,7 +8,7 @@ test('history events persist the authenticated email and render it as the author
   const service = await read('../js/services/history-service.js');
   const history = await read('../js/admin/account-history.js');
   const applications = await read('../js/services/application-service.js');
-  assert.match(service, /actorEmail:String\(session\?\.email\|\|user\.email\|\|''\)/);
+  assert.match(service, /actorEmail:String\(session\?\.email\|\|user\.email\|\|window\.OleiroFirebase\?\.auth\?\.currentUser\?\.email\|\|''\)/);
   assert.match(history, /row\?\.actorEmail/);
   assert.match(applications, /async updateLifecycle/);
   assert.match(applications, /profile_inactivated/);
@@ -66,7 +66,7 @@ test('profile activation and inactivation persist actor history atomically',asyn
   assert.match(lifecycle,/await batch\.commit\(\)/);
   assert.doesNotMatch(lifecycle,/A alteração foi salva, mas o histórico não pôde ser registrado/);
   assert.match(reactivation,/appendToBatch\(batch,context,applicationId,'profile_reactivated'/);
-  assert.match(history,/actorEmail:String\(session\?\.email\|\|user\.email\|\|''\)/);
+  assert.match(history,/actorEmail:String\(session\?\.email\|\|user\.email\|\|window\.OleiroFirebase\?\.auth\?\.currentUser\?\.email\|\|''\)/);
   assert.match(admin,/participantAccessCache\[String\(p\.id\)\]=Object\.fromEntries/);
   assert.match(admin,/adminAccountReadAt\[String\(p\.id\)\]=Date\.now\(\)/);
   assert.match(admin,/\.\.\.\(previousAccess\[key\]\|\|\{\}\)/,'Lifecycle cache updates must preserve firstPortalAccessAt and other access metadata');
