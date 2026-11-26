@@ -14,7 +14,9 @@ Critical invariant: candidate planning in `submitted` (application status `analy
 - `js/portal/planejamento.js`: canonical Planning screen and candidate planning controls.
 - `js/portal/app.js`: authentication boot, data hydration, route rendering and startup orchestration only. It must not replace screen functions or own feature forms.
 - `js/portal/estadia.js`: canonical stay date normalization, date-range selection and stay rendering.
-- `js/portal/planejamento.js`: canonical Planning screen, candidate planning controls and activity modal/form composition.
+- `js/portal/planejamento.js`: canonical Planning screen, candidate planning controls, activity modal/form composition, `submitPlan` and day-adjustment guidance.
+- `js/portal/home.js`: canonical `volunteerHome` renderer.
+- `js/portal/experience-summary.js`: retired from runtime on 2026-11-26 after its duplicate `volunteerHome`, `volunteerStay`, `submitPlan` and day-adjustment behavior was merged into the canonical Home, Stay and Planning modules.
 - `js/portal/planning-enhancements.js`: presentation refinements only. It must not replace the Planning page renderer.
 - `js/portal/candidate-view.js`: retired from runtime on 2026-09-15 after its behavior was merged into `planejamento.js`. It is intentionally kept for one rollback cycle and tracked by the runtime architecture test.
 
