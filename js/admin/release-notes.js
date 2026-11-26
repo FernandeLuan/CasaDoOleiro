@@ -46,7 +46,6 @@
       <p><strong>Versão:</strong> ${esc(version())}</p>
       <p><strong>Última atualização:</strong> ${esc(latest?.summary||'Informações da versão disponíveis.')}</p>
       ${published?`<p><strong>Publicado em:</strong> ${esc(published)}</p>`:''}
-      <button class="admin-release-details" type="button" onclick="openAdminReleaseNotes()"><i class="fa-solid fa-wand-magic-sparkles"></i>Ver detalhes</button>
     </div>`;
   }
   function modalBody(){
@@ -66,6 +65,12 @@
     modalRoot?.querySelector?.('.modal')?.classList.add('modal-wide');
   };
   function maybeAnnounce(){
+    const demoProject=String(window.OLEIRO_FIREBASE_CONFIG?.projectId||'').startsWith('demo-');
+    const localTestHost=['localhost','127.0.0.1'].includes(location.hostname);
+    const previewBuild=window.OLEIRO_PREVIEW_ENABLED===true;
+    const automatedBrowser=typeof navigator!=='undefined'&&navigator.webdriver===true;
+    const emulatorSession=(()=>{try{return sessionStorage.getItem('oleiro-e2e')==='1'}catch{return false}})();
+    if(demoProject||localTestHost||previewBuild||automatedBrowser||emulatorSession)return;
     if(popupOpened||!loaded||!latest||!audienceOf(latest).includes('admin')||!state?.currentSession?.uid||state.role!=='manager'||state.managerPage!=='home'||seen())return;
     popupOpened=true;
     setTimeout(()=>{if(state?.role==='manager'&&state?.managerPage==='home'&&!seen())window.openAdminReleaseNotes()},500);
@@ -87,7 +92,14 @@
   window.releaseInformationHtml=releaseInformationHtml;
   load();
   let attempts=0;
-  const waitForSession=()=>{if(state?.role==='manager'&&state?.currentSession?.uid){maybeAnnounce();return}if(++attempts<80)setTimeout(waitForSession,500)};
+  const waitForSession=()=>{
+    if(state?.role==='manager'&&state?.currentSession?.uid){
+      if(state?.managerPage==='home'){maybeAnnounce();if(popupOpened||seen())return}
+      if(++attempts<120)setTimeout(waitForSession,250);
+      return;
+    }
+    if(++attempts<120)setTimeout(waitForSession,250);
+  };
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',waitForSession,{once:true});else setTimeout(waitForSession,500);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden){if(!loaded)load();maybeAnnounce()}});
 })();

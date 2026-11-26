@@ -164,7 +164,16 @@
         if(participantActive!==null){
           [...new Set((participantUids||[]).filter(Boolean).map(String))].forEach(uid=>batch.update(firestore.doc(context.db,'users',uid),{active:participantActive===true,updatedAt:now}));
         }
-        await batch.commit();return true;
+        await batch.commit();
+        const before=(window.state?.candidates||[]).find(row=>String(row.id)===String(id))||window.state?.currentApplication||null;
+        const wasActive=before?.active!==false&&before?.inactive!==true;
+        const nextActive=applicationPatch?.active;
+        const eventType=nextActive===false&&wasActive?'profile_inactivated':nextActive===true&&!wasActive?'profile_reactivated':'';
+        if(eventType&&services.history?.append){
+          try{await services.history.append(id,eventType,{unitId:String(before?.unitId||before?.unit||'').toLowerCase(),metadata:{source:'lifecycle'}})}
+          catch(error){console.warn('A alteração foi salva, mas o histórico não pôde ser registrado:',error)}
+        }
+        return true;
       },{loading:false});
     },
 

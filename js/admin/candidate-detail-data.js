@@ -109,8 +109,8 @@
   function accessRows(p){
     const uids=Array.isArray(p.participantUids)?p.participantUids:[],names=Array.isArray(p.participantNames)?p.participantNames:[],emails=Array.isArray(p.participantEmails)?p.participantEmails:[],cache=accessCache(p);
     if(!uids.length)return '<div class="empty">Nenhum acesso vinculado.</div>';
-    if(!cache)return '<div class="empty compact-loading"><i class="fa-solid fa-circle-notch fa-spin"></i>Carregando acessos...</div>';
-    return uids.map((uid,index)=>{const access=cache[String(uid)]||{},email=emails[index]||access.email||'',name=names[index]||p.name||'Voluntário',first=access.firstPortalAccessAt;return `<div class="account-access-row"><div><strong>${escapeHtml(name)}</strong><span>${escapeHtml(email||'—')}</span><small>${first?'Primeiro acesso realizado':'Ainda não acessou o portal'}</small></div>${!first?`<button class="btn btn-outline btn-xs" type="button" onclick="requestVolunteerEmailEdit('${safe(p.id)}','${safe(uid)}')"><i class="fa-solid fa-pen"></i>Editar e-mail</button>`:''}</div>`}).join('');
+    if(!cache)return '<div class="oleiro-skeleton" aria-label="Carregando acessos"><div class="oleiro-skeleton-grid"><section class="oleiro-skeleton-card"><span class="oleiro-skeleton-line medium"></span><span class="oleiro-skeleton-line"></span></section></div></div>';
+    return uids.map((uid,index)=>{const access=cache[String(uid)]||{},email=emails[index]||access.email||'',name=names[index]||p.name||'Voluntário',first=access.firstPortalAccessAt,inactive=access.active===false;return `<div class="account-access-row"><div><strong>${escapeHtml(name)}</strong><span>${escapeHtml(email||'—')}</span><small>${inactive?'Acesso inativo':first?'Primeiro acesso realizado':'Ainda não acessou o portal'}</small></div>${!inactive&&!first?`<button class="btn btn-outline btn-xs" type="button" onclick="requestVolunteerEmailEdit('${safe(p.id)}','${safe(uid)}')"><i class="fa-solid fa-pen"></i>Editar e-mail</button>`:''}</div>`}).join('');
   }
   function accountLifecycle(p){
     const id=safe(p.id);
@@ -136,13 +136,24 @@
   async function ensureAccountData(p,{force=false}={}){
     if(!p?.id)return;const key=String(p.id),freshEnough=!force&&Date.now()-(state.adminAccountReadAt[key]||0)<ACCOUNT_CACHE_MS;
     if(freshEnough&&accessCache(p))return;
-    /* A lista de candidaturas já traz o documento completo da application. Ao abrir Conta,
-       consulte somente o que não existe nela: o status de acesso dos participantes. */
-    if(window.OleiroServices?.users?.getByIds&&Array.isArray(p.participantUids)&&p.participantUids.length){
-      const rows=await window.OleiroServices.users.getByIds(p.participantUids),map={};
-      (rows||[]).forEach(row=>map[String(row.id)]=row);state.participantAccessCache[key]=map;
+    const uids=Array.isArray(p.participantUids)?p.participantUids.map(String).filter(Boolean):[];
+    if(p.inactive===true||p.active===false||p.status==='rejected'){
+      state.participantAccessCache[key]=Object.fromEntries(uids.map(uid=>[uid,{id:uid,active:false}]));
+      state.adminAccountReadAt[key]=Date.now();return;
     }
-    state.adminAccountReadAt[key]=Date.now();
+    /* A candidatura já traz os dados pessoais. Consultar apenas o status de acesso,
+       sem deixar a tela presa em loading caso uma leitura individual falhe. */
+    try{
+      if(window.OleiroServices?.users?.getByIds&&uids.length){
+        const rows=await window.OleiroServices.users.getByIds(uids),map={};
+        (rows||[]).forEach(row=>map[String(row.id)]=row);
+        uids.forEach(uid=>{if(!map[uid])map[uid]={id:uid,missing:true}});
+        state.participantAccessCache[key]=map;
+      }else state.participantAccessCache[key]=Object.fromEntries(uids.map(uid=>[uid,{id:uid,missing:true}]));
+    }catch(error){
+      console.warn('Não foi possível carregar os status de acesso da candidatura:',error);
+      state.participantAccessCache[key]=Object.fromEntries(uids.map(uid=>[uid,{id:uid,missing:true}]));
+    }finally{state.adminAccountReadAt[key]=Date.now()}
   }
   openPerson=async function(id,tab='plan'){
     let p=candidateById(id);if(!p)return;tab=tab==='plan'?'plan':'account';renderPersonModal(p,tab);

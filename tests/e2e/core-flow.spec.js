@@ -193,6 +193,22 @@ test('Volunteer can edit own emergency contact and Admin sees the same profile d
   const profileReads=await page.evaluate(()=>window.OleiroQueryMetrics?.filter(row=>row.name==='profiles/by-ids').reduce((sum,row)=>sum+(Number(row.pointReads)||0),0)||0);expect(profileReads).toBeLessThanOrEqual(1);
 });
 
+test('Approved volunteer can propose a new activity without editing confirmed activities',async({page})=>{
+  await login(page,'approved@oleiro.test','Approved123!','portal');
+  await page.waitForFunction(()=>window.state?.role==='volunteer'&&window.state?.currentSession?.uid==='e2e-approved'&&window.state?.currentApplication?.id==='e2e-approved-application'&&window.state?.currentApplication?.status==='approved'&&window.state?.volunteerMode==='approved'&&window.state?.volunteerPlanningLoadedFor==='e2e-approved-application',{},{timeout:20_000});
+  await navAction(page,'Agenda').click();
+  const add=page.locator('.day-block').getByRole('button',{name:/Adicionar atividade$/}).first();
+  await expect(add).toBeVisible({timeout:20_000});
+  await add.click();
+  await expect(page.locator('#actName')).toBeVisible();
+  await expect(page.locator('#actDesc')).toBeVisible();
+  await page.evaluate(()=>closeModal());
+  const confirmed=activityCard(page,'Atividade confirmada E2E').first();
+  await expect(confirmed).toBeVisible();
+  await expect(confirmed.getByRole('button',{name:/Solicitar mudança$/})).toBeVisible();
+  await expect(confirmed.getByRole('button',{name:/Editar$/})).toHaveCount(0);
+});
+
 test('Candidate creates, edits, moves and deletes own proposed activity',async({page})=>{
   await login(page,'voluntario@oleiro.test','Volunteer123!','portal');
   await navAction(page,'Planejamento').click();
@@ -236,12 +252,16 @@ for(const locale of [
 ]){
   test(`Volunteer critical information, profile and activity placeholders render in ${locale.lang}`,async({page})=>{
     await login(page,'voluntario@oleiro.test','Volunteer123!','portal',locale.lang);
+    await page.waitForFunction(()=>window.state?.role==='volunteer'&&window.state?.currentSession?.uid==='e2e-volunteer'&&window.state?.currentApplication?.id==='e2e-application'&&window.state?.currentApplication?.status==='pending'&&window.state?.volunteerMode==='candidate'&&window.state?.volunteerPlanningLoadedFor==='e2e-application',{},{timeout:20_000});
     await page.evaluate(()=>window.navigateVolunteer?.('info'));
     await expect(page.locator('#app')).toContainText(locale.arrival,{timeout:20_000});
-    await expect(page.locator('#app')).toContainText(locale.lang==='en'?'Accommodation and meals':'Alojamiento y comidas');
+    await expect(page.locator('#app')).toContainText(locale.lang==='en'?'Accommodation':'Alojamiento');
+    await expect(page.locator('#app')).toContainText(locale.lang==='en'?'Meals':'Comidas');
 
     await navAction(page,locale.planning).click();
-    await page.getByRole('button',{name:new RegExp(`${locale.add}$`)}).first().click();
+    const addActivity=page.getByRole('button',{name:new RegExp(`${locale.add}$`)}).first();
+    await expect(addActivity).toBeVisible({timeout:20_000});
+    await addActivity.click();
     await expect(page.locator('#actName')).toHaveAttribute('placeholder',locale.namePlaceholder);
     await expect(page.locator('#actDesc')).toHaveAttribute('placeholder',locale.descriptionPlaceholder);
     await expect(page.locator('#actParticipation option[value="Até 5"]')).not.toHaveText('Até 5');

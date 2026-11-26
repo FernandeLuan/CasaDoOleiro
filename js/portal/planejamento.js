@@ -20,8 +20,9 @@ function portalPlanningShareHeading(){
   return t('planning.share.heading');
 }
 function portalPlanningShareBar(){
-  if(!portalPlanningShareAllowed()||!activeCandidateSessions().length)return '';
-  return `<div class="planning-share-bar portal-planning-share-bar"><button class="planning-share-action" type="button" onclick="sharePortalPlanningWhatsApp()"><i class="fa-brands fa-whatsapp"></i><span>${escapeHtml(t('planning.share.whatsapp'))}</span></button></div>`;
+  if(!portalPlanningShareAllowed())return '';
+  const hasActive=activeCandidateSessions().length>0;
+  return `<div class="planning-share-bar portal-planning-share-bar"><button class="planning-share-action" type="button" onclick="sharePortalPlanningWhatsApp()" ${hasActive?'':'disabled aria-disabled="true"'}><i class="fa-brands fa-whatsapp"></i><span>${escapeHtml(t('planning.share.whatsapp'))}</span></button>${hasActive?'':'<small class="planning-share-disabled-hint">Adicione uma atividade para habilitar o compartilhamento.</small>'}</div>`;
 }
 window.sharePortalPlanningWhatsApp=function(){
   const sessions=(state.sessions||[]).filter(row=>row.status!=='rejected'&&row.reviewStatus!=='rejected');
@@ -30,11 +31,14 @@ window.sharePortalPlanningWhatsApp=function(){
   const unit=application.unitName||String(application.unitId||'').replace(/^./,c=>c.toUpperCase());
   const text=window.OleiroPlanningShare?.buildText({heading:portalPlanningShareHeading(),name,statusLabel:portalPlanningShareStatus(),unit,start:application.stayStart,end:application.stayEnd,sessions,labels:{status:t('planning.share.status'),unit:t('planning.share.unit'),period:t('planning.share.period'),observation:t('planning.share.observation')}})||'';
   if(!text)return showToast(t('planning.share.none'));
-  closeModal();window.OleiroPlanningShare.openWhatsApp(text);
+  closeModal();
+  const url='https://wa.me/?text='+encodeURIComponent(text);
+  /* Navegação direta evita abrir uma aba about:blank no Safari/iOS. */
+  window.location.assign(url);
 };
 
 function volunteerPlan(){
-  const acts=volunteerActivities(),status=state.volunteerPlanStatus||'draft',approved=state.volunteerMode==='approved',editable=!approved&&candidatePlanningEditable(status);
+  const acts=volunteerActivities(),status=state.volunteerPlanStatus||'draft',approved=state.volunteerMode==='approved',editable=approved||candidatePlanningEditable(status);
   const dates=volunteerStayDates(),periodLabel=dates.length?`${fmtDate(dates[0],true)}–${fmtDate(dates[dates.length-1],true)}`:t('portal.home.periodConfirm');
   const hours=((state.sessions||[]).reduce((sum,row)=>sum+(Number(row.duration)||60),0)/60).toFixed(1).replace('.',',');
 
@@ -53,7 +57,7 @@ function volunteerPlan(){
 
   const notice=t('portal.plan.approvedNotice');
   const submitButton=`<button class="btn btn-soft btn-block" style="margin-top:12px" disabled><i class="fa-solid fa-circle-check"></i>${escapeHtml(t('portal.plan.approvedButton'))}</button>`;
-  return `<section class="section volunteer-plan-page"><div class="plan-title-row"><div><h2>${escapeHtml(t('portal.plan.title'))}</h2><p>${escapeHtml(t('portal.plan.subtitle'))}</p></div><strong>${periodLabel}</strong></div><div class="notice"><i class="fa-solid fa-circle-info"></i><div>${escapeHtml(notice)}</div></div><div style="margin-top:14px">${volunteerAgendaContent(false)}${portalPlanningShareBar()}</div><div class="card plan-summary" style="margin-top:14px"><span class="eyebrow">${escapeHtml(t('portal.plan.summary'))}</span><div class="stat-row"><span class="stat-pill">${escapeHtml(t('portal.home.activitiesCount',{count:acts.length}))}</span><span class="stat-pill">${escapeHtml(t('portal.home.sessionsCount',{count:(state.sessions||[]).length}))}</span><span class="stat-pill">${escapeHtml(t('portal.plan.hoursPlanned',{hours}))}</span></div>${submitButton}</div></section>`;
+  return `<section class="section volunteer-plan-page"><div class="plan-title-row"><div><h2>${escapeHtml(t('portal.plan.title'))}</h2><p>${escapeHtml(t('portal.plan.subtitle'))}</p></div><strong>${periodLabel}</strong></div><div class="notice"><i class="fa-solid fa-circle-info"></i><div>${escapeHtml(notice)}</div></div><div style="margin-top:14px">${volunteerAgendaContent(true)}${portalPlanningShareBar()}</div><div class="card plan-summary" style="margin-top:14px"><span class="eyebrow">${escapeHtml(t('portal.plan.summary'))}</span><div class="stat-row"><span class="stat-pill">${escapeHtml(t('portal.home.activitiesCount',{count:acts.length}))}</span><span class="stat-pill">${escapeHtml(t('portal.home.sessionsCount',{count:(state.sessions||[]).length}))}</span><span class="stat-pill">${escapeHtml(t('portal.plan.hoursPlanned',{hours}))}</span></div>${submitButton}</div></section>`;
 }
 function calendarMonthLabel(date){const locale=typeof currentLocale==='function'?currentLocale():'pt-BR';return new Intl.DateTimeFormat(locale,{month:'short'}).format(new Date(date+'T12:00:00')).replace('.','').toUpperCase()}
 function volunteerDayAdjustment(date){const rows=state.currentApplication?.dayAdjustments;return rows&&typeof rows==='object'?rows[date]||null:null}
@@ -61,7 +65,7 @@ function openVolunteerDayAdjustment(date){const item=volunteerDayAdjustment(date
 function scrollToVolunteerDay(date){const target=document.getElementById(`vday-${date}`);if(!target)return;const header=document.querySelector('.app-header');const offset=(header?.getBoundingClientRect().height||70)+14;const top=window.scrollY+target.getBoundingClientRect().top-offset;window.scrollTo({top:Math.max(0,top),behavior:'smooth'})}
 function volunteerAgendaContent(editable=false){
   const dates=volunteerStayDates();if(!dates.length)return `<div class="empty"><i class="fa-regular fa-calendar-xmark"></i>${escapeHtml(t('portal.plan.noPeriod'))}</div>`;
-  return `<div class="calendar-strip">${dates.map(d=>`<button class="date-chip" onclick="scrollToVolunteerDay('${d}')"><span>${dayName(d)}</span><strong>${new Date(d+'T12:00:00').getDate()}</strong><span>${calendarMonthLabel(d)}</span></button>`).join('')}</div><div class="volunteer-plan-days">${dates.map(d=>{const ss=getSessions(d,true),adjustment=volunteerDayAdjustment(d);return `<div class="day-block" id="vday-${d}"><div class="day-title volunteer-day-title"><div><h3>${dayName(d)}, ${fmtDate(d)}</h3>${adjustment?`<span class="badge warning">${escapeHtml(t('portal.plan.adjust'))}</span>`:''}</div><div class="day-title-actions">${adjustment?`<button class="day-info-button" type="button" onclick="openVolunteerDayAdjustment('${d}')" aria-label="${escapeHtml(t('portal.plan.viewGuidance'))}"><i class="fa-solid fa-circle-info"></i></button>`:''}<span>${ss.length?`${(ss.reduce((x,s)=>x+(Number(s.activity.duration)||0),0)/60).toFixed(1).replace('.0','')}h`:''}</span></div></div>${ss.map(s=>sessionCardVolunteer(s,editable)).join('')||`<div class="empty">${escapeHtml(t('portal.plan.noActivity'))}</div>`}${editable&&state.volunteerMode!=='approved'?`<button class="btn btn-soft btn-block" style="margin-top:6px" onclick="openActivityModal('${d}')"><i class="fa-solid fa-plus"></i>${escapeHtml(t('action.addActivity'))}</button>`:''}</div>`}).join('')}</div>`;
+  return `<div class="calendar-strip">${dates.map(d=>`<button class="date-chip" onclick="scrollToVolunteerDay('${d}')"><span>${dayName(d)}</span><strong>${new Date(d+'T12:00:00').getDate()}</strong><span>${calendarMonthLabel(d)}</span></button>`).join('')}</div><div class="volunteer-plan-days">${dates.map(d=>{const ss=getSessions(d,true),adjustment=volunteerDayAdjustment(d);return `<div class="day-block" id="vday-${d}"><div class="day-title volunteer-day-title"><div><h3>${dayName(d)}, ${fmtDate(d)}</h3>${adjustment?`<span class="badge warning">${escapeHtml(t('portal.plan.adjust'))}</span>`:''}</div><div class="day-title-actions">${adjustment?`<button class="day-info-button" type="button" onclick="openVolunteerDayAdjustment('${d}')" aria-label="${escapeHtml(t('portal.plan.viewGuidance'))}"><i class="fa-solid fa-circle-info"></i></button>`:''}<span>${ss.length?`${(ss.reduce((x,s)=>x+(Number(s.activity.duration)||0),0)/60).toFixed(1).replace('.0','')}h`:''}</span></div></div>${ss.map(s=>sessionCardVolunteer(s,editable)).join('')||`<div class="empty">${escapeHtml(t('portal.plan.noActivity'))}</div>`}${editable?`<button class="btn btn-soft btn-block" style="margin-top:6px" onclick="openActivityModal('${d}')"><i class="fa-solid fa-plus"></i>${escapeHtml(t('action.addActivity'))}</button>`:''}</div>`}).join('')}</div>`;
 }
 function sessionCardVolunteer(s,editable){
   const [l,tone]=statusMeta(s.status);const candidateEdit=editable&&state.volunteerMode!=='approved';const approvedMove=editable&&state.volunteerMode==='approved';
