@@ -77,7 +77,4 @@
     },{loading:false});
   };
 
-  if(baseSubmitPlanning){
-    services.applications.submitPlanning=async function(id,...rest){if(!id)throw new Error('Candidatura não encontrada.');const hasAny=await services.planning.hasSessions({applicationId:id});if(!hasAny)throw new Error('Adicione pelo menos uma atividade antes de enviar o planejamento.');return baseSubmitPlanning(id,...rest)};
-  }
 })();
