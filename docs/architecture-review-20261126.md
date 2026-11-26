@@ -181,3 +181,18 @@ The working branch now:
 - Adds architecture tests that reject direct Firestore SDK access from Admin/Portal UI modules and reject a return of the duplicate stay-date persistence path.
 
 The Admin `product-current.js` file still contains legacy function decorators/overrides; this change removes its direct persistence responsibility but does not claim that all Admin runtime overrides have been eliminated.
+
+
+## Phase 1 progress — removal of late Portal overrides
+
+A follow-up load-order inspection found that `experience-summary.js` and `portal/product-current.js` executed after the bootstrap and replaced behavior that had appeared to be owned by `home.js`, `estadia.js` and `planejamento.js`. The earlier app-bootstrap-only migration did not remove those late runtime replacements.
+
+The working branch now moves the effective runtime behavior into the actual feature owners:
+- Home content, support card and planning-deadline display → `home.js`.
+- Stay renderer → `estadia.js`.
+- Agenda day blocking, day cards and session cards → `agenda.js`.
+- Activity-modal blocked-date enforcement, day-adjustment visibility and planning submission → `planejamento.js`.
+- `experience-summary.js` is removed from the Portal script chain and explicitly retained as retired source for one rollback cycle.
+- `portal/product-current.js` no longer replaces Home, Agenda or activity-modal functions; its remaining profile/navigation/session-refresh composition is still technical debt.
+
+This is why script load order must be treated as part of the runtime contract. The new ownership test checks that these functions are declared by their canonical feature modules and are not replaced by the remaining composition file.
