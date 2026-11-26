@@ -66,12 +66,12 @@ test('Admin WhatsApp remains disabled when the volunteer has no valid activity',
 
 test('Admin WhatsApp button exits spinner after opening the share target',async({page})=>{
   await login(page);
-  await page.route('https://api.whatsapp.com/**',route=>route.fulfill({status:200,contentType:'text/html',body:'<title>WhatsApp mock</title>'}));
+  await page.context().route('https://api.whatsapp.com/**',route=>route.fulfill({status:200,contentType:'text/html',body:'<title>WhatsApp mock</title>'}));
   await openPlanningBoardVolunteer(page,'Voluntário E2E');
   const button=page.locator('.admin-planning-share-bar .planning-share-action');
   await expect(button).toBeEnabled({timeout:20_000});
   const popupPromise=page.waitForEvent('popup');await button.click();const popup=await popupPromise;
-  await popup.waitForURL(/api\.whatsapp\.com\/send/,{timeout:20_000});await page.bringToFront();
+  await expect.poll(()=>popup.url(),{timeout:20_000}).toMatch(/api\.whatsapp\.com\/send/);await page.bringToFront();
   await expect(button).toBeDisabled();await expect(button).toContainText('Compartilhado');
   const icon=button.locator('i');await expect(icon).toHaveClass(/fa-whatsapp/);await expect(icon).not.toHaveClass(/fa-spin/);
   await popup.close();
@@ -79,12 +79,13 @@ test('Admin WhatsApp button exits spinner after opening the share target',async(
 
 test('Admin inactivation is persisted in History with the actor email',async({page})=>{
   await login(page);await openPlanningBoardVolunteer(page,'Aprovado E2E');
-  await page.evaluate(()=>window.requestInactivateApprovedVolunteer(encodeURIComponent('e2e-approved-application')));
+  await page.locator('.planning-profile-tabs').getByRole('button',{name:'Histórico'}).click();
+  const history=page.locator('.planning-history-r71');await expect(history).toBeVisible({timeout:20_000});
+  await history.getByRole('button',{name:/Inativar perfil/}).click();
   await expect(page.locator('#modalRoot')).toContainText('Inativar perfil?');
   await page.locator('#modalRoot').getByRole('button',{name:'Inativar',exact:true}).click();
   await expect.poll(()=>page.evaluate(()=>state.candidates.find(row=>row.id==='e2e-approved-application')?.active),{timeout:20_000}).toBe(false);
   await page.locator('.planning-profile-tabs').getByRole('button',{name:'Histórico'}).click();
-  const history=page.locator('.planning-history-r71');
   await expect(history).toContainText('Perfil inativado',{timeout:20_000});
   await expect(history).toContainText('admin@oleiro.test');
 });
