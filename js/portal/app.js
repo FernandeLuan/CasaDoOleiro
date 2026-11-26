@@ -36,18 +36,33 @@ async function resetEmptyAdjustmentState(application){
   if(!application?.id||application.status!=='adjustments'||!window.OleiroServices?.applications?.update)return;
   try{await window.OleiroServices.applications.update(application.id,{status:'pending',planningSubmittedAt:null,dayAdjustments:{}});application.status='pending';application.planningSubmittedAt=null;application.dayAdjustments={};state.volunteerPlanStatus='draft'}catch(error){console.warn('Não foi possível normalizar o planejamento vazio:',error)}
 }
+async function portalPlanningWithDeadline(task,label='Carregamento do planejamento',timeoutMs=12000){
+  let timer;
+  try{return await Promise.race([
+    Promise.resolve().then(task),
+    new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(label+' excedeu o tempo limite.')),timeoutMs)})
+  ])}finally{clearTimeout(timer)}
+}
 async function hydrateVolunteerPlanning(application,{force=false}={}){
-  if(!application?.id||!window.OleiroServices?.planning)return;const applicationId=String(application.id);if(!force&&state.volunteerPlanningLoadedFor===applicationId)return;
+  if(!application?.id){state.volunteerPlanningLoadedFor='';state.volunteerPlanningFailedFor=null;return []}
+  const applicationId=String(application.id);if(!force&&state.volunteerPlanningLoadedFor===applicationId)return state.sessions||[];
+  if(!window.OleiroServices?.planning?.listSessions){const error=new Error('Serviço de planejamento indisponível.');state.volunteerPlanningFailedFor=applicationId;state.volunteerPlanningError=error.message;throw error}
   const candidate=state.volunteerMode!=='approved',declaredEmpty=candidate&&Number(application.sessionCount||0)===0&&Number(application.activityCount||0)===0;
+  state.volunteerPlanningFailedFor=null;state.volunteerPlanningError='';
   try{
     if(!force&&declaredEmpty&&window.OleiroServices.planning.hasSessions){
       applyVolunteerPlanningRows(application,[]);
-      const hasAny=await window.OleiroServices.planning.hasSessions({applicationId});
-      if(!hasAny){await resetEmptyAdjustmentState(application);return []}
+      const hasAny=await portalPlanningWithDeadline(()=>window.OleiroServices.planning.hasSessions({applicationId}));
+      if(!hasAny){await portalPlanningWithDeadline(()=>resetEmptyAdjustmentState(application),'Atualização do planejamento');return []}
     }
-    const sessions=await window.OleiroServices.planning.listSessions({applicationId});applyVolunteerPlanningRows(application,sessions||[]);
-    if(candidate&&state.sessions.length===0)await resetEmptyAdjustmentState(application);return state.sessions;
-  }catch(error){state.volunteerPlanningFailedFor=applicationId;throw error}
+    const sessions=await portalPlanningWithDeadline(()=>window.OleiroServices.planning.listSessions({applicationId}));
+    applyVolunteerPlanningRows(application,sessions||[]);
+    if(candidate&&state.sessions.length===0)await portalPlanningWithDeadline(()=>resetEmptyAdjustmentState(application),'Atualização do planejamento');
+    return state.sessions;
+  }catch(error){
+    state.volunteerPlanningFailedFor=applicationId;state.volunteerPlanningError=String(error?.message||'Não foi possível carregar o planejamento.');
+    throw error;
+  }
 }
 async function bootVolunteer(){
   const session=await window.OleiroAuthGuard?.requireRole('volunteer');if(!session)return;state.role='volunteer';state.currentSession=session;state.currentApplication=session.application||null;state.volunteerMode=session.mode||'candidate';state.volunteerPlanStatus=planStatusFromApplication(session.application?.status);state.volunteerPage='home';state.activities=[];state.sessions=[];state.volunteerPlanningLoadedFor=null;state.volunteerPlanningFailedFor=null;state.projectOnboardingStep=0;state.projectLoading=true;render();Promise.allSettled([hydrateVolunteerPlanning(session.application),window.OleiroProjects?.loadOwn?.({force:true})]).then(results=>{state.projectLoading=false;const failure=results.find(result=>result.status==='rejected');if(failure)console.error('Falha ao carregar dados do Portal:',failure.reason);render()});
