@@ -167,3 +167,17 @@ The first runtime ownership migration is complete on the working branch:
 - The reviewed override contract is now empty, and a regression test verifies canonical ownership.
 
 This is a behavior-preserving extraction: the existing approved-mode Home rule, date range cap, editability checks, post-approval edit guard and modal fields are retained. The next high-priority debt is the History middleware in `js/services/history-hooks.js`, which decorates service methods at runtime; it remains explicitly tracked rather than being silently conflated with this Portal change.
+
+
+## Phase 1 progress — persistence boundary consolidation
+
+A second concrete boundary violation was found in Admin: `candidate-profile-details.js` wrote gender and registration-link changes directly to Firestore, while `product-current.js` contained a second implementation of stay-date persistence that overlapped `applications.changeStayDates`.
+
+The working branch now:
+- Moves participant-gender and registration-link writes into `js/services/application-service.js`, preserving atomic history events.
+- Routes Admin stay-date preview and commit through the application service.
+- Keeps the operational rule that arrival and departure days cannot contain sessions by expressing it as the service option `excludeBoundaryDays`.
+- Allows the service to consume the already-loaded planning sessions, avoiding a second Firestore read.
+- Adds architecture tests that reject direct Firestore SDK access from Admin/Portal UI modules and reject a return of the duplicate stay-date persistence path.
+
+The Admin `product-current.js` file still contains legacy function decorators/overrides; this change removes its direct persistence responsibility but does not claim that all Admin runtime overrides have been eliminated.
