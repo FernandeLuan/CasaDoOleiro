@@ -98,7 +98,7 @@
     ])
       .then(([meta,notes])=>{
         releaseMeta=meta||null;
-        RELEASE_HISTORY=Array.isArray(notes?.releases)?notes.releases:[];
+        RELEASE_HISTORY=Array.isArray(notes?.releases)?notes.releases.filter(release=>!Array.isArray(release?.audience)||!release.audience.length||release.audience.includes('volunteer')):[];
         const latest=RELEASE_HISTORY[0];
         if(latest){
           ANNOUNCEMENT={...ANNOUNCEMENT,...latest};
