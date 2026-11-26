@@ -44,13 +44,11 @@ function portalPlanningShareBar(){
   const hint=!hasActive?'Adicione pelo menos uma atividade para habilitar o compartilhamento.':button.hint;
   return `<div class="planning-share-bar portal-planning-share-bar"><button id="portalPlanningShareButton" class="planning-share-action ${button.disabled?'is-complete':''}" type="button" onclick="sharePortalPlanningWhatsApp()" ${disabled?'disabled aria-disabled="true"':''}><i class="fa-brands fa-whatsapp"></i><span>${escapeHtml(label)}</span></button>${hint?`<small class="planning-share-disabled-hint">${escapeHtml(hint)}</small>`:''}</div>`;
 }
-function startPortalShareCooldown(){
-  const until=Date.now()+PORTAL_SHARE_COOLDOWN_MS;
-  try{sessionStorage.setItem(portalShareCooldownKey(),String(until))}catch{}
+function syncPortalShareCooldownTimer(){
   if(window.__oleiroPortalShareTimer)clearInterval(window.__oleiroPortalShareTimer);
   const update=()=>{
     const button=document.getElementById('portalPlanningShareButton');
-    if(!button){if(Date.now()>=until)clearInterval(window.__oleiroPortalShareTimer);return}
+    if(!button)return;
     const status=portalShareButtonState();
     button.disabled=status.disabled;button.setAttribute('aria-disabled',String(status.disabled));
     const label=button.querySelector('span');if(label)label.textContent=status.label;
@@ -59,8 +57,15 @@ function startPortalShareCooldown(){
     else if(hint)hint.remove();
     if(!status.disabled){button.classList.remove('is-complete');clearInterval(window.__oleiroPortalShareTimer);window.__oleiroPortalShareTimer=null}
   };
+  if(portalShareCooldownUntil()<=Date.now())return;
   update();window.__oleiroPortalShareTimer=setInterval(update,1000);
 }
+function startPortalShareCooldown(){
+  const until=Date.now()+PORTAL_SHARE_COOLDOWN_MS;
+  try{sessionStorage.setItem(portalShareCooldownKey(),String(until))}catch{}
+  syncPortalShareCooldownTimer();
+}
+window.syncPortalShareCooldownTimer=syncPortalShareCooldownTimer;
 window.sharePortalPlanningWhatsApp=function(){
   if(!portalPlanningShareAllowed())return showToast(t('planning.share.none'));
   const sessions=activeCandidateSessions();
