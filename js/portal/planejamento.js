@@ -169,3 +169,14 @@ async function submitPlan(){
   }catch(error){console.error(error);showToast(error?.message||'Não foi possível enviar o planejamento.')}
 }
 function openQuickSession(date=null){openActivityModal(date||volunteerStayDates()[0]||null)}
+
+function planStatusFromApplication(status){return status==='adjustments'?'adjustments':status==='analysis'?'submitted':status==='approved'?'approved':status==='rejected'?'rejected':'draft'}
+function portalPlanActivities(application,sessions){
+  const byActivity=new Map();
+  (sessions||[]).forEach(session=>{const id=String(session.activityId||'');if(!id)return;let activity=byActivity.get(id);if(!activity){activity={id,applicationId:String(application?.id||''),name:session.activityName||'Atividade',description:session.activityDescription||'',duration:Number(session.duration)||60,participation:session.participation||'Livre',materials:session.materials||'',notes:session.notes||'',period:activityPeriodValue(session),time:session.time||'',ownerName:session.ownerName||'',createdByUid:session.createdByUid||'',managerCreated:session.managerCreated===true,postApprovalProposal:session.postApprovalProposal===true,reviewStatus:session.reviewStatus||'',reviewNote:session.reviewNote||'',dates:[]};byActivity.set(id,activity)}if(session.date&&!activity.dates.includes(session.date))activity.dates.push(session.date);if(!activity.time&&session.time)activity.time=session.time;if(session.managerCreated===true)activity.managerCreated=true;if(session.postApprovalProposal===true){activity.postApprovalProposal=true;activity.reviewStatus=session.reviewStatus||activity.reviewStatus;activity.reviewNote=session.reviewNote||activity.reviewNote}});
+  byActivity.forEach(activity=>activity.dates.sort());return [...byActivity.values()];
+}
+function applyVolunteerPlanningRows(application,sessions){
+  state.sessions=sessions||[];state.activities=portalPlanActivities(application,state.sessions);state.sessionStatus={};state.sessionGroups={};
+  state.sessions.forEach(session=>{if(session.activityId&&session.date){state.sessionStatus[`${session.activityId}-${session.date}`]=session.status||'proposed';state.sessionGroups[`${session.activityId}-${session.date}`]=session.groupId||'A definir'}});state.volunteerPlanningLoadedFor=String(application.id);state.volunteerPlanningFailedFor=null;
+}
