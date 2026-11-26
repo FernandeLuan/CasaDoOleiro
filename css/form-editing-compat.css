@@ -14,5 +14,4 @@ select,
 :where(input[type="email"], input[autocomplete="email"], input[inputmode="email"]) {
   text-align: start;
   text-transform: none;
-  autocapitalize: none;
 }
