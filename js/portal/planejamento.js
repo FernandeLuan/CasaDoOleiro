@@ -7,7 +7,7 @@ function portalShareCooldownUntil(){
   try{return Number(sessionStorage.getItem(portalShareCooldownKey())||0)||0}catch{return 0}
 }
 function portalShareableSession(row){
-  if(!row||!String(row.activityId||'').trim()||!/^\\d{4}-\\d{2}-\\d{2}$/.test(String(row.date||'')))return false;
+  if(!row||!String(row.activityId||'').trim()||!/^\d{4}-\d{2}-\d{2}$/.test(String(row.date||'')))return false;
   const status=String(row.status||'proposed').toLowerCase(),review=String(row.reviewStatus||'').toLowerCase();
   return !['rejected','cancelled','canceled','deleted','inactive','removed'].includes(status)
     && !['rejected','cancelled','canceled','deleted','inactive','removed'].includes(review);
