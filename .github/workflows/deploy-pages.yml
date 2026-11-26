@@ -58,7 +58,7 @@ jobs:
               'appId': '1:391973666005:web:5ab4e4a406b591cccc765c',
           }
           Path('_site/js/firebase/firebase-config.js').write_text(
-              'window.OLEIRO_FIREBASE_CONFIG = ' + json.dumps(config, separators=(',', ':')) + ';\\n',
+              'window.OLEIRO_FIREBASE_CONFIG = ' + json.dumps(config, separators=(',', ':')) + ';\n',
               encoding='utf-8',
           )
           PY
@@ -84,7 +84,7 @@ jobs:
               'release': f'casa-do-oleiro@{sha}' if sha else 'casa-do-oleiro@unknown',
           }
           Path('_site/js/shared/monitoring-config.js').write_text(
-              'window.OLEIRO_SENTRY_CONFIG = Object.freeze(' + json.dumps(config, separators=(',', ':')) + ');\\n',
+              'window.OLEIRO_SENTRY_CONFIG = Object.freeze(' + json.dumps(config, separators=(',', ':')) + ');\n',
               encoding='utf-8',
           )
           PY
