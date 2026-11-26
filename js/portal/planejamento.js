@@ -40,7 +40,7 @@ function portalShareButtonState(){
   return {disabled:true,label:'Compartilhado',hint:`Você poderá compartilhar novamente em ${minutes}:${rest}.`};
 }
 function portalPlanningShareBar(){
-  if(!portalPlanningShareAllowed())return '';
+  if(!portalPlanningShareAllowed()||activeCandidateSessions().length===0)return '';
   const button=portalShareButtonState(),disabled=button.disabled;
   const label=button.label;
   const hint=button.hint;
@@ -93,8 +93,9 @@ window.sharePortalPlanningWhatsApp=function(){
   const text=window.OleiroPlanningShare?.buildText({heading:portalPlanningShareHeading(),name,statusLabel:portalPlanningShareStatus(),unit,start:application.stayStart,end:application.stayEnd,sessions,labels:{status:t('planning.share.status'),unit:t('planning.share.unit'),period:t('planning.share.period'),observation:t('planning.share.observation')}})||'';
   if(!text)return showToast(t('planning.share.none'));
   const popup=window.OleiroPlanningShare?.reservePopup?.()||null;
-  const opened=window.OleiroPlanningShare?.openWhatsApp?.(text,{popup})===true;
-  if(!opened){window.OleiroPlanningShare?.closePopup?.(popup);return showToast('Não foi possível abrir o WhatsApp. Tente novamente.')}
+  let opened=false;
+  try{opened=window.OleiroPlanningShare?.openWhatsApp?.(text,{popup})===true}catch(error){console.error('Falha ao abrir WhatsApp:',error)}
+  if(!opened){window.OleiroPlanningShare?.closePopup?.(popup);return showToast('O navegador bloqueou a abertura do WhatsApp. Permita pop-ups ou tente novamente.')}
   startPortalShareCooldown();
 };
 
