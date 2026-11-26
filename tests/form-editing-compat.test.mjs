@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 const compatibilityCss = await readFile(new URL('../css/form-editing-compat.css', import.meta.url), 'utf8');
 
-test('iOS editing compatibility preserves text selection and contextual paste on editable controls', async () => {
+test('iOS editing compatibility preserves text selection and contextual paste on editable controls', async async () => {
   for (const selector of [
     'input:not([type="hidden"])',
     'textarea',
