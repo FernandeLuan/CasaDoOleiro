@@ -20,7 +20,7 @@ The application is a static HTML/CSS/JavaScript frontend. Admin and Portal have 
 
 ### A1 — Script-order and global-scope coupling (high)
 
-Both entry points load many classic scripts in a fixed sequence. Modules publish globals and later modules decorate or replace functions. For example, `js/portal/app.js` captures and reassigns `volunteerHome`, replaces `openActivityModal`, and owns boot/render orchestration. Admin modules similarly share the global `state`, service namespace and rendering functions.
+Both entry points load many classic scripts in a fixed sequence. Modules publish globals and later modules decorate or replace functions. Historically, the Portal bootstrap and late-loaded compatibility files replaced feature functions. The working branch removes the Home, Agenda, Stay and activity-modal replacements from the Portal runtime and retires `experience-summary.js`. Remaining composition still exists in `js/portal/product-current.js` (profile/navigation/session refresh), `js/admin/product-current.js` and `js/services/history-hooks.js`. Both applications continue to share the global `state`, service namespace and rendering functions.
 
 Impact: changing script order or a function owner can silently break a distant workflow. A file boundary does not necessarily represent an independent module boundary.
 
@@ -149,11 +149,7 @@ The current `js/` tree should not be moved wholesale in one change. Keep the dep
 
 ## Phase 1 progress — first guarded contract
 
-The first executable contract is now recorded in `docs/runtime-contract-overrides.json`. It inventories the four currently observed Portal function replacements in `js/portal/app.js` (two assignments to `volunteerHome`, one to `volunteerStayDates`, and one to `openActivityModal`). The ownership intent and exit criteria are recorded per symbol.
-
-`tests/runtime-architecture.test.mjs` now compares the source assignments with that explicit contract. An unreviewed addition, removal, or count change fails the architecture test and requires a deliberate contract review. This is intentionally a narrow first guard, not a claim that every global write in Admin and Portal has been inventoried.
-
-Next migration target: move the two `volunteerHome` presentation adapters into the canonical home feature, then move the date selector and activity-modal orchestration behind explicit feature APIs. Each move must preserve current behavior and pass Portal E2E before the compatibility assignments are removed.
+The first executable contract originally inventoried four Portal replacements in `js/portal/app.js`. Those replacements have now been removed, and the contract in `docs/runtime-contract-overrides.json` is empty. `tests/runtime-architecture.test.mjs` checks that the bootstrap stays free of function replacement. Additional ownership tests cover the actual late-loaded feature replacements discovered in `experience-summary.js` and `portal/product-current.js`. This remains a focused guard, not a complete inventory of every global write in Admin and Portal.
 
 
 ## Phase 1 progress — Portal ownership consolidation
@@ -166,7 +162,7 @@ The first runtime ownership migration is complete on the working branch:
 - `js/portal/app.js` retains bootstrap, session hydration and route rendering; it no longer replaces `volunteerHome`, `volunteerStayDates` or `openActivityModal`.
 - The reviewed override contract is now empty, and a regression test verifies canonical ownership.
 
-This is a behavior-preserving extraction: the existing approved-mode Home rule, date range cap, editability checks, post-approval edit guard and modal fields are retained. The next high-priority debt is the History middleware in `js/services/history-hooks.js`, which decorates service methods at runtime; it remains explicitly tracked rather than being silently conflated with this Portal change.
+This is a behavior-preserving extraction: the existing approved-mode Home rule, date range cap, editability checks, post-approval edit guard and modal fields are retained. The next high-priority debt is the History middleware in `js/services/history-hooks.js` and the remaining Admin decorators in `js/admin/product-current.js`; both remain explicitly tracked rather than being silently conflated with this Portal change.
 
 
 ## Phase 1 progress — persistence boundary consolidation
