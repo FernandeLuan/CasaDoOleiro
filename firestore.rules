@@ -792,7 +792,7 @@ service cloud.firestore {
         && (
           (
             resource.data.status in ['draft', 'adjustments']
-            && request.resource.data.status in ['draft', 'analysis']
+            && request.resource.data.status in ['draft', 'adjustments', 'analysis']
             && changed.hasOnly([
               'title', 'category', 'description', 'why', 'expectedResult',
               'materials', 'driveUrl', 'allowContinuation', 'status',
