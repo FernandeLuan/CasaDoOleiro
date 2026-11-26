@@ -3,6 +3,13 @@
   const baseRenderPersonModal=renderPersonModal;
 
   function safe(value){return encodeURIComponent(String(value??''))}
+  function syncLifecycleAccess(p,active){
+    const key=String(p?.id||'');if(!key)return;
+    state.participantAccessCache=state.participantAccessCache||{};
+    const previous=state.participantAccessCache[key]||{};
+    state.participantAccessCache[key]=Object.fromEntries((p.participantUids||[]).map(uid=>{const id=String(uid);return [id,{...(previous[id]||{}),id,active}]}));
+    state.adminAccountReadAt=state.adminAccountReadAt||{};state.adminAccountReadAt[key]=Date.now();
+  }
   function patchApprovedLifecycleButton(p,tab){
     if(tab!=='account'||p?.status!=='approved'||!p?.inactive)return;
     const actions=modalRoot.querySelector('.account-lifecycle-actions');if(!actions)return;
@@ -17,11 +24,11 @@
   };
   window.confirmInactivateApprovedVolunteer=async function(encodedId){
     const id=decodeURIComponent(encodedId),p=candidateById(id);if(!p)return;
-    try{await window.OleiroServices.applications.updateLifecycle(p.id,{applicationPatch:{active:false,needsAdminAttention:false},participantUids:p.participantUids||[],participantActive:false});p.active=false;p.inactive=true;renderPersonModal(p,'account');showToast('Perfil inativado. O planejamento aprovado foi mantido.')}catch(error){console.error(error);showToast(error?.message||'Não foi possível inativar o perfil.')}
+    try{await window.OleiroServices.applications.updateLifecycle(p.id,{applicationPatch:{active:false,needsAdminAttention:false},participantUids:p.participantUids||[],participantActive:false});p.active=false;p.inactive=true;syncLifecycleAccess(p,false);renderPersonModal(p,'account');showToast('Perfil inativado. O planejamento aprovado foi mantido.')}catch(error){console.error(error);showToast(error?.message||'Não foi possível inativar o perfil.')}
   };
   window.reactivateApprovedVolunteer=async function(encodedId){
     const id=decodeURIComponent(encodedId),p=candidateById(id);if(!p||p.status!=='approved')return;
-    try{await window.OleiroServices.applications.updateLifecycle(p.id,{applicationPatch:{active:true,needsAdminAttention:false},participantUids:p.participantUids||[],participantActive:true});p.active=true;p.inactive=false;renderPersonModal(p,'account');showToast('Perfil reativado.')}catch(error){console.error(error);showToast(error?.message||'Não foi possível reativar o perfil.')}
+    try{await window.OleiroServices.applications.updateLifecycle(p.id,{applicationPatch:{active:true,needsAdminAttention:false},participantUids:p.participantUids||[],participantActive:true});p.active=true;p.inactive=false;syncLifecycleAccess(p,true);renderPersonModal(p,'account');showToast('Perfil reativado.')}catch(error){console.error(error);showToast(error?.message||'Não foi possível reativar o perfil.')}
   };
 
   window.renderPersonModal=renderPersonModal;
