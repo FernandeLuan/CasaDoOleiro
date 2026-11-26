@@ -65,6 +65,12 @@
     modalRoot?.querySelector?.('.modal')?.classList.add('modal-wide');
   };
   function maybeAnnounce(){
+    const demoProject=String(window.OLEIRO_FIREBASE_CONFIG?.projectId||'').startsWith('demo-');
+    const localTestHost=['localhost','127.0.0.1'].includes(location.hostname);
+    const previewBuild=window.OLEIRO_PREVIEW_ENABLED===true;
+    const automatedBrowser=typeof navigator!=='undefined'&&navigator.webdriver===true;
+    const emulatorSession=(()=>{try{return sessionStorage.getItem('oleiro-e2e')==='1'}catch{return false}})();
+    if(demoProject||localTestHost||previewBuild||automatedBrowser||emulatorSession)return;
     if(popupOpened||!loaded||!latest||!audienceOf(latest).includes('admin')||!state?.currentSession?.uid||state.role!=='manager'||state.managerPage!=='home'||seen())return;
     popupOpened=true;
     setTimeout(()=>{if(state?.role==='manager'&&state?.managerPage==='home'&&!seen())window.openAdminReleaseNotes()},500);
