@@ -107,8 +107,8 @@
     const source=(rows||[]).map(row=>({...row})),uids=[...new Set(source.filter(row=>row?.actorUid&&!String(row.actorEmail||'').trim()&&!usableActorName(row.actorLabel)&&String(row.actorRole||'').toLowerCase()!=='system').map(row=>String(row.actorUid)))];
     if(!uids.length||!window.OleiroServices?.users?.getByIds)return source;
     try{
-      const users=await window.OleiroServices.users.getByIds(uids),byId=new Map((users||[]).filter(user=>!user?.missing).map(user=>[String(user.id),String(user.displayName||user.name||'').trim()]));
-      source.forEach(row=>{const name=byId.get(String(row.actorUid||''));if(name)row.actorLabel=name});
+      const users=await window.OleiroServices.users.getByIds(uids),byId=new Map((users||[]).filter(user=>!user?.missing).map(user=>[String(user.id),{name:String(user.displayName||user.name||'').trim(),email:String(user.email||'').trim().toLowerCase()}]));
+      source.forEach(row=>{const actor=byId.get(String(row.actorUid||''));if(!actor)return;if(!String(row.actorEmail||'').trim()&&actor.email)row.actorEmail=actor.email;if(!usableActorName(row.actorLabel)&&actor.name)row.actorLabel=actor.name});
     }catch(error){console.warn('Não foi possível resolver os autores do histórico:',error)}
     return source;
   }
