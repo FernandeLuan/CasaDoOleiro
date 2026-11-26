@@ -268,15 +268,15 @@ test('Portal screen modules own their functions without bootstrap overrides',()=
   const home=readFileSync('js/portal/home.js','utf8');
   const stay=readFileSync('js/portal/estadia.js','utf8');
   const planning=readFileSync('js/portal/planejamento.js','utf8');
-  assert.doesNotMatch(app,/^\\s*(?:volunteerHome|volunteerStayDates|openActivityModal)\\s*=\\s*function/gm);
-  assert.match(home,/function volunteerHome\\s*\\(/);
-  assert.match(stay,/function volunteerStayDates\\s*\\(/);
-  assert.match(planning,/function openActivityModal\\s*\\(/);
-  assert.doesNotMatch(home,/function volunteerStayDates\\s*\\(/);
-  assert.doesNotMatch(app,/window\\.volunteerHome=volunteerHome/);
+  assert.doesNotMatch(app,/^\s*(?:volunteerHome|volunteerStayDates|openActivityModal)\s*=\s*function/gm);
+  assert.match(home,/function volunteerHome\s*\(/);
+  assert.match(stay,/function volunteerStayDates\s*\(/);
+  assert.match(planning,/function openActivityModal\s*\(/);
+  assert.doesNotMatch(home,/function volunteerStayDates\s*\(/);
+  assert.doesNotMatch(app,/window\.volunteerHome=volunteerHome/);
 });
 
 test('approved volunteer home hides candidate-only information in its canonical renderer',()=>{
   const home=readFileSync('js/portal/home.js','utf8');
-  assert.match(home,/\\$\\{approved\\?'':/);
+  assert.match(home,/\$\\{approved\\?'':/);
 });
