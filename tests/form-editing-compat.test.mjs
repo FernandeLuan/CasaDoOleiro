@@ -30,9 +30,9 @@ for (const [entry, href] of [
 
 test('shared navigation does not cancel native double-click text selection or contextual paste', async () => {
   const navigation = await readFile(new URL('../js/shared/navigation.js', import.meta.url), 'utf8');
-  assert.doesNotMatch(navigation, /document\\.addEventListener\\(['"]dblclick['"],\\s*e\\s*=>\\s*e\\.preventDefault/);
-  assert.match(compatibilityCss, /-webkit-touch-callout:\\s*default\\s*!important/);
-  assert.match(compatibilityCss, /user-select:\\s*text\\s*!important/);
+  assert.ok(!navigation.includes("document.addEventListener('dblclick',e=>e.preventDefault()"));
+  assert.match(compatibilityCss, /-webkit-touch-callout:\s*default\s*!important/);
+  assert.match(compatibilityCss, /user-select:\s*text\s*!important/);
 });
 
 test('new-candidate fields expose native iOS email and phone input hints', async () => {
