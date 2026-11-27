@@ -39,7 +39,9 @@ async function login(page,email,password,target,language='pt'){
 
 const navAction=(page,label)=>page.locator('.admin-sidebar-r62 button:visible').filter({hasText:label}).or(page.getByRole('navigation').getByRole('button',{name:new RegExp(label)})).first();
 async function openGroupsFromSettings(page){
-  await page.locator('.admin-content-r62>.app-header .header-actions button[aria-label="Configurações"]:visible').click();
+  const settingsButton=page.locator('.admin-sidebar-account-r62 button').filter({hasText:'Configurações'}).or(page.locator('.admin-content-r62 .app-header .header-actions button[aria-label="Configurações"]')).or(page.getByRole('button',{name:/Configurações/})).filter({visible:true}).first();
+  await expect(settingsButton).toBeVisible({timeout:15_000});
+  await settingsButton.click();
   await page.locator('.asc-category-grid .asc-tile').filter({hasText:'Casa do Oleiro'}).click();
   await page.locator('.asc-actions .asc-tile').filter({hasText:'Grupos'}).click();
   await expect(page.locator('.groups-page-grid')).toBeVisible({timeout:20_000});
