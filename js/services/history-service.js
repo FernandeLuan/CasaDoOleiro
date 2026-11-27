@@ -65,8 +65,8 @@
             console.warn('Consulta ordenada do histórico indisponível; tentando leitura compatível.',orderedError);
             snapshot=await firestore.getDocs(firestore.query(collection,firestore.limit(200)));
             const docs=[...snapshot.docs].sort((a,b)=>{
-              const av=a.data()?.createdAt?.toMillis?.()??new Date(a.data()?.createdAt||0).getTime()||0;
-              const bv=b.data()?.createdAt?.toMillis?.()??new Date(b.data()?.createdAt||0).getTime()||0;
+              const av=(a.data()?.createdAt?.toMillis?.()??new Date(a.data()?.createdAt||0).getTime()??0);
+              const bv=(b.data()?.createdAt?.toMillis?.()??new Date(b.data()?.createdAt||0).getTime()??0);
               return bv-av;
             }).slice(0,max);
             services.recordQuery?.('applications/history',started,snapshot.size,{applicationId:String(applicationId),limit:max,fallback:true});
