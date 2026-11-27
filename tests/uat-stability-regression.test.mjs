@@ -42,9 +42,9 @@ test('admin version panel removes the details link and waits for authenticated h
   assert.ok(release.includes("const demoProject=String(window.OLEIRO_FIREBASE_CONFIG?.projectId||'').startsWith('demo-')"));
   assert.match(release, /const automatedBrowser=typeof navigator!=='undefined'&&navigator\.webdriver===true/);
   const notes = JSON.parse(await read('../release-notes.json'));
-  assert.equal(notes.releases[0].version, '383');
+  assert.equal(notes.releases[0].version, '384');
   assert.ok(notes.releases[0].audience.includes('admin'));
-  assert.ok(notes.releases[0].audience.includes('volunteer'));
+  assert.ok(notes.releases[1].audience.includes('volunteer'));
 });
 
 test('project read permissions remain scoped to active users and their own project IDs', async () => {
@@ -162,9 +162,10 @@ test('Admin lifecycle writes the audit event atomically and invalidates history 
   assert.ok(application.includes('window.OleiroUI?.invalidateHistoryCache?.(historyKey)'));
 });
 
-test('Admin history reads from Firestore server and surfaces query failures', async () => {
+test('Admin history uses the compatible Firestore reader and surfaces query failures', async () => {
   const history = await read('../js/services/history-service.js');
-  assert.ok(history.includes('getDocsFromServer||firestore.getDocs'));
+  assert.ok(history.includes('const snapshot=await firestore.getDocs(query)'));
+  assert.ok(history.includes('cache/server behavior'));
   assert.ok(history.includes('Falha ao consultar o histórico persistido da candidatura'));
   assert.ok(!history.includes('fallback:true'));
 });
@@ -180,4 +181,43 @@ test('Admin Projects uses the Planning empty-state frame and skeleton loading',a
   assert.ok(styles.includes('.project-ui-empty{width:100%;min-height:188px!important'));
   assert.ok(styles.includes('.legacy-admin-page-clean{max-width:1180px}'));
   assert.ok(adminHtml.includes('projects-empty-skeleton-align-1'));
+});
+
+
+test('Admin refinements include inactive volunteers, consistent empty states and delayed skeletons',async()=>{
+  const planning=await read('../js/admin/planning-page.js');
+  const board=await read('../js/admin/planning-board.js');
+  const mobileFilters=await read('../js/admin/planning-mobile-filters.js');
+  const projects=await read('../js/admin/projects.js');
+  const boardCss=await read('../css/planning-board.css');
+  assert.ok(planning.includes("function adminPlanningShareAllowed(p){return !!p&&p.status!=='rejected'}"));
+  assert.ok(planning.includes('window.adminPlanningShareBar=adminPlanningShareBar'));
+  assert.ok(!planning.includes('Adicione uma atividade válida ao planejamento para habilitar o compartilhamento.'));
+  assert.ok(!board.includes("p.status==='rejected'||p.inactive"));
+  assert.ok(board.includes('state.planningBoardShowSkeleton'));
+  assert.ok(board.includes('},220)'));
+  assert.ok(!mobileFilters.includes("String(state.planningBoardView||'day')!=='day'"));
+  assert.ok(!mobileFilters.includes("person?.status==='rejected'||person?.inactive"));
+  assert.ok(projects.includes('projects-loading-placeholder'));
+  assert.ok(boardCss.includes('.planning-board-empty,.project-ui-empty'));
+});
+
+test('Admin account risk actions include separate deletion and lifecycle controls',async()=>{
+  const details=await read('../js/admin/candidate-detail-data.js');
+  assert.ok(details.includes('requestDeleteVolunteerApplication'));
+  assert.ok(details.includes('${accountLifecycle(p)}'));
+  assert.ok(details.includes('Inativar usuário'));
+  assert.ok(details.includes('Reativar usuário'));
+});
+
+test('version metadata announces new builds and describes release contents',async()=>{
+  const portal=await read('../js/portal/release-notes.js');
+  const admin=await read('../js/admin/release-notes.js');
+  const account=await read('../js/admin/account-settings.js');
+  const home=await read('../js/portal/home.js');
+  assert.ok(portal.includes('checkForNewBuild'));
+  assert.ok(admin.includes('checkForNewBuild'));
+  assert.ok(admin.includes('O que há de novo'));
+  assert.ok(account.includes('max-height:min(86vh,760px)'));
+  assert.ok(!home.includes('>Ver agenda</button>'));
 });
