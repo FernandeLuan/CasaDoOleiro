@@ -58,31 +58,35 @@ test('Admin WhatsApp remains disabled when the volunteer has no valid activity',
   const button=page.locator('.admin-planning-share-bar .planning-share-action');
   await expect(button).toBeVisible();await expect(button).toBeDisabled({timeout:20_000});
   await expect(button).toContainText('Sem atividades para compartilhar');
-  await expect(page.locator('.admin-planning-share-bar')).toContainText('Adicione uma atividade válida');
+  await expect(page.locator('.admin-planning-share-bar')).not.toContainText('Adicione uma atividade válida');
 });
 
-test('Admin WhatsApp button exits spinner after opening the share target',async({page})=>{
+test('Admin WhatsApp button hands the message to the native launcher and clears the spinner',async({page})=>{
   await login(page);
-  await page.context().route('https://api.whatsapp.com/**',route=>route.fulfill({status:200,contentType:'text/html',body:'<title>WhatsApp mock</title>'}));
   await openPlanningBoardVolunteer(page,'Voluntário E2E');
+  await page.evaluate(()=>{
+    window.__adminSharedMessage='';
+    window.OleiroPlanningShare.openNativeWhatsApp=(message)=>{window.__adminSharedMessage=String(message||'');return true};
+  });
   const button=page.locator('.admin-planning-share-bar .planning-share-action');
   await expect(button).toBeEnabled({timeout:20_000});
-  const popupPromise=page.waitForEvent('popup');await button.click();const popup=await popupPromise;
-  await expect.poll(()=>popup.url(),{timeout:20_000}).toMatch(/api\.whatsapp\.com\/send/);await page.bringToFront();
+  await button.click();
+  await expect.poll(()=>page.evaluate(()=>window.__adminSharedMessage)).toContain('Voluntário E2E');
   await expect(button).toBeDisabled();await expect(button).toContainText('Compartilhado');
   const icon=button.locator('i');await expect(icon).toHaveClass(/fa-whatsapp/);await expect(icon).not.toHaveClass(/fa-spin/);
-  await popup.close();
 });
 
 test('Admin inactivation is persisted in History with the actor email',async({page})=>{
   await login(page);await openPlanningBoardVolunteer(page,'Aprovado E2E');
-  await page.locator('.planning-profile-tabs').getByRole('button',{name:'Histórico'}).click();
-  const history=page.locator('.planning-history-r71');await expect(history).toBeVisible({timeout:20_000});
-  await history.getByRole('button',{name:/Inativar perfil/}).click();
-  await expect(page.locator('#modalRoot')).toContainText('Inativar perfil?');
-  await page.locator('#modalRoot').getByRole('button',{name:'Inativar',exact:true}).click();
+  await page.locator('.planning-profile-tabs').getByRole('button',{name:'Conta'}).click();
+  const riskAction=page.locator('.account-danger-zone .account-risk-lifecycle');
+  await expect(riskAction).toContainText('Inativar usuário');
+  await riskAction.click();
+  await expect(page.locator('#modalRoot')).toContainText('Inativar usuário?');
+  await page.locator('#modalRoot').getByRole('button',{name:'Inativar usuário',exact:true}).click();
   await expect.poll(()=>page.evaluate(()=>state.candidates.find(row=>row.id==='e2e-approved-application')?.active),{timeout:20_000}).toBe(false);
   await page.locator('.planning-profile-tabs').getByRole('button',{name:'Histórico'}).click();
+  const history=page.locator('.planning-history-r71');await expect(history).toBeVisible({timeout:20_000});
   await expect(history).toContainText('Perfil inativado',{timeout:20_000});
   await expect(history).toContainText('admin@oleiro.test');
 });

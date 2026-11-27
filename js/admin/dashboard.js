@@ -26,6 +26,7 @@ function openDashboardVolunteerFilter(status){
   state.candidateUnit='all';
   state.candidateSearch='';
   navigateManager('volunteer');
+  setTimeout(()=>{if(document.activeElement&&document.activeElement!==document.body)document.activeElement.blur()},0);
 }
 function openDashboardProjectFilter(status){
   state.projectFilter=String(status||'all');

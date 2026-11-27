@@ -13,14 +13,14 @@
   function patchApprovedLifecycleButton(p,tab){
     if(tab!=='account'||p?.status!=='approved'||!p?.inactive)return;
     const actions=modalRoot.querySelector('.account-lifecycle-actions');if(!actions)return;
-    actions.innerHTML=`<button class="btn btn-soft btn-block" type="button" onclick="reactivateApprovedVolunteer('${safe(p.id)}')"><i class="fa-solid fa-rotate-left"></i>Reativar perfil</button>`;
+    actions.innerHTML=`<button class="btn btn-soft btn-block" type="button" onclick="reactivateApprovedVolunteer('${safe(p.id)}')"><i class="fa-solid fa-rotate-left"></i>Reativar usuário</button>`;
   }
 
   renderPersonModal=function(p,tab='plan'){const result=baseRenderPersonModal(p,tab);patchApprovedLifecycleButton(p,tab==='plan'?'plan':'account');return result};
 
   window.requestInactivateApprovedVolunteer=function(encodedId){
     const id=decodeURIComponent(encodedId),p=candidateById(id);if(!p||p.status!=='approved')return;
-    openModal('Inativar perfil?',`O acesso de ${escapeHtml(p.name)} será bloqueado.`,`<div class="notice warning"><i class="fa-solid fa-user-slash"></i><div>O planejamento aprovado permanece intacto. Somente o acesso ao portal e a presença ativa ficam bloqueados até a reativação.</div></div>`,`<div class="confirm-actions"><button class="btn btn-outline" type="button" onclick="renderPersonModal(candidateById('${escapeHtml(String(p.id))}'),'account')">Cancelar</button><button class="btn btn-danger" type="button" onclick="confirmInactivateApprovedVolunteer('${safe(p.id)}')">Inativar</button></div>`);
+    openModal('Inativar usuário?',`O acesso de ${escapeHtml(p.name)} será bloqueado.`,`<div class="notice warning"><i class="fa-solid fa-user-slash"></i><div>O planejamento aprovado permanece intacto. Somente o acesso ao portal e a presença ativa ficam bloqueados até a reativação.</div></div>`,`<div class="confirm-actions"><button class="btn btn-outline" type="button" onclick="renderPersonModal(candidateById('${escapeHtml(String(p.id))}'),'account')">Cancelar</button><button class="btn btn-danger" type="button" onclick="confirmInactivateApprovedVolunteer('${safe(p.id)}')">Inativar usuário</button></div>`);
   };
   window.confirmInactivateApprovedVolunteer=async function(encodedId){
     const id=decodeURIComponent(encodedId),p=candidateById(id);if(!p)return;

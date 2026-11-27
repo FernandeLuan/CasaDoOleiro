@@ -22,6 +22,13 @@
     if(document.getElementById('adminReleaseNotesStyles'))return;
     const style=document.createElement('style');style.id='adminReleaseNotesStyles';style.textContent=`
       .admin-account-release .release-info{display:grid;gap:7px}
+      .admin-account-release .admin-release-version-whatsnew{grid-column:1/-1;display:grid;gap:7px}
+      .admin-account-release .admin-release-version-whatsnew>strong{font-size:.6rem;color:var(--text)}
+      .admin-account-release .admin-release-items{display:grid;gap:7px}
+      .admin-account-release .admin-release-item{padding:8px;border-radius:10px}
+      .admin-account-release .admin-release-item>span{width:30px;height:30px;border-radius:9px}
+      .admin-account-release .admin-release-item strong{font-size:.59rem}
+      .admin-account-release .admin-release-item p{font-size:.54rem;line-height:1.4}
       .admin-account-release .release-info p{margin:0;color:var(--muted);font-size:.62rem;line-height:1.45}
       .admin-account-release .release-info strong{color:var(--text)}
       .admin-release-details{display:inline-flex;align-items:center;gap:7px;width:max-content;border:0;background:none;padding:2px 0;color:var(--primary);font:inherit;font-size:.62rem;font-weight:700;cursor:pointer}
@@ -45,6 +52,31 @@
       @media(max-width:520px){.admin-release-modal{gap:12px}}
     `;document.head.appendChild(style);
   }
+  let updatePromptOpen=false,updateCheckTimer=null;
+  async function checkForNewBuild(){
+    if(!meta?.commit||updatePromptOpen||!state?.currentSession?.uid||document.visibilityState==='hidden')return;
+    const demoProject=String(window.OLEIRO_FIREBASE_CONFIG?.projectId||'').startsWith('demo-');
+    const localTestHost=['localhost','127.0.0.1'].includes(location.hostname);
+    const previewBuild=window.OLEIRO_PREVIEW_ENABLED===true;
+    const automatedBrowser=typeof navigator!=='undefined'&&navigator.webdriver===true;
+    const emulatorSession=(()=>{try{return sessionStorage.getItem('oleiro-e2e')==='1'}catch{return false}})();
+    if(demoProject||localTestHost||previewBuild||automatedBrowser||emulatorSession)return;
+    try{
+      const response=await fetch('../release.json',{cache:'no-store'});
+      if(!response.ok)return;
+      const latestBuild=await response.json();
+      if(!latestBuild?.commit||latestBuild.commit===meta.commit)return;
+      if(modalRoot?.querySelector?.('.modal'))return;
+      updatePromptOpen=true;
+      openModal('Nova versão disponível','Salve suas alterações antes de atualizar.',`<div class="admin-release-modal"><p>Uma versão mais recente do Casa do Oleiro foi publicada. Salve qualquer informação que esteja editando e atualize o painel para receber as melhorias.</p><p><strong>Versão atual:</strong> ${esc(meta.build||'—')}<br><strong>Nova versão:</strong> ${esc(latestBuild.build||'—')}</p></div>`,`<div class="release-notes-actions"><button class="btn btn-primary btn-block" type="button" onclick="window.location.reload()">Já salvei minhas alterações — atualizar agora</button></div>`);
+    }catch(error){console.warn('Não foi possível verificar uma nova versão:',error)}
+  }
+  function startBuildPolling(){
+    if(updateCheckTimer)return;
+    updateCheckTimer=setInterval(checkForNewBuild,60000);
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkForNewBuild()});
+  }
+
   function releaseInformationHtml(){
     if(!loaded)return '<div class="release-info"><p>Carregando informações da versão...</p></div>';
     const published=publishedAtLabel(meta?.publishedAt||latest?.publishedAt);
@@ -57,12 +89,13 @@
       <p><strong>Ambiente:</strong> ${esc(environmentLabel)}</p>
       ${published?`<p><strong>Publicado em:</strong> ${esc(published)}</p>`:''}
       ${shortCommit?`<p><strong>Commit:</strong> <code title="${esc(commit)}">${esc(shortCommit)}</code></p>`:''}
-      <p><strong>Última atualização:</strong> ${esc(latest?.summary||'Informações da versão disponíveis.')}</p>
+      <div class="admin-release-version-whatsnew"><strong>O que há de novo</strong><div class="admin-release-items">${(Array.isArray(latest?.items)?latest.items:[]).map(itemHtml).join('')||`<p>${esc(latest?.summary||'Informações da versão disponíveis.')}</p>`}</div></div>
     </div>`;
   }
   function modalBody(){
     return `<div class="admin-release-modal">
       <div class="admin-release-intro"><span class="admin-release-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span><div><small>${esc(latest?.eyebrow||'Atualização do sistema')} <span>Versão ${esc(version())}</span></small><strong>${esc(latest?.title||'O que mudou?')}</strong><p>${esc(latest?.summary||'Confira as melhorias desta versão.')}</p></div></div>
+      <div class="admin-release-items">${(Array.isArray(latest?.items)?latest.items:[]).map(itemHtml).join('')}</div>
     </div>`;
   }
   window.openAdminReleaseNotes=function(){
@@ -89,7 +122,7 @@
       fetch('../release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null),
       fetch('../release-notes.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null)
     ]).then(([releaseMeta,notes])=>{
-      meta=releaseMeta||null;releases=Array.isArray(notes?.releases)?notes.releases:[];latest=releases[0]||null;loaded=true;
+      meta=releaseMeta||null;releases=Array.isArray(notes?.releases)?notes.releases:[];latest=releases[0]||null;loaded=true;startBuildPolling();
       window.releaseInformationHtml=releaseInformationHtml;
       maybeAnnounce();return latest;
     }).finally(()=>{loading=null});

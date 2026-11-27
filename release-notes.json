@@ -2,6 +2,74 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "id": "2026-11-27-admin-refinements-384",
+      "version": "384",
+      "audience": [
+        "admin"
+      ],
+      "eyebrow": "Atualização administrativa",
+      "title": "Mais visibilidade e controle na gestão",
+      "summary": "O histórico volta a carregar com leitura compatível, a área de risco reúne exclusão e inativação, e o planejamento inclui perfis inativos com compartilhamento controlado.",
+      "items": [
+        {
+          "icon": "fa-clock-rotate-left",
+          "title": "Histórico do candidato",
+          "text": "A consulta foi ajustada para usar a leitura padrão do Firestore, mantendo a compatibilidade com o cache e as versões do SDK em produção."
+        },
+        {
+          "icon": "fa-shield-halved",
+          "title": "Área de risco",
+          "text": "As ações de gerar comando de exclusão e inativar ou reativar o usuário ficam organizadas em controles separados."
+        },
+        {
+          "icon": "fa-users",
+          "title": "Planejamento inclusivo",
+          "text": "Perfis aprovados inativos e perfis aguardando reunião também aparecem na visão administrativa; o botão de WhatsApp permanece condicionado à existência de atividades válidas."
+        },
+        {
+          "icon": "fa-mobile-screen",
+          "title": "Interface e carregamento",
+          "text": "Estados vazios de Planejamento e Projetos recuperam a moldura tracejada padronizada, filtros deixam de indicar seleção inexistente e skeletons só aparecem em carregamentos demorados."
+        }
+      ],
+      "publishedAt": "2026-11-27"
+    },
+    {
+      "id": "2026-11-27-portal-refinements-384",
+      "version": "384",
+      "audience": [
+        "volunteer"
+      ],
+      "eyebrow": "Nova atualização",
+      "title": "Uma navegação mais direta",
+      "summary": "A tela inicial do voluntário fica mais objetiva, e o portal passa a avisar quando uma versão nova está disponível para atualização.",
+      "homeSlides": [
+        {
+          "title": "Atualização disponível",
+          "summary": "Quando uma nova versão for publicada, o portal avisará para você salvar suas alterações e atualizar."
+        },
+        {
+          "title": "Acesso direto à agenda",
+          "summary": "Acesse sua agenda pelo atalho principal, sem repetir o mesmo link na seção de próximas atividades."
+        }
+      ],
+      "items": [
+        {
+          "icon": "fa-rotate",
+          "title": "Aviso de nova versão",
+          "text": "O portal verifica se há uma versão mais recente e orienta você a salvar alterações antes de atualizar a página."
+        },
+        {
+          "icon": "fa-calendar-check",
+          "title": "Tela inicial mais objetiva",
+          "text": "O atalho duplicado “Ver agenda” foi removido da seção Próximas atividades; o acesso principal à agenda permanece disponível."
+        }
+      ],
+      "ctaLabel": "Entendi",
+      "ctaPage": "home",
+      "publishedAt": "2026-11-27"
+    },
+    {
       "id": "2026-11-25-portal-release-383",
       "version": "383",
       "audience": [

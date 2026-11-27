@@ -110,6 +110,7 @@
           ANNOUNCEMENT.items=Array.isArray(latest.items)?latest.items:[];
         }
         updateMetaLabels();
+        startBuildPolling();
         if(previousId!==ANNOUNCEMENT.id){
           pendingReleasePopupId=ANNOUNCEMENT.id;
           if(state?.volunteerPage==='home'&&typeof render==='function')render();
@@ -120,6 +121,31 @@
       .catch(()=>null)
       .finally(()=>{metaPromise=null});
     return metaPromise;
+  }
+
+  let updatePromptOpen=false,updateCheckTimer=null;
+  async function checkForNewBuild(){
+    if(!releaseMeta?.commit||updatePromptOpen||!state?.currentSession?.uid||document.visibilityState==='hidden')return;
+    const demoProject=String(window.OLEIRO_FIREBASE_CONFIG?.projectId||'').startsWith('demo-');
+    const localTestHost=['localhost','127.0.0.1'].includes(location.hostname);
+    const previewBuild=window.OLEIRO_PREVIEW_ENABLED===true;
+    const automatedBrowser=typeof navigator!=='undefined'&&navigator.webdriver===true;
+    const emulatorSession=(()=>{try{return sessionStorage.getItem('oleiro-e2e')==='1'}catch{return false}})();
+    if(demoProject||localTestHost||previewBuild||automatedBrowser||emulatorSession)return;
+    try{
+      const response=await fetch('../release.json',{cache:'no-store'});
+      if(!response.ok)return;
+      const latestBuild=await response.json();
+      if(!latestBuild?.commit||latestBuild.commit===releaseMeta.commit)return;
+      if(modalRoot?.querySelector?.('.modal'))return;
+      updatePromptOpen=true;
+      openModal('Nova versão disponível','Salve suas alterações antes de atualizar.',`<div class="release-notes-modal"><p>Uma versão mais recente do Casa do Oleiro foi publicada. Para receber as melhorias, salve qualquer informação que esteja editando e atualize o portal.</p><p><strong>Versão atual:</strong> ${esc(releaseMeta.build||'—')}<br><strong>Nova versão:</strong> ${esc(latestBuild.build||'—')}</p></div>`,`<div class="release-notes-actions"><button class="btn btn-primary btn-block" type="button" onclick="window.location.reload()">Já salvei minhas alterações — atualizar agora</button></div>`);
+    }catch(error){console.warn('Não foi possível verificar uma nova versão:',error)}
+  }
+  function startBuildPolling(){
+    if(updateCheckTimer)return;
+    updateCheckTimer=setInterval(checkForNewBuild,60000);
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkForNewBuild()});
   }
 
   function itemHtml(item){
@@ -466,6 +492,7 @@
         <span class="release-notes-modal-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
         <div><small>${esc(ANNOUNCEMENT.eyebrow)} <span data-release-meta></span></small><strong>${esc(ANNOUNCEMENT.title)}</strong><p>${esc(ANNOUNCEMENT.summary)}</p></div>
       </div>
+      <div class="release-notes-modal-items">${(Array.isArray(ANNOUNCEMENT.items)?ANNOUNCEMENT.items:[]).map(itemHtml).join('')}</div>
     </div>`;
     const footer=`<div class="release-notes-actions"><button class="btn btn-primary btn-block" type="button" onclick="closeModal()">Entendi</button></div>`;
     openModal('O que mudou?','',body,footer);

@@ -20,8 +20,7 @@
   }
   function activeFilters(){
     const defaults=defaultRange();
-    return String(state.planningBoardView||'day')!=='day'||
-      String(state.planningBoardStatus||'all')!=='all'||
+    return String(state.planningBoardStatus||'all')!=='all'||
       String(state.planningBoardUnit||'all')!=='all'||
       String(state.planningBoardFrom||defaults.from)!==defaults.from||
       String(state.planningBoardTo||defaults.to)!==defaults.to;
@@ -46,7 +45,7 @@
     const needle=normalized(term),status=String(state.planningBoardStatus||'all'),unit=String(state.planningBoardUnit||'all');
     if(!needle)return [];
     return (state.planningBoardCandidates||[]).filter(person=>{
-      if(person?.status==='rejected'||person?.inactive)return false;
+      if(person?.status==='rejected')return false;
       if(status!=='all'&&String(person?.status)!==status)return false;
       if(unit!=='all'&&String(person?.unitId||'')!==unit)return false;
       const hay=normalized(`${person?.name||''} ${person?.country||''} ${person?.unit||person?.unitName||''}`);

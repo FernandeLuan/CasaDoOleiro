@@ -108,3 +108,12 @@
   .planning-board-person-head{grid-template-columns:36px minmax(0,1fr) auto}
   .planning-board-person-head .avatar{width:36px;height:36px;flex-basis:36px}
 }
+
+
+/* Estado vazio compartilhado entre Planejamento e Projetos. */
+.planning-board-empty,.project-ui-empty{width:100%;min-height:188px!important;box-sizing:border-box;border:1px dashed var(--border);border-radius:16px;padding:20px;display:grid;place-items:center;text-align:center}
+.planning-board-empty>div,.project-ui-empty>div{display:grid;justify-items:center;gap:8px;max-width:100%;padding:0 8px}
+.planning-board-empty i,.project-ui-empty i{display:block;margin:0 0 2px;font-size:1.35rem;color:var(--primary)}
+.planning-board-empty span,.project-ui-empty span{font-size:.68rem;line-height:1.45;color:var(--muted)}
+
+.planning-board-loading-placeholder{grid-column:1/-1;min-height:188px}

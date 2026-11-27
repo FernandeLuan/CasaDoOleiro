@@ -124,18 +124,48 @@
     return uids.map((uid,index)=>{const access=cache[String(uid)]||{},email=emails[index]||access.email||'',name=names[index]||p.name||'Voluntário',first=access.firstPortalAccessAt,inactive=access.active===false;return `<div class="account-access-row"><div><strong>${escapeHtml(name)}</strong><span>${escapeHtml(email||'—')}</span><small>${inactive?'Acesso inativo':first?'Primeiro acesso realizado':'Ainda não acessou o portal'}</small></div>${!inactive&&!first?`<button class="btn btn-outline btn-xs" type="button" onclick="requestVolunteerEmailEdit('${safe(p.id)}','${safe(uid)}')"><i class="fa-solid fa-pen"></i>Editar e-mail</button>`:''}</div>`}).join('');
   }
   function accountLifecycle(p){
-    const id=safe(p.id);
-    if(p.status==='rejected'||p.inactive===true||p.active===false){const action=p.status==='approved'||p.inactivePreviousStatus==='approved'?`reactivateApprovedVolunteer('${id}')`:`reactivateCandidate(decodeURIComponent('${id}'))`;return `<button class="btn btn-soft btn-block" type="button" onclick="${action}"><i class="fa-solid fa-rotate-left"></i>Reativar perfil</button>`;}
-    if(p.status==='pending')return `<button class="btn btn-danger-soft btn-block" type="button" onclick="requestRejectPendingCandidate(decodeURIComponent('${id}'))"><i class="fa-solid fa-user-slash"></i>Inativar perfil</button>`;
-    if(['analysis','adjustments'].includes(p.status))return `<button class="btn btn-danger-soft btn-block" type="button" onclick="rejectCandidate(decodeURIComponent('${id}'))"><i class="fa-solid fa-user-slash"></i>Inativar perfil</button>`;
-    if(p.status==='approved')return `<button class="btn btn-danger-soft btn-block" type="button" onclick="requestInactivateApprovedVolunteer('${id}')"><i class="fa-solid fa-user-slash"></i>Inativar perfil</button>`;
-    return '';
+    const id=safe(p.id),inactive=p.inactive===true||p.active===false;
+    if(inactive||p.status==='rejected'){
+      if(p.status==='rejected')return `<button class="btn btn-soft btn-block account-risk-lifecycle" type="button" onclick="reactivateCandidate(decodeURIComponent('${id}'))"><i class="fa-solid fa-rotate-left"></i>Reativar usuário</button>`;
+      if(p.status==='approved')return `<button class="btn btn-soft btn-block account-risk-lifecycle" type="button" onclick="reactivateApprovedVolunteer('${id}')"><i class="fa-solid fa-rotate-left"></i>Reativar usuário</button>`;
+      return `<button class="btn btn-soft btn-block account-risk-lifecycle" type="button" onclick="reactivateVolunteerAccess('${id}')"><i class="fa-solid fa-rotate-left"></i>Reativar usuário</button>`;
+    }
+    if(p.status==='approved')return `<button class="btn btn-danger-soft btn-block account-risk-lifecycle" type="button" onclick="requestInactivateApprovedVolunteer('${id}')"><i class="fa-solid fa-user-slash"></i>Inativar usuário</button>`;
+    return `<button class="btn btn-danger-soft btn-block account-risk-lifecycle" type="button" onclick="requestInactivateVolunteerAccess('${id}')"><i class="fa-solid fa-user-slash"></i>Inativar usuário</button>`;
   }
+  window.requestInactivateVolunteerAccess=function(encodedId){
+    const id=decodeURIComponent(String(encodedId||'')),p=candidateById(id);if(!p||p.inactive===true||p.active===false||p.status==='rejected')return;
+    openModal('Inativar usuário?',`O acesso de ${escapeHtml(p.name||'este voluntário')} será bloqueado.`,`<div class="notice warning"><i class="fa-solid fa-user-slash"></i><div>O status da candidatura e o planejamento serão preservados. O usuário poderá ser reativado posteriormente.</div></div>`,`<div class="confirm-actions"><button class="btn btn-outline" type="button" onclick="closeModal()">Cancelar</button><button class="btn btn-danger" type="button" onclick="confirmInactivateVolunteerAccess('${safe(id)}')">Inativar usuário</button></div>`);
+  };
+  window.confirmInactivateVolunteerAccess=async function(encodedId){
+    const id=decodeURIComponent(String(encodedId||'')),p=candidateById(id);if(!p)return;
+    try{
+      await window.OleiroServices.applications.updateLifecycle(p.id,{applicationPatch:{active:false,needsAdminAttention:false},participantUids:p.participantUids||[],participantActive:false});
+      p.active=false;p.inactive=true;
+      const key=String(p.id),previous=state.participantAccessCache?.[key]||{};
+      state.participantAccessCache=state.participantAccessCache||{};
+      state.participantAccessCache[key]=Object.fromEntries((p.participantUids||[]).map(uid=>{const participantId=String(uid);return [participantId,{...(previous[participantId]||{}),id:participantId,active:false}]}));
+      state.adminAccountReadAt=state.adminAccountReadAt||{};state.adminAccountReadAt[key]=Date.now();
+      renderPersonModal(p,'account');showToast('Usuário inativado. O planejamento foi preservado.');
+    }catch(error){console.error(error);showToast(error?.message||'Não foi possível inativar o usuário.')}
+  };
+  window.reactivateVolunteerAccess=async function(encodedId){
+    const id=decodeURIComponent(String(encodedId||'')),p=candidateById(id);if(!p||p.status==='rejected'||!(p.inactive===true||p.active===false))return;
+    try{
+      await window.OleiroServices.applications.updateLifecycle(p.id,{applicationPatch:{active:true,needsAdminAttention:false},participantUids:p.participantUids||[],participantActive:true});
+      p.active=true;p.inactive=false;
+      const key=String(p.id),previous=state.participantAccessCache?.[key]||{};
+      state.participantAccessCache=state.participantAccessCache||{};
+      state.participantAccessCache[key]=Object.fromEntries((p.participantUids||[]).map(uid=>{const participantId=String(uid);return [participantId,{...(previous[participantId]||{}),id:participantId,active:true}]}));
+      state.adminAccountReadAt=state.adminAccountReadAt||{};state.adminAccountReadAt[key]=Date.now();
+      renderPersonModal(p,'account');showToast('Usuário reativado. O status e o planejamento foram preservados.');
+    }catch(error){console.error(error);showToast(error?.message||'Não foi possível reativar o usuário.')}
+  };
   window.candidateHistoryLifecycleActions=accountLifecycle;
   function accountContent(p){
     const status=personStatus(p),contacts=contactRows(p),{start,end}=personDates(p),unit=p.unit||p.unitName||'—';
     const meeting=typeof window.selectionAccountCard==='function'?window.selectionAccountCard(p):'';
-    return `<div class="admin-account-refactor"><div class="account-status-line"><span class="badge ${status.type}">${escapeHtml(status.label)}</span>${p.inactive&&p.status!=='rejected'?'<span class="badge danger">Inativo</span>':''}</div><div class="card account-contact-card">${contacts.map(person=>`<div class="account-person-row"><div class="avatar">${String(person.name||'V').split(/\s+/).filter(Boolean).map(v=>v[0]).slice(0,2).join('').toUpperCase()}</div><div><strong>${escapeHtml(person.name)}</strong><span>${escapeHtml(person.country)}</span><span>${escapeHtml(person.email)}</span><span>${escapeHtml(person.phone)}</span></div></div>`).join('')}</div><div class="card account-stay-card"><div class="account-card-head"><div><span class="eyebrow">Período</span><strong>${start&&end?`${fmtDate(start,true)}–${fmtDate(end,true)}`:'Não informado'}</strong></div><button class="btn btn-outline btn-xs" type="button" onclick="openStayDateEditor(decodeURIComponent('${safe(p.id)}'))"><i class="fa-regular fa-calendar"></i>Editar</button></div><div class="account-card-head account-unit-row"><div><span class="eyebrow">Unidade</span><strong>${escapeHtml(unit)}</strong></div><button class="btn btn-outline btn-xs" type="button" onclick="openVolunteerUnitEditor('${safe(p.id)}')"><i class="fa-solid fa-building"></i>Alterar</button></div></div>${meeting}${p.rejectedReason?`<div class="notice danger account-reason"><i class="fa-solid fa-circle-info"></i><div>${escapeHtml(p.rejectedReason)}</div></div>`:''}<div class="card account-access-card"><div class="account-section-title"><div><span class="eyebrow">Acesso</span><strong>Portal do voluntário</strong></div></div><div class="account-access-list">${accessRows(p)}</div></div><div class="card account-danger-zone"><span class="eyebrow">Área de risco</span><button class="btn btn-danger btn-block" type="button" onclick="requestDeleteVolunteerApplication('${safe(p.id)}')"><i class="fa-solid fa-terminal"></i>Gerar comando de exclusão</button><small>Nenhum dado é apagado pelo Admin. A exclusão completa é executada pelo Google Cloud Shell.</small></div></div>`;
+    return `<div class="admin-account-refactor"><div class="account-status-line"><span class="badge ${status.type}">${escapeHtml(status.label)}</span>${p.inactive&&p.status!=='rejected'?'<span class="badge danger">Inativo</span>':''}</div><div class="card account-contact-card">${contacts.map(person=>`<div class="account-person-row"><div class="avatar">${String(person.name||'V').split(/\s+/).filter(Boolean).map(v=>v[0]).slice(0,2).join('').toUpperCase()}</div><div><strong>${escapeHtml(person.name)}</strong><span>${escapeHtml(person.country)}</span><span>${escapeHtml(person.email)}</span><span>${escapeHtml(person.phone)}</span></div></div>`).join('')}</div><div class="card account-stay-card"><div class="account-card-head"><div><span class="eyebrow">Período</span><strong>${start&&end?`${fmtDate(start,true)}–${fmtDate(end,true)}`:'Não informado'}</strong></div><button class="btn btn-outline btn-xs" type="button" onclick="openStayDateEditor(decodeURIComponent('${safe(p.id)}'))"><i class="fa-regular fa-calendar"></i>Editar</button></div><div class="account-card-head account-unit-row"><div><span class="eyebrow">Unidade</span><strong>${escapeHtml(unit)}</strong></div><button class="btn btn-outline btn-xs" type="button" onclick="openVolunteerUnitEditor('${safe(p.id)}')"><i class="fa-solid fa-building"></i>Alterar</button></div></div>${meeting}${p.rejectedReason?`<div class="notice danger account-reason"><i class="fa-solid fa-circle-info"></i><div>${escapeHtml(p.rejectedReason)}</div></div>`:''}<div class="card account-access-card"><div class="account-section-title"><div><span class="eyebrow">Acesso</span><strong>Portal do voluntário</strong></div></div><div class="account-access-list">${accessRows(p)}</div></div><div class="card account-danger-zone"><span class="eyebrow">Área de risco</span><button class="btn btn-danger btn-block" type="button" onclick="requestDeleteVolunteerApplication('${safe(p.id)}')"><i class="fa-solid fa-terminal"></i>Gerar comando de exclusão</button>${accountLifecycle(p)}<small>Nenhum dado é apagado diretamente pelo Admin. A exclusão completa é executada pelo Google Cloud Shell.</small></div></div>`;
   }
 
   function detailTabs(p,tab){const id=safe(p.id);return `<div class="person-refactor-tabs"><button class="${tab==='plan'?'active':''}" type="button" onclick="openPerson(decodeURIComponent('${id}'),'plan')"><i class="fa-regular fa-calendar-check"></i>Planejamento</button><button class="${tab==='account'?'active':''}" type="button" onclick="openPerson(decodeURIComponent('${id}'),'account')"><i class="fa-regular fa-user"></i>Conta</button></div>`}

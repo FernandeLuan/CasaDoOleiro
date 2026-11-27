@@ -12,12 +12,13 @@
     style.id='adminAccountSettingsStyles';
     style.textContent=`
       .modal.admin-account-settings-modal{
-        width:min(500px,calc(100vw - 28px))!important;
-        max-width:500px!important;
-        max-height:min(78vh,520px)!important;
+        width:min(620px,calc(100vw - 24px))!important;
+        max-width:620px!important;
+        max-height:min(86vh,760px)!important;
       }
-      .admin-account-settings-modal .modal-head{padding:15px 16px 12px!important}
-      .admin-account-settings-modal .modal-body{padding:16px!important}
+      .admin-account-settings-modal .modal-head{padding:18px 20px 14px!important;text-align:left!important}
+      .admin-account-settings-modal .modal-head h2{font-size:1rem!important;text-align:left!important;letter-spacing:-.02em}
+      .admin-account-settings-modal .modal-body{padding:18px 20px 22px!important}
 
       .admin-account-settings{display:grid;gap:13px}
       .admin-account-top{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:10px}
@@ -56,7 +57,9 @@
         .admin-account-inline-signout,.admin-account-profile-divider{display:none!important}
       }
       @media(max-width:520px){
-        .modal.admin-account-settings-modal{width:calc(100vw - 20px)!important;max-width:calc(100vw - 20px)!important}
+        .modal.admin-account-settings-modal{width:calc(100vw - 16px)!important;max-width:calc(100vw - 16px)!important;max-height:88vh!important}
+        .admin-account-settings-modal .modal-head{padding:17px 18px 13px!important}
+        .admin-account-settings-modal .modal-body{padding:16px 18px 20px!important}
         .admin-account-top{grid-template-columns:1fr}
         .admin-account-release .release-info{grid-template-columns:1fr}
         .admin-account-profile{
