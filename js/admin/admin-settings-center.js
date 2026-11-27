@@ -88,7 +88,7 @@
         const bytes=new Uint8Array(32);crypto.getRandomValues(bytes);const password=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('')+'aA1!';
         credential=await authModule.createUserWithEmailAndPassword(secondaryAuth,email,password);
         await firestore.setDoc(firestore.doc(context.db,'users',credential.user.uid),{displayName:name,name,email,role,active:true,unitIds:role==='coordinator'?unitIds:[],createdAt:firestore.serverTimestamp(),updatedAt:firestore.serverTimestamp(),createdBy:state.currentSession.uid});
-        try{await authModule.sendPasswordResetEmail(context.auth,email,{url:location.origin+location.pathname.replace(/admin\/.*$/,'')+'index.html',handleCodeInApp:false})}
+        try{await window.OleiroAuth.sendPasswordReset(email)}
         catch(error){console.warn('Conta criada, mas o e-mail de definição de senha não foi enviado:',error);showToast?.('Conta criada. O envio do e-mail falhou; use Reenviar acesso na lista.')}
       }catch(error){
         if(credential?.user)await authModule.deleteUser(secondaryAuth.currentUser).catch(()=>{});
