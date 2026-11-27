@@ -29,6 +29,17 @@ test('volunteer release modal uses the same card-only layout and opens once per 
   assert.ok(notes.releases[0].audience.includes('volunteer'));
 });
 
+test('volunteer release popup detects the published release on first metadata load and spaces cards consistently', async () => {
+  const portal = await read('../js/portal/release-notes.js');
+  const css = await read('../css/release-notes.css');
+  const notes = JSON.parse(await readFile(new URL('../release-notes.json', import.meta.url), 'utf8'));
+  const fallbackId = portal.match(/id:'([^']+)'/)[1];
+  assert.notEqual(fallbackId, notes.releases.find(item => item.audience?.includes('volunteer'))?.id);
+  assert.match(portal, /if\(previousId!==ANNOUNCEMENT\.id\)\{[\s\S]*pendingReleasePopupId=ANNOUNCEMENT\.id/);
+  assert.match(portal, /sessionAnnouncementAttempts<480/);
+  assert.match(css, /\.release-notes-modal-items\s*\{[^}]*display:\s*grid;[^}]*gap:\s*8px/s);
+});
+
 test('WhatsApp sharing is disabled without active sessions and does not open a blank tab', async () => {
   const planning = await read('../js/portal/planejamento.js');
   assert.match(planning, /const hasActive=activeCandidateSessions\(\)\.length>0/);
