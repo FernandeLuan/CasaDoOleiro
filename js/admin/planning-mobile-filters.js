@@ -14,12 +14,7 @@
     d.setDate(d.getDate()+Number(days||0));
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   }
-  function defaultRange(){
-    const from=String(window._oleiroToday||new Date().toISOString().slice(0,10));
-    return {from,to:addDaysIso(from,30)};
-  }
   function activeFilters(){
-    const defaults=defaultRange();
     return String(state.planningBoardStatus||'all')!=='all'||
       String(state.planningBoardUnit||'all')!=='all'||
       state.planningBoardDateFilterActive===true;
