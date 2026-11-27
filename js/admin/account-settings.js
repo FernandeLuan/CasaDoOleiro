@@ -21,6 +21,22 @@
       .admin-account-settings-modal .modal-body{padding:18px 20px 22px!important}
 
       .admin-account-settings{display:grid;gap:13px}
+      .admin-account-top{grid-template-columns:1fr!important}
+      .admin-account-sections{display:grid;gap:8px}
+      .admin-account-accordion{border:1px solid var(--border);border-radius:14px;background:var(--surface);overflow:hidden}
+      .admin-account-accordion>summary{padding:13px 14px;cursor:pointer;font-size:.68rem;font-weight:700;color:var(--text)}
+      .admin-account-accordion-content{padding:0 12px 12px}
+      .admin-account-routine-group{border:1px solid var(--border);border-radius:11px;overflow:hidden;margin-top:8px}
+      .admin-account-routine-group>strong{display:block;padding:8px 10px;background:var(--surface-2);font-size:.58rem;color:var(--muted)}
+      .admin-account-routine-row{display:grid;grid-template-columns:112px 1fr;gap:9px;padding:8px 10px;border-top:1px solid var(--border);font-size:.62rem}
+      .admin-account-routine-row b{color:var(--primary);white-space:nowrap}
+      .admin-account-unit{display:grid;gap:7px;padding:10px 0;border-bottom:1px solid var(--border)}
+      .admin-account-unit-toggle{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:3px;border:1px solid var(--border);border-radius:11px;background:var(--surface-2)}
+      .admin-account-unit-toggle button{min-height:36px;border:0;border-radius:8px;background:transparent;color:var(--muted);font-size:.62rem;font-weight:700}
+      .admin-account-unit-toggle button.active{background:var(--primary);color:white}
+      .admin-account-unit-toggle button.inactive{background:var(--danger);color:white}
+      .admin-account-footer{display:flex;justify-content:flex-end;padding-top:10px;border-top:1px solid var(--border)}
+
       .admin-account-top{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:10px}
       .admin-account-panel{min-width:0;border:1px solid var(--border);border-radius:15px;background:var(--surface);padding:13px}
 
