@@ -4,6 +4,7 @@
   function httpUrl(value){try{const url=new URL(String(value||'').trim());return ['http:','https:'].includes(url.protocol)?url.toString():''}catch{return ''}}
   function genderLabel(value){return value==='female'?'Feminino':value==='male'?'Masculino':'Não informado'}
   function participantGender(p,index){const genders=Array.isArray(p?.participantGenders)?p.participantGenders:[];return genders[index]||(index===0?p?.gender:'')||''}
+  if(!document.getElementById('accountWhatsappLinkStyles')){const style=document.createElement('style');style.id='accountWhatsappLinkStyles';style.textContent='.account-whatsapp-link{display:inline-flex;align-items:center;justify-content:center;gap:6px;width:max-content;margin-top:7px;padding:7px 10px;border:1px solid #25D366;border-radius:9px;color:#168A45;background:color-mix(in srgb,#25D366 9%,var(--surface));font-size:.68rem;font-weight:700;text-decoration:none}.account-whatsapp-link i{font-size:.9rem}.account-whatsapp-link:focus-visible{outline:2px solid #168A45;outline-offset:2px}';document.head.appendChild(style)}
 
   /* Cadastro: gênero por participante e link administrativo do perfil no Worldpackers. */
   const baseCandidateParticipantFields=candidateParticipantFields;
@@ -71,8 +72,13 @@
 
     const contactCard=modalRoot.querySelector('.account-contact-card');if(contactCard){
       [...contactCard.querySelectorAll('.account-person-row')].forEach((row,index)=>{
-        const detail=row.lastElementChild;if(!detail||detail.querySelector('.account-person-gender'))return;const gender=participantGender(p,index);
-        detail.insertAdjacentHTML('beforeend',`<div class="account-person-gender"><span>Gênero: ${escapeHtml(genderLabel(gender))}</span><button class="account-inline-edit" type="button" onclick="openVolunteerGenderEditor('${safe(p.id)}',${index})">Editar</button></div>`);
+        const detail=row.lastElementChild;if(!detail)return;
+        if(!detail.querySelector('.account-person-gender')){const gender=participantGender(p,index);detail.insertAdjacentHTML('beforeend',`<div class="account-person-gender"><span>Gênero: ${escapeHtml(genderLabel(gender))}</span><button class="account-inline-edit" type="button" onclick="openVolunteerGenderEditor('${safe(p.id)}',${index})">Editar</button></div>`)}
+        if(!detail.querySelector('.account-whatsapp-link')){
+          const phones=Array.isArray(p.participantPhones)&&p.participantPhones.length?p.participantPhones:String(p.phone||'').split('/').map(v=>v.trim()).filter(Boolean);
+          let phone=String(phones[index]||'').replace(/\\D/g,'');if(phone.startsWith('00'))phone=phone.slice(2);if(phone.length===10||phone.length===11)phone='55'+phone;
+          if(phone.length>=12&&phone.length<=15)detail.insertAdjacentHTML('beforeend',`<a class="account-whatsapp-link" href="https://wa.me/${phone}" target="_blank" rel="noopener noreferrer" aria-label="Conversar com ${escapeHtml(row.querySelector('strong')?.textContent||'voluntário')} pelo WhatsApp"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i><span>WhatsApp</span></a>`);
+        }
       });
       if(!modalRoot.querySelector('.account-registration-card')){
         const link=httpUrl(p.registrationLink||''),card=document.createElement('div');card.className='card account-registration-card';
