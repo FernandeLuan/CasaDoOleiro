@@ -35,7 +35,8 @@
       .admin-account-unit-toggle button{min-height:36px;border:0;border-radius:8px;background:transparent;color:var(--muted);font-size:.62rem;font-weight:700}
       .admin-account-unit-toggle button.active{background:var(--primary);color:white}
       .admin-account-unit-toggle button.inactive{background:var(--danger);color:white}
-      .admin-account-footer{display:flex;justify-content:flex-end;padding-top:10px;border-top:1px solid var(--border)}
+      .admin-account-footer{display:grid;grid-template-columns:1fr;padding-top:12px;border-top:1px solid var(--border)}
+      .admin-account-footer .admin-account-inline-signout{width:100%;min-height:48px;font-size:.72rem;border-radius:13px}
 
       .admin-account-top{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:10px}
       .admin-account-panel{min-width:0;border:1px solid var(--border);border-radius:15px;background:var(--surface);padding:13px}
@@ -96,6 +97,28 @@
   function routineHtml(){return '<div class="admin-account-routine-group"><strong>MANHÃ</strong>'+routineRows([['06:00','Despertar e higiene'],['06:15–07:30','Devocional'],['07:30–08:15','Café da manhã'],['08:15–11:15','Atividades práticas'],['11:15–12:00','Reunião de sentimentos'],['12:00–13:30','Almoço e descanso']])+'</div><div class="admin-account-routine-group"><strong>TARDE E NOITE</strong>'+routineRows([['13:45–15:00','Atividades'],['15:00–15:15','Café da tarde'],['15:15–16:30','Atividades'],['16:30 em diante','Banho, lazer e jantar'],['19:30–21:00','Filme, palestra, documentário ou outras atividades'],['21:00','Alojamento'],['21:30','Silêncio total']])+'</div>'}
   function unitsHtml(){const rows=Array.isArray(state.units)?state.units:[];return rows.map(unit=>{const id=encodeURIComponent(String(unit.id)),active=unit.active!==false;return '<div class="admin-account-unit"><strong>'+esc(unit.name||unit.id)+'</strong><small>Disponibilidade da unidade</small><div class="admin-account-unit-toggle"><button class="'+(active?'active':'')+'" onclick="setAccountUnitActive(\''+id+'\',true)">Ativo</button><button class="'+(!active?'inactive':'')+'" onclick="setAccountUnitActive(\''+id+'\',false)">Inativo</button></div></div>'}).join('')||'<p>Nenhuma unidade cadastrada.</p>'}
   window.setAccountUnitActive=async function(encoded,next){const id=decodeURIComponent(encoded),unit=(state.units||[]).find(row=>String(row.id)===id);if(!unit||unit.active===(next===true))return;try{await window.OleiroServices.units.update(id,{active:next===true});state.units=state.units.map(row=>String(row.id)===id?{...row,active:next===true}:row);window.OleiroServices.units.invalidate?.();window.openMyAccount()}catch(error){console.error(error);showToast?.('Não foi possível atualizar a unidade.')}};
+  window.confirmAdminLogout=function(){
+    openModal(
+      'Sair do portal',
+      'Deseja realmente encerrar sua sessão?',
+      '<div class="notice success"><i class="fa-solid fa-right-from-bracket"></i><div>Você precisará entrar novamente com seu e-mail e senha.</div></div>',
+      '<div class="confirm-actions"><button class="btn btn-outline btn-block" type="button" onclick="closeModal()">Cancelar</button><button class="btn btn-danger btn-block" type="button" onclick="performAdminLogout()"><i class="fa-solid fa-right-from-bracket"></i>Sair</button></div>'
+    );
+  };
+  window.performAdminLogout=async function(){
+    const buttons=modalRoot?.querySelectorAll?.('.modal-footer button')||[];
+    buttons.forEach(button=>button.disabled=true);
+    try{
+      if(!window.OleiroAuth?.signOut)throw new Error('Serviço de autenticação indisponível.');
+      await window.OleiroAuth.signOut();
+      closeModal();
+      location.replace('../index.html');
+    }catch(error){
+      console.error('Falha ao encerrar sessão administrativa:',error);
+      buttons.forEach(button=>button.disabled=false);
+      showToast?.(error?.message||'Não foi possível encerrar a sessão.');
+    }
+  };
   window.setAdminTheme=function(target){
     window.setThemePreference?.(target);
     setTimeout(()=>window.openMyAccount?.(),0);
@@ -122,7 +145,7 @@
       <div class="admin-account-sections"><details class="admin-account-accordion"><summary>Rotina da Casa</summary><div class="admin-account-accordion-content">${routineHtml()}</div></details><details class="admin-account-accordion"><summary>Unidades</summary><div class="admin-account-accordion-content">${unitsHtml()}</div></details><details class="admin-account-accordion"><summary>Sistema e versão</summary><div class="admin-account-accordion-content"><section class="admin-account-release">
         <div class="admin-account-release-head"><small>Sistema</small><strong>Versão do software</strong></div>
         ${releaseHtml()}
-      </section></div></details></div><footer class="admin-account-footer"><button class="admin-account-inline-signout" type="button" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i>Sair</button></footer>
+      </section></div></details></div><footer class="admin-account-footer"><button class="admin-account-inline-signout" type="button" onclick="confirmAdminLogout()"><i class="fa-solid fa-right-from-bracket"></i>Sair</button></footer>
     </div></div>`;
     openModal('Minha conta','',body);
     modalRoot?.querySelector?.('.modal')?.classList.add('admin-account-settings-modal');
