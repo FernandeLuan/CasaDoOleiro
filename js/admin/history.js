@@ -9,7 +9,7 @@
   const safe=value=>encodeURIComponent(String(value??''));
 
   function roleLabel(role){const value=String(role||'').toLowerCase();if(value==='coordinator')return tx('role.coordinator','Coordenador');if(value==='volunteer')return tx('role.volunteer','Voluntário');if(value==='system')return 'Sistema';return tx('role.admin','Administrador')}
-  function eventLabel(type){return tx(`history.${String(type||'')}`,String(type||'Evento').replaceAll('_',' '))}
+  function eventLabel(type){const key=String(type||''),labels={profile_inactivated:'Usuário inativado',profile_reactivated:'Usuário reativado'};return tx(`history.${key}`,labels[key]||key.replaceAll('_',' ')||'Evento')}
   function asDate(value){if(!value)return null;if(typeof value.toDate==='function')return value.toDate();const parsed=new Date(value);return Number.isNaN(parsed.getTime())?null:parsed}
   function when(value){const date=asDate(value);if(!date)return '—';const locale=typeof currentLocale==='function'?currentLocale():'pt-BR';return new Intl.DateTimeFormat(locale,{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(date)}
   function metadataLine(row){const m=row?.metadata||{};switch(row.type){
