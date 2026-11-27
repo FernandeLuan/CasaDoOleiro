@@ -157,7 +157,7 @@
     if(!date)return '';
     try{
       if(typeof fmtDate==='function')return fmtDate(date,true);
-      return new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'2-digit'}).format(new Date(date+'T12:00:00'));
+      const parsed=new Date(value);if(Number.isNaN(parsed.getTime()))return date;const hasTime=/T\d{2}:\d{2}/.test(String(value));return new Intl.DateTimeFormat('pt-BR',hasTime?{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}:{day:'2-digit',month:'2-digit'}).format(parsed);
     }catch{return date}
   }
   function currentProjectAdjustmentSlide(){
@@ -490,7 +490,7 @@
     const body=`<div class="release-notes-modal">
       <div class="release-notes-modal-intro">
         <span class="release-notes-modal-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
-        <div><small>${esc(ANNOUNCEMENT.eyebrow)} <span data-release-meta></span></small><strong>${esc(ANNOUNCEMENT.title)}</strong><p>${esc(ANNOUNCEMENT.summary)}</p></div>
+        <div><small>${esc(ANNOUNCEMENT.eyebrow)} <span data-release-meta></span></small><strong>${esc(ANNOUNCEMENT.title)}</strong><p>${esc(ANNOUNCEMENT.summary)}</p>${fmtNoticeDate(ANNOUNCEMENT.publishedAt||releaseMeta?.publishedAt)?`<p class="release-notes-published">Publicado em ${esc(fmtNoticeDate(ANNOUNCEMENT.publishedAt||releaseMeta?.publishedAt))}</p>`:''}</div>
       </div>
       <div class="release-notes-modal-items">${(Array.isArray(ANNOUNCEMENT.items)?ANNOUNCEMENT.items:[]).map(itemHtml).join('')}</div>
     </div>`;
