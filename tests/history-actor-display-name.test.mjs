@@ -19,3 +19,14 @@ test('both Admin history views prefer display names and resolve legacy email lab
   assert.ok(page.includes('OleiroServices.users.getByIds(uids)'));
   assert.ok(page.includes('row.actorLabel=actor.name'));
 });
+
+test('history resolves legacy authors by email and never exposes email as author label', async () => {
+  const users = await read('../js/services/user-service.js');
+  const page = await read('../js/admin/account-history.js');
+  const modal = await read('../js/admin/history.js');
+  assert.ok(users.includes('async getByEmails(emails)'));
+  assert.ok(page.includes('users.getByEmails(emails)'));
+  assert.ok(modal.includes('users.getByEmails(emails)'));
+  assert.ok(page.includes("return 'Autor não registrado'"));
+  assert.ok(!page.includes("if(email)return email"));
+});
