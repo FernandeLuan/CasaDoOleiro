@@ -161,7 +161,6 @@
       renderPersonModal(p,'account');showToast('Usuário reativado. O status e o planejamento foram preservados.');
     }catch(error){console.error(error);showToast(error?.message||'Não foi possível reativar o usuário.')}
   };
-  window.candidateHistoryLifecycleActions=accountLifecycle;
   function accountContent(p){
     const status=personStatus(p),contacts=contactRows(p),{start,end}=personDates(p),unit=p.unit||p.unitName||'—';
     const meeting=typeof window.selectionAccountCard==='function'?window.selectionAccountCard(p):'';
