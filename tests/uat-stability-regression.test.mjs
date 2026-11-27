@@ -231,41 +231,41 @@ test('version metadata announces new builds and describes release contents',asyn
 test('profile modal history is isolated from the planning-page history and has no account lifecycle actions', async () => {
   const accountHistory = await read('../js/admin/account-history.js');
   const modalHistory = await read('../js/admin/history.js');
-  assert.doesNotMatch(accountHistory, /const baseOpenPerson=typeof window\\.openPerson/);
-  assert.doesNotMatch(accountHistory, /person-history-tabs/);
-  assert.doesNotMatch(accountHistory, /candidateHistoryLifecycleActions/);
-  assert.match(accountHistory, /\.planning-detail-page \\.planning-profile-tabs button/);
-  assert.match(modalHistory, /window\\.openPerson=openPerson/);
+  assert.ok(!accountHistory.includes('const baseOpenPerson=typeof window.openPerson'));
+  assert.ok(!accountHistory.includes('person-history-tabs'));
+  assert.ok(!accountHistory.includes('candidateHistoryLifecycleActions'));
+  assert.ok(accountHistory.includes('.planning-detail-page .planning-profile-tabs button'));
+  assert.ok(modalHistory.includes('window.openPerson=openPerson'));
 });
 
 test('volunteer preparation deadline uses calendar days and is displayed below the name', async () => {
   const lifecycle = await read('../js/admin/candidate-lifecycle.js');
   const inline = await read('../js/admin/volunteer-status-inline.js');
-  assert.match(lifecycle, /today\\.setHours\\(0,0,0,0\\)/);
-  assert.match(lifecycle, /deadlineDay\\.setHours\\(0,0,0,0\\)/);
-  assert.match(lifecycle, /Math\\.round\\(\\(deadlineDay\\.getTime\\(\\)-today\\.getTime\\(\\)\\)\\/86400000\\)/);
-  assert.match(inline, /<div class=\\"volunteer-deadline-line\\">/);
-  assert.match(inline, /<div class=\\"volunteer-name-status\\"><h3>/);
+  assert.ok(lifecycle.includes('today.setHours(0,0,0,0)'));
+  assert.ok(lifecycle.includes('deadlineDay.setHours(0,0,0,0)'));
+  assert.ok(lifecycle.includes('Math.round((deadlineDay.getTime()-today.getTime())/86400000)'));
+  assert.ok(inline.includes('<div class="volunteer-deadline-line">'));
+  assert.ok(inline.includes('<div class="volunteer-name-status"><h3>'));
 });
 
 test('occupancy month navigation is bounded to September 2026 through September 2027', async () => {
   const occupancy = await read('../js/admin/occupancy-page.js');
-  assert.match(occupancy, /OCCUPANCY_MIN_MONTH='2026-09'/);
-  assert.match(occupancy, /OCCUPANCY_MAX_MONTH='2027-09'/);
-  assert.match(occupancy, /next<OCCUPANCY_MIN_MONTH\\|\\|next>OCCUPANCY_MAX_MONTH/);
+  assert.ok(occupancy.includes("OCCUPANCY_MIN_MONTH='2026-09'"));
+  assert.ok(occupancy.includes("OCCUPANCY_MAX_MONTH='2027-09'"));
+  assert.ok(occupancy.includes('next<OCCUPANCY_MIN_MONTH||next>OCCUPANCY_MAX_MONTH'));
 });
 
 test('planning filter dot only reflects explicitly selected filters', async () => {
   const filters = await read('../js/admin/planning-mobile-filters.js');
   const board = await read('../js/admin/planning-board.js');
-  assert.match(filters, /planningBoardDateFilterActive===true/);
-  assert.match(board, /state\\.planningBoardDateFilterActive=true/);
-  assert.match(board, /state\\.planningBoardDateFilterActive=false/);
+  assert.ok(filters.includes('planningBoardDateFilterActive===true'));
+  assert.ok(board.includes('state.planningBoardDateFilterActive=true'));
+  assert.ok(board.includes('state.planningBoardDateFilterActive=false'));
 });
 
 test('volunteer release details show the actual deployment timestamp and keep the menu minimal', async () => {
   const portal = await read('../js/portal/release-notes.js');
-  assert.match(portal, /releaseMeta\\?\\.publishedAt\\|\\|ANNOUNCEMENT\\.publishedAt/);
-  assert.match(portal, /hasTime=\\/T\\\\d\\{2\\}:\\\\d\\{2\\}\\//);
-  assert.doesNotMatch(portal, /Última atualização:<\\/strong>/);
+  assert.ok(portal.includes('releaseMeta?.publishedAt||ANNOUNCEMENT.publishedAt'));
+  assert.ok(portal.includes('hasTime=/T\\\\d{2}:\\\\d{2}/'));
+  assert.ok(!portal.includes('Última atualização:</strong>'));
 });
