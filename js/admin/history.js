@@ -38,7 +38,7 @@
     if(entry.loading&&!rows.length)return `<div class="oleiro-skeleton history-skeleton" aria-label="Carregando histórico"><div class="oleiro-skeleton-card"><span class="oleiro-skeleton-line medium"></span><span class="oleiro-skeleton-line"></span><span class="oleiro-skeleton-line short"></span></div><div class="oleiro-skeleton-card"><span class="oleiro-skeleton-line medium"></span><span class="oleiro-skeleton-line"></span><span class="oleiro-skeleton-line short"></span></div></div>`;
     if(entry.error&&!rows.length)return `<div class="notice danger"><i class="fa-solid fa-triangle-exclamation"></i><div>${escapeHtml(tx('history.error','Não foi possível carregar o histórico.'))}</div></div>`;
     if(!rows.length&&entry.loadedAt)return `<div class="history-state"><i class="fa-regular fa-clock"></i>${escapeHtml(tx('history.empty','Nenhum evento registrado ainda.'))}</div>`;
-    const list=rows.map(row=>{const meta=metadataLine(row),actor=String(row.actorEmail||row.actorLabel||'').trim(),who=actor?`${actor} • ${roleLabel(row.actorRole)}`:roleLabel(row.actorRole);return `<article class="history-event"><div class="history-event-dot"></div><div class="history-event-body"><div class="history-event-head"><strong>${escapeHtml(eventLabel(row.type))}</strong><time>${escapeHtml(when(row.createdAt))}</time></div>${meta?`<p data-no-i18n>${escapeHtml(meta)}</p>`:''}<span>${escapeHtml(who)}</span></div></article>`}).join('');
+    const list=rows.map(row=>{const meta=metadataLine(row),actor=String(row.actorLabel||row.actorEmail||'').trim(),who=actor?`${actor} • ${roleLabel(row.actorRole)}`:roleLabel(row.actorRole);return `<article class="history-event"><div class="history-event-dot"></div><div class="history-event-body"><div class="history-event-head"><strong>${escapeHtml(eventLabel(row.type))}</strong><time>${escapeHtml(when(row.createdAt))}</time></div>${meta?`<p data-no-i18n>${escapeHtml(meta)}</p>`:''}<span>${escapeHtml(who)}</span></div></article>`}).join('');
     const more=entry.hasMore?`<button class="btn btn-soft btn-block history-load-more" type="button" onclick="loadMoreCandidateHistory('${safe(p.id)}')" ${entry.loading?'disabled':''}><i class="fa-solid ${entry.loading?'fa-circle-notch fa-spin':'fa-chevron-down'}"></i>${escapeHtml(tx('history.more','Carregar mais eventos'))}</button>`:'';
     return `<div class="history-list">${list}</div>${more}`;
   }
@@ -57,13 +57,21 @@
     if(root.querySelector('[data-history-tab]'))return;
     const button=document.createElement('button');button.type='button';button.dataset.historyTab='1';button.className=tab==='history'?'active':'';button.innerHTML=`<i class="fa-solid fa-clock-rotate-left"></i>${escapeHtml(tx('history.tab','Histórico'))}`;button.onclick=()=>openPerson(String(p.id),'history');root.append(button);
   }
+  async function resolveActorNames(rows){
+    const source=(rows||[]).map(row=>({...row}));
+    const uids=[...new Set(source.filter(row=>row?.actorUid&&String(row.actorRole||'').toLowerCase()!=='system'&&(!String(row.actorLabel||'').trim()||String(row.actorLabel||'').trim().toLowerCase()===String(row.actorEmail||'').trim().toLowerCase())).map(row=>String(row.actorUid)))];
+    if(!uids.length||!window.OleiroServices?.users?.getByIds)return source;
+    try{const users=await window.OleiroServices.users.getByIds(uids);const byId=new Map((users||[]).filter(user=>!user?.missing).map(user=>[String(user.id),String(user.displayName||user.name||'').trim()]));source.forEach(row=>{const name=byId.get(String(row.actorUid||''));if(name)row.actorLabel=name})}catch(error){console.warn('Não foi possível resolver os nomes dos autores do histórico:',error)}
+    return source;
+  }
   async function hydrate(p,{append=false,force=false}={}){
     const key=String(p.id),entry=state.adminHistoryCache[key]||{items:[],cursor:null,hasMore:false,loadedAt:0,loading:false,error:''};
     if(entry.loading)return;if(!append&&!force&&entry.loadedAt&&Date.now()-entry.loadedAt<CACHE_MS)return;
     entry.loading=true;entry.error='';state.adminHistoryCache[key]=entry;renderHistory(p);
     try{
       const result=await window.OleiroServices.history.list(p.id,{limit:PAGE_SIZE,cursor:append?entry.cursor:null});
-      const byId=new Map((append?entry.items:[]).map(row=>[String(row.id),row]));(result.items||[]).forEach(row=>byId.set(String(row.id),row));
+      const resolvedRows=await resolveActorNames(result.items||[]);
+      const byId=new Map((append?entry.items:[]).map(row=>[String(row.id),row]));resolvedRows.forEach(row=>byId.set(String(row.id),row));
       entry.items=[...byId.values()];entry.cursor=result.nextCursor||null;entry.hasMore=!!result.hasMore;entry.loadedAt=Date.now();
     }catch(error){console.error('Falha ao carregar histórico:',error);entry.error=error?.message||'history-error'}finally{entry.loading=false;if(modalRoot.dataset.personId===key&&modalRoot.dataset.personTab==='history')renderHistory(p)}
   }
