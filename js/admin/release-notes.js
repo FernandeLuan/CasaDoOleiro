@@ -98,7 +98,7 @@
     </div>`;
   }
   function modalBody(){
-    return `<div class="admin-release-modal"><span class="admin-release-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span><div><small>${esc(latest?.eyebrow||'Atualização do sistema')} <span>Versão ${esc(version())}</span></small><strong>${esc(latest?.title||'O que mudou?')}</strong><p>${esc(latest?.summary||'Confira as melhorias desta versão.')}</p>${publishedAtLabel(meta?.publishedAt||latest?.publishedAt)?`<p class="admin-release-published">Publicado em ${esc(publishedAtLabel(meta?.publishedAt||latest?.publishedAt))}</p>`:''}</div></div>
+    return `<div class="admin-release-modal">
       <div class="admin-release-items">${(Array.isArray(latest?.items)?latest.items:[]).map(itemHtml).join('')}</div>
     </div>`;
   }
