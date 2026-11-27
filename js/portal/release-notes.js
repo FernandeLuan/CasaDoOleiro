@@ -11,7 +11,7 @@
 
   const ALWAYS_SHOW_HOME_NOTICES=false; // produção: respeitar a dispensa do usuário e só reexibir quando ANNOUNCEMENT.id mudar
   let ANNOUNCEMENT={
-    id:'2026-09-portal-projeto-legado-v3',
+    id:'2026-11-27-portal-unified-whats-new-412',
     eyebrow:'Nova atualização',
     title:'Tem novidade por aqui ✨',
     summary:'Deixamos o portal mais simples e adicionamos novas formas de acompanhar sua experiência.',
@@ -45,6 +45,7 @@
   function releaseSeenKey(){return `oleiro.portal.release-notes.seen.v1:${uid()}`}
   function releaseSeen(){if(ALWAYS_SHOW_HOME_NOTICES)return false;if(releaseDismissedInSession&&releaseDismissedInSessionId===ANNOUNCEMENT.id)return true;try{return localStorage.getItem(releaseSeenKey())===ANNOUNCEMENT.id}catch{return false}}
   function markReleaseSeen(){if(ALWAYS_SHOW_HOME_NOTICES)return;releaseDismissedInSession=true;releaseDismissedInSessionId=ANNOUNCEMENT.id;try{localStorage.setItem(releaseSeenKey(),ANNOUNCEMENT.id)}catch{}}
+  let pendingPopupAttempts=0;
   function maybeOpenPendingReleasePopup(){
     const pendingId=pendingReleasePopupId;
     if(!pendingId||pendingId!==ANNOUNCEMENT.id)return;
@@ -54,12 +55,16 @@
     const automatedBrowser=typeof navigator!=='undefined'&&navigator.webdriver===true;
     const emulatorSession=(()=>{try{return sessionStorage.getItem('oleiro-e2e')==='1'}catch{return false}})();
     if(demoProject||localTestHost||previewBuild||automatedBrowser||emulatorSession){pendingReleasePopupId=null;return}
-    if(state?.volunteerPage!=='home')return;
+    if(state?.role!=='volunteer'||!state?.currentSession?.uid)return;
     if(releaseSeen()){pendingReleasePopupId=null;return}
-    pendingReleasePopupId=null;
+    if(modalRoot?.querySelector?.('.modal')){
+      if(++pendingPopupAttempts<30)setTimeout(maybeOpenPendingReleasePopup,700);
+      return;
+    }
+    pendingPopupAttempts=0;pendingReleasePopupId=null;
     setTimeout(()=>{
-      if(state?.volunteerPage==='home'&&ANNOUNCEMENT.id===pendingId&&!releaseSeen())window.openPortalReleaseNotes?.();
-      else if(state?.volunteerPage!=='home'&&ANNOUNCEMENT.id===pendingId)pendingReleasePopupId=pendingId;
+      if(state?.role==='volunteer'&&state?.currentSession?.uid&&ANNOUNCEMENT.id===pendingId&&!releaseSeen())window.openPortalReleaseNotes?.();
+      else if(ANNOUNCEMENT.id===pendingId&&!releaseSeen())pendingReleasePopupId=pendingId;
     },420);
   }
   function dismissedHomeNoticeKey(){return `oleiro.portal.home-notices.dismissed.v1:${uid()}`}
@@ -486,13 +491,7 @@
         setTimeout(()=>card.remove(),180);
       }
     }
-    const body=`<div class="release-notes-modal">
-      <div class="release-notes-modal-intro">
-        <span class="release-notes-modal-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
-        <div><small>${esc(ANNOUNCEMENT.eyebrow)} <span data-release-meta></span></small><strong>${esc(ANNOUNCEMENT.title)}</strong><p>${esc(ANNOUNCEMENT.summary)}</p>${fmtNoticeDate(releaseMeta?.publishedAt||ANNOUNCEMENT.publishedAt)?`<p class="release-notes-published">Publicado em ${esc(fmtNoticeDate(releaseMeta?.publishedAt||ANNOUNCEMENT.publishedAt))}</p>`:''}</div>
-      </div>
-      <div class="release-notes-modal-items">${(Array.isArray(ANNOUNCEMENT.items)?ANNOUNCEMENT.items:[]).map(itemHtml).join('')}</div>
-    </div>`;
+    const body=`<div class="release-notes-modal"><div class="release-notes-modal-items">${(Array.isArray(ANNOUNCEMENT.items)?ANNOUNCEMENT.items:[]).map(itemHtml).join('')}</div></div>`;
     const footer=`<div class="release-notes-actions"><button class="btn btn-primary btn-block" type="button" onclick="closeModal()">Entendi</button></div>`;
     openModal('O que mudou?','',body,footer);
     modalRoot.querySelector('.modal')?.classList.add('modal-wide');
