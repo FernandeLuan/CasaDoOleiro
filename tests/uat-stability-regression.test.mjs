@@ -208,6 +208,9 @@ test('Admin account risk actions include separate deletion and lifecycle control
   assert.ok(details.includes('${accountLifecycle(p)}'));
   assert.ok(details.includes('Inativar usuário'));
   assert.ok(details.includes('Reativar usuário'));
+  assert.ok(details.includes('requestInactivateVolunteerAccess'));
+  assert.ok(details.includes('reactivateVolunteerAccess'));
+  assert.ok(details.includes('O status da candidatura e o planejamento serão preservados.'));
 });
 
 test('version metadata announces new builds and describes release contents',async()=>{
