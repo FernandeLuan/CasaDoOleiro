@@ -57,9 +57,11 @@ test('admin version panel keeps the menu concise and opens card-based release de
   assert.ok(release.includes("const demoProject=String(window.OLEIRO_FIREBASE_CONFIG?.projectId||'').startsWith('demo-')"));
   assert.match(release, /const automatedBrowser=typeof navigator!=='undefined'&&navigator\.webdriver===true/);
   const notes = JSON.parse(await read('../release-notes.json'));
-  assert.equal(notes.releases[0].version, '384');
-  assert.ok(notes.releases[0].audience.includes('admin'));
-  assert.ok(notes.releases[1].audience.includes('volunteer'));
+  const adminRelease = notes.releases.find(item => item.audience?.includes('admin'));
+  const volunteerRelease = notes.releases.find(item => item.audience?.includes('volunteer'));
+  assert.equal(adminRelease.version, '384');
+  assert.ok(volunteerRelease);
+  assert.equal(notes.releases[0].version, '412');
 });
 
 test('project read permissions remain scoped to active users and their own project IDs', async () => {
