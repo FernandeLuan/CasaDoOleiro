@@ -113,7 +113,7 @@
     if(!uids.length||!window.OleiroServices?.users?.getByIds)return source;
     try{
       const users=await window.OleiroServices.users.getByIds(uids),byId=new Map((users||[]).filter(user=>!user?.missing).map(user=>[String(user.id),{name:String(user.displayName||user.name||'').trim(),email:String(user.email||'').trim().toLowerCase()}]));
-      source.forEach(row=>{const actor=byId.get(String(row.actorUid||''));if(!actor)return;if(!String(row.actorEmail||'').trim()&&actor.email)row.actorEmail=actor.email;if(!usableActorName(row.actorLabel)&&actor.name)row.actorLabel=actor.name});
+      source.forEach(row=>{const actor=byId.get(String(row.actorUid||''));if(!actor)return;if(!String(row.actorEmail||'').trim()&&actor.email)row.actorEmail=actor.email;if(actor.name&&(!usableActorName(row.actorLabel)||String(row.actorLabel||'').trim().toLowerCase()===String(row.actorEmail||'').trim().toLowerCase()))row.actorLabel=actor.name});
     }catch(error){console.warn('Não foi possível resolver os autores do histórico:',error)}
     return source;
   }
