@@ -106,6 +106,7 @@
   }
 
   function boardBodyHtml(){
+    if(state.planningBoardLoading&&!state.planningBoardShowSkeleton&&!state.planningBoardSessions.length)return '<div class="planning-board-loading-placeholder" aria-busy="true"></div>';
     if(state.planningBoardLoading&&state.planningBoardShowSkeleton&&!state.planningBoardSessions.length)return '<div class="oleiro-skeleton planning-board-loading" aria-label="Carregando planejamentos"><div class="oleiro-skeleton-grid"><section class="oleiro-skeleton-card"><span class="oleiro-skeleton-line medium"></span><span class="oleiro-skeleton-block tall"></span><span class="oleiro-skeleton-line short"></span></section><section class="oleiro-skeleton-card"><span class="oleiro-skeleton-line medium"></span><span class="oleiro-skeleton-block tall"></span></section></div></div>';
     if(state.planningBoardError&&!state.planningBoardSessions.length)return `<div class="empty planning-board-empty"><div><i class="fa-solid fa-triangle-exclamation"></i>${escapeHtml(state.planningBoardError)}</div></div>`;
     if(state.planningBoardView==='volunteer'){
