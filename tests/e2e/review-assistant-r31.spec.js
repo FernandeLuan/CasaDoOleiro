@@ -17,7 +17,7 @@ async function relogin(page,email,password,target){await page.evaluate(async()=>
 const navAction=(page,label)=>page.getByRole('navigation').getByRole('button',{name:label,exact:false});
 async function openGroupsFromSettings(page){
   await navAction(page,'Configurações').click();
-  await page.getByRole('button',{name:/Grupos.*Gerenciar grupos e integrantes por unidade/}).click();
+  await page.locator('.asc-actions .asc-tile').filter({hasText:'Grupos'}).click();
   await expect(page.locator('.groups-page-grid')).toBeVisible({timeout:20_000});
 }
 async function openVolunteerByStatus(page,status,name){
