@@ -27,3 +27,9 @@
   .occupancy-screen-legend{margin-bottom:20px!important;column-gap:12px!important;row-gap:8px!important}
   .person-title-line{gap:6px}
 }
+
+
+/* Área de risco: ações administrativas independentes e empilhadas. */
+.account-danger-zone{display:grid;gap:10px}
+.account-danger-zone .account-risk-lifecycle{width:100%;margin:0}
+.account-danger-zone>small{display:block;line-height:1.45}
