@@ -22,8 +22,7 @@
     const defaults=defaultRange();
     return String(state.planningBoardStatus||'all')!=='all'||
       String(state.planningBoardUnit||'all')!=='all'||
-      String(state.planningBoardFrom||defaults.from)!==defaults.from||
-      String(state.planningBoardTo||defaults.to)!==defaults.to;
+      state.planningBoardDateFilterActive===true;
   }
   function unitOptions(){
     const map=new Map();
