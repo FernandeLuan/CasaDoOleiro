@@ -4,6 +4,12 @@
   if(window.__OLEIRO_ACCOUNT_EMERGENCY_LIVE__)return;
   window.__OLEIRO_ACCOUNT_EMERGENCY_LIVE__=true;
 
+  if(!document.getElementById('accountEmergencyWhatsappStylesR73')){
+    const style=document.createElement('style');style.id='accountEmergencyWhatsappStylesR73';
+    style.textContent='.account-emergency-whatsapp-r73{display:inline-flex;align-items:center;gap:5px;width:max-content;margin:3px 0 0;padding:5px 8px;border:1px solid #25D366;border-radius:8px;color:#168A45;background:color-mix(in srgb,#25D366 9%,var(--surface));font-size:.58rem;font-weight:700;text-decoration:none}.account-emergency-whatsapp-r73 i{font-size:.78rem}.account-emergency-whatsapp-r73:focus-visible{outline:2px solid #168A45;outline-offset:2px}';
+    document.head.appendChild(style);
+  }
+
   const inflight=new Map();
   const profileCache=new Map();
   const safe=value=>encodeURIComponent(String(value??''));
@@ -68,7 +74,11 @@
     const row=normalized(contact),parts=[];
     if(row.name)parts.push(`<strong>${escapeHtml(row.name)}</strong>`);
     if(row.relationship)parts.push(`<span>${escapeHtml(row.relationship)}</span>`);
-    if(row.phone)parts.push(`<span>${escapeHtml(row.phone)}</span>`);
+    if(row.phone){
+      parts.push(`<span>${escapeHtml(row.phone)}</span>`);
+      let phone=String(row.phone).replace(/\\D/g,'');if(phone.startsWith('00'))phone=phone.slice(2);if(phone.length===10||phone.length===11)phone='55'+phone;
+      if(phone.length>=12&&phone.length<=15)parts.push(`<a class="account-emergency-whatsapp-r73" href="https://wa.me/${phone}" target="_blank" rel="noopener noreferrer" aria-label="Conversar com o contato de emergência pelo WhatsApp"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i><span>WhatsApp</span></a>`);
+    }
     return parts.join('');
   }
 

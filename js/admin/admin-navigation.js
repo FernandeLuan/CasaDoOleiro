@@ -114,7 +114,7 @@
   function enhanceAdminHeader(){
     const actions=document.querySelector('.admin-content-r62>.app-header .header-actions');
     if(!actions)return;
-    actions.innerHTML='<button class="icon-btn" type="button" onclick="openMyAccount()" aria-label="Minha conta" title="Minha conta"><i class="fa-solid fa-user"></i></button>';
+    actions.innerHTML='<button class="icon-btn" type="button" onclick="openMyAccount()" aria-label="Configurações" title="Configurações"><i class="fa-solid fa-gear"></i></button>';
   }
 
   function bottomNav(){
