@@ -146,7 +146,7 @@
     const eligibility=state.adminShareEligibility?.[String(p.id)];
     if(!eligibility&&!adminShareEligibilityRequests[String(p.id)])setTimeout(()=>refreshAdminShareEligibility(p),0);
     const status=adminShareButtonState(p.id);
-    return '<div class="planning-share-bar admin-planning-share-bar"><button class="planning-share-action '+(status.cooldownActive?'is-complete':'')+'" type="button" data-application-id="'+escapeHtml(String(p.id))+'" onclick="shareAdminPlanningWhatsApp(\\''+encodeURIComponent(String(p.id))+'\\')" '+(status.disabled?'disabled aria-disabled="true"':'')+'><i class="fa-brands fa-whatsapp"></i><span>'+escapeHtml(status.label)+'</span></button></div>';
+    return '<div class="planning-share-bar admin-planning-share-bar"><button class="planning-share-action '+(status.cooldownActive?'is-complete':'')+'" type="button" data-application-id="'+escapeHtml(String(p.id))+'" onclick="shareAdminPlanningWhatsApp(\''+encodeURIComponent(String(p.id))+'\')" '+(status.disabled?'disabled aria-disabled="true"':'')+'><i class="fa-brands fa-whatsapp"></i><span>'+escapeHtml(status.label)+'</span></button></div>';
   }
   window.adminPlanningShareBar=adminPlanningShareBar;
   window.shareAdminPlanningWhatsApp=async function(encodedId){
