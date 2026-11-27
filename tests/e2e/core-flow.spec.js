@@ -37,7 +37,51 @@ async function login(page,email,password,target,language='pt'){
   },target,{timeout:20_000});
 }
 
-const navAction=(page,label)=>page.getByRole('navigation').getByRole('button',{name:new RegExp(`^.{0,3}${label}$`)});
+const navAction=(page,label)=>page.getByRole('navigation').getByRole('button',{name:new RegExp(`^.{0,3}${label}// Critical browser regression: isolated Firebase emulators only; never production data.
+import {test,expect} from '@playwright/test';
+import {seedEmulators} from './seed.mjs';
+
+const firebaseConfig={
+  apiKey:'demo-api-key',
+  authDomain:'demo-casadooleiro.firebaseapp.com',
+  projectId:'demo-casadooleiro',
+  appId:'1:123:web:e2e'
+};
+
+async function prepare(page,language='pt'){
+  await page.addInitScript(lang=>localStorage.setItem('oleiro-language',lang),language);
+  await page.route('**/js/firebase/firebase-config.js*',route=>route.fulfill({
+    status:200,
+    contentType:'application/javascript',
+    body:`window.OLEIRO_FIREBASE_CONFIG=${JSON.stringify(firebaseConfig)};`
+  }));
+}
+
+async function login(page,email,password,target,language='pt'){
+  await prepare(page,language);
+  await page.goto('/?emulator=1');
+  await page.waitForFunction(async()=>{
+    try{
+      const context=await window.OleiroFirebase?.ready;
+      return !!context?.configured&&typeof window.OleiroAuth?.signIn==='function';
+    }catch{return false}
+  },undefined,{timeout:30_000});
+  await page.locator('#email').fill(email);
+  await page.locator('#password').fill(password);
+  await page.locator('#loginButton').click();
+  await expect(page).toHaveURL(new RegExp(`/${target}/`),{timeout:30_000});
+  await page.waitForFunction(targetName=>{
+    if(typeof window.render!=='function')return false;
+    return targetName==='portal'?typeof window.navigateVolunteer==='function':targetName==='admin'?typeof window.navigateManager==='function':true;
+  },target,{timeout:20_000});
+}
+
+)});
+async function openGroupsFromSettings(page){
+  await navAction(page,'Configurações').click();
+  await page.getByRole('button',{name:/Grupos.*Gerenciar grupos e integrantes por unidade/}).click();
+  await expect(page.locator('.groups-page-grid')).toBeVisible({timeout:20_000});
+}
 const appAction=(page,label)=>page.locator('#app').getByRole('button',{name:new RegExp(label)});
 const activityCard=(page,label)=>page.locator('.activity-card').filter({hasText:label});
 const profileNavAction=page=>page.locator(`button[onclick="navigateVolunteer('profile')"]:visible`).first();
@@ -70,7 +114,7 @@ test.beforeEach(async()=>{
 
 test('Admin manages independent A/B/C/D groups for Rodeio and Indaial',async({page})=>{
   await login(page,'admin@oleiro.test','Admin123!','admin');
-  await navAction(page,'Grupos').click();
+  await openGroupsFromSettings(page);
   const grid=page.locator('.groups-page-grid');await expect(grid).toBeVisible({timeout:20_000});
   const columns=grid.locator('.groups-unit-column');await expect(columns).toHaveCount(2,{timeout:20_000});
   const rodeio=columns.filter({hasText:'Rodeio'}),indaial=columns.filter({hasText:'Indaial'});
