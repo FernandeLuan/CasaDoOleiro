@@ -40,7 +40,7 @@ async function login(page,email,password,target,language='pt'){
 const navAction=(page,label)=>page.getByRole('navigation').getByRole('button',{name:new RegExp(`^.{0,3}${label}$`)});
 async function openGroupsFromSettings(page){
   await navAction(page,'Configurações').click();
-  await page.getByRole('button',{name:/Grupos.*Gerenciar grupos e integrantes por unidade/}).click();
+  await page.locator('.asc-actions .asc-tile').filter({hasText:'Grupos'}).click();
   await expect(page.locator('.groups-page-grid')).toBeVisible({timeout:20_000});
 }
 const appAction=(page,label)=>page.locator('#app').getByRole('button',{name:new RegExp(label)});
