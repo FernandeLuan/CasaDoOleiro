@@ -4,12 +4,12 @@ import { readFile } from 'node:fs/promises';
 
 const read = path => readFile(new URL(path, import.meta.url), 'utf8');
 
-test('history events persist the authenticated email and render it as the author', async () => {
+test('history events preserve authenticated email and display the actor name', async () => {
   const service = await read('../js/services/history-service.js');
   const history = await read('../js/admin/account-history.js');
   const applications = await read('../js/services/application-service.js');
   assert.match(service, /actorEmail:String\(session\?\.email\|\|user\.email\|\|window\.OleiroFirebase\?\.auth\?\.currentUser\?\.email\|\|''\)/);
-  assert.match(history, /row\?\.actorEmail/);
+  assert.match(service, /actorLabel:String\(user\.displayName\|\|user\.name\|\|session\?\.displayName\|\|session\?\.name/);\n  assert.match(history, /function historyAuthor\(row\)\{const actor=String\(row\?\.actorLabel\|\|''\)\.trim\(\);if\(usableActorName\(actor\)\)return actor/);\n  assert.match(history, /source\.filter\(row=>row\?\.actorUid&&!usableActorName\(row\.actorLabel\)/);
   assert.match(applications, /async updateLifecycle/);
   assert.match(applications, /profile_inactivated/);
   assert.match(applications, /profile_reactivated/);
