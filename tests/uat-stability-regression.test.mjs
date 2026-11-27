@@ -71,7 +71,7 @@ test('admin version panel keeps the menu concise and opens card-based release de
   const adminRelease = notes.releases.find(item => item.audience?.includes('admin'));
   const volunteerRelease = notes.releases.find(item => item.audience?.includes('volunteer'));
   assert.equal(adminRelease.version, '384');
-  assert.match(admin, /latest=releases\.find\(release=>audienceOf\(release\)\.includes\('admin'\)\)\|\|null/);
+  assert.match(release, /latest=releases\.find\(release=>audienceOf\(release\)\.includes\('admin'\)\)\|\|null/);
   assert.ok(volunteerRelease);
   assert.equal(notes.releases[0].version, '412');
 });
