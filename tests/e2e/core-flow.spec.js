@@ -37,46 +37,7 @@ async function login(page,email,password,target,language='pt'){
   },target,{timeout:20_000});
 }
 
-const navAction=(page,label)=>page.getByRole('navigation').getByRole('button',{name:new RegExp(`^.{0,3}${label}// Critical browser regression: isolated Firebase emulators only; never production data.
-import {test,expect} from '@playwright/test';
-import {seedEmulators} from './seed.mjs';
-
-const firebaseConfig={
-  apiKey:'demo-api-key',
-  authDomain:'demo-casadooleiro.firebaseapp.com',
-  projectId:'demo-casadooleiro',
-  appId:'1:123:web:e2e'
-};
-
-async function prepare(page,language='pt'){
-  await page.addInitScript(lang=>localStorage.setItem('oleiro-language',lang),language);
-  await page.route('**/js/firebase/firebase-config.js*',route=>route.fulfill({
-    status:200,
-    contentType:'application/javascript',
-    body:`window.OLEIRO_FIREBASE_CONFIG=${JSON.stringify(firebaseConfig)};`
-  }));
-}
-
-async function login(page,email,password,target,language='pt'){
-  await prepare(page,language);
-  await page.goto('/?emulator=1');
-  await page.waitForFunction(async()=>{
-    try{
-      const context=await window.OleiroFirebase?.ready;
-      return !!context?.configured&&typeof window.OleiroAuth?.signIn==='function';
-    }catch{return false}
-  },undefined,{timeout:30_000});
-  await page.locator('#email').fill(email);
-  await page.locator('#password').fill(password);
-  await page.locator('#loginButton').click();
-  await expect(page).toHaveURL(new RegExp(`/${target}/`),{timeout:30_000});
-  await page.waitForFunction(targetName=>{
-    if(typeof window.render!=='function')return false;
-    return targetName==='portal'?typeof window.navigateVolunteer==='function':targetName==='admin'?typeof window.navigateManager==='function':true;
-  },target,{timeout:20_000});
-}
-
-)});
+const navAction=(page,label)=>page.getByRole('navigation').getByRole('button',{name:new RegExp(`^.{0,3}${label}$`)});
 async function openGroupsFromSettings(page){
   await navAction(page,'Configurações').click();
   await page.getByRole('button',{name:/Grupos.*Gerenciar grupos e integrantes por unidade/}).click();
