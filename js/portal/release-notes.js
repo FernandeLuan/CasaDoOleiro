@@ -156,7 +156,6 @@
     const date=String(value||'').slice(0,10);
     if(!date)return '';
     try{
-      if(typeof fmtDate==='function')return fmtDate(date,true);
       const parsed=new Date(value);if(Number.isNaN(parsed.getTime()))return date;const hasTime=/T\d{2}:\d{2}/.test(String(value));return new Intl.DateTimeFormat('pt-BR',hasTime?{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}:{day:'2-digit',month:'2-digit'}).format(parsed);
     }catch{return date}
   }
