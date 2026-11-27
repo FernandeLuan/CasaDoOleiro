@@ -59,7 +59,8 @@
   }
   let updatePromptOpen=false,updateCheckTimer=null;
   async function checkForNewBuild(){
-    const currentBuild=window.OLEIRO_BUILD_META||meta;\n    if(!currentBuild?.commit||updatePromptOpen||!state?.currentSession?.uid||document.visibilityState==='hidden')return;
+    const currentBuild=window.OLEIRO_BUILD_META||meta;
+    if(!currentBuild?.commit||updatePromptOpen||!state?.currentSession?.uid||document.visibilityState==='hidden')return;
     const demoProject=String(window.OLEIRO_FIREBASE_CONFIG?.projectId||'').startsWith('demo-');
     const localTestHost=['localhost','127.0.0.1'].includes(location.hostname);
     const previewBuild=window.OLEIRO_PREVIEW_ENABLED===true;
@@ -73,7 +74,7 @@
       if(!latestBuild?.commit||latestBuild.commit===currentBuild.commit)return;
       if(modalRoot?.querySelector?.('.modal'))return;
       updatePromptOpen=true;
-      openModal('Nova versão disponível','Salve suas alterações antes de atualizar.',`<div class="admin-release-modal"><p>Uma versão mais recente do Casa do Oleiro foi publicada. Salve qualquer informação que esteja editando e atualize o painel para receber as melhorias.</p><p><strong>Versão atual:</strong> ${esc(meta.build||'—')}<br><strong>Nova versão:</strong> ${esc(latestBuild.build||'—')}</p></div>`,`<div class="release-notes-actions"><button class="btn btn-primary btn-block" type="button" onclick="window.location.reload()">Já salvei minhas alterações — atualizar agora</button></div>`);
+      openModal('Nova versão disponível','Salve suas alterações antes de atualizar.',`<div class="admin-release-modal"><p>Uma versão mais recente do Casa do Oleiro foi publicada. Salve qualquer informação que esteja editando e atualize o painel para receber as melhorias.</p><p><strong>Versão atual:</strong> ${esc(currentBuild.build||meta?.build||'—')}<br><strong>Nova versão:</strong> ${esc(latestBuild.build||'—')}</p></div>`,`<div class="release-notes-actions"><button class="btn btn-primary btn-block" type="button" onclick="window.location.reload()">Já salvei minhas alterações — atualizar agora</button></div>`);
     }catch(error){console.warn('Não foi possível verificar uma nova versão:',error)}
   }
   function startBuildPolling(){
@@ -138,12 +139,13 @@
   let attempts=0;
   const waitForSession=()=>{
     if(state?.role==='manager'&&state?.currentSession?.uid){
-      if(state?.managerPage==='home'){maybeAnnounce();if(popupOpened||seen()){} }\n      checkForNewBuild();
+      if(state?.managerPage==='home')maybeAnnounce();
+      checkForNewBuild();
       if(++attempts<120)setTimeout(waitForSession,250);
       return;
     }
     if(++attempts<120)setTimeout(waitForSession,250);
   };
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',waitForSession,{once:true});else setTimeout(waitForSession,500);
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden){if(!loaded)load();maybeAnnounce()}});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden){if(!loaded)load();maybeAnnounce();checkForNewBuild()}});
 })();
