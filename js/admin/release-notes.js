@@ -3,7 +3,7 @@
   if(!location.pathname.includes('/admin/')||window.__OLEIRO_ADMIN_RELEASE_NOTES__)return;
   window.__OLEIRO_ADMIN_RELEASE_NOTES__=true;
   const esc=value=>typeof escapeHtml==='function'?escapeHtml(value):String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  let meta=null,releases=[],latest=null,loaded=false,loading=null,popupOpened=false;
+  let meta=null,releases=[],latest=null,loaded=false,loading=null,popupOpened=false,popupScheduled=false;
   const audienceOf=release=>Array.isArray(release?.audience)&&release.audience.length?release.audience:['volunteer'];
   const uid=()=>String(state?.currentSession?.uid||'anon');
   const seenKey=()=>`oleiro.admin.release-notes.seen.v1:${uid()}`;
@@ -93,7 +93,7 @@
   }
   function startBuildPolling(){
     if(updateCheckTimer)return;
-    updateCheckTimer=setInterval(checkForNewBuild,60000);
+    updateCheckTimer=setInterval(checkForNewBuild,30000);\n    checkForNewBuild();\n    window.addEventListener('focus',checkForNewBuild);
     document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkForNewBuild()});
   }
 
@@ -131,9 +131,18 @@
     const automatedBrowser=typeof navigator!=='undefined'&&navigator.webdriver===true;
     const emulatorSession=(()=>{try{return sessionStorage.getItem('oleiro-e2e')==='1'}catch{return false}})();
     if(demoProject||localTestHost||previewBuild||automatedBrowser||emulatorSession)return;
-    if(popupOpened||!loaded||!latest||!audienceOf(latest).includes('admin')||!state?.currentSession?.uid||state.role!=='manager'||state.managerPage!=='home'||seen())return;
-    popupOpened=true;
-    setTimeout(()=>{if(state?.role==='manager'&&state?.managerPage==='home'&&!seen())window.openAdminReleaseNotes()},500);
+    if(popupOpened||popupScheduled||!loaded||!latest||!audienceOf(latest).includes('admin')||!state?.currentSession?.uid||state.role!=='manager'||state.managerPage!=='home'||seen())return;
+    popupScheduled=true;
+    let attempts=0;
+    const openWhenSafe=()=>{
+      if(state?.role!=='manager'||state?.managerPage!=='home'||seen()){popupScheduled=false;return}
+      if(modalRoot?.querySelector?.('.modal')){
+        if(++attempts<120){setTimeout(openWhenSafe,500);return}
+        popupScheduled=false;return;
+      }
+      popupScheduled=false;popupOpened=true;window.openAdminReleaseNotes();
+    };
+    setTimeout(openWhenSafe,500);
   }
   async function load(){
     if(loading)return loading;
@@ -141,7 +150,7 @@
       fetch('../release.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null),
       fetch('../release-notes.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null)
     ]).then(([releaseMeta,notes])=>{
-      meta=releaseMeta||null;releases=Array.isArray(notes?.releases)?notes.releases:[];latest=releases[0]||null;loaded=true;startBuildPolling();
+      meta=releaseMeta||null;releases=Array.isArray(notes?.releases)?notes.releases:[];latest=releases.find(release=>audienceOf(release).includes('admin'))||null;loaded=true;startBuildPolling();
       window.releaseInformationHtml=releaseInformationHtml;
       maybeAnnounce();return latest;
     }).finally(()=>{loading=null});
