@@ -135,7 +135,7 @@
     }catch{}
   }
   function browserHistoryClear(id){try{sessionStorage.removeItem(browserHistoryKey(id))}catch{}}
-  function historyTabs(p){const id=safe(p.id);return `<div class="person-refactor-tabs person-history-tabs planning-profile-tabs"><button type="button" onclick="openPerson(decodeURIComponent('${id}'),'plan')">Planejamento</button><button type="button" onclick="openPerson(decodeURIComponent('${id}'),'account')">Conta</button><button class="active" type="button" data-r71-history-tab="1">Histórico</button></div>`}
+  function historyTabs(p){const id=safe(p.id);return `<div class="person-refactor-tabs planning-profile-tabs"><button type="button" onclick="openPerson(decodeURIComponent('${id}'),'plan')">Planejamento</button><button type="button" onclick="openPerson(decodeURIComponent('${id}'),'account')">Conta</button><button class="active" type="button" data-r71-history-tab="1">Histórico</button></div>`}
   function historyHtml(p,rows,{loading=false,error=''}={}){
     let content='';
     if(loading)content='<div class="planning-history-r71-skeleton" aria-label="Carregando histórico"><article class="planning-history-r71-placeholder"><span></span><i></i><b></b></article><article class="planning-history-r71-placeholder"><span></span><i></i><b></b></article><article class="planning-history-r71-placeholder"><span></span><i></i><b></b></article></div>';
