@@ -170,9 +170,15 @@ test('Authentication startup bounds Firebase and Firestore waits and exposes a r
   const login = await read('../js/login.js');
   assert.ok(auth.includes('AUTH_READ_TIMEOUT_MS=12000'));
   assert.ok(auth.includes('withAuthDeadline(()=>window.OleiroFirebase.ready'));
+  assert.ok(auth.includes('withAuthDeadline(()=>auth.signInWithEmailAndPassword(context.auth,email,password)'));
+  assert.ok(auth.includes('A autenticação da conta'));
+  assert.ok(auth.includes('A validação do vínculo de voluntariado'));
   assert.ok(auth.includes('withAuthDeadline(()=>firestore.getDoc(firestore.doc(context.db,\'users\',user.uid))'));
   assert.ok(auth.includes('oleiro/timeout'));
   assert.ok(guard.includes("error?.code==='oleiro/timeout'"));
+  const history = await read('../js/admin/account-history.js');
+  assert.ok(history.includes('button.onclick=()=>openHistory(id)'),'History tab must own a direct click handler');
+  assert.ok(history.includes("button.dataset.r71DirectHandler==='1'"),'History delegated handler must not double invoke direct binding');
   assert.ok(login.includes("error?.code==='oleiro/timeout'"));
 });
 
