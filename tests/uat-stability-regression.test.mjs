@@ -126,11 +126,58 @@ test('volunteer profile edits are recorded atomically in application history', a
 });
 
 
-test('admin WhatsApp visibility considers sessions across all cached planning pages', async () => {
+test('admin WhatsApp visibility is verified against all persisted sessions, never a stale sessionCount', async () => {
   const planning = await read('../js/admin/planning-page.js');
-  assert.match(planning, /function adminHasShareablePlan\(p\)/);
-  assert.match(planning, /state\.adminPlanPageCache\|\|\{\}/);
-  assert.match(planning, /Number\(p\?\.sessionCount\|\|0\)>0/);
-  assert.match(planning, /!adminHasShareablePlan\(p\)/);
-  assert.match(planning, /setTimeout\(function\(\)\{syncAdminShareCooldown\(p\.id\)\},0\)/);
+  assert.ok(planning.includes('function adminShareableRows(rows)'));
+  assert.ok(planning.includes('refreshAdminShareEligibility(p'));
+  assert.ok(planning.includes('listSessions({applicationId:id,fresh:true})'));
+  assert.ok(planning.includes("wrapAdminShareInvalidation('saveActivity'"));
+  assert.ok(!planning.includes('Number(p?.sessionCount||0)>0'));
+  assert.ok(planning.includes('eligibility?.valid!==true'));
+  assert.ok(planning.includes('button.disabled=status.disabled'));
+});
+
+
+test('Admin share button restores the WhatsApp icon and clears the loading state', async () => {
+  const planning = await read('../js/admin/planning-page.js');
+  assert.ok(planning.includes("icon.className='fa-brands fa-whatsapp'"));
+  assert.ok(planning.includes("button.removeAttribute('aria-busy')"));
+  assert.ok(planning.includes("button.classList.toggle('is-complete',status.cooldownActive)"));
+});
+
+test('Admin share eligibility bypasses cached planning sessions for a fresh server read', async () => {
+  const planning = await read('../js/admin/planning-page.js');
+  const service = await read('../js/services/planning-service.js');
+  assert.ok(planning.includes('listSessions({applicationId:id,fresh:true})'));
+  assert.ok(planning.includes('fresh:true'));
+  assert.ok(service.includes('async listSessions({applicationId,from,to,fresh=false}={})'));
+  assert.ok(service.includes('?await applicationSessions(context,applicationId,{from,to})'));
+  assert.ok(service.includes('getDocsFromServer||firestore.getDocs'));
+});
+
+test('Admin lifecycle writes the audit event atomically and invalidates history caches', async () => {
+  const application = await read('../js/services/application-service.js');
+  assert.ok(application.includes('getDocFromServer||firestore.getDoc'));
+  assert.ok(application.includes("services.history.appendToBatch(batch,context,id,eventType"));
+  assert.ok(application.includes('window.OleiroUI?.invalidateHistoryCache?.(historyKey)'));
+});
+
+test('Admin history reads from Firestore server and surfaces query failures', async () => {
+  const history = await read('../js/services/history-service.js');
+  assert.ok(history.includes('getDocsFromServer||firestore.getDocs'));
+  assert.ok(history.includes('Falha ao consultar o histórico persistido da candidatura'));
+  assert.ok(!history.includes('fallback:true'));
+});
+
+
+test('Admin Projects uses the Planning empty-state frame and skeleton loading',async()=>{
+  const projects=await read('../js/admin/projects.js');
+  const styles=await read('../css/projects.css');
+  const adminHtml=await read('../admin/index.html');
+  assert.ok(projects.includes('oleiro-skeleton-grid'));
+  assert.ok(projects.includes('planning-board-empty project-ui-empty'));
+  assert.ok(projects.includes('state.projectLoaded=true'));
+  assert.ok(styles.includes('.project-ui-empty{width:100%;min-height:188px!important'));
+  assert.ok(styles.includes('.legacy-admin-page-clean{max-width:1180px}'));
+  assert.ok(adminHtml.includes('projects-empty-skeleton-align-1'));
 });

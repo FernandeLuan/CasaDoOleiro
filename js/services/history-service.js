@@ -52,16 +52,13 @@
         const constraints=[firestore.orderBy('createdAt','desc')];if(cursor)constraints.push(firestore.startAfter(cursor));constraints.push(firestore.limit(max));
         const started=Date.now();
         try{
-          const snapshot=await firestore.getDocs(firestore.query(firestore.collection(context.db,'applications',String(applicationId),'history'),...constraints));
+          const query=firestore.query(firestore.collection(context.db,'applications',String(applicationId),'history'),...constraints),read=firestore.getDocsFromServer||firestore.getDocs;
+          const snapshot=await read(query);
           services.recordQuery?.('applications/history',started,snapshot.size,{applicationId:String(applicationId),limit:max,append:!!cursor});
           const items=snapshot.docs.map(doc=>({id:doc.id,...doc.data()})),last=snapshot.docs.at(-1)||null;
           return {items,nextCursor:snapshot.size===max?last:null,hasMore:snapshot.size===max};
         }catch(error){
-          const detail=`${error?.code||''} ${error?.message||''}`;
-          if(/permission-denied|missing or insufficient permissions|failed-precondition|index/i.test(detail)){
-            console.warn('Histórico detalhado indisponível; usando eventos do registro principal.',error);
-            return {items:[],nextCursor:null,hasMore:false,fallback:true};
-          }
+          console.error('Falha ao consultar o histórico persistido da candidatura:',applicationId,error);
           throw error;
         }
       },{loading:false});

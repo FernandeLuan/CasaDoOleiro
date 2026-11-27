@@ -161,7 +161,7 @@
   window.managerProjects=function(){
     if(!state.projectLoaded&&!state.projectLoading)ensureProjectsLoaded().catch(()=>{});
     if(state.projectError)return '<section class="section legacy-admin-page compact-page-top"><div class="notice danger"><i class="fa-solid fa-triangle-exclamation"></i><div><strong>Não foi possível carregar os projetos.</strong><br>'+esc(state.projectError)+'</div></div><button class="btn btn-primary btn-block" type="button" onclick="refreshLegacyProjects()">Tentar novamente</button></section>';
-    if(state.projectLoading)return `<section class="section legacy-admin-page compact-page-top"><div class="card" aria-busy="true"><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div></div></section>`;
+    if(state.projectLoading)return `<section class="section legacy-admin-page legacy-admin-page-clean compact-page-top" aria-busy="true" aria-live="polite"><div class="oleiro-skeleton projects-loading-skeleton" aria-label="Carregando projetos"><div class="oleiro-skeleton-grid">${Array.from({length:3},()=>'<section class="oleiro-skeleton-card"><div class="oleiro-skeleton-row"><span class="oleiro-skeleton-circle"></span><span class="oleiro-skeleton-line medium"></span></div><span class="oleiro-skeleton-line"></span><span class="oleiro-skeleton-line short"></span></section>').join('')}</div></div></section>`;
     state.projectFilter=normalizeProjectFilter(state.projectFilter);
     state.projectUnit=normalizeProjectUnit(state.projectUnit);
     const list=rows(),activeFilter=state.projectFilter!=='all'||state.projectUnit!=='all';
@@ -170,7 +170,7 @@
         <div class="filter-search admin-filter-search"><i class="fa-solid fa-magnifying-glass"></i><input id="projectSearch" class="input" type="search" value="${esc(state.projectSearch||'')}" placeholder="Buscar projeto ou voluntário" oninput="updateLegacyProjectSearch(this.value)"></div>
         <button class="admin-filter-button ${activeFilter?'active':''}" type="button" onclick="openLegacyProjectFilters()" aria-label="Filtros"><i class="fa-solid fa-sliders"></i>${activeFilter?'<span class="filter-dot"></span>':''}</button>
       </div>
-      <div class="list project-ui-list">${list.length?list.map(projectCard).join(''):'<div class="empty"><i class="fa-solid fa-seedling"></i>Nenhum projeto encontrado.</div>'}</div>
+      <div class="list project-ui-list">${list.length?list.map(projectCard).join(''):`<div class="planning-board-empty project-ui-empty" role="status"><div><i class="fa-solid fa-seedling" aria-hidden="true"></i><strong>${activeFilter||projectSearchValue()?'Nenhum projeto corresponde aos filtros.':'Ainda não há projetos cadastrados.'}</strong><span>${activeFilter||projectSearchValue()?'Ajuste ou limpe os filtros para ver outros projetos.':'Os projetos enviados pelos voluntários aparecerão aqui.'}</span>${activeFilter||projectSearchValue()?'<button class="btn btn-outline" type="button" onclick="clearLegacyProjectFilters()">Limpar filtros</button>':''}</div></div>`}</div>
     </section>`;
   };
   window.updateLegacyProjectSearch=function(value){state.projectSearch=String(value||'');render();afterNavigation?.()};
@@ -184,7 +184,7 @@
     state.projectUnit=normalizeProjectUnit(document.getElementById('legacyProjectUnitFilter')?.value);
     closeModal();render();afterNavigation?.();
   };
-  window.clearLegacyProjectFilters=function(){state.projectFilter='all';state.projectUnit='all';closeModal();render();afterNavigation?.()};
+  window.clearLegacyProjectFilters=function(){state.projectFilter='all';state.projectUnit='all';state.projectSearch='';closeModal();render();afterNavigation?.()};
   window.setLegacyProjectFilter=function(value){state.projectFilter=normalizeProjectFilter(value);render();afterNavigation?.()};
   window.openLegacyProjectAdmin=function(id){
     const p=(window.OleiroProjects?.list?.()||[]).find(x=>String(x.id)===String(id));if(!p)return;
