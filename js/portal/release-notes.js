@@ -11,7 +11,7 @@
 
   const ALWAYS_SHOW_HOME_NOTICES=false; // produção: respeitar a dispensa do usuário e só reexibir quando ANNOUNCEMENT.id mudar
   let ANNOUNCEMENT={
-    id:'2026-11-27-portal-unified-whats-new-412',
+    id:'2026-09-portal-projeto-legado-v3',
     eyebrow:'Nova atualização',
     title:'Tem novidade por aqui ✨',
     summary:'Deixamos o portal mais simples e adicionamos novas formas de acompanhar sua experiência.',
@@ -534,7 +534,7 @@
   let sessionAnnouncementAttempts=0;
   const waitForVolunteerSession=()=>{
     if(state?.role==='volunteer'&&state?.currentSession?.uid){maybeOpenPendingReleasePopup();return}
-    if(++sessionAnnouncementAttempts<120)setTimeout(waitForVolunteerSession,250);
+    if(++sessionAnnouncementAttempts<480)setTimeout(waitForVolunteerSession,250);
   };
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',waitForVolunteerSession,{once:true});
   else setTimeout(waitForVolunteerSession,250);
