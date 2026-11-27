@@ -165,7 +165,8 @@
   function startBuildPolling(){
     if(updateCheckTimer)return;
     updateCheckTimer=setInterval(checkForNewBuild,30000);
-    checkForNewBuild();\n    window.addEventListener('focus',checkForNewBuild);
+    checkForNewBuild();
+    window.addEventListener('focus',checkForNewBuild);
     document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkForNewBuild()});
   }
 
