@@ -27,8 +27,8 @@
         .planning-candidate-list .volunteer-name-status>h3{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
       }
       @media(max-width:640px){
-        .volunteer-name-status{align-items:flex-start;flex-wrap:wrap;gap:6px}
-        .volunteer-status-badges{gap:6px;flex-wrap:wrap}
+        .volunteer-name-status{align-items:center;flex-wrap:wrap;gap:6px}
+        .volunteer-status-badges{align-items:center;gap:6px;flex-wrap:wrap}
         .volunteer-status-badges .badge{font-size:.62rem}
         .volunteer-status-badges .candidate-deadline-mini{font-size:.58rem}
         .planning-detail-page .planning-profile-meta{display:flex!important;align-items:center!important;flex-wrap:wrap!important;gap:5px!important}
