@@ -10,12 +10,12 @@ test('history records the authenticated user display name, not their email', asy
   assert.match(service, /actorEmail:String\(session\?\.email\|\|user\.email/);
 });
 
-test('both Admin history views prefer the display name and resolve legacy email labels by UID', async () => {
+test('both Admin history views prefer display names and resolve legacy email labels by UID', async () => {
   const modal = await read('../js/admin/history.js');
   const page = await read('../js/admin/account-history.js');
   assert.match(modal, /row\.actorLabel\|\|row\.actorEmail/);
-  assert.match(page, /row\.actorLabel\|\|row\.actorEmail/);
-  assert.match(page, /async resolveActorNames\(rows\)/);
+  assert.match(page, /function historyAuthor\(row\)/);
+  assert.match(page, /actorLabel\|\|''\)\.trim\(\)\.toLowerCase\(\)===String\(row\.actorEmail/);
   assert.match(page, /OleiroServices\.users\.getByIds\(uids\)/);
-  assert.match(page, /resolvedRows\.forEach\(row=>byId\.set/);
+  assert.match(page, /actor\.name\)row\.actorLabel=actor\.name/);
 });
