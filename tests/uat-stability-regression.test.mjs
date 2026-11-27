@@ -164,6 +164,18 @@ test('Admin lifecycle writes the audit event atomically and invalidates history 
   assert.ok(application.includes('window.OleiroUI?.invalidateHistoryCache?.(historyKey)'));
 });
 
+test('Authentication startup bounds Firebase and Firestore waits and exposes a retry state', async () => {
+  const auth = await read('../js/services/auth-service.js');
+  const guard = await read('../js/services/auth-guard.js');
+  const login = await read('../js/login.js');
+  assert.ok(auth.includes('AUTH_READ_TIMEOUT_MS=12000'));
+  assert.ok(auth.includes('withAuthDeadline(()=>window.OleiroFirebase.ready'));
+  assert.ok(auth.includes('withAuthDeadline(()=>firestore.getDoc(firestore.doc(context.db,\'users\',user.uid))'));
+  assert.ok(auth.includes('oleiro/timeout'));
+  assert.ok(guard.includes("error?.code==='oleiro/timeout'"));
+  assert.ok(login.includes("error?.code==='oleiro/timeout'"));
+});
+
 test('Admin history uses the compatible Firestore reader and surfaces query failures', async () => {
   const history = await read('../js/services/history-service.js');
   assert.ok(history.includes('snapshot=await firestore.getDocs(query)'));
