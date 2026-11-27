@@ -102,9 +102,9 @@
     document.head.appendChild(style);
   }
 
-  const OCCUPANCY_MIN_MONTH='2026-09';
-  const OCCUPANCY_MAX_MONTH='2027-09';
-  function month(){return String(state.occupancyScreenMonth||_oleiroToday.slice(0,7))}
+  const OCCUPANCY_MIN_MONTH='2026-11';
+  const OCCUPANCY_MAX_MONTH='2027-11';
+  function month(){const stored=String(state.occupancyScreenMonth||_oleiroToday.slice(0,7)).slice(0,7);const normalized=stored<OCCUPANCY_MIN_MONTH?OCCUPANCY_MIN_MONTH:stored>OCCUPANCY_MAX_MONTH?OCCUPANCY_MAX_MONTH:stored;state.occupancyScreenMonth=normalized;return normalized}
   function monthParts(){const [year,value]=month().split('-').map(Number);return {year,monthIndex:Math.max(0,(value||1)-1)}}
   function monthTitle(){const {year,monthIndex}=monthParts(),locale=typeof currentLocale==='function'?currentLocale():'pt-BR',text=new Intl.DateTimeFormat(locale,{month:'long',year:'numeric'}).format(new Date(year,monthIndex,1,12));return text.charAt(0).toUpperCase()+text.slice(1)}
   function weekdays(){const locale=typeof currentLocale==='function'?currentLocale():'pt-BR',sunday=new Date(2021,7,1,12);return Array.from({length:7},(_,i)=>{const d=new Date(sunday);d.setDate(sunday.getDate()+i);return new Intl.DateTimeFormat(locale,{weekday:'short'}).format(d).replace('.','').slice(0,3).toUpperCase()})}
