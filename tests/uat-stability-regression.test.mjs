@@ -167,7 +167,7 @@ test('Admin lifecycle writes the audit event atomically and invalidates history 
 test('Admin history uses the compatible Firestore reader and surfaces query failures', async () => {
   const history = await read('../js/services/history-service.js');
   assert.ok(history.includes('snapshot=await firestore.getDocs(query)'));
-  assert.ok(history.includes('cache/server behavior'));
+  assert.ok(history.includes('Compatibility fallback'),'History reader must preserve compatibility when ordered Firestore reads fail');
   assert.ok(history.includes('Falha ao consultar o histórico persistido da candidatura'));
   assert.ok(history.includes('fallback:true'),'History must keep a compatibility fallback when the ordered query fails');
 });
