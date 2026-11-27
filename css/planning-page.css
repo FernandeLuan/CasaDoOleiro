@@ -160,3 +160,6 @@
   .planning-review-toolbar{align-items:stretch;flex-direction:column;gap:12px;margin:0 0 14px;padding:14px}
   .planning-approve-button{width:100%}
 }
+
+/* Estado vazio com contorno tracejado perceptível em temas claro e escuro. */
+.planning-board-empty{border:1.5px dashed color-mix(in srgb,var(--muted) 48%,var(--border))!important;background:color-mix(in srgb,var(--surface) 38%,transparent)!important}

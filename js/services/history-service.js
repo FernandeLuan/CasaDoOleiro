@@ -52,10 +52,26 @@
         const constraints=[firestore.orderBy('createdAt','desc')];if(cursor)constraints.push(firestore.startAfter(cursor));constraints.push(firestore.limit(max));
         const started=Date.now();
         try{
-          const query=firestore.query(firestore.collection(context.db,'applications',String(applicationId),'history'),...constraints);
-          /* Use the SDK's normal query reader: it preserves the configured Firestore
-             cache/server behavior across the Firebase SDK versions used in production. */
-          const snapshot=await firestore.getDocs(query);
+          const collection=firestore.collection(context.db,'applications',String(applicationId),'history');
+          let snapshot;
+          try{
+            const query=firestore.query(collection,...constraints);
+            snapshot=await firestore.getDocs(query);
+          }catch(orderedError){
+            /* Compatibility fallback for projects whose deployed Firestore indexes do not
+               yet support the ordered history query. Keep the canonical read API and sort
+               the bounded result client-side rather than leaving the History tab unusable. */
+            if(cursor)throw orderedError;
+            console.warn('Consulta ordenada do histórico indisponível; tentando leitura compatível.',orderedError);
+            snapshot=await firestore.getDocs(firestore.query(collection,firestore.limit(200)));
+            const docs=[...snapshot.docs].sort((a,b)=>{
+              const av=(a.data()?.createdAt?.toMillis?.()??new Date(a.data()?.createdAt||0).getTime()??0);
+              const bv=(b.data()?.createdAt?.toMillis?.()??new Date(b.data()?.createdAt||0).getTime()??0);
+              return bv-av;
+            }).slice(0,max);
+            services.recordQuery?.('applications/history',started,snapshot.size,{applicationId:String(applicationId),limit:max,fallback:true});
+            return {items:docs.map(doc=>({id:doc.id,...doc.data()})),nextCursor:null,hasMore:false};
+          }
           services.recordQuery?.('applications/history',started,snapshot.size,{applicationId:String(applicationId),limit:max,append:!!cursor});
           const items=snapshot.docs.map(doc=>({id:doc.id,...doc.data()})),last=snapshot.docs.at(-1)||null;
           return {items,nextCursor:snapshot.size===max?last:null,hasMore:snapshot.size===max};

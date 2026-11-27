@@ -33,6 +33,10 @@
       .admin-account-release .release-info strong{color:var(--text)}
       .admin-release-details{display:inline-flex;align-items:center;gap:7px;width:max-content;border:0;background:none;padding:2px 0;color:var(--primary);font:inherit;font-size:.62rem;font-weight:700;cursor:pointer}
       .admin-release-modal{display:grid;gap:14px}
+      .admin-release-modal,.admin-release-modal p{font-family:var(--font-body)!important}
+      .admin-release-modal p{margin:0;color:var(--text);font-size:.84rem;line-height:1.55;letter-spacing:0}
+      .admin-release-modal p+p{margin-top:2px}
+      .admin-release-modal p strong{font-family:var(--font-heading)!important;font-weight:700;color:var(--text)}
       .admin-release-intro{display:grid;grid-template-columns:46px minmax(0,1fr);gap:12px;align-items:start}
       .admin-release-icon{width:46px;height:46px;border-radius:14px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center}
       .admin-release-intro small{display:block;margin-bottom:3px;color:var(--primary);font-size:.56rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase}
@@ -95,8 +99,6 @@
   }
   function modalBody(){
     return `<div class="admin-release-modal">
-      <div class="admin-release-intro"><span class="admin-release-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span><div><small>${esc(latest?.eyebrow||'Atualização do sistema')} <span>Versão ${esc(version())}</span></small><strong>${esc(latest?.title||'O que mudou?')}</strong><p>${esc(latest?.summary||'Confira as melhorias desta versão.')}</p>${publishedAtLabel(meta?.publishedAt||latest?.publishedAt)?`<p class="admin-release-published">Publicado em ${esc(publishedAtLabel(meta?.publishedAt||latest?.publishedAt))}</p>`:''}</div></div>
-      <div class="admin-release-whatsnew-title">O que há de novo</div>
       <div class="admin-release-items">${(Array.isArray(latest?.items)?latest.items:[]).map(itemHtml).join('')}</div>
     </div>`;
   }

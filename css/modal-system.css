@@ -102,3 +102,9 @@
 .modal.modal-keyboard-open{
   max-height:calc(var(--modal-viewport-height,100dvh) - 12px)!important;
 }
+
+/* Cabeçalho dos modais: título maior, alinhado verticalmente ao controle de fechar. */
+.modal-head{align-items:center!important;min-height:68px}
+.modal-head>div{display:flex;min-height:38px;flex-direction:column;justify-content:center}
+.modal-head h2{font-size:1.12rem!important;line-height:1.2!important;font-weight:700!important;letter-spacing:-.02em}
+.modal-head p{font-size:.68rem!important;line-height:1.4!important}

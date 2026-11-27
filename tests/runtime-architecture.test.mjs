@@ -185,8 +185,10 @@ test('release announcement modals keep only the compact summary and full-width a
   const css=readFileSync('css/release-notes.css','utf8');
   const portalModal=portal.slice(portal.indexOf('window.openPortalReleaseNotes=function'),portal.indexOf('const baseNavigateVolunteer'));
   const adminModal=admin.slice(admin.indexOf('function modalBody()'),admin.indexOf('window.openAdminReleaseNotes=function'));
+  assert.ok(portalModal.includes('ANNOUNCEMENT.summary'));
+  assert.ok(adminModal.includes('admin-release-items'),'Admin announcement must show only the new-change cards');
+  assert.ok(!adminModal.includes('admin-release-intro'),'Admin announcement must omit the redundant introductory block');
   for(const modal of [portalModal,adminModal]){
-    assert.ok(modal.includes('ANNOUNCEMENT.summary')||modal.includes('latest?.summary'));
     assert.ok(!modal.includes('Atualizações anteriores'));
     assert.ok(!modal.includes('release-history-list'));
     assert.ok(!modal.includes('admin-release-history'));

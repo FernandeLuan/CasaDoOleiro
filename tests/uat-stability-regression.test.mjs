@@ -166,10 +166,10 @@ test('Admin lifecycle writes the audit event atomically and invalidates history 
 
 test('Admin history uses the compatible Firestore reader and surfaces query failures', async () => {
   const history = await read('../js/services/history-service.js');
-  assert.ok(history.includes('const snapshot=await firestore.getDocs(query)'));
-  assert.ok(history.includes('cache/server behavior'));
+  assert.ok(history.includes('snapshot=await firestore.getDocs(query)'));
+  assert.ok(history.includes('Compatibility fallback'),'History reader must preserve compatibility when ordered Firestore reads fail');
   assert.ok(history.includes('Falha ao consultar o histórico persistido da candidatura'));
-  assert.ok(!history.includes('fallback:true'));
+  assert.ok(history.includes('fallback:true'),'History must keep a compatibility fallback when the ordered query fails');
 });
 
 
@@ -222,7 +222,7 @@ test('version metadata announces new builds and describes release contents',asyn
   const home=await read('../js/portal/home.js');
   assert.ok(portal.includes('checkForNewBuild'));
   assert.ok(admin.includes('checkForNewBuild'));
-  assert.ok(admin.includes('O que há de novo'));
+  assert.ok(admin.includes('admin-release-items'),'Admin release modal must present the upcoming changes as cards');
   assert.ok(account.includes('max-height:min(86vh,760px)'));
   assert.ok(!home.includes('>Ver agenda</button>'));
 });
@@ -248,10 +248,10 @@ test('volunteer preparation deadline uses calendar days and is displayed below t
   assert.ok(inline.includes('<div class="volunteer-name-status"><h3>'));
 });
 
-test('occupancy month navigation is bounded to September 2026 through September 2027', async () => {
+test('occupancy month navigation is bounded to November 2026 through November 2027', async () => {
   const occupancy = await read('../js/admin/occupancy-page.js');
-  assert.ok(occupancy.includes("OCCUPANCY_MIN_MONTH='2026-09'"));
-  assert.ok(occupancy.includes("OCCUPANCY_MAX_MONTH='2027-09'"));
+  assert.ok(occupancy.includes("OCCUPANCY_MIN_MONTH='2026-11'"));
+  assert.ok(occupancy.includes("OCCUPANCY_MAX_MONTH='2027-11'"));
   assert.ok(occupancy.includes('next<OCCUPANCY_MIN_MONTH||next>OCCUPANCY_MAX_MONTH'));
 });
 
