@@ -128,6 +128,22 @@
     return metaPromise;
   }
 
+  function showBuildUpdateNotice(currentBuild,latestBuild){
+    if(document.getElementById('oleiro-build-update-notice'))return;
+    updatePromptOpen=true;
+    const notice=document.createElement('section');
+    notice.id='oleiro-build-update-notice';
+    notice.setAttribute('role','status');
+    notice.setAttribute('aria-live','polite');
+    notice.style.cssText='position:fixed;right:16px;bottom:16px;z-index:2147483000;width:min(420px,calc(100vw - 32px));padding:16px;border:1px solid var(--border,#d7dce2);border-radius:16px;background:var(--surface,#fff);color:var(--text,#17202a);box-shadow:0 12px 40px rgba(0,0,0,.22);font:inherit;display:grid;gap:10px';
+    const title=document.createElement('strong');title.textContent='Nova versão disponível';
+    const message=document.createElement('span');message.textContent='Salve suas alterações antes de atualizar. A tela atual permanecerá aberta.';
+    const versions=document.createElement('small');versions.textContent='Versão atual: '+String(currentBuild.build||'—')+' · Nova versão: '+String(latestBuild.build||'—');
+    const actions=document.createElement('div');actions.style.cssText='display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap';
+    const dismiss=document.createElement('button');dismiss.type='button';dismiss.textContent='Agora não';dismiss.style.cssText='padding:9px 12px;border:1px solid var(--border,#d7dce2);border-radius:9px;background:transparent;color:inherit;cursor:pointer';dismiss.addEventListener('click',()=>{notice.remove();updatePromptOpen=false});
+    const reload=document.createElement('button');reload.type='button';reload.textContent='Já salvei — atualizar';reload.style.cssText='padding:9px 12px;border:0;border-radius:9px;background:var(--primary,#315b49);color:white;cursor:pointer';reload.addEventListener('click',()=>window.location.reload());
+    actions.append(dismiss,reload);notice.append(title,message,versions,actions);document.body.appendChild(notice);
+  }
   let updatePromptOpen=false,updateCheckTimer=null;
   async function checkForNewBuild(){
     const currentBuild=window.OLEIRO_BUILD_META||releaseMeta;
@@ -143,9 +159,7 @@
       if(!response.ok)return;
       const latestBuild=await response.json();
       if(!latestBuild?.commit||latestBuild.commit===currentBuild.commit)return;
-      if(modalRoot?.querySelector?.('.modal'))return;
-      updatePromptOpen=true;
-      openModal('Nova versão disponível','Salve suas alterações antes de atualizar.',`<div class="release-notes-modal"><p>Uma versão mais recente do Casa do Oleiro foi publicada. Para receber as melhorias, salve qualquer informação que esteja editando e atualize o portal.</p><p><strong>Versão atual:</strong> ${esc(currentBuild.build||releaseMeta?.build||'—')}<br><strong>Nova versão:</strong> ${esc(latestBuild.build||'—')}</p></div>`,`<div class="release-notes-actions"><button class="btn btn-primary btn-block" type="button" onclick="window.location.reload()">Já salvei minhas alterações — atualizar agora</button></div>`);
+      showBuildUpdateNotice(currentBuild,latestBuild);
     }catch(error){console.warn('Não foi possível verificar uma nova versão:',error)}
   }
   function startBuildPolling(){
