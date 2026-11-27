@@ -58,10 +58,19 @@
     const button=document.createElement('button');button.type='button';button.dataset.historyTab='1';button.className=tab==='history'?'active':'';button.innerHTML=`<i class="fa-solid fa-clock-rotate-left"></i>${escapeHtml(tx('history.tab','Histórico'))}`;button.onclick=()=>openPerson(String(p.id),'history');root.append(button);
   }
   async function resolveActorNames(rows){
-    const source=(rows||[]).map(row=>({...row}));
-    const uids=[...new Set(source.filter(row=>row?.actorUid&&String(row.actorRole||'').toLowerCase()!=='system'&&(!String(row.actorLabel||'').trim()||String(row.actorLabel||'').trim().toLowerCase()===String(row.actorEmail||'').trim().toLowerCase())).map(row=>String(row.actorUid)))];
-    if(!uids.length||!window.OleiroServices?.users?.getByIds)return source;
-    try{const users=await window.OleiroServices.users.getByIds(uids);const byId=new Map((users||[]).filter(user=>!user?.missing).map(user=>[String(user.id),String(user.displayName||user.name||'').trim()]));source.forEach(row=>{const name=byId.get(String(row.actorUid||''));if(name)row.actorLabel=name})}catch(error){console.warn('Não foi possível resolver os nomes dos autores do histórico:',error)}
+    const source=(rows||[]).map(row=>({...row})),needsName=row=>!String(row.actorLabel||'').trim()||String(row.actorLabel||'').trim().toLowerCase()===String(row.actorEmail||'').trim().toLowerCase();
+    const unresolved=source.filter(row=>needsName(row)&&String(row.actorRole||'').toLowerCase()!=='system');
+    const uids=[...new Set(unresolved.map(row=>String(row.actorUid||'')).filter(Boolean))],emails=[...new Set(unresolved.map(row=>String(row.actorEmail||'').trim().toLowerCase()).filter(Boolean))];
+    if(!uids.length&&!emails.length)return source;
+    try{
+      const [byIdUsers,byEmailUsers]=await Promise.all([
+        uids.length&&window.OleiroServices?.users?.getByIds?window.OleiroServices.users.getByIds(uids):Promise.resolve([]),
+        emails.length&&window.OleiroServices?.users?.getByEmails?window.OleiroServices.users.getByEmails(emails):Promise.resolve([])
+      ]);
+      const byId=new Map((byIdUsers||[]).filter(user=>!user?.missing).map(user=>[String(user.id),String(user.displayName||user.name||user.fullName||'').trim()]));
+      const byEmail=new Map((byEmailUsers||[]).map(user=>[String(user.email||'').trim().toLowerCase(),String(user.displayName||user.name||user.fullName||'').trim()]));
+      source.forEach(row=>{if(!needsName(row))return;const name=byId.get(String(row.actorUid||''))||byEmail.get(String(row.actorEmail||'').trim().toLowerCase());if(name)row.actorLabel=name});
+    }catch(error){console.warn('Não foi possível resolver os nomes dos autores do histórico:',error)}
     return source;
   }
   async function hydrate(p,{append=false,force=false}={}){

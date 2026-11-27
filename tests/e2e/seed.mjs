@@ -31,7 +31,7 @@ export async function seedEmulators(){
     const now=Timestamp.now(),deadline=Timestamp.fromDate(new Date(Date.now()+7*86400000));
 
     const batch=db.batch();
-    batch.set(db.doc(`users/${admin.uid}`),{role:'admin',active:true,language:'pt',unitIds:['rodeio','indaial'],email:admin.email,createdAt:now,updatedAt:now});
+    batch.set(db.doc(`users/${admin.uid}`),{role:'admin',active:true,displayName:'Administrador E2E',name:'Administrador E2E',language:'pt',unitIds:['rodeio','indaial'],email:admin.email,createdAt:now,updatedAt:now});
     batch.set(db.doc(`users/${volunteer.uid}`),{role:'volunteer',active:true,language:'pt',unitIds:['rodeio'],email:volunteer.email,firstPortalAccessAt:now,createdAt:now,updatedAt:now});
     batch.set(db.doc(`users/${approved.uid}`),{role:'volunteer',active:true,language:'pt',unitIds:['rodeio'],email:approved.email,firstPortalAccessAt:now,createdAt:now,updatedAt:now});
     batch.set(db.doc(`users/${indaial.uid}`),{role:'volunteer',active:true,language:'pt',unitIds:['indaial'],email:indaial.email,firstPortalAccessAt:now,createdAt:now,updatedAt:now});

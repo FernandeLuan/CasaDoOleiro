@@ -76,7 +76,7 @@ test('Admin WhatsApp button hands the message to the native launcher and clears 
   const icon=button.locator('i');await expect(icon).toHaveClass(/fa-whatsapp/);await expect(icon).not.toHaveClass(/fa-spin/);
 });
 
-test('Admin inactivation is persisted in History with the actor email',async({page})=>{
+test('Admin inactivation is persisted in History with the actor display name',async({page})=>{
   await login(page);await openPlanningBoardVolunteer(page,'Aprovado E2E');
   await page.locator('.planning-profile-tabs').getByRole('button',{name:'Conta'}).click();
   const riskAction=page.locator('.account-danger-zone .account-risk-lifecycle');
@@ -91,5 +91,6 @@ test('Admin inactivation is persisted in History with the actor email',async({pa
   const history=page.locator('.planning-detail-page .planning-history-r71');
   await expect(history).toBeVisible({timeout:20_000});
   await expect(history).toContainText('Perfil inativado',{timeout:20_000});
-  await expect(history).toContainText('admin@oleiro.test');
+  await expect(history).toContainText('Administrador E2E');
+  await expect(history).not.toContainText('admin@oleiro.test');
 });
