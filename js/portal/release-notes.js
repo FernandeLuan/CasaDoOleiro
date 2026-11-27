@@ -130,7 +130,8 @@
 
   let updatePromptOpen=false,updateCheckTimer=null;
   async function checkForNewBuild(){
-    const currentBuild=window.OLEIRO_BUILD_META||releaseMeta;\n    if(!currentBuild?.commit||updatePromptOpen||!state?.currentSession?.uid||document.visibilityState==='hidden')return;
+    const currentBuild=window.OLEIRO_BUILD_META||releaseMeta;
+    if(!currentBuild?.commit||updatePromptOpen||!state?.currentSession?.uid||document.visibilityState==='hidden')return;
     const demoProject=String(window.OLEIRO_FIREBASE_CONFIG?.projectId||'').startsWith('demo-');
     const localTestHost=['localhost','127.0.0.1'].includes(location.hostname);
     const previewBuild=window.OLEIRO_PREVIEW_ENABLED===true;
@@ -144,7 +145,7 @@
       if(!latestBuild?.commit||latestBuild.commit===currentBuild.commit)return;
       if(modalRoot?.querySelector?.('.modal'))return;
       updatePromptOpen=true;
-      openModal('Nova versão disponível','Salve suas alterações antes de atualizar.',`<div class="release-notes-modal"><p>Uma versão mais recente do Casa do Oleiro foi publicada. Para receber as melhorias, salve qualquer informação que esteja editando e atualize o portal.</p><p><strong>Versão atual:</strong> ${esc(releaseMeta.build||'—')}<br><strong>Nova versão:</strong> ${esc(latestBuild.build||'—')}</p></div>`,`<div class="release-notes-actions"><button class="btn btn-primary btn-block" type="button" onclick="window.location.reload()">Já salvei minhas alterações — atualizar agora</button></div>`);
+      openModal('Nova versão disponível','Salve suas alterações antes de atualizar.',`<div class="release-notes-modal"><p>Uma versão mais recente do Casa do Oleiro foi publicada. Para receber as melhorias, salve qualquer informação que esteja editando e atualize o portal.</p><p><strong>Versão atual:</strong> ${esc(currentBuild.build||releaseMeta?.build||'—')}<br><strong>Nova versão:</strong> ${esc(latestBuild.build||'—')}</p></div>`,`<div class="release-notes-actions"><button class="btn btn-primary btn-block" type="button" onclick="window.location.reload()">Já salvei minhas alterações — atualizar agora</button></div>`);
     }catch(error){console.warn('Não foi possível verificar uma nova versão:',error)}
   }
   function startBuildPolling(){
