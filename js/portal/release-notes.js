@@ -517,7 +517,6 @@
       const published=fmtNoticeDate(releaseMeta?.publishedAt||ANNOUNCEMENT.publishedAt);
       return `<div class="release-info release-info-latest">
         <p><strong>Versão:</strong> <span data-release-latest-version>${esc(version)}</span></p>
-        <p><strong>Última atualização:</strong> <span data-release-latest-summary>${esc(ANNOUNCEMENT.summary||'Nenhuma descrição disponível.')}</span></p>
         ${published?`<small>Publicado em ${esc(published)}</small>`:''}
         <button class="info-action-link" type="button" onclick="openPortalReleaseNotes()"><i class="fa-solid fa-wand-magic-sparkles"></i>Ver detalhes</button>
       </div>`;
