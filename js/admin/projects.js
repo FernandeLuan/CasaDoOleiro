@@ -162,6 +162,7 @@
   window.managerProjects=function(){
     if(!state.projectLoaded&&!state.projectLoading)ensureProjectsLoaded().catch(()=>{});
     if(state.projectError)return '<section class="section legacy-admin-page compact-page-top"><div class="notice danger"><i class="fa-solid fa-triangle-exclamation"></i><div><strong>Não foi possível carregar os projetos.</strong><br>'+esc(state.projectError)+'</div></div><button class="btn btn-primary btn-block" type="button" onclick="refreshLegacyProjects()">Tentar novamente</button></section>';
+    if(state.projectLoading&&!state.projectShowSkeleton)return '<section class="section legacy-admin-page legacy-admin-page-clean compact-page-top projects-loading-placeholder" aria-busy="true"></section>';
     if(state.projectLoading&&state.projectShowSkeleton)return `<section class="section legacy-admin-page legacy-admin-page-clean compact-page-top" aria-busy="true" aria-live="polite"><div class="oleiro-skeleton projects-loading-skeleton" aria-label="Carregando projetos"><div class="oleiro-skeleton-grid">${Array.from({length:3},()=>'<section class="oleiro-skeleton-card"><div class="oleiro-skeleton-row"><span class="oleiro-skeleton-circle"></span><span class="oleiro-skeleton-line medium"></span></div><span class="oleiro-skeleton-line"></span><span class="oleiro-skeleton-line short"></span></section>').join('')}</div></div></section>`;
     state.projectFilter=normalizeProjectFilter(state.projectFilter);
     state.projectUnit=normalizeProjectUnit(state.projectUnit);
