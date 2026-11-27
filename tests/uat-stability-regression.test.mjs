@@ -16,6 +16,19 @@ test('history events persist the authenticated email and render it as the author
   assert.match(applications, /services\.history\.appendToBatch\(batch,context,id,eventType/);
 });
 
+test('volunteer release modal uses the same card-only layout and opens once per new release after login', async () => {
+  const portal = await read('../js/portal/release-notes.js');
+  const admin = await read('../js/admin/release-notes.js');
+  const notes = JSON.parse(await readFile(new URL('../release-notes.json', import.meta.url), 'utf8'));
+  assert.match(portal, /const body=\`<div class="release-notes-modal"><div class="release-notes-modal-items">/);
+  assert.doesNotMatch(portal, /release-notes-modal-intro/);
+  assert.match(admin, /function modalBody\(\)[\s\S]*admin-release-items/);
+  assert.match(portal, /state\?\.role!=='volunteer'\|\|!state\?\.currentSession\?\.uid/);
+  assert.doesNotMatch(portal, /state\?\.volunteerPage!=='home'\)return/);
+  assert.equal(notes.releases[0].id, '2026-11-27-portal-unified-whats-new-412');
+  assert.ok(notes.releases[0].audience.includes('volunteer'));
+});
+
 test('WhatsApp sharing is disabled without active sessions and does not open a blank tab', async () => {
   const planning = await read('../js/portal/planejamento.js');
   assert.match(planning, /const hasActive=activeCandidateSessions\(\)\.length>0/);
