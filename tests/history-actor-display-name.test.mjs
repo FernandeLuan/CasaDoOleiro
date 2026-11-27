@@ -38,3 +38,14 @@ test('history never renders an email address as the author display name', async 
   assert.ok(!page.includes("if(email)return email"));
   assert.ok(modal.includes("actor&&!actor.includes('@')"));
 });
+
+test('admin account uses the standard logout confirmation and a full-width footer action', async () => {
+  const account = await read('../js/admin/account-settings.js');
+  assert.ok(account.includes("window.confirmAdminLogout=function()"));
+  assert.ok(account.includes("'Sair do portal'"));
+  assert.ok(account.includes("'Deseja realmente encerrar sua sessão?'"));
+  assert.ok(account.includes("onclick=\"confirmAdminLogout()\""));
+  assert.ok(account.includes("window.OleiroAuth.signOut()"));
+  assert.ok(account.includes("grid-template-columns:1fr;padding-top:12px"));
+  assert.ok(account.includes(".admin-account-footer .admin-account-inline-signout{width:100%"));
+});
