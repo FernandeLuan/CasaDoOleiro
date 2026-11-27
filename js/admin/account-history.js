@@ -226,16 +226,21 @@
   }
 
   function rewriteHistoryButtons(){
-    const p=typeof candidateById==='function'?candidateById(state.managerPlanningPersonId):null;if(!p)return;
+    const detail=document.querySelector('.planning-detail-page');
+    const id=String(detail?.dataset.personId||state.managerPlanningPersonId||'');
+    const p=typeof candidateById==='function'?candidateById(id):null;if(!p)return;
     document.querySelectorAll('.planning-detail-page .planning-profile-tabs button').forEach(button=>{
       if(String(button.textContent||'').trim().toLowerCase()!=='histórico')return;
-      button.dataset.r71HistoryTab='1';button.removeAttribute('onclick');
+      button.dataset.r71HistoryTab='1';
+      button.dataset.r71DirectHandler='1';
+      button.onclick=()=>openHistory(id);
     });
   }
   document.addEventListener('click',event=>{
     const button=event.target.closest?.('.planning-detail-page .planning-profile-tabs button');
-    if(!button||String(button.textContent||'').trim().toLowerCase()!=='histórico')return;
-    const p=typeof candidateById==='function'?candidateById(state.managerPlanningPersonId):null;if(!p)return;
+    if(!button||String(button.textContent||'').trim().toLowerCase()!=='histórico'||button.dataset.r71DirectHandler==='1')return;
+    const id=String(document.querySelector('.planning-detail-page')?.dataset.personId||state.managerPlanningPersonId||'');
+    const p=typeof candidateById==='function'?candidateById(id):null;if(!p)return;
     event.preventDefault();event.stopImmediatePropagation();openHistory(p.id);
   },true);
 
