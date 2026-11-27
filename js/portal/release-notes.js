@@ -490,7 +490,7 @@
     const body=`<div class="release-notes-modal">
       <div class="release-notes-modal-intro">
         <span class="release-notes-modal-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
-        <div><small>${esc(ANNOUNCEMENT.eyebrow)} <span data-release-meta></span></small><strong>${esc(ANNOUNCEMENT.title)}</strong><p>${esc(ANNOUNCEMENT.summary)}</p>${fmtNoticeDate(ANNOUNCEMENT.publishedAt||releaseMeta?.publishedAt)?`<p class="release-notes-published">Publicado em ${esc(fmtNoticeDate(ANNOUNCEMENT.publishedAt||releaseMeta?.publishedAt))}</p>`:''}</div>
+        <div><small>${esc(ANNOUNCEMENT.eyebrow)} <span data-release-meta></span></small><strong>${esc(ANNOUNCEMENT.title)}</strong><p>${esc(ANNOUNCEMENT.summary)}</p>${fmtNoticeDate(releaseMeta?.publishedAt||ANNOUNCEMENT.publishedAt)?`<p class="release-notes-published">Publicado em ${esc(fmtNoticeDate(releaseMeta?.publishedAt||ANNOUNCEMENT.publishedAt))}</p>`:''}</div>
       </div>
       <div class="release-notes-modal-items">${(Array.isArray(ANNOUNCEMENT.items)?ANNOUNCEMENT.items:[]).map(itemHtml).join('')}</div>
     </div>`;
@@ -514,7 +514,7 @@
   if(typeof window.releaseInformationHtml==='function'){
     window.releaseInformationHtml=function(){
       const version=ANNOUNCEMENT.version||releaseMeta?.build||'—';
-      const published=fmtNoticeDate(ANNOUNCEMENT.publishedAt||releaseMeta?.publishedAt);
+      const published=fmtNoticeDate(releaseMeta?.publishedAt||ANNOUNCEMENT.publishedAt);
       return `<div class="release-info release-info-latest">
         <p><strong>Versão:</strong> <span data-release-latest-version>${esc(version)}</span></p>
         <p><strong>Última atualização:</strong> <span data-release-latest-summary>${esc(ANNOUNCEMENT.summary||'Nenhuma descrição disponível.')}</span></p>
