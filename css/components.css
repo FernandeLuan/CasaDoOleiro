@@ -291,3 +291,14 @@
     animation:none!important;
   }
 }
+
+
+/* Navegação mobile flutuante: superfície translúcida, segura e coerente com o tema. */
+@media(max-width:759px){
+  body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
+  .bottom-nav{left:12px;right:12px;bottom:max(10px,env(safe-area-inset-bottom));width:auto;max-width:none;box-sizing:border-box;padding:7px;gap:5px;grid-template-columns:repeat(5,minmax(0,1fr));border:1px solid color-mix(in srgb,var(--border-strong) 72%,transparent);border-radius:28px;background:color-mix(in srgb,var(--surface) 78%,transparent);-webkit-backdrop-filter:blur(24px) saturate(1.55);backdrop-filter:blur(24px) saturate(1.55);box-shadow:0 12px 34px rgba(15,25,18,.16),inset 0 1px 0 rgba(255,255,255,.24)}
+  .dark .bottom-nav{background:rgba(25,34,29,.78);border-color:rgba(255,255,255,.15);box-shadow:0 12px 34px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.09)}
+  .nav-btn{min-width:0;min-height:58px;padding:7px 2px;border:0;border-radius:21px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;color:var(--muted);font-size:.57rem;font-weight:600;line-height:1.1;-webkit-tap-highlight-color:transparent;transition:background .18s ease,color .18s ease,transform .18s ease}
+  .nav-btn i{font-size:1.12rem;line-height:1}.nav-btn.active{background:var(--primary-soft);color:var(--primary);font-weight:800}.nav-btn:active{transform:scale(.94)}.nav-btn:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+}
+@media(prefers-reduced-motion:reduce){.nav-btn{transition:none}}
