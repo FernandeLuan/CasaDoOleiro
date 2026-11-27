@@ -266,6 +266,7 @@ test('planning filter dot only reflects explicitly selected filters', async () =
 test('volunteer release details show the actual deployment timestamp and keep the menu minimal', async () => {
   const portal = await read('../js/portal/release-notes.js');
   assert.ok(portal.includes('releaseMeta?.publishedAt||ANNOUNCEMENT.publishedAt'));
-  assert.ok(portal.includes('hasTime=/T\\\\d{2}:\\\\d{2}/'));
+  assert.ok(portal.includes('hasTime='));
+  assert.ok(portal.includes("hour:'2-digit'"));
   assert.ok(!portal.includes('Última atualização:</strong>'));
 });
