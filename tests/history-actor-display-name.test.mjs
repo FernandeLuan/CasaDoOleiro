@@ -15,7 +15,7 @@ test('both Admin history views prefer display names and resolve legacy email lab
   const page = await read('../js/admin/account-history.js');
   assert.ok(modal.includes('row.actorLabel||row.actorEmail'));
   assert.ok(page.includes('function historyAuthor(row)'));
-  assert.ok(page.includes('async resolveHistoryActors(rows)'));
+  assert.ok(page.includes('async function resolveHistoryActors(rows)'));
   assert.ok(page.includes('OleiroServices.users.getByIds(uids)'));
   assert.ok(page.includes('row.actorLabel=actor.name'));
 });
