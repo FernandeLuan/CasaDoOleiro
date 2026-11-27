@@ -37,7 +37,7 @@ async function login(page,email,password,target,language='pt'){
   },target,{timeout:20_000});
 }
 
-const navAction=(page,label)=>page.locator('.admin-sidebar-r62 button:visible, #navRoot .bottom-nav button:visible').filter({hasText:label}).first();
+const navAction=(page,label)=>page.locator('.admin-sidebar-r62 button:visible').filter({hasText:label}).or(page.getByRole('navigation').getByRole('button',{name:new RegExp(label)})).first();
 async function openGroupsFromSettings(page){
   await navAction(page,'Configurações').click();
   await page.locator('.asc-actions .asc-tile').filter({hasText:'Grupos'}).click();
