@@ -8,7 +8,7 @@
   }
   async function requireRole(expectedRole){
     if(!window.OleiroAuth?.currentSession){redirectTo(rootUrl());return null}
-    let session;try{session=await window.OleiroAuth.currentSession()}catch(error){if(error?.code==='oleiro/offline'){showOfflineState(error.message);return null}console.error('Falha ao validar sessão:',error);redirectTo(rootUrl());return null}
+    let session;try{session=await window.OleiroAuth.currentSession()}catch(error){if(error?.code==='oleiro/offline'||error?.code==='oleiro/timeout'){showOfflineState(error.message);return null}console.error('Falha ao validar sessão:',error);redirectTo(rootUrl());return null}
     if(!session){redirectTo(rootUrl());return null}
     if(session.role!==expectedRole){redirectTo(session.role==='manager'?'../admin/':'../portal/');return null}
     return session;
