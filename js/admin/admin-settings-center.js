@@ -48,7 +48,7 @@
       <button class="btn btn-outline btn-block" style="width:100%;min-height:46px" onclick="confirmAdminLogout()"><i class="fa-solid fa-right-from-bracket"></i> Sair da conta</button>
     </div></div>`;
   }
-  window.openAdminGroups=function(){closeModal?.();if(typeof navigateManager==='function')navigateManager('groups')};
+  window.openAdminGroups=function(){if(typeof closeModal==='function')closeModal();if(typeof navigateManager==='function')navigateManager('groups')};
   window.openMyAccount=function(){openShell('Configurações',settingsHtml())};
   window.setAdminTheme=function(target){window.setThemePreference?.(target);setTimeout(()=>window.openMyAccount(),0)};
   window.openAdminAccessManagement=async function(){
