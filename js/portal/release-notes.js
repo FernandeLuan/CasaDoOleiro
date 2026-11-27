@@ -153,11 +153,10 @@
   }
   function rawSession(value){return value?.raw||value||{}}
   function fmtNoticeDate(value){
-    const date=String(value||'').slice(0,10);
+    const raw=String(value||''),date=raw.slice(0,10);
     if(!date)return '';
     try{
-      if(typeof fmtDate==='function')return fmtDate(date,true);
-      return new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'2-digit'}).format(new Date(date+'T12:00:00'));
+      const hasTime=raw.length>10,parsed=new Date(hasTime?raw:`${date}T12:00:00`);if(Number.isNaN(parsed.getTime()))return date;return new Intl.DateTimeFormat('pt-BR',hasTime?{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}:{day:'2-digit',month:'2-digit'}).format(parsed);
     }catch{return date}
   }
   function currentProjectAdjustmentSlide(){
@@ -490,7 +489,7 @@
     const body=`<div class="release-notes-modal">
       <div class="release-notes-modal-intro">
         <span class="release-notes-modal-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
-        <div><small>${esc(ANNOUNCEMENT.eyebrow)} <span data-release-meta></span></small><strong>${esc(ANNOUNCEMENT.title)}</strong><p>${esc(ANNOUNCEMENT.summary)}</p></div>
+        <div><small>${esc(ANNOUNCEMENT.eyebrow)} <span data-release-meta></span></small><strong>${esc(ANNOUNCEMENT.title)}</strong><p>${esc(ANNOUNCEMENT.summary)}</p>${fmtNoticeDate(releaseMeta?.publishedAt||ANNOUNCEMENT.publishedAt)?`<p class="release-notes-published">Publicado em ${esc(fmtNoticeDate(releaseMeta?.publishedAt||ANNOUNCEMENT.publishedAt))}</p>`:''}</div>
       </div>
       <div class="release-notes-modal-items">${(Array.isArray(ANNOUNCEMENT.items)?ANNOUNCEMENT.items:[]).map(itemHtml).join('')}</div>
     </div>`;
@@ -514,10 +513,9 @@
   if(typeof window.releaseInformationHtml==='function'){
     window.releaseInformationHtml=function(){
       const version=ANNOUNCEMENT.version||releaseMeta?.build||'—';
-      const published=fmtNoticeDate(ANNOUNCEMENT.publishedAt||releaseMeta?.publishedAt);
+      const published=fmtNoticeDate(releaseMeta?.publishedAt||ANNOUNCEMENT.publishedAt);
       return `<div class="release-info release-info-latest">
         <p><strong>Versão:</strong> <span data-release-latest-version>${esc(version)}</span></p>
-        <p><strong>Última atualização:</strong> <span data-release-latest-summary>${esc(ANNOUNCEMENT.summary||'Nenhuma descrição disponível.')}</span></p>
         ${published?`<small>Publicado em ${esc(published)}</small>`:''}
         <button class="info-action-link" type="button" onclick="openPortalReleaseNotes()"><i class="fa-solid fa-wand-magic-sparkles"></i>Ver detalhes</button>
       </div>`;

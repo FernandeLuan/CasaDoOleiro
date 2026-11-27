@@ -102,6 +102,8 @@
     document.head.appendChild(style);
   }
 
+  const OCCUPANCY_MIN_MONTH='2026-09';
+  const OCCUPANCY_MAX_MONTH='2027-09';
   function month(){return String(state.occupancyScreenMonth||_oleiroToday.slice(0,7))}
   function monthParts(){const [year,value]=month().split('-').map(Number);return {year,monthIndex:Math.max(0,(value||1)-1)}}
   function monthTitle(){const {year,monthIndex}=monthParts(),locale=typeof currentLocale==='function'?currentLocale():'pt-BR',text=new Intl.DateTimeFormat(locale,{month:'long',year:'numeric'}).format(new Date(year,monthIndex,1,12));return text.charAt(0).toUpperCase()+text.slice(1)}
@@ -151,7 +153,7 @@
     const current=unitId(),rows=units();
     return `<div class="occupancy-v2-unit-options" role="group" aria-label="Unidade">${rows.map(row=>`<button class="occupancy-v2-unit ${String(row.id)===current?'active':''}" type="button" aria-pressed="${String(row.id)===current?'true':'false'}" onclick="selectOccupancyUnit('${esc(String(row.id))}')">${esc(row.name||row.id)}</button>`).join('')}</div>`;
   }
-  function monthSelector(){return `<div class="occupancy-v2-month"><button class="icon-btn" type="button" onclick="shiftOccupancyMonth(-1)" aria-label="Mês anterior"><i class="fa-solid fa-chevron-left"></i></button><strong>${esc(monthTitle())}</strong><button class="icon-btn" type="button" onclick="shiftOccupancyMonth(1)" aria-label="Próximo mês"><i class="fa-solid fa-chevron-right"></i></button></div>`}
+  function monthSelector(){const current=month(),previousDisabled=current<=OCCUPANCY_MIN_MONTH,nextDisabled=current>=OCCUPANCY_MAX_MONTH;return `<div class="occupancy-v2-month"><button class="icon-btn" type="button" onclick="shiftOccupancyMonth(-1)" aria-label="Mês anterior" ${previousDisabled?'disabled aria-disabled="true"':''}><i class="fa-solid fa-chevron-left"></i></button><strong>${esc(monthTitle())}</strong><button class="icon-btn" type="button" onclick="shiftOccupancyMonth(1)" aria-label="Próximo mês" ${nextDisabled?'disabled aria-disabled="true"':''}><i class="fa-solid fa-chevron-right"></i></button></div>`}
 
   function html(){
     const loading=state.occupancyScreenLoading===true,data=metrics();
@@ -206,7 +208,7 @@
   window.selectOccupancyDay=function(iso){iso=String(iso||'').slice(0,10);if(!iso)return;state.occupancySelectedDate=iso;window.render();openDayPopup(iso)};
   window.selectOccupancyUnit=function(next){next=String(next||'');if(!next||next===unitId())return;state.occupancyUnitId=next;return refresh()};
   window.openManagerOccupancy=function(){state.managerPage='occupancy';state.occupancyScreenMonth=month();state.occupancySelectedDate=selectedDate();if(typeof afterNavigation==='function')afterNavigation();return refresh()};
-  window.shiftOccupancyMonth=function(delta){const {year,monthIndex}=monthParts(),date=new Date(year,monthIndex+Number(delta||0),1,12);state.occupancyScreenMonth=`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}`;state.occupancySelectedDate=String(_oleiroToday).startsWith(state.occupancyScreenMonth)?_oleiroToday:`${state.occupancyScreenMonth}-01`;return refresh()};
+  window.shiftOccupancyMonth=function(delta){const {year,monthIndex}=monthParts(),date=new Date(year,monthIndex+Number(delta||0),1,12),next=`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}`;if(next<OCCUPANCY_MIN_MONTH||next>OCCUPANCY_MAX_MONTH)return;state.occupancyScreenMonth=next;state.occupancySelectedDate=String(_oleiroToday).startsWith(next)?_oleiroToday:`${next}-01`;return refresh()};
 
   window.renderManager=function(){const assistant=String(state.currentSession?.user?.role||'')==='activity_assistant';if(assistant&&state.managerPage==='occupancy'&&typeof window.renderR31OccupancyPage==='function')return window.renderR31OccupancyPage();const result=baseRenderManager();if(!assistant&&state.role==='manager'&&state.managerPage==='occupancy')renderPage();else closeDayPopup();return result};
   window.render=function(){return window.renderManager()};

@@ -4,10 +4,6 @@ on:
   push:
     branches:
       - main
-      - refactor/real-data-only
-      - 'fix/**'
-      - 'fix-*'
-      - 'audit/**'
   pull_request:
     branches: [main]
   workflow_dispatch:

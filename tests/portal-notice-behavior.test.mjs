@@ -29,12 +29,13 @@ test('a new release opens the existing change-summary modal once and is dismisse
   assert.ok(!release.includes("if(!releaseSeen())slides.push(...releaseSlides())"));
 });
 
-test('software version accordion contains the latest release summary and link to details',()=>{
+test('software version menu stays concise and opens the card-based release details',()=>{
   assert.ok(ui.includes('id="info-software"'));
   assert.ok(release.includes('release-info-latest'));
   assert.ok(release.includes('data-release-latest-version'));
-  assert.ok(release.includes('data-release-latest-summary'));
-  assert.ok(release.includes('Última atualização'));
+  assert.ok(release.includes('Publicado em'));
+  assert.ok(release.includes('releaseMeta?.publishedAt||ANNOUNCEMENT.publishedAt'));
+  assert.ok(!release.includes('Última atualização'));
   assert.ok(release.includes('openPortalReleaseNotes()'));
   assert.ok(!release.includes('release-history-card'));
 });

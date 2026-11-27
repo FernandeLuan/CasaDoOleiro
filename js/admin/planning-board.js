@@ -155,10 +155,10 @@
   window.setPlanningBoardView=function(view){state.planningBoardView=view==='volunteer'?'volunteer':'day';render()};
   window.updatePlanningBoardSearch=function(value){state.planningBoardSearch=String(value||'');clearTimeout(state._planningBoardSearchTimer);state._planningBoardSearchTimer=setTimeout(()=>{if(state.managerPage==='planning'&&!state.managerPlanningPersonId)render()},90)};
   window.updatePlanningBoardFilter=function(field,value){
-    if(field==='status')state.planningBoardStatus=String(value||'all');else if(field==='unit')state.planningBoardUnit=String(value||'all');else if(field==='from')state.planningBoardFrom=String(value||state.planningBoardFrom);else if(field==='to')state.planningBoardTo=String(value||state.planningBoardTo);
+    if(field==='status')state.planningBoardStatus=String(value||'all');else if(field==='unit')state.planningBoardUnit=String(value||'all');else if(field==='from'){state.planningBoardFrom=String(value||state.planningBoardFrom);state.planningBoardDateFilterActive=true}else if(field==='to'){state.planningBoardTo=String(value||state.planningBoardTo);state.planningBoardDateFilterActive=true}
     if(field==='from'||field==='to'){state.planningBoardLoadedRange='';render();loadPlanningBoardData({force:true})}else render();
   };
-  window.resetPlanningBoardFilters=function(){state.planningBoardSearch='';state.planningBoardStatus='all';state.planningBoardUnit='all';state.planningBoardFrom=String(_oleiroToday||new Date().toISOString().slice(0,10));state.planningBoardTo=addDaysIso(state.planningBoardFrom,30);state.planningBoardLoadedRange='';render();loadPlanningBoardData({force:true})};
+  window.resetPlanningBoardFilters=function(){state.planningBoardSearch='';state.planningBoardStatus='all';state.planningBoardUnit='all';state.planningBoardDateFilterActive=false;state.planningBoardFrom=String(_oleiroToday||new Date().toISOString().slice(0,10));state.planningBoardTo=addDaysIso(state.planningBoardFrom,30);state.planningBoardLoadedRange='';render();loadPlanningBoardData({force:true})};
   window.openPlanningBoardPerson=function(encodedId){
     const id=decodeURIComponent(encodedId),p=personByBoardId(id);if(!p)return;
     const byId=new Map((state.candidates||[]).map(row=>[String(row.id),row]));byId.set(String(p.id),p);state.candidates=[...byId.values()];state.managerPlanningOrigin='planning';return openPerson(String(p.id),'plan');

@@ -130,8 +130,8 @@
       if(p.status==='approved')return `<button class="btn btn-soft btn-block account-risk-lifecycle" type="button" onclick="reactivateApprovedVolunteer('${id}')"><i class="fa-solid fa-rotate-left"></i>Reativar usuário</button>`;
       return `<button class="btn btn-soft btn-block account-risk-lifecycle" type="button" onclick="reactivateVolunteerAccess('${id}')"><i class="fa-solid fa-rotate-left"></i>Reativar usuário</button>`;
     }
-    if(p.status==='approved')return `<button class="btn btn-danger-soft btn-block account-risk-lifecycle" type="button" onclick="requestInactivateApprovedVolunteer('${id}')"><i class="fa-solid fa-user-slash"></i>Inativar usuário</button>`;
-    return `<button class="btn btn-danger-soft btn-block account-risk-lifecycle" type="button" onclick="requestInactivateVolunteerAccess('${id}')"><i class="fa-solid fa-user-slash"></i>Inativar usuário</button>`;
+    if(p.status==='approved')return `<button class="btn btn-soft btn-block account-risk-lifecycle" type="button" onclick="requestInactivateApprovedVolunteer('${id}')"><i class="fa-solid fa-user-slash"></i>Inativar usuário</button>`;
+    return `<button class="btn btn-soft btn-block account-risk-lifecycle" type="button" onclick="requestInactivateVolunteerAccess('${id}')"><i class="fa-solid fa-user-slash"></i>Inativar usuário</button>`;
   }
   window.requestInactivateVolunteerAccess=function(encodedId){
     const id=decodeURIComponent(String(encodedId||'')),p=candidateById(id);if(!p||p.inactive===true||p.active===false||p.status==='rejected')return;
@@ -161,7 +161,6 @@
       renderPersonModal(p,'account');showToast('Usuário reativado. O status e o planejamento foram preservados.');
     }catch(error){console.error(error);showToast(error?.message||'Não foi possível reativar o usuário.')}
   };
-  window.candidateHistoryLifecycleActions=accountLifecycle;
   function accountContent(p){
     const status=personStatus(p),contacts=contactRows(p),{start,end}=personDates(p),unit=p.unit||p.unitName||'—';
     const meeting=typeof window.selectionAccountCard==='function'?window.selectionAccountCard(p):'';

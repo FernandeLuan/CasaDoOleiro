@@ -135,14 +135,14 @@
     }catch{}
   }
   function browserHistoryClear(id){try{sessionStorage.removeItem(browserHistoryKey(id))}catch{}}
-  function historyTabs(p){const id=safe(p.id);return `<div class="person-refactor-tabs person-history-tabs planning-profile-tabs"><button type="button" onclick="openPerson(decodeURIComponent('${id}'),'plan')">Planejamento</button><button type="button" onclick="openPerson(decodeURIComponent('${id}'),'account')">Conta</button><button class="active" type="button" data-r71-history-tab="1">Histórico</button></div>`}
+  function historyTabs(p){const id=safe(p.id);return `<div class="person-refactor-tabs planning-profile-tabs"><button type="button" onclick="openPerson(decodeURIComponent('${id}'),'plan')">Planejamento</button><button type="button" onclick="openPerson(decodeURIComponent('${id}'),'account')">Conta</button><button class="active" type="button" data-r71-history-tab="1">Histórico</button></div>`}
   function historyHtml(p,rows,{loading=false,error=''}={}){
     let content='';
     if(loading)content='<div class="planning-history-r71-skeleton" aria-label="Carregando histórico"><article class="planning-history-r71-placeholder"><span></span><i></i><b></b></article><article class="planning-history-r71-placeholder"><span></span><i></i><b></b></article><article class="planning-history-r71-placeholder"><span></span><i></i><b></b></article></div>';
     else if(error)content=`<div class="notice danger"><i class="fa-solid fa-triangle-exclamation"></i><div>${escapeHtml(error)}</div></div>`;
     else if(!rows.length)content='<div class="planning-history-r71-state"><span><i class="fa-regular fa-clock"></i> Nenhum evento registrado ainda.</span></div>';
     else content=`<div class="planning-history-r71-list">${rows.map(row=>{const meta=metadata(row),who=historyAuthor(row);return `<article class="planning-history-r71-event"><div class="planning-history-r71-dot"></div><div class="planning-history-r71-body"><div class="planning-history-r71-head"><strong>${escapeHtml(eventLabel(row.type))}</strong><time>${escapeHtml(when(row.createdAt))}</time></div>${meta?`<p data-no-i18n>${escapeHtml(meta)}</p>`:''}<span>${escapeHtml(who)}</span></div></article>`}).join('')}</div>`;
-    return `<section class="candidate-history-panel planning-history-r71"><div class="section-head"><div><h3>Histórico do candidato</h3><p>Ações e mudanças registradas neste processo.</p></div></div>${content}${window.candidateHistoryLifecycleActions?.(p)||''}</section>`;
+    return `<section class="candidate-history-panel planning-history-r71"><div class="section-head"><div><h3>Histórico do candidato</h3><p>Ações e mudanças registradas neste processo.</p></div></div>${content}</section>`;
   }
   function renderHistory(p,rows,opts={}){
     state.managerPage='planning';
@@ -201,14 +201,8 @@
     wrapped.__browserCacheWrapped=true;historyService.append=wrapped;
   }
 
-  const baseOpenPerson=typeof window.openPerson==='function'?window.openPerson:null;
-  if(baseOpenPerson){
-    openPerson=async function(id,tab='plan'){
-      if(tab==='history')return openHistory(id);
-      return baseOpenPerson(id,tab);
-    };
-    window.openPerson=openPerson;
-  }
+  /* O Histórico do modal é propriedade de js/admin/history.js.
+     Não sobrescrever openPerson aqui: isso desviava o modal para a página de Planejamento. */
 
   function normalizeAccessText(text){const value=String(text||'').trim();if(/ainda não/i.test(value))return 'Ainda não realizou acesso';if(/primeiro acesso|já realizado|realizado/i.test(value))return 'Primeiro acesso realizado';return value||'Status de acesso indisponível'}
   function postProcessAccount(){
@@ -232,13 +226,13 @@
 
   function rewriteHistoryButtons(){
     const p=typeof candidateById==='function'?candidateById(state.managerPlanningPersonId):null;if(!p)return;
-    document.querySelectorAll('.planning-profile-tabs button,.person-history-tabs button').forEach(button=>{
+    document.querySelectorAll('.planning-detail-page .planning-profile-tabs button').forEach(button=>{
       if(String(button.textContent||'').trim().toLowerCase()!=='histórico')return;
       button.dataset.r71HistoryTab='1';button.removeAttribute('onclick');
     });
   }
   document.addEventListener('click',event=>{
-    const button=event.target.closest?.('button[data-r71-history-tab],.planning-profile-tabs button,.person-history-tabs button');
+    const button=event.target.closest?.('.planning-detail-page .planning-profile-tabs button');
     if(!button||String(button.textContent||'').trim().toLowerCase()!=='histórico')return;
     const p=typeof candidateById==='function'?candidateById(state.managerPlanningPersonId):null;if(!p)return;
     event.preventDefault();event.stopImmediatePropagation();openHistory(p.id);

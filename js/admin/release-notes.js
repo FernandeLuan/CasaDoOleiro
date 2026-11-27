@@ -12,7 +12,7 @@
   const dateLabel=value=>{if(!value)return '';const date=String(value).slice(0,10);const parsed=new Date(date+'T12:00:00');return Number.isNaN(parsed.getTime())?date:new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'long',year:'numeric'}).format(parsed)};
   const publishedAtLabel=value=>{
     if(!value)return '';
-    const date=new Date(value);
+    const raw=String(value),hasTime=raw.length>10,date=new Date(hasTime?raw:`${raw.slice(0,10)}T12:00:00`);
     if(Number.isNaN(date.getTime()))return '';
     return new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(date);
   };
@@ -39,6 +39,7 @@
       .admin-release-intro small span{margin-left:5px;color:var(--muted);letter-spacing:0;text-transform:none}
       .admin-release-intro strong{display:block;font-size:.86rem;color:var(--text)}
       .admin-release-intro p{margin-top:4px;color:var(--muted);font-size:.65rem;line-height:1.45}
+      .admin-release-whatsnew-title{font-size:.7rem;font-weight:800;color:var(--text)}
       .admin-release-items{display:grid;gap:8px}
       .admin-release-item{display:grid;grid-template-columns:38px minmax(0,1fr);gap:10px;align-items:start;padding:11px;border:1px solid var(--border);border-radius:14px;background:var(--surface)}
       .admin-release-item>span{width:38px;height:38px;border-radius:11px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center}
@@ -89,12 +90,13 @@
       <p><strong>Ambiente:</strong> ${esc(environmentLabel)}</p>
       ${published?`<p><strong>Publicado em:</strong> ${esc(published)}</p>`:''}
       ${shortCommit?`<p><strong>Commit:</strong> <code title="${esc(commit)}">${esc(shortCommit)}</code></p>`:''}
-      <div class="admin-release-version-whatsnew"><strong>O que há de novo</strong><div class="admin-release-items">${(Array.isArray(latest?.items)?latest.items:[]).map(itemHtml).join('')||`<p>${esc(latest?.summary||'Informações da versão disponíveis.')}</p>`}</div></div>
+      <button class="admin-release-details" type="button" onclick="openAdminReleaseNotes()"><i class="fa-solid fa-wand-magic-sparkles"></i>Ver detalhes desta versão</button>
     </div>`;
   }
   function modalBody(){
     return `<div class="admin-release-modal">
-      <div class="admin-release-intro"><span class="admin-release-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span><div><small>${esc(latest?.eyebrow||'Atualização do sistema')} <span>Versão ${esc(version())}</span></small><strong>${esc(latest?.title||'O que mudou?')}</strong><p>${esc(latest?.summary||'Confira as melhorias desta versão.')}</p></div></div>
+      <div class="admin-release-intro"><span class="admin-release-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span><div><small>${esc(latest?.eyebrow||'Atualização do sistema')} <span>Versão ${esc(version())}</span></small><strong>${esc(latest?.title||'O que mudou?')}</strong><p>${esc(latest?.summary||'Confira as melhorias desta versão.')}</p>${publishedAtLabel(meta?.publishedAt||latest?.publishedAt)?`<p class="admin-release-published">Publicado em ${esc(publishedAtLabel(meta?.publishedAt||latest?.publishedAt))}</p>`:''}</div></div>
+      <div class="admin-release-whatsnew-title">O que há de novo</div>
       <div class="admin-release-items">${(Array.isArray(latest?.items)?latest.items:[]).map(itemHtml).join('')}</div>
     </div>`;
   }

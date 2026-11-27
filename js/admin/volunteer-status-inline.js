@@ -1,4 +1,4 @@
-/* Status e prazo do voluntário na mesma linha da listagem administrativa. */
+/* Status ao lado do nome e prazo em linha secundária na listagem administrativa. */
 (function volunteerStatusInline(){
   if(!/\/admin\//.test(location.pathname))return;
   if(window.__OLEIRO_VOLUNTEER_STATUS_INLINE__)return;
@@ -14,11 +14,14 @@
       .volunteer-list-page #candidateList.list{gap:12px!important}
 
       .volunteer-name-status{display:flex;align-items:center;gap:8px;min-width:0;margin-bottom:2px}
+      .volunteer-name-status .volunteer-status-badges{display:flex;align-items:center;gap:7px;flex:0 0 auto;white-space:nowrap}
+      .volunteer-name-status .candidate-deadline-mini{display:none!important}
+      .volunteer-deadline-line{display:flex;align-items:center;gap:5px;margin:3px 0 0;color:var(--warning-text,#a56700);font-size:.62rem;line-height:1.3;font-weight:600}
       .volunteer-name-status>h3{margin:0;min-width:0}
       .volunteer-status-badges{display:flex;align-items:center;gap:7px;flex:0 0 auto;white-space:nowrap}
       .volunteer-status-badges .badge{margin:0;flex:0 0 auto}
-      .volunteer-status-badges .candidate-deadline-mini{display:inline-flex!important;align-items:center;gap:4px;margin:0!important;color:var(--warning-text,#a56700);font-size:.62rem;line-height:1.2;font-weight:600;white-space:nowrap}
-      .volunteer-status-badges .candidate-deadline-mini i{font-size:.58rem}
+      .volunteer-status-badges .candidate-deadline-mini{display:none!important}
+       .volunteer-deadline-line i{font-size:.58rem}
       .planning-profile-status-sep{color:var(--muted);font-weight:700}
       @media(min-width:641px){
         .volunteer-list-page .volunteer-name-status,
@@ -30,7 +33,7 @@
         .volunteer-name-status{align-items:center;flex-wrap:wrap;gap:6px}
         .volunteer-status-badges{align-items:center;gap:6px;flex-wrap:wrap}
         .volunteer-status-badges .badge{font-size:.62rem}
-        .volunteer-status-badges .candidate-deadline-mini{font-size:.58rem}
+        .volunteer-deadline-line{font-size:.58rem}
         .planning-detail-page .planning-profile-meta{display:flex!important;align-items:center!important;flex-wrap:wrap!important;gap:5px!important}
         .planning-detail-page .planning-profile-meta .badge{margin:0!important;padding:4px 7px!important;font-size:.61rem!important;white-space:nowrap!important}
       }
@@ -69,11 +72,11 @@
     const meta=typeof candidateDeadlineMeta==='function'&&p?.status==='pending'?candidateDeadlineMeta(p):null;
     const status=candidateStatus(p);
     const inactive=p?.inactive&&p?.status!=='rejected'?statusBadge('Inativo','danger'):'';
-    const deadline=meta?`<span class="candidate-deadline-mini"><i class="fa-regular fa-clock"></i>${esc(meta.label)}</span>`:'';
+    const deadline=meta?`<div class="volunteer-deadline-line"><i class="fa-regular fa-clock"></i>${esc(meta.label)}</div>`:'';
     const period=p?.from&&p?.to&&typeof fmtDate==='function'?`${fmtDate(p.from,true)}–${fmtDate(p.to,true)}`:'Período não informado';
     const initials=String(p?.name||'V').split(/\s+/).filter(Boolean).map(part=>part[0]).slice(0,2).join('').toUpperCase();
     const id=actionArg(p?.id);
-    return `<div class="list-item clickable" onclick="openPerson(decodeURIComponent('${id}'))"><div class="avatar">${esc(initials)}</div><div class="item-main"><div class="volunteer-name-status"><h3>${esc(p?.name||'Voluntário')}</h3><div class="volunteer-status-badges">${statusBadge(status?.[0]||'Status',status?.[1]||'')}${deadline}${inactive}</div></div><p>${esc(p?.country||'—')} • ${esc(p?.unit||p?.unitName||'—')} • ${esc(period)}</p></div><i class="fa-solid fa-chevron-right" style="color:var(--muted);margin-top:11px"></i></div>`;
+    return `<div class="list-item clickable" onclick="openPerson(decodeURIComponent('${id}'))"><div class="avatar">${esc(initials)}</div><div class="item-main"><div class="volunteer-name-status"><h3>${esc(p?.name||'Voluntário')}</h3><div class="volunteer-status-badges">${statusBadge(status?.[0]||'Status',status?.[1]||'')}${inactive}</div></div>${deadline}<p>${esc(p?.country||'—')} • ${esc(p?.unit||p?.unitName||'—')} • ${esc(period)}</p></div><i class="fa-solid fa-chevron-right" style="color:var(--muted);margin-top:11px"></i></div>`;
   };
   window.personCompact=personCompact;
 
