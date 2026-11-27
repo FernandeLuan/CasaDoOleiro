@@ -115,3 +115,5 @@
 .planning-board-empty>div,.project-ui-empty>div{display:grid;justify-items:center;gap:8px;max-width:100%;padding:0 8px}
 .planning-board-empty i,.project-ui-empty i{display:block;margin:0 0 2px;font-size:1.35rem;color:var(--primary)}
 .planning-board-empty span,.project-ui-empty span{font-size:.68rem;line-height:1.45;color:var(--muted)}
+
+.planning-board-loading-placeholder{grid-column:1/-1;min-height:188px}
