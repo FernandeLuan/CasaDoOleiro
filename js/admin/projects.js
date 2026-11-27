@@ -29,8 +29,9 @@
     if(!window.OleiroProjects?.loadAll){state.projectError='Serviço de projetos indisponível.';return Promise.resolve([])}
     if(state.projectLoadPromise&&!force)return state.projectLoadPromise;
     if(state.projectLoaded&&!force)return Promise.resolve(window.OleiroProjects.list?.()||[]);
-    state.projectLoading=true;state.projectError='';
-    const task=Promise.resolve().then(()=>window.OleiroProjects.loadAll({force})).then(rows=>{state.projectLoaded=true;state.projectError='';return rows||[]}).catch(error=>{console.error('Falha ao carregar projetos do Firestore:',error);state.projectLoaded=false;state.projectError=error?.message||'Verifique as permissões do Firestore.';throw error}).finally(()=>{state.projectLoading=false;state.projectLoadPromise=null;if(state.managerPage==='projects')render()});
+    state.projectLoading=true;state.projectShowSkeleton=false;state.projectError='';
+    const skeletonTimer=setTimeout(()=>{if(state.projectLoading&&state.managerPage==='projects'){state.projectShowSkeleton=true;render()}},220);
+    const task=Promise.resolve().then(()=>window.OleiroProjects.loadAll({force})).then(rows=>{state.projectLoaded=true;state.projectError='';return rows||[]}).catch(error=>{console.error('Falha ao carregar projetos do Firestore:',error);state.projectLoaded=false;state.projectError=error?.message||'Verifique as permissões do Firestore.';throw error}).finally(()=>{clearTimeout(skeletonTimer);state.projectLoading=false;state.projectShowSkeleton=false;state.projectLoadPromise=null;if(state.managerPage==='projects')render()});
     state.projectLoadPromise=task;return task;
   }
   window.refreshLegacyProjects=function(){state.projectLoaded=false;return ensureProjectsLoaded({force:true}).catch(()=>[])};
