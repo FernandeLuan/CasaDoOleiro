@@ -169,12 +169,15 @@
       state.adminShareEligibility[id]={loading:false,valid:true,sessions:rows,checkedAt:Date.now(),error:''};
       const labels={status:typeof t==='function'?t('planning.share.status'):'Status',unit:typeof t==='function'?t('planning.share.unit'):'Unidade',period:typeof t==='function'?t('planning.share.period'):'Período',observation:typeof t==='function'?t('planning.share.observation'):'Obs.'};
       const text=window.OleiroPlanningShare.buildText({heading:adminPlanningShareHeading(p),name:p.name||'Voluntário',statusLabel:adminPlanningShareStatus(p),unit:p.unit||p.unitName||'',start,end,sessions:rows,labels});
-      const opened=window.OleiroPlanningShare.openWhatsApp(text)===true;
-      if(!opened){window.OleiroPlanningShare?.closePopup?.(popup);throw new Error('O navegador bloqueou a abertura do WhatsApp.')}
+      const encoded=encodeURIComponent(text),appUrl='whatsapp://send?text='+encoded,webUrl='https://wa.me/?text='+encoded;
+      window.location.href=appUrl;
+      window.setTimeout(()=>{if(document.visibilityState==='visible')window.location.href=webUrl},1100);
+      const opened=true;
+      if(!opened){throw new Error('Não foi possível abrir o WhatsApp neste dispositivo.')}
       try{sessionStorage.setItem(adminShareKey(id),String(Date.now()+ADMIN_SHARE_COOLDOWN_MS))}catch{}
       syncAdminShareCooldown(id);
     }catch(error){
-      console.error('Falha ao preparar compartilhamento do planejamento:',error);window.OleiroPlanningShare?.closePopup?.(popup);showToast(error?.message||'Não foi possível preparar o compartilhamento.');
+      console.error('Falha ao preparar compartilhamento do planejamento:',error);showToast(error?.message||'Não foi possível preparar o compartilhamento.');
       if(button?.isConnected)syncAdminShareCooldown(id);
     }
   };
