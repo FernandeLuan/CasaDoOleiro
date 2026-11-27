@@ -97,7 +97,7 @@ function showLoginMessage(text){const el=document.getElementById('loginMessage')
     if(!session?.role)return;
     location.replace(destinationFor(session.role));
   }catch(error){
-    if(error?.code==='oleiro/offline')showLoginMessage(error.message);
+    if(error?.code==='oleiro/offline'||error?.code==='oleiro/timeout')showLoginMessage(error.message,{error:true});
   }
 })();
 
