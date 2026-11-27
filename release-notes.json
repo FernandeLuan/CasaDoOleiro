@@ -2,6 +2,30 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "id": "2026-11-27-portal-unified-whats-new-412",
+      "version": "412",
+      "audience": [
+        "volunteer"
+      ],
+      "eyebrow": "Nova atualização",
+      "title": "Acesso mais estável ao Casa do Oleiro",
+      "summary": "Melhorias no acesso e na comunicação de atualizações do portal.",
+      "items": [
+        {
+          "icon": "fa-shield-halved",
+          "title": "Acesso mais estável",
+          "text": "A entrada e a restauração da sessão agora tratam esperas prolongadas e apresentam uma orientação para tentar novamente quando necessário."
+        },
+        {
+          "icon": "fa-rotate",
+          "title": "Aviso de nova versão",
+          "text": "O portal identifica quando uma atualização está disponível e orienta você a salvar suas alterações antes de atualizar a página."
+        }
+      ],
+      "ctaLabel": "Entendi",
+      "publishedAt": "2026-11-27"
+    },
+    {
       "id": "2026-11-27-admin-refinements-384",
       "version": "384",
       "audience": [
