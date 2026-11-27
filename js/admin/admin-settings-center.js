@@ -81,21 +81,8 @@
     const name=form.elements.namedItem('name').value.trim(),email=form.elements.namedItem('email').value.trim().toLowerCase(),role=form.elements.namedItem('role').value,unitIds=[...form.querySelectorAll('[name="adminUnit"]:checked')].map(x=>x.value);
     try{
       if(role==='coordinator'&&!unitIds.length)throw new Error('Selecione ao menos uma unidade para o coordenador.');
-      const context=await services().firebase(),appModule=context.modules.app,authModule=context.modules.auth,firestore=context.modules.firestore;
-      const secondaryName='oleiro-admin-provision-'+Date.now(),secondaryApp=appModule.initializeApp(window.OLEIRO_FIREBASE_CONFIG,secondaryName),secondaryAuth=authModule.getAuth(secondaryApp);
-      let credential=null;
-      try{
-        const bytes=new Uint8Array(32);crypto.getRandomValues(bytes);const password=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('')+'aA1!';
-        credential=await authModule.createUserWithEmailAndPassword(secondaryAuth,email,password);
-        await firestore.setDoc(firestore.doc(context.db,'users',credential.user.uid),{displayName:name,name,email,role,active:true,unitIds:role==='coordinator'?unitIds:[],createdAt:firestore.serverTimestamp(),updatedAt:firestore.serverTimestamp(),createdBy:state.currentSession.uid});
-        try{await window.OleiroAuth.sendPasswordReset(email)}
-        catch(error){console.warn('Conta criada, mas o e-mail de definição de senha não foi enviado:',error);showToast?.('Conta criada. O envio do e-mail falhou; use Reenviar acesso na lista.')}
-      }catch(error){
-        if(credential?.user)await authModule.deleteUser(secondaryAuth.currentUser).catch(()=>{});
-        if(error?.code==='auth/email-already-in-use')throw new Error('Já existe uma conta de autenticação com esse e-mail.');
-        if(error?.code==='permission-denied')throw new Error('O Firebase bloqueou a gravação do perfil. Verifique se sua conta tem permissão de administrador.');
-        throw error;
-      }finally{await appModule.deleteApp(secondaryApp).catch(()=>{})}
+      const result=await services().adminAccess.createAccount({name,email,role,unitIds,createdBy:state.currentSession.uid});
+      if(!result.emailSent)showToast?.('Conta criada, mas o e-mail falhou. Use Reenviar acesso na lista.');
       services().users.invalidateManagers?.();showToast?.('Conta administrativa criada.');await window.openAdminAccessManagement();
     }catch(error){console.error('Falha ao criar administrador:',error);showToast?.(error.message||'Não foi possível criar a conta.');button.disabled=false;button.textContent='Criar conta e enviar acesso'}
   }
@@ -103,14 +90,14 @@
     if(!isAdmin())return;const row=(window.__oleiroManagerRows||[]).find(x=>x.id===uid);if(!row)return;
     openShell('Editar permissões',`<div class="modal-body"><form id="ascEditForm" class="asc-form"><div class="asc-person"><span class="asc-avatar"><i class="fa-solid fa-user-shield"></i></span><div class="asc-person-copy"><strong>${esc(row.displayName||row.name||'Administrador')}</strong><small>${esc(row.email||'')}</small></div></div><div class="asc-field"><label for="ascEditRole">Nível de acesso</label><select id="ascEditRole"><option value="admin" ${row.role==='admin'?'selected':''}>Administrador — acesso completo</option><option value="coordinator" ${row.role==='coordinator'?'selected':''}>Coordenador — acesso por unidade</option></select></div><div class="asc-field" id="ascEditUnits" ${row.role==='coordinator'?'':'hidden'}><label>Unidades autorizadas</label><div class="asc-unit-list">${unitOptions(row.unitIds||[])}</div></div><div class="asc-footer"><button type="button" class="btn btn-outline" onclick="openAdminAccessManagement()">Cancelar</button><button type="submit" class="btn btn-primary">Salvar permissões</button></div></form></div>`);
     $('#ascEditRole').addEventListener('change',e=>$('#ascEditUnits').hidden=e.target.value!=='coordinator');
-    $('#ascEditForm').addEventListener('submit',async e=>{e.preventDefault();const role=$('#ascEditRole').value,unitIds=[...document.querySelectorAll('[name="adminUnit"]:checked')].map(x=>x.value);const admins=(window.__oleiroManagerRows||[]).filter(r=>r.role==='admin'&&r.active===true);if(row.role==='admin'&&role!=='admin'&&admins.length<=1){showToast?.('Não é possível rebaixar o último administrador ativo.');return}if(role==='coordinator'&&!unitIds.length){showToast?.('Selecione ao menos uma unidade.');return}try{const c=await services().firebase();await c.modules.firestore.updateDoc(c.modules.firestore.doc(c.db,'users',uid),{role,unitIds:role==='coordinator'?unitIds:[],updatedAt:c.modules.firestore.serverTimestamp()});services().users.invalidateManagers?.();showToast?.('Permissões atualizadas.');await window.openAdminAccessManagement()}catch(error){console.error(error);showToast?.('Não foi possível atualizar as permissões.')}});
+    $('#ascEditForm').addEventListener('submit',async e=>{e.preventDefault();const role=$('#ascEditRole').value,unitIds=[...document.querySelectorAll('[name="adminUnit"]:checked')].map(x=>x.value);const admins=(window.__oleiroManagerRows||[]).filter(r=>r.role==='admin'&&r.active===true);if(row.role==='admin'&&role!=='admin'&&admins.length<=1){showToast?.('Não é possível rebaixar o último administrador ativo.');return}if(role==='coordinator'&&!unitIds.length){showToast?.('Selecione ao menos uma unidade.');return}try{await services().adminAccess.updatePermissions(uid,{role,unitIds});showToast?.('Permissões atualizadas.');await window.openAdminAccessManagement()}catch(error){console.error(error);showToast?.('Não foi possível atualizar as permissões.')}});
   };
   window.toggleAdminAccess=async function(uid,active){
     if(!isAdmin()||uid===state.currentSession?.uid)return;
     const rows=window.__oleiroManagerRows||[],activeAdmins=rows.filter(r=>r.role==='admin'&&r.active===true);
     const target=rows.find(r=>r.id===uid);if(!target)return;
     if(target.role==='admin'&&!active&&activeAdmins.length<=1){showToast?.('Não é possível suspender o último administrador ativo.');return}
-    try{const c=await services().firebase();await c.modules.firestore.updateDoc(c.modules.firestore.doc(c.db,'users',uid),{active:!!active,updatedAt:c.modules.firestore.serverTimestamp()});services().users.invalidateManagers?.();showToast?.(active?'Acesso reativado.':'Acesso suspenso.');await loadManagers()}catch(error){console.error(error);showToast?.('Não foi possível alterar o acesso.')}
+    try{await services().adminAccess.setActive(uid,active);showToast?.(active?'Acesso reativado.':'Acesso suspenso.');await loadManagers()}catch(error){console.error(error);showToast?.('Não foi possível alterar o acesso.')}
   };
   window.sendAdminReset=async function(uid){
     if(!isAdmin())return;const row=(window.__oleiroManagerRows||[]).find(x=>x.id===uid);if(!row?.email)return;
