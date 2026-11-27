@@ -21,6 +21,22 @@
       .admin-account-settings-modal .modal-body{padding:18px 20px 22px!important}
 
       .admin-account-settings{display:grid;gap:13px}
+      .admin-account-top{grid-template-columns:1fr!important}
+      .admin-account-sections{display:grid;gap:8px}
+      .admin-account-accordion{border:1px solid var(--border);border-radius:14px;background:var(--surface);overflow:hidden}
+      .admin-account-accordion>summary{padding:13px 14px;cursor:pointer;font-size:.68rem;font-weight:700;color:var(--text)}
+      .admin-account-accordion-content{padding:0 12px 12px}
+      .admin-account-routine-group{border:1px solid var(--border);border-radius:11px;overflow:hidden;margin-top:8px}
+      .admin-account-routine-group>strong{display:block;padding:8px 10px;background:var(--surface-2);font-size:.58rem;color:var(--muted)}
+      .admin-account-routine-row{display:grid;grid-template-columns:112px 1fr;gap:9px;padding:8px 10px;border-top:1px solid var(--border);font-size:.62rem}
+      .admin-account-routine-row b{color:var(--primary);white-space:nowrap}
+      .admin-account-unit{display:grid;gap:7px;padding:10px 0;border-bottom:1px solid var(--border)}
+      .admin-account-unit-toggle{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:3px;border:1px solid var(--border);border-radius:11px;background:var(--surface-2)}
+      .admin-account-unit-toggle button{min-height:36px;border:0;border-radius:8px;background:transparent;color:var(--muted);font-size:.62rem;font-weight:700}
+      .admin-account-unit-toggle button.active{background:var(--primary);color:white}
+      .admin-account-unit-toggle button.inactive{background:var(--danger);color:white}
+      .admin-account-footer{display:flex;justify-content:flex-end;padding-top:10px;border-top:1px solid var(--border)}
+
       .admin-account-top{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:10px}
       .admin-account-panel{min-width:0;border:1px solid var(--border);border-radius:15px;background:var(--surface);padding:13px}
 
@@ -53,27 +69,19 @@
       .admin-account-release .release-info strong{color:var(--text);font-weight:600}
       .admin-account-release .release-info code,.admin-account-release .release-info span{overflow-wrap:anywhere}
 
-      @media(min-width:1024px){
-        .admin-account-inline-signout,.admin-account-profile-divider{display:none!important}
-      }
+      @media(min-width:1024px){.admin-account-profile-divider{display:none!important}}
       @media(max-width:520px){
         .modal.admin-account-settings-modal{width:calc(100vw - 16px)!important;max-width:calc(100vw - 16px)!important;max-height:88vh!important}
         .admin-account-settings-modal .modal-head{padding:17px 18px 13px!important}
         .admin-account-settings-modal .modal-body{padding:16px 18px 20px!important}
         .admin-account-top{grid-template-columns:1fr}
         .admin-account-release .release-info{grid-template-columns:1fr}
-        .admin-account-profile{
-          grid-template-columns:42px minmax(0,1fr) 1px auto;
-          gap:10px;
-          align-items:center;
-        }
-        .admin-account-profile-divider{display:block}
-        .admin-account-inline-signout{justify-self:end}
+        .admin-account-profile{grid-template-columns:42px minmax(0,1fr)}
+        .admin-account-profile-divider{display:none}
       }
       @media(max-width:380px){
-        .admin-account-profile{grid-template-columns:38px minmax(0,1fr) 1px auto;gap:8px;padding:11px}
+        .admin-account-profile{grid-template-columns:38px minmax(0,1fr);gap:8px;padding:11px}
         .admin-account-avatar{width:38px;height:38px;border-radius:12px}
-        .admin-account-inline-signout{min-width:70px;padding-inline:10px}
       }
     `;
     document.head.appendChild(style);
@@ -84,6 +92,10 @@
     catch{return '<div class="release-info"><p>Informação de versão indisponível.</p></div>'}
   }
 
+  function routineRows(rows){return rows.map(row=>'<div class="admin-account-routine-row"><b>'+row[0]+'</b><span>'+row[1]+'</span></div>').join('')}
+  function routineHtml(){return '<div class="admin-account-routine-group"><strong>MANHÃ</strong>'+routineRows([['06:00','Despertar e higiene'],['06:15–07:30','Devocional'],['07:30–08:15','Café da manhã'],['08:15–11:15','Atividades práticas'],['11:15–12:00','Reunião de sentimentos'],['12:00–13:30','Almoço e descanso']])+'</div><div class="admin-account-routine-group"><strong>TARDE E NOITE</strong>'+routineRows([['13:45–15:00','Atividades'],['15:00–15:15','Café da tarde'],['15:15–16:30','Atividades'],['16:30 em diante','Banho, lazer e jantar'],['19:30–21:00','Filme, palestra, documentário ou outras atividades'],['21:00','Alojamento'],['21:30','Silêncio total']])+'</div>'}
+  function unitsHtml(){const rows=Array.isArray(state.units)?state.units:[];return rows.map(unit=>{const id=encodeURIComponent(String(unit.id)),active=unit.active!==false;return '<div class="admin-account-unit"><strong>'+esc(unit.name||unit.id)+'</strong><small>Disponibilidade da unidade</small><div class="admin-account-unit-toggle"><button class="'+(active?'active':'')+'" onclick="setAccountUnitActive(\''+id+'\',true)">Ativo</button><button class="'+(!active?'inactive':'')+'" onclick="setAccountUnitActive(\''+id+'\',false)">Inativo</button></div></div>'}).join('')||'<p>Nenhuma unidade cadastrada.</p>'}
+  window.setAccountUnitActive=async function(encoded,next){const id=decodeURIComponent(encoded),unit=(state.units||[]).find(row=>String(row.id)===id);if(!unit||unit.active===(next===true))return;try{await window.OleiroServices.units.update(id,{active:next===true});state.units=state.units.map(row=>String(row.id)===id?{...row,active:next===true}:row);window.OleiroServices.units.invalidate?.();window.openMyAccount()}catch(error){console.error(error);showToast?.('Não foi possível atualizar a unidade.')}};
   window.setAdminTheme=function(target){
     window.setThemePreference?.(target);
     setTimeout(()=>window.openMyAccount?.(),0);
@@ -97,7 +109,6 @@
           <span class="admin-account-avatar"><i class="fa-solid fa-user-shield"></i></span>
           <div class="admin-account-profile-copy"><div class="admin-account-profile-line"><strong>Administrador</strong></div><span>${esc(session.email||'—')}</span></div>
           <span class="admin-account-profile-divider" aria-hidden="true"></span>
-          <button class="admin-account-inline-signout" type="button" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i>Sair</button>
         </section>
         <section class="admin-account-panel admin-account-preference">
           <div class="admin-account-preference-copy"><small>Aparência</small><strong>Tema do painel</strong><span>Preferência salva neste dispositivo.</span></div>
@@ -108,10 +119,10 @@
           </div>
         </section>
       </div>
-      <section class="admin-account-release">
+      <div class="admin-account-sections"><details class="admin-account-accordion"><summary>Rotina da Casa</summary><div class="admin-account-accordion-content">${routineHtml()}</div></details><details class="admin-account-accordion"><summary>Unidades</summary><div class="admin-account-accordion-content">${unitsHtml()}</div></details><details class="admin-account-accordion"><summary>Sistema e versão</summary><div class="admin-account-accordion-content"><section class="admin-account-release">
         <div class="admin-account-release-head"><small>Sistema</small><strong>Versão do software</strong></div>
         ${releaseHtml()}
-      </section>
+      </section></div></details></div><footer class="admin-account-footer"><button class="admin-account-inline-signout" type="button" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i>Sair</button></footer>
     </div></div>`;
     openModal('Minha conta','',body);
     modalRoot?.querySelector?.('.modal')?.classList.add('admin-account-settings-modal');

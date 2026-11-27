@@ -101,7 +101,7 @@
         sidebarButton(state.managerPage==='planning','fa-calendar-check','Planejamento',"navigateManager('planning')"),
         sidebarButton(state.managerPage==='projects','fa-seedling','Projetos',"navigateManager('projects')"),
         sidebarButton(state.managerPage==='groups','fa-people-group','Grupos',"navigateManager('groups')"),
-        sidebarButton(state.managerPage==='houseInfo','fa-circle-info','Informações da Casa','openHouseInfo()','admin-sidebar-item-info')
+        
       ].join('');
     }
     document.querySelector('.admin-sidebar-tools-r62')?.remove();
@@ -114,7 +114,7 @@
   function enhanceAdminHeader(){
     const actions=document.querySelector('.admin-content-r62>.app-header .header-actions');
     if(!actions)return;
-    actions.innerHTML='<button class="icon-btn" type="button" onclick="openMyAccount()" aria-label="Minha conta" title="Minha conta"><i class="fa-solid fa-user"></i></button><button class="icon-btn" type="button" onclick="openHouseInfo()" aria-label="Informações da Casa" title="Informações da Casa"><i class="fa-solid fa-circle-info"></i></button>';
+    actions.innerHTML='<button class="icon-btn" type="button" onclick="openMyAccount()" aria-label="Minha conta" title="Minha conta"><i class="fa-solid fa-user"></i></button>';
   }
 
   function bottomNav(){
