@@ -124,13 +124,43 @@
     return uids.map((uid,index)=>{const access=cache[String(uid)]||{},email=emails[index]||access.email||'',name=names[index]||p.name||'Voluntário',first=access.firstPortalAccessAt,inactive=access.active===false;return `<div class="account-access-row"><div><strong>${escapeHtml(name)}</strong><span>${escapeHtml(email||'—')}</span><small>${inactive?'Acesso inativo':first?'Primeiro acesso realizado':'Ainda não acessou o portal'}</small></div>${!inactive&&!first?`<button class="btn btn-outline btn-xs" type="button" onclick="requestVolunteerEmailEdit('${safe(p.id)}','${safe(uid)}')"><i class="fa-solid fa-pen"></i>Editar e-mail</button>`:''}</div>`}).join('');
   }
   function accountLifecycle(p){
-    const id=safe(p.id);
-    if(p.status==='rejected'||p.inactive===true||p.active===false){const action=p.status==='approved'||p.inactivePreviousStatus==='approved'?`reactivateApprovedVolunteer('${id}')`:`reactivateCandidate(decodeURIComponent('${id}'))`;return `<button class="btn btn-soft btn-block account-risk-lifecycle" type="button" onclick="${action}"><i class="fa-solid fa-rotate-left"></i>Reativar usuário</button>`;}
-    if(p.status==='pending')return `<button class="btn btn-danger-soft btn-block account-risk-lifecycle" type="button" onclick="requestRejectPendingCandidate(decodeURIComponent('${id}'))"><i class="fa-solid fa-user-slash"></i>Recusar e inativar usuário</button>`;
-    if(['analysis','adjustments'].includes(p.status))return `<button class="btn btn-danger-soft btn-block account-risk-lifecycle" type="button" onclick="rejectCandidate(decodeURIComponent('${id}'))"><i class="fa-solid fa-user-slash"></i>Recusar e inativar usuário</button>`;
+    const id=safe(p.id),inactive=p.inactive===true||p.active===false;
+    if(inactive){
+      if(p.status==='rejected')return `<button class="btn btn-soft btn-block account-risk-lifecycle" type="button" onclick="reactivateCandidate(decodeURIComponent('${id}'))"><i class="fa-solid fa-rotate-left"></i>Reativar usuário</button>`;
+      if(p.status==='approved')return `<button class="btn btn-soft btn-block account-risk-lifecycle" type="button" onclick="reactivateApprovedVolunteer('${id}')"><i class="fa-solid fa-rotate-left"></i>Reativar usuário</button>`;
+      return `<button class="btn btn-soft btn-block account-risk-lifecycle" type="button" onclick="reactivateVolunteerAccess('${id}')"><i class="fa-solid fa-rotate-left"></i>Reativar usuário</button>`;
+    }
     if(p.status==='approved')return `<button class="btn btn-danger-soft btn-block account-risk-lifecycle" type="button" onclick="requestInactivateApprovedVolunteer('${id}')"><i class="fa-solid fa-user-slash"></i>Inativar usuário</button>`;
-    return '';
+    return `<button class="btn btn-danger-soft btn-block account-risk-lifecycle" type="button" onclick="requestInactivateVolunteerAccess('${id}')"><i class="fa-solid fa-user-slash"></i>Inativar usuário</button>`;
   }
+  window.requestInactivateVolunteerAccess=function(encodedId){
+    const id=decodeURIComponent(String(encodedId||'')),p=candidateById(id);if(!p||p.inactive===true||p.active===false||p.status==='rejected')return;
+    openModal('Inativar usuário?',`O acesso de ${escapeHtml(p.name||'este voluntário')} será bloqueado.`,`<div class="notice warning"><i class="fa-solid fa-user-slash"></i><div>O status da candidatura e o planejamento serão preservados. O usuário poderá ser reativado posteriormente.</div></div>`,`<div class="confirm-actions"><button class="btn btn-outline" type="button" onclick="closeModal()">Cancelar</button><button class="btn btn-danger" type="button" onclick="confirmInactivateVolunteerAccess('${safe(id)}')">Inativar usuário</button></div>`);
+  };
+  window.confirmInactivateVolunteerAccess=async function(encodedId){
+    const id=decodeURIComponent(String(encodedId||'')),p=candidateById(id);if(!p)return;
+    try{
+      await window.OleiroServices.applications.updateLifecycle(p.id,{applicationPatch:{active:false,needsAdminAttention:false},participantUids:p.participantUids||[],participantActive:false});
+      p.active=false;p.inactive=true;
+      const key=String(p.id),previous=state.participantAccessCache?.[key]||{};
+      state.participantAccessCache=state.participantAccessCache||{};
+      state.participantAccessCache[key]=Object.fromEntries((p.participantUids||[]).map(uid=>{const participantId=String(uid);return [participantId,{...(previous[participantId]||{}),id:participantId,active:false}]}));
+      state.adminAccountReadAt=state.adminAccountReadAt||{};state.adminAccountReadAt[key]=Date.now();
+      renderPersonModal(p,'account');showToast('Usuário inativado. O planejamento foi preservado.');
+    }catch(error){console.error(error);showToast(error?.message||'Não foi possível inativar o usuário.')}
+  };
+  window.reactivateVolunteerAccess=async function(encodedId){
+    const id=decodeURIComponent(String(encodedId||'')),p=candidateById(id);if(!p||p.status==='rejected'||!(p.inactive===true||p.active===false))return;
+    try{
+      await window.OleiroServices.applications.updateLifecycle(p.id,{applicationPatch:{active:true,needsAdminAttention:false},participantUids:p.participantUids||[],participantActive:true});
+      p.active=true;p.inactive=false;
+      const key=String(p.id),previous=state.participantAccessCache?.[key]||{};
+      state.participantAccessCache=state.participantAccessCache||{};
+      state.participantAccessCache[key]=Object.fromEntries((p.participantUids||[]).map(uid=>{const participantId=String(uid);return [participantId,{...(previous[participantId]||{}),id:participantId,active:true}]}));
+      state.adminAccountReadAt=state.adminAccountReadAt||{};state.adminAccountReadAt[key]=Date.now();
+      renderPersonModal(p,'account');showToast('Usuário reativado. O status e o planejamento foram preservados.');
+    }catch(error){console.error(error);showToast(error?.message||'Não foi possível reativar o usuário.')}
+  };
   window.candidateHistoryLifecycleActions=accountLifecycle;
   function accountContent(p){
     const status=personStatus(p),contacts=contactRows(p),{start,end}=personDates(p),unit=p.unit||p.unitName||'—';
