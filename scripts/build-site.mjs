@@ -178,12 +178,17 @@ const portalBundle=await bundlePortalAssets();
 const adminBundle=await bundleAdminAssets();
 
 const htmlAssetPattern=/((?:src|href)="(?:\.\.\/)?(?:js|css)\/[^"?]+)(?:\?[^\"]*)?(\")/g;
+const releaseMetadata={environment,build:buildId,commit,publishedAt:new Date().toISOString()};
 for(const relative of ['index.html','login.html','admin/index.html','portal/index.html']){
-  await rewrite(relative,source=>source.replace(htmlAssetPattern,`$1?v=${assetKey}$2`));
+  await rewrite(relative,source=>{
+    const versioned=source.replace(htmlAssetPattern,`$1?v=${assetKey}$2`);
+    const bootstrap=`<script>window.OLEIRO_BUILD_META=Object.freeze(${JSON.stringify(releaseMetadata)});</script>`;
+    return versioned.includes('window.OLEIRO_BUILD_META')?versioned:versioned.replace('</head>',bootstrap+'</head>');
+  });
 }
 
 await checkSiteAssets(out);
-await writeFile(path.join(out,'release.json'),JSON.stringify({environment,build:buildId,commit,publishedAt:new Date().toISOString()})+'\n','utf8');
+await writeFile(path.join(out,'release.json'),JSON.stringify(releaseMetadata)+'\n','utf8');
 console.log(`Canonical site build ready: ${out}`);
 console.log(`Environment: ${environment}`);
 console.log(`Runtime source audit: ${runtimeAudit.modules} JS modules, no orphaned files.`);

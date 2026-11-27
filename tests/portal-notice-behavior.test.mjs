@@ -8,6 +8,18 @@ const build=readFileSync('scripts/build-site.mjs','utf8');
 const deploy=readFileSync('.github/workflows/deploy-pages.yml','utf8');
 const notes=JSON.parse(readFileSync('release-notes.json','utf8'));
 
+test('production build embeds the page build identity and both portals compare it with the latest deployment',()=>{
+  assert.ok(build.includes('window.OLEIRO_BUILD_META=Object.freeze'));
+  assert.ok(build.includes('releaseMetadata'));
+  const admin=readFileSync('js/admin/release-notes.js','utf8');
+  assert.ok(admin.includes('const currentBuild=window.OLEIRO_BUILD_META||meta'));
+  assert.ok(admin.includes('latestBuild.commit===currentBuild.commit'));
+  assert.ok(admin.includes('checkForNewBuild();'));
+  assert.ok(release.includes('const currentBuild=window.OLEIRO_BUILD_META||releaseMeta'));
+  assert.ok(release.includes('latestBuild.commit===currentBuild.commit'));
+  assert.ok(release.includes('checkForNewBuild();'));
+});
+
 test('activity notice dismissal is persisted per authenticated volunteer',()=>{
   assert.ok(release.includes('dismissedHomeNoticeKey()'));
   assert.ok(release.includes('ensureDismissedHomeNotices()'));
