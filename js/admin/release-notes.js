@@ -89,12 +89,12 @@
       <p><strong>Ambiente:</strong> ${esc(environmentLabel)}</p>
       ${published?`<p><strong>Publicado em:</strong> ${esc(published)}</p>`:''}
       ${shortCommit?`<p><strong>Commit:</strong> <code title="${esc(commit)}">${esc(shortCommit)}</code></p>`:''}
-      <div class="admin-release-version-whatsnew"><strong>O que há de novo</strong><div class="admin-release-items">${(Array.isArray(latest?.items)?latest.items:[]).map(itemHtml).join('')||`<p>${esc(latest?.summary||'Informações da versão disponíveis.')}</p>`}</div></div>
+      <button class="admin-release-details" type="button" onclick="openAdminReleaseNotes()"><i class="fa-solid fa-wand-magic-sparkles"></i>Ver detalhes desta versão</button>
     </div>`;
   }
   function modalBody(){
     return `<div class="admin-release-modal">
-      <div class="admin-release-intro"><span class="admin-release-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span><div><small>${esc(latest?.eyebrow||'Atualização do sistema')} <span>Versão ${esc(version())}</span></small><strong>${esc(latest?.title||'O que mudou?')}</strong><p>${esc(latest?.summary||'Confira as melhorias desta versão.')}</p></div></div>
+      <div class="admin-release-intro"><span class="admin-release-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span><div><small>${esc(latest?.eyebrow||'Atualização do sistema')} <span>Versão ${esc(version())}</span></small><strong>${esc(latest?.title||'O que mudou?')}</strong><p>${esc(latest?.summary||'Confira as melhorias desta versão.')}</p>${publishedAtLabel(meta?.publishedAt||latest?.publishedAt)?`<p class="admin-release-published">Publicado em ${esc(publishedAtLabel(meta?.publishedAt||latest?.publishedAt))}</p>`:''}</div></div>
       <div class="admin-release-items">${(Array.isArray(latest?.items)?latest.items:[]).map(itemHtml).join('')}</div>
     </div>`;
   }
