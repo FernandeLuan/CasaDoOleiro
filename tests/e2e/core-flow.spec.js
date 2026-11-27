@@ -37,7 +37,7 @@ async function login(page,email,password,target,language='pt'){
   },target,{timeout:20_000});
 }
 
-const navAction=(page,label)=>page.getByRole('navigation').getByRole('button',{name:new RegExp(`^.{0,3}${label}$`)});
+const navAction=(page,label)=>page.locator('.admin-sidebar-r62 button:visible, #navRoot .bottom-nav button:visible').filter({hasText:label}).first();
 async function openGroupsFromSettings(page){
   await navAction(page,'Configurações').click();
   await page.locator('.asc-actions .asc-tile').filter({hasText:'Grupos'}).click();
