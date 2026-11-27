@@ -25,8 +25,9 @@ test('volunteer release modal uses the same card-only layout and opens once per 
   assert.match(admin, /function modalBody\(\)[\s\S]*admin-release-items/);
   assert.match(portal, /state\?\.role!=='volunteer'\|\|!state\?\.currentSession\?\.uid/);
   assert.doesNotMatch(portal, /state\?\.volunteerPage!=='home'\)return/);
-  assert.equal(notes.releases[0].id, '2026-11-27-portal-unified-whats-new-412');
-  assert.ok(notes.releases[0].audience.includes('volunteer'));
+  const volunteerRelease = notes.releases.find(item => item.audience?.includes('volunteer'));
+  assert.equal(volunteerRelease?.id, '2026-11-27-portal-unified-whats-new-412');
+  assert.equal(volunteerRelease?.version, '412');
 });
 
 test('volunteer release popup detects the published release on first metadata load and spaces cards consistently', async () => {
@@ -70,10 +71,10 @@ test('admin version panel keeps the menu concise and opens card-based release de
   const notes = JSON.parse(await read('../release-notes.json'));
   const adminRelease = notes.releases.find(item => item.audience?.includes('admin'));
   const volunteerRelease = notes.releases.find(item => item.audience?.includes('volunteer'));
-  assert.equal(adminRelease.version, '384');
+  assert.equal(adminRelease?.version, '413');
   assert.match(release, /latest=releases\.find\(release=>audienceOf\(release\)\.includes\('admin'\)\)\|\|null/);
   assert.ok(volunteerRelease);
-  assert.equal(notes.releases[0].version, '412');
+  assert.equal(volunteerRelease?.version, '412');
 });
 
 test('project read permissions remain scoped to active users and their own project IDs', async () => {
