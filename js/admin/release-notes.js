@@ -22,6 +22,13 @@
     if(document.getElementById('adminReleaseNotesStyles'))return;
     const style=document.createElement('style');style.id='adminReleaseNotesStyles';style.textContent=`
       .admin-account-release .release-info{display:grid;gap:7px}
+      .admin-account-release .admin-release-version-whatsnew{grid-column:1/-1;display:grid;gap:7px}
+      .admin-account-release .admin-release-version-whatsnew>strong{font-size:.6rem;color:var(--text)}
+      .admin-account-release .admin-release-items{display:grid;gap:7px}
+      .admin-account-release .admin-release-item{padding:8px;border-radius:10px}
+      .admin-account-release .admin-release-item>span{width:30px;height:30px;border-radius:9px}
+      .admin-account-release .admin-release-item strong{font-size:.59rem}
+      .admin-account-release .admin-release-item p{font-size:.54rem;line-height:1.4}
       .admin-account-release .release-info p{margin:0;color:var(--muted);font-size:.62rem;line-height:1.45}
       .admin-account-release .release-info strong{color:var(--text)}
       .admin-release-details{display:inline-flex;align-items:center;gap:7px;width:max-content;border:0;background:none;padding:2px 0;color:var(--primary);font:inherit;font-size:.62rem;font-weight:700;cursor:pointer}
@@ -57,12 +64,13 @@
       <p><strong>Ambiente:</strong> ${esc(environmentLabel)}</p>
       ${published?`<p><strong>Publicado em:</strong> ${esc(published)}</p>`:''}
       ${shortCommit?`<p><strong>Commit:</strong> <code title="${esc(commit)}">${esc(shortCommit)}</code></p>`:''}
-      <p><strong>Última atualização:</strong> ${esc(latest?.summary||'Informações da versão disponíveis.')}</p>
+      <div class="admin-release-version-whatsnew"><strong>O que há de novo</strong><div class="admin-release-items">${(Array.isArray(latest?.items)?latest.items:[]).map(itemHtml).join('')||`<p>${esc(latest?.summary||'Informações da versão disponíveis.')}</p>`}</div></div>
     </div>`;
   }
   function modalBody(){
     return `<div class="admin-release-modal">
       <div class="admin-release-intro"><span class="admin-release-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span><div><small>${esc(latest?.eyebrow||'Atualização do sistema')} <span>Versão ${esc(version())}</span></small><strong>${esc(latest?.title||'O que mudou?')}</strong><p>${esc(latest?.summary||'Confira as melhorias desta versão.')}</p></div></div>
+      <div class="admin-release-items">${(Array.isArray(latest?.items)?latest.items:[]).map(itemHtml).join('')}</div>
     </div>`;
   }
   window.openAdminReleaseNotes=function(){
