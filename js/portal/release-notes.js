@@ -58,7 +58,7 @@
     if(state?.role!=='volunteer'||!state?.currentSession?.uid)return;
     if(releaseSeen()){pendingReleasePopupId=null;return}
     if(modalRoot?.querySelector?.('.modal')){
-      if(++pendingPopupAttempts<30)setTimeout(maybeOpenPendingReleasePopup,700);
+      if(++pendingPopupAttempts<120)setTimeout(maybeOpenPendingReleasePopup,500);
       return;
     }
     pendingPopupAttempts=0;pendingReleasePopupId=null;
@@ -164,7 +164,7 @@
   }
   function startBuildPolling(){
     if(updateCheckTimer)return;
-    updateCheckTimer=setInterval(checkForNewBuild,60000);
+    updateCheckTimer=setInterval(checkForNewBuild,30000);\n    checkForNewBuild();\n    window.addEventListener('focus',checkForNewBuild);
     document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkForNewBuild()});
   }
 
@@ -537,7 +537,7 @@
   }
 
   document.addEventListener('visibilitychange',()=>{
-    if(!document.hidden&&state.volunteerPage==='home')setTimeout(()=>refreshHomeNoticeData(),80);
+    if(!document.hidden){if(state.volunteerPage==='home')setTimeout(()=>refreshHomeNoticeData(),80);maybeOpenPendingReleasePopup();checkForNewBuild();maybeOpenPendingReleasePopup();checkForNewBuild();}
   });
   window.addEventListener('focus',()=>{
     if(state.volunteerPage==='home')setTimeout(()=>refreshHomeNoticeData(),80);
