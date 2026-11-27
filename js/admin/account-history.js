@@ -150,7 +150,7 @@
     state.managerPlanningTab='history';
     state.managerPlanningLoading=false;
     state.managerPlanningBody=historyHtml(p,rows,opts);
-    render();
+    window.renderManager?.();
   }
   async function openHistory(id){
     const p=typeof candidateById==='function'?candidateById(id):null;if(!p)return;
@@ -181,13 +181,13 @@
       browserHistoryWrite(p.id,source,loadedAt);
       if(state.managerPage==='planning'&&String(state.managerPlanningPersonId)===String(p.id)&&state.managerPlanningTab==='history'){
         state.managerPlanningBody=historyHtml(p,rows,{});
-        render();
+        window.renderManager?.();
       }
     }catch(error){
       console.error('Falha ao carregar histórico R71:',error);
       if(state.managerPage==='planning'&&String(state.managerPlanningPersonId)===String(p.id)&&state.managerPlanningTab==='history'){
         state.managerPlanningBody=historyHtml(p,cachedRows,{error:'Não foi possível carregar o histórico.'});
-        render();
+        window.renderManager?.();
       }
     }
   }
