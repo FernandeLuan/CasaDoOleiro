@@ -37,7 +37,12 @@ async function login(page,email,password,target,language='pt'){
   },target,{timeout:20_000});
 }
 
-const navAction=(page,label)=>page.getByRole('navigation').getByRole('button',{name:new RegExp(`^.{0,3}${label}$`)});
+const navAction=(page,label)=>page.locator('.admin-sidebar-r62 button:visible').filter({hasText:label}).or(page.getByRole('navigation').getByRole('button',{name:new RegExp(label)})).first();
+async function openGroupsFromSettings(page){
+  await navAction(page,'Configurações').click();
+  await page.locator('.asc-actions .asc-tile').filter({hasText:'Grupos'}).click();
+  await expect(page.locator('.groups-page-grid')).toBeVisible({timeout:20_000});
+}
 const appAction=(page,label)=>page.locator('#app').getByRole('button',{name:new RegExp(label)});
 const activityCard=(page,label)=>page.locator('.activity-card').filter({hasText:label});
 const profileNavAction=page=>page.locator(`button[onclick="navigateVolunteer('profile')"]:visible`).first();
@@ -70,7 +75,7 @@ test.beforeEach(async()=>{
 
 test('Admin manages independent A/B/C/D groups for Rodeio and Indaial',async({page})=>{
   await login(page,'admin@oleiro.test','Admin123!','admin');
-  await navAction(page,'Grupos').click();
+  await openGroupsFromSettings(page);
   const grid=page.locator('.groups-page-grid');await expect(grid).toBeVisible({timeout:20_000});
   const columns=grid.locator('.groups-unit-column');await expect(columns).toHaveCount(2,{timeout:20_000});
   const rodeio=columns.filter({hasText:'Rodeio'}),indaial=columns.filter({hasText:'Indaial'});

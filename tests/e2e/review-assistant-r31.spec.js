@@ -11,10 +11,15 @@ async function login(page,email,password,target){
   await prepare(page);await page.goto('/?emulator=1');
   await page.waitForFunction(async()=>{try{const context=await window.OleiroFirebase?.ready;return !!context?.configured&&typeof window.OleiroAuth?.signIn==='function'}catch{return false}},undefined,{timeout:30_000});
   await page.locator('#email').fill(email);await page.locator('#password').fill(password);await page.locator('#loginButton').click();await expect(page).toHaveURL(new RegExp(`/${target}/`),{timeout:30_000});
-  await page.waitForFunction(targetName=>{if(typeof window.render!=='function')return false;return targetName==='portal'?typeof window.navigateVolunteer==='function':targetName==='admin'?typeof window.navigateManager==='function':true},target,{timeout:20_000});await expect(page.getByRole('navigation').getByRole('button',{name:/Planejamento|Agenda/})).toBeVisible({timeout:30_000});const dismiss=page.getByRole('button',{name:'Agora não',exact:true});if(await dismiss.isVisible().catch(()=>false))await dismiss.press('Enter');if(target==='portal')await page.waitForFunction(()=>state.role==='volunteer'&&state.currentApplication?.id&&state.volunteerPlanningLoadedFor===String(state.currentApplication.id),undefined,{timeout:30_000});
+  await page.waitForFunction(targetName=>{if(typeof window.render!=='function')return false;return targetName==='portal'?typeof window.navigateVolunteer==='function':targetName==='admin'?typeof window.navigateManager==='function':true},target,{timeout:20_000});await expect(page.locator('.admin-sidebar-r62 button:visible').filter({hasText:/Planejamento|Agenda/}).or(page.getByRole('navigation').getByRole('button',{name:/Planejamento|Agenda/})).first()).toBeVisible({timeout:30_000});const dismiss=page.getByRole('button',{name:'Agora não',exact:true});if(await dismiss.isVisible().catch(()=>false))await dismiss.press('Enter');if(target==='portal')await page.waitForFunction(()=>state.role==='volunteer'&&state.currentApplication?.id&&state.volunteerPlanningLoadedFor===String(state.currentApplication.id),undefined,{timeout:30_000});
 }
 async function relogin(page,email,password,target){await page.evaluate(async()=>{await window.OleiroAuth?.signOut?.()});await login(page,email,password,target)}
-const navAction=(page,label)=>page.getByRole('navigation').getByRole('button',{name:label,exact:false});
+const navAction=(page,label)=>page.locator('.admin-sidebar-r62 button:visible').filter({hasText:label}).or(page.getByRole('navigation').getByRole('button',{name:new RegExp(label)})).first();
+async function openGroupsFromSettings(page){
+  await navAction(page,'Configurações').click();
+  await page.locator('.asc-actions .asc-tile').filter({hasText:'Grupos'}).click();
+  await expect(page.locator('.groups-page-grid')).toBeVisible({timeout:20_000});
+}
 async function openVolunteerByStatus(page,status,name){
   const list=page.locator('#candidateList');
   await navAction(page,'Voluntariado').click();
@@ -79,12 +84,12 @@ test('Approved volunteer can add a new activity and Admin gets blue scoped info 
 
 test('Rodeio activity assistant is unit-scoped and has no candidate lifecycle controls',async({page})=>{
   await login(page,'assistant@oleiro.test','Assistant123!','admin');
-  for(const label of ['Início','Voluntariado','Planejamento','Projetos','Grupos'])await expect(navAction(page,label)).toBeVisible();
+  for(const label of ['Início','Voluntariado','Planejamento','Projetos','Configurações'])await expect(navAction(page,label)).toBeVisible();
   const homeOccupancy=page.locator('[data-home-occupancy]');await expect(homeOccupancy).toBeVisible({timeout:20_000});const homeUnits=homeOccupancy.locator('.home-occ-units button');await expect(homeUnits).toHaveCount(1);await expect(homeUnits).toHaveText('Rodeio');await expect(homeOccupancy.getByText('Indaial',{exact:true})).toHaveCount(0);
   await navAction(page,'Voluntariado').click();const list=page.locator('#candidateList');await expect(list).toContainText('Aprovado E2E',{timeout:20_000});await expect(list).not.toContainText('Indaial E2E');await expect(page.locator('.candidate-add-button')).toHaveCount(0);
   const denied=await page.evaluate(async()=>{try{await window.OleiroServices.applications.getById('e2e-indaial-application');return 'allowed'}catch(error){return String(error?.code||error?.message||'denied')}});expect(denied).not.toBe('allowed');
 
   const person=list.locator('.list-item.clickable').filter({hasText:'Aprovado E2E'}).first();await person.click();const detail=page.locator('#app');await expect(detail.locator('.person-refactor-tabs button.active')).toContainText('Planejamento',{timeout:20_000});await expect(detail.getByRole('button',{name:/Conta$/})).toHaveCount(0);await expect(detail.getByRole('button',{name:/Histórico$/})).toHaveCount(0);await expect(detail.getByRole('button',{name:/Estadia/})).toHaveCount(0);await expect(detail.getByRole('button',{name:/Aprovar planejamento/})).toHaveCount(0);await expect(detail.getByRole('button',{name:/Limpar/})).toHaveCount(0);
 
-  await navAction(page,'Grupos').click();const groupUnits=page.locator('.groups-unit-column');await expect(groupUnits).toHaveCount(1,{timeout:20_000});await expect(groupUnits).toContainText('Rodeio');await expect(page.getByText('Indaial',{exact:true})).toHaveCount(0);
+  await openGroupsFromSettings(page);const groupUnits=page.locator('.groups-unit-column');await expect(groupUnits).toHaveCount(1,{timeout:20_000});await expect(groupUnits).toContainText('Rodeio');await expect(page.getByText('Indaial',{exact:true})).toHaveCount(0);
 });

@@ -114,14 +114,8 @@
     }
   }
 
-  const baseOpenPerson=typeof window.openPerson==='function'?window.openPerson:(typeof openPerson==='function'?openPerson:null);
-  if(baseOpenPerson){
-    openPerson=async function(id,tab='plan'){
-      if(state.managerPage==='planning'&&tab==='history')return openHistory(id);
-      return baseOpenPerson(id,tab);
-    };
-    window.openPerson=openPerson;
-  }
+  // O fluxo de Histórico é controlado por account-history.js (R71).
+  // Não interceptar openPerson aqui: isso desviava a navegação para o renderer legado R69.
 
   installStyles();
   if(typeof state!=='undefined'&&state.role==='manager'&&state.managerPage==='planning'&&typeof render==='function')render();
