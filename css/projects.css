@@ -2763,3 +2763,6 @@ button.project-ui-row{appearance:none}
 .project-ui-empty span{font-size:.68rem!important;line-height:1.45!important;color:var(--muted)!important}
 
 .projects-loading-placeholder{min-height:188px}
+
+/* Mantém o contorno tracejado visível no estado vazio de Projetos. */
+.project-ui-empty,.planning-board-empty.project-ui-empty{border:1.5px dashed color-mix(in srgb,var(--muted) 48%,var(--border))!important;background:color-mix(in srgb,var(--surface) 38%,transparent)!important}
