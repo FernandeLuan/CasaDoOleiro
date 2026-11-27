@@ -125,7 +125,7 @@
   }
   function accountLifecycle(p){
     const id=safe(p.id),inactive=p.inactive===true||p.active===false;
-    if(inactive){
+    if(inactive||p.status==='rejected'){
       if(p.status==='rejected')return `<button class="btn btn-soft btn-block account-risk-lifecycle" type="button" onclick="reactivateCandidate(decodeURIComponent('${id}'))"><i class="fa-solid fa-rotate-left"></i>Reativar usuário</button>`;
       if(p.status==='approved')return `<button class="btn btn-soft btn-block account-risk-lifecycle" type="button" onclick="reactivateApprovedVolunteer('${id}')"><i class="fa-solid fa-rotate-left"></i>Reativar usuário</button>`;
       return `<button class="btn btn-soft btn-block account-risk-lifecycle" type="button" onclick="reactivateVolunteerAccess('${id}')"><i class="fa-solid fa-rotate-left"></i>Reativar usuário</button>`;
