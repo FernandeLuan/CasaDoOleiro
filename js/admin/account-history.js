@@ -101,6 +101,15 @@
   }
 
   const safe=value=>encodeURIComponent(String(value??''));
+  function historyPersonById(id){
+    const key=String(id??'');
+    const current=typeof candidateById==='function'?candidateById(key):null;
+    if(current)return current;
+    // Perfis inativados podem sair do índice ativo usado por candidateById,
+    // mas continuam acessíveis no detalhe e precisam manter o Histórico.
+    const rows=Array.isArray(state?.candidates)?state.candidates:[];
+    return rows.find(row=>String(row?.id??'')===key)||null;
+  }
   const HISTORY_BROWSER_CACHE_MS=60*60*1000;
   const HISTORY_BROWSER_PREFIX='oleiro.admin.history.v1.';
   const asDate=value=>{if(!value)return null;if(typeof value?.toDate==='function')return value.toDate();const d=new Date(value);return Number.isNaN(d.getTime())?null:d};
@@ -161,7 +170,7 @@
     window.renderManager?.();
   }
   async function openHistory(id){
-    const p=typeof candidateById==='function'?candidateById(id):null;if(!p)return;
+    const p=historyPersonById(id);if(!p)return;
     /* Reabrir Histórico sempre atualiza os dados; o cache serve apenas como prévia imediata. */
     const previousTab=String(state.managerPlanningTab||'plan');
     state.adminHistoryCache=state.adminHistoryCache||{};
@@ -236,7 +245,7 @@
   function rewriteHistoryButtons(){
     const detail=document.querySelector('.planning-detail-page');
     const id=String(detail?.dataset.personId||state.managerPlanningPersonId||'');
-    const p=typeof candidateById==='function'?candidateById(id):null;if(!p)return;
+    const p=historyPersonById(id);if(!p)return;
     document.querySelectorAll('.planning-detail-page .planning-profile-tabs button').forEach(button=>{
       if(String(button.textContent||'').trim().toLowerCase()!=='histórico')return;
       button.dataset.r71HistoryTab='1';
@@ -248,7 +257,7 @@
     const button=event.target.closest?.('.planning-detail-page .planning-profile-tabs button');
     if(!button||String(button.textContent||'').trim().toLowerCase()!=='histórico'||button.dataset.r71DirectHandler==='1')return;
     const id=String(document.querySelector('.planning-detail-page')?.dataset.personId||state.managerPlanningPersonId||'');
-    const p=typeof candidateById==='function'?candidateById(id):null;if(!p)return;
+    const p=historyPersonById(id);if(!p)return;
     event.preventDefault();event.stopImmediatePropagation();openHistory(p.id);
   },true);
 
