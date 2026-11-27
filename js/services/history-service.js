@@ -14,7 +14,7 @@
     return {
       actorUid:String(session?.uid||user.uid||window.OleiroFirebase?.auth?.currentUser?.uid||''),
       actorRole:role==='manager'?String(user.role||'admin'):role||'volunteer',
-      actorLabel:String(user.displayName||user.name||session?.displayName||session?.name||'').trim().slice(0,120),
+      actorLabel:String(user.displayName||user.name||session?.displayName||session?.name||window.OleiroFirebase?.auth?.currentUser?.displayName||'').trim().slice(0,120),
       actorEmail:String(session?.email||user.email||window.OleiroFirebase?.auth?.currentUser?.email||'').trim().toLowerCase().slice(0,254)
     };
   }
