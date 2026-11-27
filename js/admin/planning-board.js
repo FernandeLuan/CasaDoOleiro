@@ -40,12 +40,13 @@
   state.planningBoardCandidatesAt=state.planningBoardCandidatesAt||0;
   state.planningBoardLoadedRange=state.planningBoardLoadedRange||'';
   state.planningBoardLoading=false;
+  state.planningBoardShowSkeleton=false;
   state.planningBoardError='';
 
   function boardCandidatesFiltered(){
     const term=normalized(state.planningBoardSearch),status=String(state.planningBoardStatus||'all'),unit=String(state.planningBoardUnit||'all');
     return (state.planningBoardCandidates||[]).filter(p=>{
-      if(p.status==='rejected'||p.inactive)return false;
+      if(p.status==='rejected')return false;
       if(status!=='all'&&String(p.status)!==status)return false;
       if(unit!=='all'&&String(p.unitId||'')!==unit)return false;
       if(term&&!`${p.name||''} ${p.country||''} ${p.unit||p.unitName||''}`.toLocaleLowerCase('pt-BR').includes(term))return false;
@@ -105,7 +106,7 @@
   }
 
   function boardBodyHtml(){
-    if(state.planningBoardLoading&&!state.planningBoardSessions.length)return '<div class="oleiro-skeleton planning-board-loading" aria-label="Carregando planejamentos"><div class="oleiro-skeleton-grid"><section class="oleiro-skeleton-card"><span class="oleiro-skeleton-line medium"></span><span class="oleiro-skeleton-block tall"></span><span class="oleiro-skeleton-line short"></span></section><section class="oleiro-skeleton-card"><span class="oleiro-skeleton-line medium"></span><span class="oleiro-skeleton-block tall"></span></section></div></div>';
+    if(state.planningBoardLoading&&state.planningBoardShowSkeleton&&!state.planningBoardSessions.length)return '<div class="oleiro-skeleton planning-board-loading" aria-label="Carregando planejamentos"><div class="oleiro-skeleton-grid"><section class="oleiro-skeleton-card"><span class="oleiro-skeleton-line medium"></span><span class="oleiro-skeleton-block tall"></span><span class="oleiro-skeleton-line short"></span></section><section class="oleiro-skeleton-card"><span class="oleiro-skeleton-line medium"></span><span class="oleiro-skeleton-block tall"></span></section></div></div>';
     if(state.planningBoardError&&!state.planningBoardSessions.length)return `<div class="empty planning-board-empty"><div><i class="fa-solid fa-triangle-exclamation"></i>${escapeHtml(state.planningBoardError)}</div></div>`;
     if(state.planningBoardView==='volunteer'){
       const groups=personGroups();if(!groups.length)return '<div class="empty planning-board-empty"><div><i class="fa-regular fa-calendar-xmark"></i>Nenhum voluntário encontrado com estes filtros.</div></div>';
@@ -136,16 +137,18 @@
     if(state.planningBoardLoading)return;
     const from=String(state.planningBoardFrom||''),to=String(state.planningBoardTo||'');if(!from||!to||to<from){state.planningBoardError='O período selecionado é inválido.';render();return}
     const rangeKey=`${from}|${to}`;if(!force&&state.planningBoardLoadedRange===rangeKey&&Date.now()-(state.planningBoardLoadedAt||0)<BOARD_CACHE_MS){render();return}
-    state.planningBoardLoading=true;state.planningBoardError='';render();
+    state.planningBoardLoading=true;state.planningBoardShowSkeleton=false;state.planningBoardError='';
+    const skeletonTimer=setTimeout(()=>{if(state.planningBoardLoading){state.planningBoardShowSkeleton=true;if(state.managerPage==='planning'&&!state.managerPlanningPersonId)render()}},220);
+    render();
     try{
       if(force||!state.planningBoardCandidates.length||Date.now()-state.planningBoardCandidatesAt>BOARD_CACHE_MS){state.planningBoardCandidates=await fetchCandidates();state.planningBoardCandidatesAt=Date.now()}
       if(!window.OleiroServices?.planning?.listScheduleRange)throw new Error('Consulta consolidada de planejamento indisponível.');
-      const people=new Map((state.planningBoardCandidates||[]).filter(p=>p.status!=='rejected'&&!p.inactive&&(!p.from||p.from<=to)&&(!p.to||p.to>=from)).map(p=>[String(p.id),p]));
+      const people=new Map((state.planningBoardCandidates||[]).filter(p=>p.status!=='rejected'&&(!p.from||p.from<=to)&&(!p.to||p.to>=from)).map(p=>[String(p.id),p]));
       const rows=await window.OleiroServices.planning.listScheduleRange({from,to});
       state.planningBoardSessions=(rows||[]).filter(row=>people.has(String(row.applicationId))&&row.status!=='rejected'&&row.reviewStatus!=='rejected').map(row=>({...row,applicationId:String(row.applicationId),person:people.get(String(row.applicationId))}));
       state.planningBoardLoadedRange=rangeKey;state.planningBoardLoadedAt=Date.now();
     }catch(error){console.error('Falha ao carregar quadro de planejamento:',error);state.planningBoardError=error?.message||'Não foi possível carregar os planejamentos.'}
-    finally{state.planningBoardLoading=false;if(state.managerPage==='planning'&&!state.managerPlanningPersonId)render()}
+    finally{clearTimeout(skeletonTimer);state.planningBoardLoading=false;state.planningBoardShowSkeleton=false;if(state.managerPage==='planning'&&!state.managerPlanningPersonId)render()}
   }
 
   window.setPlanningBoardView=function(view){state.planningBoardView=view==='volunteer'?'volunteer':'day';render()};
