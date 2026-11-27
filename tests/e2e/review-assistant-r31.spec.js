@@ -14,7 +14,7 @@ async function login(page,email,password,target){
   await page.waitForFunction(targetName=>{if(typeof window.render!=='function')return false;return targetName==='portal'?typeof window.navigateVolunteer==='function':targetName==='admin'?typeof window.navigateManager==='function':true},target,{timeout:20_000});await expect(page.locator('.admin-sidebar-r62 button:visible').filter({hasText:/Planejamento|Agenda/}).or(page.getByRole('navigation').getByRole('button',{name:/Planejamento|Agenda/})).first()).toBeVisible({timeout:30_000});const dismiss=page.getByRole('button',{name:'Agora não',exact:true});if(await dismiss.isVisible().catch(()=>false))await dismiss.press('Enter');if(target==='portal')await page.waitForFunction(()=>state.role==='volunteer'&&state.currentApplication?.id&&state.volunteerPlanningLoadedFor===String(state.currentApplication.id),undefined,{timeout:30_000});
 }
 async function relogin(page,email,password,target){await page.evaluate(async()=>{await window.OleiroAuth?.signOut?.()});await login(page,email,password,target)}
-const navAction=(page,label)=>page.locator('.admin-sidebar-r62 button:visible, #navRoot .bottom-nav button:visible').filter({hasText:label}).first();
+const navAction=(page,label)=>page.locator('.admin-sidebar-r62 button:visible').filter({hasText:label}).or(page.getByRole('navigation').getByRole('button',{name:new RegExp(label)})).first();
 async function openGroupsFromSettings(page){
   await navAction(page,'Configurações').click();
   await page.locator('.asc-actions .asc-tile').filter({hasText:'Grupos'}).click();
