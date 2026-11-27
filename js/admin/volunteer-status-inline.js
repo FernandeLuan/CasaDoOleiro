@@ -13,7 +13,10 @@
       .volunteer-list-page .candidate-tools.candidate-tools-compact{margin-bottom:12px!important}
       .volunteer-list-page #candidateList.list{gap:12px!important}
 
-      .volunteer-name-status{display:flex;align-items:center;gap:8px;min-width:0;margin-bottom:2px}\n      .volunteer-name-status .volunteer-status-badges{display:flex;align-items:center;gap:7px;flex:0 0 auto;white-space:nowrap}\n      .volunteer-name-status .candidate-deadline-mini{display:none!important}\n      .volunteer-deadline-line{display:flex;align-items:center;gap:5px;margin:3px 0 0;color:var(--warning-text,#a56700);font-size:.62rem;line-height:1.3;font-weight:600}
+      .volunteer-name-status{display:flex;align-items:center;gap:8px;min-width:0;margin-bottom:2px}
+      .volunteer-name-status .volunteer-status-badges{display:flex;align-items:center;gap:7px;flex:0 0 auto;white-space:nowrap}
+      .volunteer-name-status .candidate-deadline-mini{display:none!important}
+      .volunteer-deadline-line{display:flex;align-items:center;gap:5px;margin:3px 0 0;color:var(--warning-text,#a56700);font-size:.62rem;line-height:1.3;font-weight:600}
       .volunteer-name-status>h3{margin:0;min-width:0}
       .volunteer-status-badges{display:flex;align-items:center;gap:7px;flex:0 0 auto;white-space:nowrap}
       .volunteer-status-badges .badge{margin:0;flex:0 0 auto}
