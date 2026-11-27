@@ -139,7 +139,7 @@
   let attempts=0;
   const waitForSession=()=>{
     if(state?.role==='manager'&&state?.currentSession?.uid){
-      if(state?.managerPage==='home')maybeAnnounce();
+      if(state?.managerPage==='home'){maybeAnnounce()}
       checkForNewBuild();
       if(++attempts<120)setTimeout(waitForSession,250);
       return;
