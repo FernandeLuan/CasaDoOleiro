@@ -97,7 +97,6 @@
           <span class="admin-account-avatar"><i class="fa-solid fa-user-shield"></i></span>
           <div class="admin-account-profile-copy"><div class="admin-account-profile-line"><strong>Administrador</strong></div><span>${esc(session.email||'—')}</span></div>
           <span class="admin-account-profile-divider" aria-hidden="true"></span>
-          <button class="admin-account-inline-signout" type="button" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i>Sair</button>
         </section>
         <section class="admin-account-panel admin-account-preference">
           <div class="admin-account-preference-copy"><small>Aparência</small><strong>Tema do painel</strong><span>Preferência salva neste dispositivo.</span></div>
@@ -108,10 +107,10 @@
           </div>
         </section>
       </div>
-      <section class="admin-account-release">
+      <div class="admin-account-sections"><details class="admin-account-accordion"><summary>Rotina da Casa</summary><div class="admin-account-accordion-content">${routineHtml()}</div></details><details class="admin-account-accordion"><summary>Unidades</summary><div class="admin-account-accordion-content">${unitsHtml()}</div></details><details class="admin-account-accordion"><summary>Sistema e versão</summary><div class="admin-account-accordion-content"><section class="admin-account-release">
         <div class="admin-account-release-head"><small>Sistema</small><strong>Versão do software</strong></div>
         ${releaseHtml()}
-      </section>
+      </section></div></details></div><footer class="admin-account-footer"><button class="admin-account-inline-signout" type="button" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i>Sair</button></footer>
     </div></div>`;
     openModal('Minha conta','',body);
     modalRoot?.querySelector?.('.modal')?.classList.add('admin-account-settings-modal');
