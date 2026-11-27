@@ -16,6 +16,19 @@ test('history events persist the authenticated email and render it as the author
   assert.match(applications, /services\.history\.appendToBatch\(batch,context,id,eventType/);
 });
 
+test('volunteer release modal uses the same card-only layout and opens once per new release after login', async () => {
+  const portal = await read('../js/portal/release-notes.js');
+  const admin = await read('../js/admin/release-notes.js');
+  const notes = JSON.parse(await readFile(new URL('../release-notes.json', import.meta.url), 'utf8'));
+  assert.match(portal, /const body=\`<div class="release-notes-modal"><div class="release-notes-modal-items">/);
+  assert.doesNotMatch(portal, /release-notes-modal-intro/);
+  assert.match(admin, /function modalBody\(\)[\s\S]*admin-release-items/);
+  assert.match(portal, /state\?\.role!=='volunteer'\|\|!state\?\.currentSession\?\.uid/);
+  assert.doesNotMatch(portal, /state\?\.volunteerPage!=='home'\)return/);
+  assert.equal(notes.releases[0].id, '2026-11-27-portal-unified-whats-new-412');
+  assert.ok(notes.releases[0].audience.includes('volunteer'));
+});
+
 test('WhatsApp sharing is disabled without active sessions and does not open a blank tab', async () => {
   const planning = await read('../js/portal/planejamento.js');
   assert.match(planning, /const hasActive=activeCandidateSessions\(\)\.length>0/);
@@ -44,9 +57,11 @@ test('admin version panel keeps the menu concise and opens card-based release de
   assert.ok(release.includes("const demoProject=String(window.OLEIRO_FIREBASE_CONFIG?.projectId||'').startsWith('demo-')"));
   assert.match(release, /const automatedBrowser=typeof navigator!=='undefined'&&navigator\.webdriver===true/);
   const notes = JSON.parse(await read('../release-notes.json'));
-  assert.equal(notes.releases[0].version, '384');
-  assert.ok(notes.releases[0].audience.includes('admin'));
-  assert.ok(notes.releases[1].audience.includes('volunteer'));
+  const adminRelease = notes.releases.find(item => item.audience?.includes('admin'));
+  const volunteerRelease = notes.releases.find(item => item.audience?.includes('volunteer'));
+  assert.equal(adminRelease.version, '384');
+  assert.ok(volunteerRelease);
+  assert.equal(notes.releases[0].version, '412');
 });
 
 test('project read permissions remain scoped to active users and their own project IDs', async () => {
