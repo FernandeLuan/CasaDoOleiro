@@ -9,12 +9,12 @@
     });return out;
   }
   function actor(){
-    const session=typeof state!=='undefined'?state.currentSession:null,user=session?.user||{};
+    const session=typeof state!=='undefined'?state.currentSession:null,user=session?.user||{},profile=session?.profile||{};
     const role=String(user.role||session?.role||state?.role||'').toLowerCase();
     return {
       actorUid:String(session?.uid||user.uid||window.OleiroFirebase?.auth?.currentUser?.uid||''),
       actorRole:role==='manager'?String(user.role||'admin'):role||'volunteer',
-      actorLabel:String(user.displayName||user.name||session?.displayName||session?.name||window.OleiroFirebase?.auth?.currentUser?.displayName||'').trim().slice(0,120),
+      actorLabel:String(user.displayName||user.name||user.fullName||profile.displayName||profile.fullName||profile.name||session?.displayName||session?.name||window.OleiroFirebase?.auth?.currentUser?.displayName||(String(session?.email||user.email||window.OleiroFirebase?.auth?.currentUser?.email||'').trim().toLowerCase()==='ctcasadooleirorodeio@gmail.com'?'Luan':'')).trim().slice(0,120),
       actorEmail:String(session?.email||user.email||window.OleiroFirebase?.auth?.currentUser?.email||'').trim().toLowerCase().slice(0,254)
     };
   }
