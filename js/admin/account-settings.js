@@ -69,27 +69,19 @@
       .admin-account-release .release-info strong{color:var(--text);font-weight:600}
       .admin-account-release .release-info code,.admin-account-release .release-info span{overflow-wrap:anywhere}
 
-      @media(min-width:1024px){
-        .admin-account-inline-signout,.admin-account-profile-divider{display:none!important}
-      }
+      @media(min-width:1024px){.admin-account-profile-divider{display:none!important}}
       @media(max-width:520px){
         .modal.admin-account-settings-modal{width:calc(100vw - 16px)!important;max-width:calc(100vw - 16px)!important;max-height:88vh!important}
         .admin-account-settings-modal .modal-head{padding:17px 18px 13px!important}
         .admin-account-settings-modal .modal-body{padding:16px 18px 20px!important}
         .admin-account-top{grid-template-columns:1fr}
         .admin-account-release .release-info{grid-template-columns:1fr}
-        .admin-account-profile{
-          grid-template-columns:42px minmax(0,1fr) 1px auto;
-          gap:10px;
-          align-items:center;
-        }
-        .admin-account-profile-divider{display:block}
-        .admin-account-inline-signout{justify-self:end}
+        .admin-account-profile{grid-template-columns:42px minmax(0,1fr)}
+        .admin-account-profile-divider{display:none}
       }
       @media(max-width:380px){
-        .admin-account-profile{grid-template-columns:38px minmax(0,1fr) 1px auto;gap:8px;padding:11px}
+        .admin-account-profile{grid-template-columns:38px minmax(0,1fr);gap:8px;padding:11px}
         .admin-account-avatar{width:38px;height:38px;border-radius:12px}
-        .admin-account-inline-signout{min-width:70px;padding-inline:10px}
       }
     `;
     document.head.appendChild(style);
