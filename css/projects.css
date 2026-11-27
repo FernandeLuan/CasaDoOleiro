@@ -2761,3 +2761,5 @@ button.project-ui-row{appearance:none}
 .project-ui-empty>div{display:grid!important;justify-items:center!important;gap:8px!important}
 .project-ui-empty strong{font-size:.68rem!important;font-weight:400!important;color:var(--muted)!important}
 .project-ui-empty span{font-size:.68rem!important;line-height:1.45!important;color:var(--muted)!important}
+
+.projects-loading-placeholder{min-height:188px}
