@@ -107,13 +107,13 @@
   function when(value){const d=asDate(value);if(!d)return '—';const locale=typeof currentLocale==='function'?currentLocale():'pt-BR';return new Intl.DateTimeFormat(locale,{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(d)}
   function eventLabel(type){const map={candidate_created:'Perfil criado',planning_submitted:'Planejamento enviado',planning_approved:'Planejamento aprovado',meeting_scheduled:'Reunião agendada',meeting_completed:'Reunião realizada',candidate_approved:'Candidato aprovado',candidate_rejected:'Candidato não aprovado',activity_created:'Atividade criada',activity_updated:'Atividade atualizada',activity_feedback_added:'Feedback adicionado',activity_feedback_updated:'Feedback atualizado',session_moved:'Atividade movida',adjustment_requested:'Ajuste solicitado',stay_dates_changed:'Período alterado',post_proposal_reviewed:'Proposta revisada',profile_inactivated:'Perfil inativado',profile_reactivated:'Perfil reativado',profile_updated:'Dados do perfil atualizados'};const key=String(type||'');return map[key]||key.replaceAll('_',' ').replace(/^./,c=>c.toUpperCase())||'Evento'}
   function usableActorName(value){const actor=String(value||'').trim();return !!actor&&actor!=='Registro anterior'}
-  function historyAuthor(row){const email=String(row?.actorEmail||'').trim().toLowerCase();if(email)return email;const actor=String(row?.actorLabel||'').trim();if(usableActorName(actor))return actor;if(String(row?.actorRole||'').toLowerCase()==='system'&&!row?.actorUid)return 'Sistema';return 'Autor não registrado'}
+  function historyAuthor(row){const actor=String(row?.actorLabel||'').trim();if(usableActorName(actor)&&!actor.includes('@'))return actor;const email=String(row?.actorEmail||'').trim().toLowerCase();if(email)return email;if(usableActorName(actor))return actor;if(String(row?.actorRole||'').toLowerCase()==='system'&&!row?.actorUid)return 'Sistema';return 'Autor não registrado'}
   async function resolveHistoryActors(rows){
-    const source=(rows||[]).map(row=>({...row})),uids=[...new Set(source.filter(row=>row?.actorUid&&!String(row.actorEmail||'').trim()&&!usableActorName(row.actorLabel)&&String(row.actorRole||'').toLowerCase()!=='system').map(row=>String(row.actorUid)))];
+    const source=(rows||[]).map(row=>({...row})),uids=[...new Set(source.filter(row=>row?.actorUid&&(!usableActorName(row.actorLabel)||String(row.actorLabel||'').trim().toLowerCase()===String(row.actorEmail||'').trim().toLowerCase())&&String(row.actorRole||'').toLowerCase()!=='system').map(row=>String(row.actorUid)))];
     if(!uids.length||!window.OleiroServices?.users?.getByIds)return source;
     try{
       const users=await window.OleiroServices.users.getByIds(uids),byId=new Map((users||[]).filter(user=>!user?.missing).map(user=>[String(user.id),{name:String(user.displayName||user.name||'').trim(),email:String(user.email||'').trim().toLowerCase()}]));
-      source.forEach(row=>{const actor=byId.get(String(row.actorUid||''));if(!actor)return;if(!String(row.actorEmail||'').trim()&&actor.email)row.actorEmail=actor.email;if(!usableActorName(row.actorLabel)&&actor.name)row.actorLabel=actor.name});
+      source.forEach(row=>{const actor=byId.get(String(row.actorUid||''));if(!actor)return;if(!String(row.actorEmail||'').trim()&&actor.email)row.actorEmail=actor.email;if(actor.name&&(!usableActorName(row.actorLabel)||String(row.actorLabel||'').trim().toLowerCase()===String(row.actorEmail||'').trim().toLowerCase()))row.actorLabel=actor.name});
     }catch(error){console.warn('Não foi possível resolver os autores do histórico:',error)}
     return source;
   }
@@ -150,7 +150,7 @@
     state.managerPlanningTab='history';
     state.managerPlanningLoading=false;
     state.managerPlanningBody=historyHtml(p,rows,opts);
-    render();
+    window.renderManager?.();
   }
   async function openHistory(id){
     const p=typeof candidateById==='function'?candidateById(id):null;if(!p)return;
@@ -181,13 +181,13 @@
       browserHistoryWrite(p.id,source,loadedAt);
       if(state.managerPage==='planning'&&String(state.managerPlanningPersonId)===String(p.id)&&state.managerPlanningTab==='history'){
         state.managerPlanningBody=historyHtml(p,rows,{});
-        render();
+        window.renderManager?.();
       }
     }catch(error){
       console.error('Falha ao carregar histórico R71:',error);
       if(state.managerPage==='planning'&&String(state.managerPlanningPersonId)===String(p.id)&&state.managerPlanningTab==='history'){
         state.managerPlanningBody=historyHtml(p,cachedRows,{error:'Não foi possível carregar o histórico.'});
-        render();
+        window.renderManager?.();
       }
     }
   }

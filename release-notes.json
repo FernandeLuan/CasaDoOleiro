@@ -2,6 +2,29 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "id": "2026-11-27-admin-history-and-release-notes-413",
+      "version": "413",
+      "audience": [
+        "admin"
+      ],
+      "eyebrow": "Atualização administrativa",
+      "title": "Histórico mais claro e novidades da versão atual",
+      "summary": "O histórico identifica quem realizou cada ação, e os avisos de atualização passam a destacar somente as mudanças relevantes para administradores.",
+      "items": [
+        {
+          "icon": "fa-user-check",
+          "title": "Identificação no histórico",
+          "text": "As ações passam a exibir o nome de quem realizou cada operação. Registros anteriores também tentam recuperar o nome pelo cadastro do usuário."
+        },
+        {
+          "icon": "fa-bullhorn",
+          "title": "Novidades por público",
+          "text": "A modal administrativa apresenta apenas as melhorias desta versão destinadas à equipe de gestão, sem misturar atualizações antigas do portal do voluntário."
+        }
+      ],
+      "publishedAt": "2026-11-27"
+    },
+    {
       "id": "2026-11-27-portal-unified-whats-new-412",
       "version": "412",
       "audience": [
