@@ -60,7 +60,10 @@ test('mobile document scroll survives viewport changes, modals and navigation',a
       await expect.poll(()=>page.evaluate(()=>window.scrollY)).toBe(700);
       await page.evaluate(()=>window.scrollBy(0,-300));
       await expect.poll(()=>page.evaluate(()=>window.scrollY)).toBe(400);
-      expect(await page.locator('.bottom-nav').evaluate(el=>Math.abs(el.getBoundingClientRect().bottom-innerHeight))).toBeLessThan(2);
+      const navBottomGap=await page.locator('.bottom-nav').evaluate(el=>innerHeight-el.getBoundingClientRect().bottom);
+      // Floating navigation intentionally keeps an inset from the viewport edge.
+      expect(navBottomGap).toBeGreaterThanOrEqual(8);
+      expect(navBottomGap).toBeLessThanOrEqual(40);
     }
     await page.evaluate(()=>openModal('Test','','<p>Content</p>'));
     expect(await page.evaluate(()=>getComputedStyle(document.body).overflowY)).toBe('hidden');
