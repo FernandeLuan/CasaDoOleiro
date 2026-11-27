@@ -163,3 +163,6 @@
 
 /* A confirmação da atualização ocupa toda a largura do rodapé. */
 .release-notes-actions .btn{width:100%;}
+
+/* Mantém o mesmo espaçamento entre os cards do modal administrativo. */
+.release-notes-modal-items{display:grid;gap:8px}
