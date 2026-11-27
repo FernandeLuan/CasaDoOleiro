@@ -531,4 +531,11 @@
   const loadMetaWhenIdle=()=>loadReleaseMeta();
   if(typeof requestIdleCallback==='function')requestIdleCallback(loadMetaWhenIdle,{timeout:1800});
   else setTimeout(loadMetaWhenIdle,900);
+  let sessionAnnouncementAttempts=0;
+  const waitForVolunteerSession=()=>{
+    if(state?.role==='volunteer'&&state?.currentSession?.uid){maybeOpenPendingReleasePopup();return}
+    if(++sessionAnnouncementAttempts<120)setTimeout(waitForVolunteerSession,250);
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',waitForVolunteerSession,{once:true});
+  else setTimeout(waitForVolunteerSession,250);
 })();
