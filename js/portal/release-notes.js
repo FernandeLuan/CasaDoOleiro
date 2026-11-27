@@ -153,10 +153,10 @@
   }
   function rawSession(value){return value?.raw||value||{}}
   function fmtNoticeDate(value){
-    const date=String(value||'').slice(0,10);
+    const raw=String(value||''),date=raw.slice(0,10);
     if(!date)return '';
     try{
-      const parsed=new Date(value);if(Number.isNaN(parsed.getTime()))return date;const hasTime=/T\d{2}:\d{2}/.test(String(value));return new Intl.DateTimeFormat('pt-BR',hasTime?{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}:{day:'2-digit',month:'2-digit'}).format(parsed);
+      const hasTime=raw.length>10,parsed=new Date(hasTime?raw:`${date}T12:00:00`);if(Number.isNaN(parsed.getTime()))return date;return new Intl.DateTimeFormat('pt-BR',hasTime?{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}:{day:'2-digit',month:'2-digit'}).format(parsed);
     }catch{return date}
   }
   function currentProjectAdjustmentSlide(){
