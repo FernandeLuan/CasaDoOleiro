@@ -85,8 +85,8 @@ test('Admin inactivation is persisted in History with the actor email',async({pa
   await expect(page.locator('#modalRoot')).toContainText('Inativar usuário?');
   await page.locator('#modalRoot').getByRole('button',{name:'Inativar usuário',exact:true}).click();
   await expect.poll(()=>page.evaluate(()=>state.candidates.find(row=>row.id==='e2e-approved-application')?.active),{timeout:20_000}).toBe(false);
-  await page.locator('.planning-profile-tabs').getByRole('button',{name:'Histórico'}).click();
-  const history=page.locator('.planning-history-r71');await expect(history).toBeVisible({timeout:20_000});
-  await expect(history).toContainText('Perfil inativado',{timeout:20_000});
+  await page.locator('#modalRoot .person-history-tabs').getByRole('button',{name:'Histórico'}).click();
+  const history=page.locator('#modalRoot .candidate-history-panel');await expect(history).toBeVisible({timeout:20_000});
+  await expect(history).toContainText('Usuário inativado',{timeout:20_000});
   await expect(history).toContainText('admin@oleiro.test');
 });
