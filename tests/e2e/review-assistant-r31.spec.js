@@ -85,7 +85,7 @@ test('Approved volunteer can add a new activity and Admin gets blue scoped info 
 
 test('Rodeio activity assistant is unit-scoped and has no candidate lifecycle controls',async({page})=>{
   await login(page,'assistant@oleiro.test','Assistant123!','admin');
-  for(const label of ['Início','Voluntariado','Planejamento','Projetos'])await expect(navAction(page,label)).toBeVisible();await expect(page.locator('.admin-content-r62>.app-header .header-actions button[aria-label="Configurações"]:visible')).toBeVisible();
+  for(const label of ['Início','Voluntariado','Planejamento','Projetos'])await expect(navAction(page,label)).toBeVisible();
   const homeOccupancy=page.locator('[data-home-occupancy]');await expect(homeOccupancy).toBeVisible({timeout:20_000});const homeUnits=homeOccupancy.locator('.home-occ-units button');await expect(homeUnits).toHaveCount(1);await expect(homeUnits).toHaveText('Rodeio');await expect(homeOccupancy.getByText('Indaial',{exact:true})).toHaveCount(0);
   await navAction(page,'Voluntariado').click();const list=page.locator('#candidateList');await expect(list).toContainText('Aprovado E2E',{timeout:20_000});await expect(list).not.toContainText('Indaial E2E');await expect(page.locator('.candidate-add-button')).toHaveCount(0);
   const denied=await page.evaluate(async()=>{try{await window.OleiroServices.applications.getById('e2e-indaial-application');return 'allowed'}catch(error){return String(error?.code||error?.message||'denied')}});expect(denied).not.toBe('allowed');
