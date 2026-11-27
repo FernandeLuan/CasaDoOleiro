@@ -23,7 +23,9 @@ test('a new release opens the existing change-summary modal once and is dismisse
   assert.ok(release.includes('function maybeOpenPendingReleasePopup()'));
   assert.ok(release.includes('pendingReleasePopupId=ANNOUNCEMENT.id;'));
   assert.ok(release.includes('maybeOpenPendingReleasePopup()},60)'));
-  assert.ok(release.includes("else if(state?.volunteerPage!=='home'&&ANNOUNCEMENT.id===pendingId)pendingReleasePopupId=pendingId"));
+  assert.ok(release.includes("state?.role!=='volunteer'||!state?.currentSession?.uid"));
+  assert.ok(release.includes('pendingPopupAttempts<30'));
+  assert.ok(release.includes('waitForVolunteerSession'));
   assert.ok(release.includes("localStorage.getItem(releaseSeenKey())===ANNOUNCEMENT.id"));
   assert.ok(release.includes("onclick=" + '"closeModal()">Entendi'));
   assert.ok(!release.includes("if(!releaseSeen())slides.push(...releaseSlides())"));
