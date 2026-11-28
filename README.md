@@ -123,6 +123,7 @@ Atuação na concepção do produto, estruturação dos fluxos, priorização de
 - [Backend e modelo de dados](BACKEND.md)
 - [Configuração do Firebase](FIREBASE_SETUP.md)
 - [Auditoria de arquitetura — setembro de 2026](docs/architecture-audit-20260918.md)
+- [Auditoria de arquitetura — novembro de 2026](docs/architecture-audit-20261128.md)
 - [Workflows de CI/CD](.github/workflows/)
 
 ## Repositório
