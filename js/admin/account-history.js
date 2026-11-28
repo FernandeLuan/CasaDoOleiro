@@ -251,14 +251,15 @@
     document.querySelectorAll('.planning-detail-page .planning-profile-tabs button').forEach(button=>{
       if(String(button.textContent||'').trim().toLowerCase()!=='histórico')return;
       button.dataset.r71HistoryTab='1';
-      // A captura do evento abaixo é o único ponto de entrada. Não depender de
-      // onclick inline/propriedade, que pode ser substituído por outros módulos
-      // carregados depois e deixar a aba sem ação no fluxo de Planejamento.
+      button.dataset.r71DirectHandler='1';
+      // Fallback direto para ambientes sem delegação; a captura abaixo é
+      // prioritária e impede dupla execução quando o clique vem do DOM. 
+      button.onclick=()=>openHistory(id);
     });
   }
   document.addEventListener('click',event=>{
     const button=event.target.closest?.('.planning-detail-page .planning-profile-tabs button');
-    if(!button||String(button.textContent||'').trim().toLowerCase()!=='histórico')return;
+    if(!button||String(button.textContent||'').trim().toLowerCase()!=='histórico'||button.dataset.r71DirectHandler==='1')return;
     const detail=document.querySelector('.planning-detail-page');
     let id=String(detail?.dataset.personId||state.managerPlanningPersonId||'');
     if(!id){
