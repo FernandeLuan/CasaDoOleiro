@@ -95,13 +95,6 @@
     if(key==='account')return `<div class="modal-body"><div class="asc-wrap">
       <section class="asc-card"><div class="asc-person"><span class="asc-avatar"><i class="fa-solid fa-user"></i></span><div class="asc-person-copy"><strong>${esc(user.displayName||user.name||'Conta administrativa')}</strong><small>${esc(session.email||'—')}</small></div></div></section>
     </div></div>`;
-    if(key==='house')return `<div class="modal-body"><div class="asc-wrap">
-      <div class="asc-actions">
-        ${settingsTile('fa-house','Informações da Casa','Rotina e orientações do portal',"openHouseInfo()")}
-        ${settingsTile('fa-building','Unidades','Gerenciar unidades cadastradas',"openUnits()")}
-        ${settingsTile('fa-people-group','Grupos','Gerenciar grupos e integrantes por unidade',"openAdminGroups()")}
-      </div>
-    </div></div>`;
     if(key==='admin')return '';
     return `<div class="modal-body"><div class="asc-wrap">
             <section class="asc-section"><div class="asc-section-head"><div><h3>Aparência</h3><p>Escolha como o painel será exibido neste dispositivo.</p></div></div>
@@ -113,7 +106,7 @@
     </div></div>`;
   }
   window.openSettingsCategory=function(key){
-    const labels={account:'Minha conta',house:'Casa do Oleiro',admin:'Administração',system:'Sistema'};
+    const labels={account:'Minha conta',admin:'Administração',system:'Sistema'};
     if(key==='admin'&&!isAdmin()){showToast?.('Somente administradores podem acessar esta área.');return}
     if(key==='admin'){window.openAdminAccessManagement();return}openShell(labels[key]||'Configurações',settingsCategoryHtml(key),'',true);
   };
@@ -122,7 +115,7 @@
     const rows=[['06:00','Despertar e higiene'],['06:15–07:30','Devocional'],['07:30–08:15','Café da manhã'],['08:15–11:15','Atividades práticas'],['11:15–12:00','Reunião de sentimentos'],['12:00–13:30','Almoço e descanso'],['13:45–15:00','Atividades'],['15:00–15:15','Café da tarde'],['15:15–16:30','Atividades'],['16:30 em diante','Banho, lazer e jantar'],['19:30–21:00','Filme, palestra, documentário ou outras atividades'],['21:00','Alojamento'],['21:30','Silêncio total']];
     const routine='<div class="asc-card">'+rows.map(([time,label])=>'<div class="asc-house-routine-row"><strong>'+esc(time)+'</strong><span>'+esc(label)+'</span></div>').join('')+'</div>';
     const portal=typeof infoAccordion==='function'?infoAccordion():'<div class="asc-empty">Informações do portal indisponíveis.</div>';
-    openShell('Informações da Casa','<div class="modal-body"><div class="asc-wrap"><section class="asc-section"><h3>Portal do voluntário</h3>'+portal+'</section><section class="asc-section"><h3>Rotina da Casa</h3>'+routine+'</section></div></div>','',()=>window.openSettingsCategory('house'));
+    openShell('Informações da Casa','<div class="modal-body"><div class="asc-wrap"><section class="asc-section"><h3>Portal do voluntário</h3>'+portal+'</section><section class="asc-section"><h3>Rotina da Casa</h3>'+routine+'</section></div></div>','',()=>window.openMyAccount());
   };
   window.openMyAccount=function(){openShell('Configurações',settingsHtml(),'',()=>closeModal())};
   window.setAdminTheme=function(target){window.setThemePreference?.(target);setTimeout(()=>window.openSettingsCategory('system'),0)};
