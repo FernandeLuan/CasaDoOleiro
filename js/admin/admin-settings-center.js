@@ -81,7 +81,6 @@
   }
   function settingsHtml(){
     const categories=[
-      ['fa-user','Minha conta','Dados e preferências pessoais','openSettingsCategory(\'account\')'],
       ['fa-house','Casa do Oleiro','Informações, unidades e grupos','openSettingsCategory(\'house\')'],
       ...(isAdmin()?[['fa-users-gear','Administração','Administradores e permissões de acesso','openSettingsCategory(\'admin\')']]:[]),
       ['fa-sliders','Sistema','Aparência, versão e informações técnicas','openSettingsCategory(\'system\')']
@@ -124,7 +123,7 @@
     const portal=typeof infoAccordion==='function'?infoAccordion():'<div class="asc-empty">Informações do portal indisponíveis.</div>';
     openShell('Informações da Casa','<div class="modal-body"><div class="asc-wrap"><section class="asc-section"><h3>Portal do voluntário</h3>'+portal+'</section><section class="asc-section"><h3>Rotina da Casa</h3>'+routine+'</section></div></div>','',()=>window.openSettingsCategory('house'));
   };
-  window.openMyAccount=function(){openShell('Configurações',settingsHtml())};
+  window.openMyAccount=function(){openShell('Configurações',settingsHtml(),' ',()=>closeModal())};
   window.setAdminTheme=function(target){window.setThemePreference?.(target);setTimeout(()=>window.openSettingsCategory('system'),0)};
   window.openAdminAccessManagement=async function(){
     if(!isAdmin()){showToast?.('Somente administradores podem gerenciar acessos.');return}
@@ -144,9 +143,9 @@
     openShell('Cadastrar administrador',`<div class="modal-body"><form id="ascCreateForm" class="asc-admin-form">
       <div class="field"><label for="ascName">Nome completo</label><input id="ascName" class="input" name="name" required maxlength="100" autocomplete="name" placeholder="Nome do administrador"></div>
       <div class="field"><label for="ascEmail">E-mail de acesso</label><input id="ascEmail" class="input" name="email" type="email" required maxlength="160" autocomplete="email" placeholder="nome@exemplo.com"></div>
-      <div class="field"><label for="ascRole">Nível de acesso</label><select id="ascRole" class="select" name="role" onchange="document.getElementById('ascUnitScope').hidden=this.value!=='coordinator'"><option value="admin">Administrador — acesso completo</option><option value="coordinator">Coordenador — limitado às unidades selecionadas</option></select></div>
-      <div id="ascUnitScope" class="field" hidden><label>Unidades autorizadas</label><div class="asc-unit-list">${unitOptions()}</div><small class="asc-help">O coordenador só poderá administrar registros vinculados às unidades selecionadas.</small></div>
-      <div class="asc-danger-note">Será criada uma conta real no Firebase Authentication. O novo usuário receberá um e-mail para definir a própria senha. Não compartilhe senhas temporárias.</div>
+      <div class="field"><label for="ascRole">Nível de acesso</label><select id="ascRole" class="select" name="role"><option value="admin">Administrador — acesso completo</option><option value="coordinator">Coordenador — limitado às unidades selecionadas</option></select></div>
+      <div id="ascUnitScope" class="field"><label>Unidades autorizadas</label><div class="asc-unit-list">${unitOptions()}</div></div>
+      
       <div class="asc-admin-form-footer"><button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Criar administrador e enviar acesso</button></div>
     </form></div>`,'',()=>window.openAdminAccessManagement());
     $('#ascCreateForm')?.addEventListener('submit',createAdminAccount);
@@ -166,8 +165,8 @@
   window.confirmAdminAccessToggle=function(uid,active){const row=(window.__oleiroManagerRows||[]).find(x=>x.id===uid);if(!row)return;const label=active?'reativar':'suspender';openModal(active?'Reativar acesso':'Suspender acesso',`Deseja realmente ${label} o acesso de ${esc(row.displayName||row.name||'este administrador')}?`,'<div class="notice warning"><i class="fa-solid fa-triangle-exclamation"></i><div>A alteração será aplicada à conta administrativa.</div></div>',`<div class="confirm-actions"><button class="btn btn-outline" type="button" onclick="openAdminAccessManagement()">Cancelar</button><button class="btn ${active?'btn-primary':'btn-danger'}" type="button" onclick="toggleAdminAccess('${esc(uid)}',${active})">Confirmar</button></div>`)};
   window.editAdminAccess=function(uid){
     if(!isAdmin())return;const row=(window.__oleiroManagerRows||[]).find(x=>x.id===uid);if(!row)return;
-    openShell('Editar permissões',`<div class="modal-body"><form id="ascEditForm" class="asc-admin-form"><div class="asc-person"><span class="asc-avatar"><i class="fa-solid fa-user-shield"></i></span><div class="asc-person-copy"><strong>${esc(row.displayName||row.name||'Administrador')}</strong><small>${esc(row.email||'')}</small></div></div><div class="field"><label for="ascEditRole">Nível de acesso</label><select id="ascEditRole"><option value="admin" ${row.role==='admin'?'selected':''}>Administrador — acesso completo</option><option value="coordinator" ${row.role==='coordinator'?'selected':''}>Coordenador — acesso por unidade</option></select></div><div class="field" id="ascEditUnits" ${row.role==='coordinator'?'':'hidden'}><label>Unidades autorizadas</label><div class="asc-unit-list">${unitOptions(row.unitIds||[])}</div></div><div class="asc-admin-form-footer"><button type="submit" class="btn btn-primary">Salvar permissões</button></div></form></div>`);
-    $('#ascEditRole').addEventListener('change',e=>$('#ascEditUnits').hidden=e.target.value!=='coordinator');
+    openShell('Editar permissões',`<div class="modal-body"><form id="ascEditForm" class="asc-admin-form"><div class="asc-person"><span class="asc-avatar"><i class="fa-solid fa-user-shield"></i></span><div class="asc-person-copy"><strong>${esc(row.displayName||row.name||'Administrador')}</strong><small>${esc(row.email||'')}</small></div></div><div class="field"><label for="ascEditRole">Nível de acesso</label><select id="ascEditRole"><option value="admin" ${row.role==='admin'?'selected':''}>Administrador — acesso completo</option><option value="coordinator" ${row.role==='coordinator'?'selected':''}>Coordenador — acesso por unidade</option></select></div><div class="field" id="ascEditUnits"><label>Unidades autorizadas</label><div class="asc-unit-list">${unitOptions(row.unitIds||[])}</div></div><div class="asc-admin-form-footer"><button type="submit" class="btn btn-primary">Salvar permissões</button></div></form></div>`);
+
     $('#ascEditForm').addEventListener('submit',async e=>{e.preventDefault();const role=$('#ascEditRole').value,unitIds=[...document.querySelectorAll('[name="adminUnit"]:checked')].map(x=>x.value);const admins=(window.__oleiroManagerRows||[]).filter(r=>r.role==='admin'&&r.active===true);if(row.role==='admin'&&role!=='admin'&&admins.length<=1){showToast?.('Não é possível rebaixar o último administrador ativo.');return}if(role==='coordinator'&&!unitIds.length){showToast?.('Selecione ao menos uma unidade.');return}try{await services().adminAccess.updatePermissions(uid,{role,unitIds});showToast?.('Permissões atualizadas.');await window.openAdminAccessManagement()}catch(error){console.error(error);showToast?.('Não foi possível atualizar as permissões.')}});
   };
   window.toggleAdminAccess=async function(uid,active){
