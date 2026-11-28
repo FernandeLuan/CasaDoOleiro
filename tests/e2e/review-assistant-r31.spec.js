@@ -16,7 +16,9 @@ async function login(page,email,password,target){
 async function relogin(page,email,password,target){await page.evaluate(async()=>{await window.OleiroAuth?.signOut?.()});await login(page,email,password,target)}
 const navAction=(page,label)=>page.locator('.admin-sidebar-r62 button:visible').filter({hasText:label}).or(page.getByRole('navigation').getByRole('button',{name:new RegExp(label)})).first();
 async function openGroupsFromSettings(page){
-  await page.locator('.admin-content-r62>.app-header .header-actions button[aria-label="Configurações"]:visible').click();
+  const settingsButton=page.locator('.admin-sidebar-account-r62 button:visible, .admin-content-r62 .app-header .header-actions button[aria-label="Configurações"]:visible, button[aria-label="Configurações"]:visible').first();
+  await expect(settingsButton).toBeVisible({timeout:15_000});
+  await settingsButton.click();
   await page.locator('.asc-category-grid .asc-tile').filter({hasText:'Casa do Oleiro'}).click();
   await page.locator('.asc-actions .asc-tile').filter({hasText:'Grupos'}).click();
   await expect(page.locator('.groups-page-grid')).toBeVisible({timeout:20_000});
