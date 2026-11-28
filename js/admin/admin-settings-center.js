@@ -81,6 +81,7 @@
   }
   function settingsHtml(){
     const categories=[
+      ['fa-house','Informações da Casa','Rotina e orientações do portal','openHouseInfo()'],
       ['fa-building','Unidades','Gerenciar unidades cadastradas','openUnits()'],
       ['fa-people-group','Grupos','Gerenciar grupos e integrantes por unidade','openAdminGroups()'],
       ...(isAdmin()?[['fa-users-gear','Administração','Administradores e permissões de acesso','openSettingsCategory(\'admin\')']]:[]),
