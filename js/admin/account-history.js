@@ -252,6 +252,8 @@
       if(String(button.textContent||'').trim().toLowerCase()!=='histórico')return;
       button.dataset.r71HistoryTab='1';
       button.dataset.r71DirectHandler='1';
+      // Fallback direto para ambientes sem delegação; a captura abaixo é
+      // prioritária e impede dupla execução quando o clique vem do DOM. 
       button.onclick=()=>openHistory(id);
     });
   }

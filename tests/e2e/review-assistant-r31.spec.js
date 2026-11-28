@@ -44,7 +44,7 @@ async function expectDecisionMenu(card){
 test.beforeEach(async()=>{await seedEmulators()});
 
 test('Admin adjustment stays on one activity and volunteer resubmits that session',async({page})=>{
-  await login(page,'voluntario@oleiro.test','Volunteer123!','portal');await navAction(page,'Planejamento').click();await page.getByRole('button',{name:/Enviar planejamento/}).click();await expect.poll(()=>page.evaluate(()=>state.currentApplication?.status),{timeout:20_000}).toBe('analysis');await expect.poll(()=>page.evaluate(async()=>{const row=await window.OleiroServices.applications.getById('e2e-application',{enrichProfiles:false,server:true});return row?.status||null}),{timeout:20_000}).toBe('analysis');
+  await login(page,'voluntario@oleiro.test','Volunteer123!','portal');await navAction(page,'Planejamento').click();await page.getByRole('button',{name:/Enviar planejamento/}).click();await expect.poll(()=>page.evaluate(()=>state.volunteerPlanStatus),{timeout:20_000}).toBe('submitted');await expect.poll(()=>page.evaluate(async()=>{const row=await window.OleiroServices.applications.getById('e2e-application',{enrichProfiles:false,server:true});return row?.status||null}),{timeout:20_000}).toBe('analysis');
   await relogin(page,'admin@oleiro.test','Admin123!','admin');const modal=await openVolunteerByStatus(page,'analysis','Voluntário E2E');
   await expect(modal.locator('.person-refactor-tabs button.active')).toContainText('Planejamento');
   await openPlanning(modal);
@@ -61,7 +61,7 @@ test('Admin adjustment stays on one activity and volunteer resubmits that sessio
   const layout=await vcard.evaluate(card=>{const actions=card.querySelector('.candidate-session-actions'),row=card.querySelector('.activity-row'),description=card.querySelector('.volunteer-session-description');return {card:card.getBoundingClientRect().width,actions:actions?.getBoundingClientRect().width||0,row:row?.getBoundingClientRect().width||0,description:description?.getBoundingClientRect().width||0}});
   expect(layout.actions).toBeGreaterThan(layout.card*.8);expect(layout.description).toBeGreaterThan(layout.row*.9);
   await vcard.getByRole('button',{name:/Ajustar atividade/}).click();await page.locator('#r31ActPeriod').selectOption('Noite');await page.locator('#r31VolunteerAdjustSave').click();await page.getByRole('button',{name:/Reenviar planejamento/}).click();
-  await expect.poll(()=>page.evaluate(()=>{const s=state.sessions.find(row=>row.id==='e2e-candidate-session');return `${state.currentApplication?.status}|${s?.adminAdjustmentStatus}|${s?.period}|${s?.time}`}),{timeout:20_000}).toBe('analysis|analysis|Noite|15:15');
+  await expect.poll(()=>page.evaluate(()=>{const s=state.sessions.find(row=>row.id==='e2e-candidate-session');return `${state.volunteerPlanStatus}|${s?.adminAdjustmentStatus}|${s?.period}|${s?.time}`}),{timeout:20_000}).toBe('submitted|analysis|Noite|15:15');
 });
 
 test('Legacy manager-confirmed activity requires reason, preserves original and exposes De to Para',async({page})=>{

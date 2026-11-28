@@ -90,10 +90,11 @@ test('delete confirmation uses only the canonical Cloud Shell flow',()=>{
   assert.ok(!confirmation.includes('window.confirmDeleteVolunteerApplication=function'),'browser must not expose a direct destructive delete handler');
 });
 
-test('analysis copy never says editing is blocked',()=>{
-  const home=readFileSync('js/portal/experience-summary.js','utf8');
+test('analysis copy is validated in the canonical Portal Home module',()=>{
+  const home=readFileSync('js/portal/home.js','utf8');
   assert.ok(!home.includes('edição fica bloqueada'));
   assert.ok(home.includes('continuar adicionando e ajustando atividades'));
+  assert.ok(!readFileSync('portal/index.html','utf8').includes('experience-summary.js'),'Retired experience-summary must not be the source of the active Home copy contract');
 });
 
 test('legacy plan_approved sessions stay editable during candidate analysis',()=>{
@@ -351,4 +352,15 @@ test('Portal experience summary behavior has one canonical feature owner',()=>{
   assert.doesNotMatch(html,/experience-summary\.js/);
   assert.ok(retiredNotLoaded.has('js/portal/experience-summary.js'));
   assert.match(planning,/if\(wasAdjustment\)application\.dayAdjustments=\{\}/);
+});
+
+
+test('Settings navigation has one root and Units returns directly to it',()=>{
+  const settings=readFileSync('js/admin/admin-settings-center.js','utf8');
+  const units=readFileSync('js/admin/unit-management.js','utf8');
+  assert.ok(settings.includes("['fa-building','Unidades'"),'Units must remain directly available from Settings');
+  assert.ok(settings.includes("['fa-people-group','Grupos'"),'Groups must remain directly available from Settings');
+  assert.doesNotMatch(settings,/if\(key===['"]house['"]\)/,'The obsolete House category must not be recreated');
+  assert.match(settings,/openShell\('Informações da Casa'[\s\S]*?\(\)=>window\.openMyAccount\(\)/,'House information must return to the Settings root');
+  assert.match(units,/aria-label','Voltar para Configurações'[\s\S]*?back\.onclick=\(\)=>window\.openMyAccount\(\)/,'Units back action must return to the Settings root');
 });
