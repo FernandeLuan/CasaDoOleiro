@@ -352,3 +352,14 @@ test('Portal experience summary behavior has one canonical feature owner',()=>{
   assert.ok(retiredNotLoaded.has('js/portal/experience-summary.js'));
   assert.match(planning,/if\(wasAdjustment\)application\.dayAdjustments=\{\}/);
 });
+
+
+test('Settings navigation has one root and Units returns directly to it',()=>{
+  const settings=readFileSync('js/admin/admin-settings-center.js','utf8');
+  const units=readFileSync('js/admin/unit-management.js','utf8');
+  assert.ok(settings.includes("['fa-building','Unidades'"),'Units must remain directly available from Settings');
+  assert.ok(settings.includes("['fa-people-group','Grupos'"),'Groups must remain directly available from Settings');
+  assert.doesNotMatch(settings,/if\(key===['"]house['"]\)/,'The obsolete House category must not be recreated');
+  assert.match(settings,/openShell\('Informações da Casa'[\s\S]*?\(\)=>window\.openMyAccount\(\)/,'House information must return to the Settings root');
+  assert.match(units,/aria-label','Voltar para Configurações'[\s\S]*?back\.onclick=\(\)=>window\.openMyAccount\(\)/,'Units back action must return to the Settings root');
+});
