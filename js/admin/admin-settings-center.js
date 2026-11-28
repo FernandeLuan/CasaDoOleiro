@@ -45,7 +45,7 @@
       .asc-theme-switch{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;border:1px solid var(--border);border-radius:13px;background:var(--surface)}
       .asc-theme-switch button{min-height:42px;border:0;border-radius:9px;background:transparent;color:var(--muted);font-size:.68rem;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer}
       .asc-theme-switch button.active{background:var(--primary);color:#fff}
-      .asc-release-card .admin-release-items{display:grid;gap:8px;grid-column:1/-1}
+      .asc-release-card .admin-release-version-whatsnew{display:grid;gap:8px;grid-column:1/-1}.asc-release-card .admin-release-items{display:grid;gap:8px;grid-column:1/-1}
       .asc-release-card .admin-release-item{display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;padding:10px;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
       .asc-release-card .admin-release-item>span{width:34px;height:34px;border-radius:10px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center}
       .asc-release-card .admin-release-item strong{font-size:.65rem}
