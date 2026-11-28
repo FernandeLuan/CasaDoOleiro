@@ -103,7 +103,7 @@
     if(!loaded)return '<div class="release-info"><p>Carregando versão...</p></div>';
     const published=publishedAtLabel(meta?.publishedAt||latest?.publishedAt);
     const items=Array.isArray(latest?.items)?latest.items:[];
-    return `<div class="admin-release-summary"><div class="admin-release-meta"><span>${esc(published||"Data não informada")}</span><i aria-hidden="true">·</i><strong>v${esc(version())}</strong></div><div class="admin-release-whatsnew"><h4>O que mudou nesta versão</h4><div class="admin-release-items">${items.length?items.map(itemHtml).join(""):"<p>Nenhuma descrição cadastrada para esta versão.</p>"}</div></div></div>`;
+    return `<div class="admin-release-summary"><div class="admin-release-meta"><span>Publicado em: ${esc(published||"Data não informada")}</span><i aria-hidden="true">·</i><strong>v${esc(version())}</strong></div><div class="admin-release-whatsnew"><h4>O que mudou nesta versão</h4><div class="admin-release-items">${items.length?items.map(itemHtml).join(""):"<p>Nenhuma descrição cadastrada para esta versão.</p>"}</div></div></div>`;
   }
   function modalBody(){
     return `<div class="admin-release-modal">
