@@ -61,11 +61,12 @@ test('inactive volunteer account details stop loading access records and show a 
   assert.match(details, /Acesso inativo/);
 });
 
-test('admin version panel keeps the menu concise and opens card-based release details', async () => {
+test('admin version panel shows version metadata and changes inline', async () => {
   const release = await read('../js/admin/release-notes.js');
-  assert.match(release, /Ver detalhes desta versão/);
-  assert.match(release, /admin-release-details/);
-  assert.match(release, /admin-release-whatsnew-title/);
+  assert.match(release, /O que mudou nesta versão/);
+  assert.match(release, /admin-release-version-whatsnew/);
+  assert.match(release, /Publicado em:/);
+  assert.match(release, /Commit:/);
   assert.match(release, /if\(state\?\.managerPage==='home'\)\{maybeAnnounce\(\)/);
   assert.match(release, /if\(popupOpened\|\|popupScheduled\|\|!loaded\|\|!latest[\s\S]*\|\|seen\(\)\)return/);
   assert.ok(release.includes("const demoProject=String(window.OLEIRO_FIREBASE_CONFIG?.projectId||'').startsWith('demo-')"));
