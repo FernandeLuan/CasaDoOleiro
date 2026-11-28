@@ -249,16 +249,23 @@
     document.querySelectorAll('.planning-detail-page .planning-profile-tabs button').forEach(button=>{
       if(String(button.textContent||'').trim().toLowerCase()!=='histórico')return;
       button.dataset.r71HistoryTab='1';
-      button.dataset.r71DirectHandler='1';
-      button.onclick=()=>openHistory(id);
+      // A troca é tratada pelo listener delegado em capture para evitar
+      // handlers inline do renderer legado sobrescreverem a navegação.
     });
   }
   document.addEventListener('click',event=>{
     const button=event.target.closest?.('.planning-detail-page .planning-profile-tabs button');
-    if(!button||String(button.textContent||'').trim().toLowerCase()!=='histórico'||button.dataset.r71DirectHandler==='1')return;
-    const id=String(document.querySelector('.planning-detail-page')?.dataset.personId||state.managerPlanningPersonId||'');
+    if(!button||String(button.textContent||'').trim().toLowerCase()!=='histórico')return;
+    const detail=document.querySelector('.planning-detail-page');
+    let id=String(detail?.dataset.personId||state.managerPlanningPersonId||'');
+    if(!id){
+      const inline=String(button.getAttribute('onclick')||'');
+      const match=inline.match(/(?:openPerson|openPlanningHistoryR71)\s*\(\s*(?:decodeURIComponent\s*\()?['"]([^'"]+)['"]/);
+      if(match)try{id=decodeURIComponent(match[1])}catch{id=match[1]}
+    }
     const p=historyPersonById(id);if(!p)return;
-    event.preventDefault();event.stopImmediatePropagation();openHistory(p.id);
+    event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();
+    openHistory(p.id);
   },true);
 
   const baseRenderManager=typeof window.renderManager==='function'?window.renderManager:null;
