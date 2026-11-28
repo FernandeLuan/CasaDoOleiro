@@ -13,7 +13,7 @@
     s.textContent=`
       .modal.admin-settings-center{width:min(720px,calc(100vw - 20px))!important;max-width:720px!important;max-height:min(90vh,820px)!important}
       .admin-settings-center .modal-head{padding:20px 22px 14px!important;text-align:left!important}
-      .admin-settings-center .modal-head h2{font-size:1.05rem!important;text-align:left!important}
+      .admin-settings-center .modal-head h2{font-size:1.12rem!important;text-align:left!important}
       .admin-settings-center .modal-body{padding:18px 22px 22px!important}
       .asc-wrap{display:grid;gap:16px;color:var(--text)}
       .asc-intro{display:flex;align-items:center;gap:13px;padding:15px;border:1px solid var(--border);border-radius:16px;background:var(--surface)}
