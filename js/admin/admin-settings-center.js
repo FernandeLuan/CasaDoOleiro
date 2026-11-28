@@ -81,7 +81,8 @@
   }
   function settingsHtml(){
     const categories=[
-      ['fa-house','Casa do Oleiro','Informações, unidades e grupos','openSettingsCategory(\'house\')'],
+      ['fa-building','Unidades','Gerenciar unidades cadastradas','openUnits()'],
+      ['fa-people-group','Grupos','Gerenciar grupos e integrantes por unidade','openAdminGroups()'],
       ...(isAdmin()?[['fa-users-gear','Administração','Administradores e permissões de acesso','openSettingsCategory(\'admin\')']]:[]),
       ['fa-sliders','Sistema','Aparência, versão e informações técnicas','openSettingsCategory(\'system\')']
     ];
