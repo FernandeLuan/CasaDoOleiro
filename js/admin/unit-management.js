@@ -19,7 +19,8 @@
     const rows=state.units||[];
     const html=rows.length?rows.map(unit=>{const [label,type]=unitStatus(unit);return `<div class="card unit-admin-card"><div class="unit-admin-head"><span class="metric-icon"><i class="fa-solid fa-house"></i></span><div><h3>${escapeHtml(unit.name||unit.id)}</h3><div class="item-meta">${badge(label,type)}</div></div></div><div class="unit-admin-actions">${unitActions(unit)}</div></div>`}).join(''):'<div class="empty">Nenhuma unidade cadastrada.</div>';
     openModal('Unidades','Ative, pause ou controle novos cadastros por unidade.',`<div class="unit-admin-list">${html}</div>`);
-    modalRoot.querySelector('.modal')?.classList.add('units-admin-modal');
+    const modal=modalRoot.querySelector('.modal');modal?.classList.add('units-admin-modal');
+    if(typeof window.openSettingsCategory==='function'&&modal){const head=modal.querySelector('.modal-head');if(head&&!head.querySelector('.units-settings-back')){const back=document.createElement('button');back.type='button';back.className='units-settings-back';back.setAttribute('aria-label','Voltar para Casa do Oleiro');back.innerHTML='<i class="fa-solid fa-arrow-left"></i>';back.style.cssText='width:40px;height:40px;flex:none;border:0;border-radius:12px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;font-size:1rem;cursor:pointer';back.onclick=()=>window.openSettingsCategory('house');head.prepend(back)}}
   };
 
   window.confirmPauseUnit=function(encodedId){
