@@ -32,7 +32,7 @@
       .admin-account-release .release-info p{margin:0;color:var(--muted);font-size:.62rem;line-height:1.45}
       .admin-account-release .release-info strong{color:var(--text)}
       .admin-release-details{display:inline-flex;align-items:center;gap:7px;width:max-content;border:0;background:none;padding:2px 0;color:var(--primary);font:inherit;font-size:.62rem;font-weight:700;cursor:pointer}
-      .admin-release-modal{display:grid;gap:14px}
+      .admin-release-summary{display:grid;gap:18px}.admin-release-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:2px 0 14px;border-bottom:1px solid var(--border);font-size:.72rem;color:var(--muted)}.admin-release-meta strong{color:var(--primary);font-size:.8rem}.admin-release-whatsnew{display:grid;gap:10px}.admin-release-whatsnew h4{margin:0;font-size:.82rem;color:var(--text)}.admin-release-whatsnew .admin-release-items{display:grid;gap:9px}.admin-release-whatsnew .admin-release-item{background:transparent;border:0;border-bottom:1px solid var(--border);border-radius:0;padding:10px 0}.admin-release-whatsnew .admin-release-item:last-child{border-bottom:0}.admin-release-modal{display:grid;gap:14px}
       .admin-release-modal,.admin-release-modal p{font-family:var(--font-body)!important}
       .admin-release-modal p{margin:0;color:var(--text);font-size:.84rem;line-height:1.55;letter-spacing:0}
       .admin-release-modal p+p{margin-top:2px}
@@ -100,20 +100,11 @@
   }
 
   function releaseInformationHtml(){
-    if(!loaded)return '<div class="release-info"><p>Carregando informações da versão...</p></div>';
+    // Commit: continua registrado em release.json para rastreabilidade, sem ocupar um card separado na interface.
+    if(!loaded)return '<div class="release-info"><p>Carregando versão...</p></div>';
     const published=publishedAtLabel(meta?.publishedAt||latest?.publishedAt);
-    const commit=String(meta?.commit||'').trim();
-    const shortCommit=/^[a-f0-9]{7,40}$/i.test(commit)?commit.slice(0,7):'';
-    const environment=String(meta?.environment||'').toLowerCase();
-    const environmentLabel=environment==='production'?'Produção':environment==='homologation'?'Homologação':environment==='development'?'Desenvolvimento':'—';
     const items=Array.isArray(latest?.items)?latest.items:[];
-    return `<div class="release-info">
-      <p><strong>Versão:</strong> ${esc(version())}</p>
-      <p><strong>Ambiente:</strong> ${esc(environmentLabel)}</p>
-      <p><strong>Publicado em:</strong> ${esc(published||'Horário não informado')}</p>
-      <p><strong>Commit:</strong> <code title="${esc(commit)}">${esc(shortCommit||commit||'—')}</code></p>
-      <div class="admin-release-version-whatsnew"><strong>O que mudou nesta versão</strong><div class="admin-release-items">${items.length?items.map(itemHtml).join(''):'<p>Nenhuma descrição de atualização cadastrada para esta versão.</p>'}</div></div>
-    </div>`;
+    return `<div class="admin-release-summary"><div class="admin-release-meta"><span>Publicado em: ${esc(published||"Data não informada")}</span><i aria-hidden="true">·</i><strong>v${esc(version())}</strong></div><div class="admin-release-whatsnew"><h4>O que mudou nesta versão</h4><div class="admin-release-items">${items.length?items.map(itemHtml).join(""):"<p>Nenhuma descrição cadastrada para esta versão.</p>"}</div></div></div>`;
   }
   function modalBody(){
     return `<div class="admin-release-modal">

@@ -42,8 +42,7 @@ async function openGroupsFromSettings(page){
   const settingsButton=page.locator('.admin-sidebar-account-r62 button:visible, .admin-content-r62 .app-header .header-actions button[aria-label="Configurações"]:visible, button[aria-label="Configurações"]:visible').first();
   await expect(settingsButton).toBeVisible({timeout:15_000});
   await settingsButton.click();
-  await page.locator('.asc-category-grid .asc-tile').filter({hasText:'Casa do Oleiro'}).click();
-  await page.locator('.asc-actions .asc-tile').filter({hasText:'Grupos'}).click();
+  await page.locator('.asc-category-grid .asc-tile').filter({hasText:'Grupos'}).click();
   await expect(page.locator('.groups-page-grid')).toBeVisible({timeout:20_000});
 }
 const appAction=(page,label)=>page.locator('#app').getByRole('button',{name:new RegExp(label)});
