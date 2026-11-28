@@ -259,7 +259,7 @@
   }
   document.addEventListener('click',event=>{
     const button=event.target.closest?.('.planning-detail-page .planning-profile-tabs button');
-    if(!button||String(button.textContent||'').trim().toLowerCase()!=='histórico'||button.dataset.r71DirectHandler==='1')return;
+    if(!button||String(button.textContent||'').trim().toLowerCase()!=='histórico')return;
     const detail=document.querySelector('.planning-detail-page');
     let id=String(detail?.dataset.personId||state.managerPlanningPersonId||'');
     if(!id){
