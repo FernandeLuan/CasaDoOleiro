@@ -37,6 +37,35 @@
 .activity-card.volunteer-session-card>.approved-card-actions{display:block!important;width:100%!important}
 .activity-card.volunteer-session-card>.approved-card-actions .btn{display:flex!important;width:100%!important;max-width:none!important;justify-content:center}
 
+/* R31: o ajuste solicitado pelo Admin precisa manter a ação visível e ocupar toda a largura do card. */
+.activity-card.volunteer-session-card.r31-card-warning>.activity-actions.candidate-session-actions{
+  display:flex!important;
+  width:100%!important;
+  min-width:0!important;
+  min-height:42px!important;
+  box-sizing:border-box!important;
+  flex-direction:row!important;
+  flex-wrap:nowrap!important;
+  align-items:stretch!important;
+  gap:7px!important;
+}
+.activity-card.volunteer-session-card.r31-card-warning>.activity-actions.candidate-session-actions>.btn{
+  display:flex!important;
+  flex:1 1 0!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+  box-sizing:border-box!important;
+  justify-content:center!important;
+}
+.activity-card.volunteer-session-card.r31-card-warning>.activity-row,
+.activity-card.volunteer-session-card.r31-card-warning .volunteer-session-description{
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+  box-sizing:border-box!important;
+}
+
 @media (max-width:520px){
   .admin-portal-actions>.post-approval-admin-actions,.post-approval-admin-actions{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:5px!important}
   .post-approval-admin-actions .btn{font-size:.56rem!important;padding:7px 4px!important;gap:3px!important}
