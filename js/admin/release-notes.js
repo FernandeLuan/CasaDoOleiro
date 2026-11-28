@@ -100,6 +100,7 @@
   }
 
   function releaseInformationHtml(){
+    // Commit: continua registrado em release.json para rastreabilidade, sem ocupar um card separado na interface.
     if(!loaded)return '<div class="release-info"><p>Carregando versão...</p></div>';
     const published=publishedAtLabel(meta?.publishedAt||latest?.publishedAt);
     const items=Array.isArray(latest?.items)?latest.items:[];
