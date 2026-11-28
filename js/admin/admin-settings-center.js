@@ -54,11 +54,10 @@
     `;document.head.appendChild(s);
   }
   function unitOptions(selected=[]){return (state.units||[]).filter(u=>u.active!==false).map(u=>'<label class="asc-unit-check"><input type="checkbox" name="adminUnit" value="'+esc(u.id)+'" '+(selected.includes(String(u.id))?'checked':'')+'> '+esc(u.name||u.id)+'</label>').join('')||'<small class="asc-help">Nenhuma unidade ativa cadastrada.</small>'}
-  function openShell(title,html,footer=''){openModal(title,'',html,footer);$('.modal')?.classList.add('admin-settings-center')}
+  function openShell(title,html,footer='',withBack=false,withAdd=false){openModal(title,'',html,footer);const modal=$('.modal');modal?.classList.add('admin-settings-center');const head=modal?.querySelector('.modal-head');if(!head)return;if(withBack){const b=document.createElement('button');b.type='button';b.className='asc-header-back';b.setAttribute('aria-label','Voltar');b.innerHTML='<i class="fa-solid fa-arrow-left"></i>';b.onclick=()=>window.openMyAccount();head.prepend(b)}if(withAdd){const b=document.createElement('button');b.type='button';b.className='asc-header-action';b.setAttribute('aria-label','Cadastrar administrador');b.innerHTML='<i class="fa-solid fa-plus"></i>';b.onclick=()=>window.openAdminCreateForm();head.insertBefore(b,head.querySelector('.modal-close'))}}
   function settingsTile(icon,title,description,action){
     return `<button class="asc-tile" type="button" onclick="${action}"><i class="fa-solid ${icon}"></i><span><strong>${title}</strong><small>${description}</small></span><i class="fa-solid fa-chevron-right asc-tile-chevron"></i></button>`;
   }
-  function settingsBack(){return '<button class="asc-back" type="button" onclick="openMyAccount()"><i class="fa-solid fa-arrow-left"></i> Todas as configurações</button>'}
   function settingsIntro(title,description,icon='fa-gear'){
     return `<div class="asc-intro"><span class="asc-intro-icon"><i class="fa-solid ${icon}"></i></span><div><h3>${title}</h3><p>${description}</p></div></div>`;
   }
@@ -70,16 +69,13 @@
       ['fa-sliders','Sistema','Aparência, versão e informações técnicas','openSettingsCategory(\'system\')']
     ];
     return `<div class="modal-body"><div class="asc-wrap">
-      ${settingsIntro('Central de configurações','Selecione uma área para acessar suas opções.')}
       <div class="asc-category-grid">${categories.map(([icon,title,description,action])=>settingsTile(icon,title,description,action)).join('')}</div>
     </div></div>`;
   }
   function settingsCategoryHtml(key){
     const session=state.currentSession||{},user=session.user||{},pref=state.themePreference||'system';
     if(key==='account')return `<div class="modal-body"><div class="asc-wrap">
-      ${settingsIntro('Minha conta','Informações da conta administrativa.','fa-user')}
-      <section class="asc-card"><div class="asc-person"><span class="asc-avatar"><i class="fa-solid fa-user"></i></span><div class="asc-person-copy"><strong>${esc(user.displayName||user.name||'Conta administrativa')}</strong><small>${esc(session.email||'—')}</small></div><span class="asc-pill active">${esc(roleLabel(user.role))}</span></div></section>
-      ${settingsBack()}
+      <section class="asc-card"><div class="asc-person"><span class="asc-avatar"><i class="fa-solid fa-user"></i></span><div class="asc-person-copy"><strong>${esc(user.displayName||user.name||'Conta administrativa')}</strong><small>${esc(session.email||'—')}</small></div></div></section>
     </div></div>`;
     if(key==='house')return `<div class="modal-body"><div class="asc-wrap">
       ${settingsIntro('Casa do Oleiro','Conteúdos e configurações operacionais.','fa-house')}
@@ -88,17 +84,11 @@
         ${settingsTile('fa-building','Unidades','Gerenciar unidades cadastradas',"openUnits()")}
         ${settingsTile('fa-people-group','Grupos','Gerenciar grupos e integrantes por unidade',"openAdminGroups()")}
       </div>
-      ${settingsBack()}
     </div></div>`;
-    if(key==='admin')return `<div class="modal-body"><div class="asc-wrap">
-      ${settingsIntro('Administração','Gerencie quem pode acessar o painel e o que cada perfil pode fazer.','fa-users-gear')}
-      <div class="asc-actions">${settingsTile('fa-users-gear','Administradores e acessos','Consultar, cadastrar e ajustar permissões',"openAdminAccessManagement()")}</div>
-      ${settingsBack()}
-    </div></div>`;
+    if(key==='admin')return '';
     return `<div class="modal-body"><div class="asc-wrap">
-      ${settingsIntro('Sistema','Aparência do painel e informações da versão instalada.','fa-sliders')}
-      <section class="asc-section"><div class="asc-section-head"><div><h3>Aparência</h3><p>Escolha como o painel será exibido neste dispositivo.</p></div></div>
-        <div class="asc-card"><div class="asc-field"><label for="ascTheme">Tema do painel</label><select id="ascTheme" onchange="setAdminTheme(this.value)"><option value="system" ${pref==='system'?'selected':''}>Seguir o dispositivo</option><option value="light" ${pref==='light'?'selected':''}>Claro</option><option value="dark" ${pref==='dark'?'selected':''}>Escuro</option></select></div></div>
+            <section class="asc-section"><div class="asc-section-head"><div><h3>Aparência</h3><p>Escolha como o painel será exibido neste dispositivo.</p></div></div>
+        <div class="asc-card"><div class="asc-theme-switch" role="group" aria-label="Aparência"><button class="${pref==='system'?'active':''}" type="button" aria-pressed="${pref==='system'}" onclick="setAdminTheme('system')"><i class="fa-solid fa-circle-half-stroke"></i>Automático</button><button class="${pref==='light'?'active':''}" type="button" aria-pressed="${pref==='light'}" onclick="setAdminTheme('light')"><i class="fa-solid fa-sun"></i>Claro</button><button class="${pref==='dark'?'active':''}" type="button" aria-pressed="${pref==='dark'}" onclick="setAdminTheme('dark')"><i class="fa-solid fa-moon"></i>Escuro</button></div></div>
       </section>
       <section class="asc-section"><div class="asc-section-head"><div><h3>Versão do sistema</h3><p>Ambiente, publicação e histórico de atualizações.</p></div></div>
         <div class="asc-card asc-release-card">${typeof releaseInformationHtml==='function'?releaseInformationHtml():'<div class="asc-empty">Informações de versão indisponíveis.</div>'}</div>
@@ -109,14 +99,14 @@
   window.openSettingsCategory=function(key){
     const labels={account:'Minha conta',house:'Casa do Oleiro',admin:'Administração',system:'Sistema'};
     if(key==='admin'&&!isAdmin()){showToast?.('Somente administradores podem acessar esta área.');return}
-    openShell(labels[key]||'Configurações',settingsCategoryHtml(key));
+    if(key==='admin'){window.openAdminAccessManagement();return}openShell(labels[key]||'Configurações',settingsCategoryHtml(key),'',true);
   };
   window.openAdminGroups=function(){if(typeof closeModal==='function')closeModal();if(typeof navigateManager==='function')navigateManager('groups')};
   window.openMyAccount=function(){openShell('Configurações',settingsHtml())};
   window.setAdminTheme=function(target){window.setThemePreference?.(target);setTimeout(()=>window.openSettingsCategory('system'),0)};
   window.openAdminAccessManagement=async function(){
     if(!isAdmin()){showToast?.('Somente administradores podem gerenciar acessos.');return}
-    openShell('Administradores e acessos','<div class="modal-body"><div class="asc-wrap"><div class="asc-intro"><span class="asc-intro-icon"><i class="fa-solid fa-shield-halved"></i></span><div><h3>Controle de acesso</h3><p>Contas administrativas vinculadas ao Firebase Authentication e ao cadastro de permissões.</p></div></div><div id="ascManagerList" class="asc-section"><div class="asc-empty"><i class="fa-solid fa-circle-notch fa-spin"></i> Carregando administradores...</div></div><div class="asc-footer"><button class="btn btn-outline" onclick="openMyAccount()">Voltar</button><button class="btn btn-primary" onclick="openAdminCreateForm()"><i class="fa-solid fa-user-plus"></i> Cadastrar administrador</button></div></div></div>');
+    openShell('Administradores e acessos','<div class="modal-body"><div class="asc-wrap"><div id="ascManagerList" class="asc-admin-list"><div class="asc-empty"><i class="fa-solid fa-circle-notch fa-spin"></i> Carregando administradores...</div></div></div></div>','',true,true);
     await loadManagers();
   };
   async function loadManagers(){
@@ -129,14 +119,15 @@
   }
   window.openAdminCreateForm=function(){
     if(!isAdmin())return;
-    openShell('Cadastrar administrador',`<div class="modal-body"><form id="ascCreateForm" class="asc-form">
-      <div class="asc-field"><label for="ascName">Nome completo</label><input id="ascName" name="name" required maxlength="100" autocomplete="name" placeholder="Nome do administrador"></div>
-      <div class="asc-field"><label for="ascEmail">E-mail de acesso</label><input id="ascEmail" name="email" type="email" required maxlength="160" autocomplete="email" placeholder="nome@exemplo.com"></div>
-      <div class="asc-field"><label for="ascRole">Nível de acesso</label><select id="ascRole" name="role" onchange="document.getElementById('ascUnitScope').hidden=this.value!=='coordinator'"><option value="admin">Administrador — acesso completo</option><option value="coordinator">Coordenador — limitado às unidades selecionadas</option></select></div>
-      <div id="ascUnitScope" class="asc-field" hidden><label>Unidades autorizadas</label><div class="asc-unit-list">${unitOptions()}</div><small class="asc-help">O coordenador só poderá administrar registros vinculados às unidades selecionadas.</small></div>
+    openShell('Cadastrar administrador',`<div class="modal-body"><form id="ascCreateForm" class="asc-admin-form">
+      <div class="field"><label for="ascName">Nome completo</label><input id="ascName" class="input" name="name" required maxlength="100" autocomplete="name" placeholder="Nome do administrador"></div>
+      <div class="field"><label for="ascEmail">E-mail de acesso</label><input id="ascEmail" class="input" name="email" type="email" required maxlength="160" autocomplete="email" placeholder="nome@exemplo.com"></div>
+      <div class="field"><label for="ascRole">Nível de acesso</label><select id="ascRole" class="select" name="role" onchange="document.getElementById('ascUnitScope').hidden=this.value!=='coordinator'"><option value="admin">Administrador — acesso completo</option><option value="coordinator">Coordenador — limitado às unidades selecionadas</option></select></div>
+      <div id="ascUnitScope" class="field" hidden><label>Unidades autorizadas</label><div class="asc-unit-list">${unitOptions()}</div><small class="asc-help">O coordenador só poderá administrar registros vinculados às unidades selecionadas.</small></div>
       <div class="asc-danger-note">Será criada uma conta real no Firebase Authentication. O novo usuário receberá um e-mail para definir a própria senha. Não compartilhe senhas temporárias.</div>
-      <div class="asc-footer"><button type="button" class="btn btn-outline" onclick="openAdminAccessManagement()">Cancelar</button><button type="submit" class="btn btn-primary">Criar conta e enviar acesso</button></div>
+      <div class="asc-admin-form-footer"><button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Criar administrador e enviar acesso</button></div>
     </form></div>`);
+    openShell('Cadastrar administrador',modalRoot.querySelector('.modal-body').outerHTML,'',true);
     $('#ascCreateForm')?.addEventListener('submit',createAdminAccount);
   };
   async function createAdminAccount(event){
