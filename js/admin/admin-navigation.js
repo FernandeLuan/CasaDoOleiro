@@ -146,7 +146,7 @@
   }
 
   function houseInfoHtml(){
-    return `<section class="admin-house-info compact-page-top">${pageTitle('Informações','Informações da Casa','Centralize orientações do portal, rotina e dados gerais das unidades.')}<div class="admin-house-info-grid"><article class="admin-house-info-card wide"><div class="admin-house-info-card-head"><div><strong>Portal do voluntário</strong><p>Conteúdo e orientações apresentados aos candidatos e voluntários.</p></div></div>${portalHtml()}</article><article class="admin-house-info-card"><div class="admin-house-info-card-head"><div><strong>Rotina da Casa</strong><p>Horários de referência usados na comunidade.</p></div></div>${routineHtml()}</article></div></section>;
+    return `<section class="admin-house-info compact-page-top">${pageTitle('Informações','Informações da Casa','Centralize orientações do portal, rotina e dados gerais das unidades.')}<div class="admin-house-info-grid"><article class="admin-house-info-card wide"><div class="admin-house-info-card-head"><div><strong>Portal do voluntário</strong><p>Conteúdo e orientações apresentados aos candidatos e voluntários.</p></div></div>${portalHtml()}</article><article class="admin-house-info-card"><div class="admin-house-info-card-head"><div><strong>Rotina da Casa</strong><p>Horários de referência usados na comunidade.</p></div></div>${routineHtml()}</article></div></section>`;
   }
 
   function enhanceGroupsPage(){
