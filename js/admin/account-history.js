@@ -173,6 +173,8 @@
     const p=historyPersonById(id);if(!p)return;
     /* Reabrir Histórico sempre atualiza os dados; o cache serve apenas como prévia imediata. */
     const previousTab=String(state.managerPlanningTab||'plan');
+    // A aba recebe um handler direto para evitar o renderer legado; portanto, o R71 também precisa atualizar o estado da aba antes de renderizar.
+    state.managerPlanningTab='history';
     state.adminHistoryCache=state.adminHistoryCache||{};
     let cached=state.adminHistoryCache[String(p.id)];
     if(!cached?.loadedAt){
