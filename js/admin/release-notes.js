@@ -106,12 +106,13 @@
     const shortCommit=/^[a-f0-9]{7,40}$/i.test(commit)?commit.slice(0,7):'';
     const environment=String(meta?.environment||'').toLowerCase();
     const environmentLabel=environment==='production'?'Produção':environment==='homologation'?'Homologação':environment==='development'?'Desenvolvimento':'—';
+    const items=Array.isArray(latest?.items)?latest.items:[];
     return `<div class="release-info">
       <p><strong>Versão:</strong> ${esc(version())}</p>
       <p><strong>Ambiente:</strong> ${esc(environmentLabel)}</p>
-      ${published?`<p><strong>Publicado em:</strong> ${esc(published)}</p>`:''}
-      ${shortCommit?`<p><strong>Commit:</strong> <code title="${esc(commit)}">${esc(shortCommit)}</code></p>`:''}
-      <button class="admin-release-details" type="button" onclick="openAdminReleaseNotes()"><i class="fa-solid fa-wand-magic-sparkles"></i>Ver detalhes desta versão</button>
+      <p><strong>Publicado em:</strong> ${esc(published||'Horário não informado')}</p>
+      <p><strong>Commit:</strong> <code title="${esc(commit)}">${esc(shortCommit||commit||'—')}</code></p>
+      <div class="admin-release-version-whatsnew"><strong>O que mudou nesta versão</strong><div class="admin-release-items">${items.length?items.map(itemHtml).join(''):'<p>Nenhuma descrição de atualização cadastrada para esta versão.</p>'}</div></div>
     </div>`;
   }
   function modalBody(){
