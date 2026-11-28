@@ -11,7 +11,12 @@
     if($('#adminSettingsCenterStyles'))return;
     const s=document.createElement('style');s.id='adminSettingsCenterStyles';
     s.textContent=`
-      .modal.admin-settings-center{width:min(720px,calc(100vw - 20px))!important;max-width:720px!important;max-height:min(90vh,820px)!important}
+      .modal.admin-settings-center{width:min(820px,calc(100vw - 20px))!important;max-width:820px!important;max-height:min(90vh,820px)!important}
+      .admin-settings-center .modal-body>.asc-wrap,.admin-settings-center .asc-category-grid,.admin-settings-center .asc-section,.admin-settings-center .asc-card,.admin-settings-center .asc-tile{width:100%;min-width:0;box-sizing:border-box}
+      .admin-settings-center .modal-body{padding:20px 24px 24px!important}
+      .admin-settings-center .asc-category-grid .asc-tile{min-height:88px;padding:18px 20px;border-radius:16px}
+      .admin-settings-center .asc-category-grid .asc-tile strong{font-size:.76rem}
+      .admin-settings-center .asc-category-grid .asc-tile small{font-size:.62rem}
       .admin-settings-center .modal-head{padding:20px 22px 14px!important;text-align:left!important}
       .admin-settings-center .modal-head h2{font-size:1.12rem!important;text-align:left!important}
       .admin-settings-center .modal-body{padding:18px 22px 22px!important}
@@ -68,7 +73,7 @@
       #navRoot .bottom-nav .nav-btn.nav-logout span{color:var(--danger)!important}
       @media(max-width:520px){.asc-release-card .release-info{grid-template-columns:1fr}}
 
-      @media(max-width:520px){.admin-settings-center .modal-head{padding:16px 16px 12px!important}.admin-settings-center .modal-body{padding:14px 16px 18px!important}.asc-actions{grid-template-columns:1fr}.asc-unit-list{grid-template-columns:1fr}.asc-section-head{align-items:flex-start}}
+      @media(max-width:520px){.admin-settings-center .modal-head{padding:16px 16px 12px!important}.admin-settings-center .modal-body{padding:16px 18px 20px!important}.admin-settings-center .asc-category-grid .asc-tile{min-height:84px;padding:16px 18px}.asc-actions{grid-template-columns:1fr}.asc-unit-list{grid-template-columns:repeat(2,minmax(0,1fr))}.asc-section-head{align-items:flex-start}}
     `;document.head.appendChild(s);
   }
   function unitOptions(selected=[]){return (state.units||[]).map(u=>'<label class="asc-unit-check"><input type="checkbox" name="adminUnit" value="'+esc(u.id)+'" '+(selected.includes(String(u.id))?'checked':'')+'> '+esc(u.name||u.id)+'</label>').join('')||'<small class="asc-help">Nenhuma unidade ativa cadastrada.</small>'}
