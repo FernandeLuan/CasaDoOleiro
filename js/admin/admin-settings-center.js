@@ -73,7 +73,7 @@
       #navRoot .bottom-nav .nav-btn.nav-logout span{color:var(--danger)!important}
       @media(max-width:520px){.asc-release-card .release-info{grid-template-columns:1fr}}
 
-      @media(max-width:520px){.admin-settings-center .modal-head{padding:16px 16px 12px!important}.admin-settings-center .modal-body{padding:16px 18px 20px!important}.admin-settings-center .asc-category-grid .asc-tile{min-height:84px;padding:16px 18px}.asc-actions{grid-template-columns:1fr}.asc-unit-list{grid-template-columns:repeat(2,minmax(0,1fr))}.asc-section-head{align-items:flex-start}}
+      @media(max-width:520px){.admin-settings-center .modal-head{padding:16px 16px 12px!important}.admin-settings-center .modal-body{padding:16px 18px 20px!important}.admin-settings-center .asc-category-grid .asc-tile{min-height:84px;padding:16px 18px}.asc-actions{grid-template-columns:1fr}.asc-unit-list{grid-template-columns:1fr}.asc-section-head{align-items:flex-start}}
     `;document.head.appendChild(s);
   }
   function unitOptions(selected=[]){return (state.units||[]).map(u=>'<label class="asc-unit-check"><input type="checkbox" name="adminUnit" value="'+esc(u.id)+'" '+(selected.includes(String(u.id))?'checked':'')+'> '+esc(u.name||u.id)+'</label>').join('')||'<small class="asc-help">Nenhuma unidade ativa cadastrada.</small>'}
