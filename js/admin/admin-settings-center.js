@@ -33,6 +33,24 @@
       .asc-footer{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}.asc-empty{border:1px dashed var(--border);border-radius:13px;padding:18px;text-align:center;color:var(--muted);font-size:.6rem}
       .asc-danger-note{padding:10px 12px;border-radius:10px;background:color-mix(in srgb,var(--warning,#d99a2b) 10%,var(--surface));font-size:.55rem;line-height:1.45;color:var(--text)}
 
+      .admin-settings-center .modal-head{display:flex;align-items:center;gap:10px}
+      .asc-header-back,.asc-header-action{width:40px;height:40px;flex:none;border:0;border-radius:12px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;font-size:1rem;cursor:pointer}
+      .asc-header-back{order:0}.admin-settings-center .modal-head>div{order:1;flex:1;min-width:0}.admin-settings-center .modal-head .modal-close{order:3}
+      .asc-header-action{order:2;background:var(--primary);color:#fff}
+      .asc-admin-list{display:grid;gap:12px}.asc-admin-card{padding:14px}
+      .asc-admin-form{display:grid;gap:14px}.asc-admin-form .field{display:grid;gap:6px}
+      .asc-admin-form .field label{font-size:.68rem;font-weight:700;color:var(--text)}
+      .asc-admin-form .input,.asc-admin-form .select{width:100%;min-height:48px;border:1px solid var(--border);border-radius:13px;padding:11px 13px;background:var(--surface);color:var(--text);font:inherit;font-size:.82rem}
+      .asc-admin-form-footer .btn{width:100%;min-height:50px;border-radius:13px;font-size:.78rem}
+      .asc-theme-switch{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;border:1px solid var(--border);border-radius:13px;background:var(--surface)}
+      .asc-theme-switch button{min-height:42px;border:0;border-radius:9px;background:transparent;color:var(--muted);font-size:.68rem;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer}
+      .asc-theme-switch button.active{background:var(--primary);color:#fff}
+      .asc-release-card .admin-release-items{display:grid;gap:8px;grid-column:1/-1}
+      .asc-release-card .admin-release-item{display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;padding:10px;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
+      .asc-release-card .admin-release-item>span{width:34px;height:34px;border-radius:10px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center}
+      .asc-release-card .admin-release-item strong{font-size:.65rem}
+      .asc-release-card .admin-release-item p{margin:3px 0 0;font-size:.58rem;line-height:1.45;color:var(--muted)}
+      .asc-release-card .admin-release-details{display:none!important}
       .asc-category-grid{display:grid;grid-template-columns:1fr;gap:10px}
       .asc-category-grid .asc-tile{min-height:76px;padding:16px;border-radius:16px}
       .asc-category-grid .asc-tile strong{font-size:.72rem}
@@ -54,7 +72,7 @@
     `;document.head.appendChild(s);
   }
   function unitOptions(selected=[]){return (state.units||[]).filter(u=>u.active!==false).map(u=>'<label class="asc-unit-check"><input type="checkbox" name="adminUnit" value="'+esc(u.id)+'" '+(selected.includes(String(u.id))?'checked':'')+'> '+esc(u.name||u.id)+'</label>').join('')||'<small class="asc-help">Nenhuma unidade ativa cadastrada.</small>'}
-  function openShell(title,html,footer='',withBack=false,withAdd=false){openModal(title,'',html,footer);const modal=$('.modal');modal?.classList.add('admin-settings-center');const head=modal?.querySelector('.modal-head');if(!head)return;if(withBack){const b=document.createElement('button');b.type='button';b.className='asc-header-back';b.setAttribute('aria-label','Voltar');b.innerHTML='<i class="fa-solid fa-arrow-left"></i>';b.onclick=()=>window.openMyAccount();head.prepend(b)}if(withAdd){const b=document.createElement('button');b.type='button';b.className='asc-header-action';b.setAttribute('aria-label','Cadastrar administrador');b.innerHTML='<i class="fa-solid fa-plus"></i>';b.onclick=()=>window.openAdminCreateForm();head.insertBefore(b,head.querySelector('.modal-close'))}}
+  function openShell(title,html,footer='',withBack=false,withAdd=false){openModal(title,'',html,footer);const modal=$('.modal');modal?.classList.add('admin-settings-center');const head=modal?.querySelector('.modal-head');if(!head)return;if(withBack){const b=document.createElement('button');b.type='button';b.className='asc-header-back';b.setAttribute('aria-label','Voltar');b.innerHTML='<i class="fa-solid fa-arrow-left"></i>';b.onclick=()=>typeof withBack==='function'?withBack():window.openMyAccount();head.prepend(b)}if(withAdd){const b=document.createElement('button');b.type='button';b.className='asc-header-action';b.setAttribute('aria-label','Cadastrar administrador');b.innerHTML='<i class="fa-solid fa-plus"></i>';b.onclick=()=>window.openAdminCreateForm();head.insertBefore(b,head.querySelector('.modal-close'))}}
   function settingsTile(icon,title,description,action){
     return `<button class="asc-tile" type="button" onclick="${action}"><i class="fa-solid ${icon}"></i><span><strong>${title}</strong><small>${description}</small></span><i class="fa-solid fa-chevron-right asc-tile-chevron"></i></button>`;
   }
@@ -93,7 +111,6 @@
       <section class="asc-section"><div class="asc-section-head"><div><h3>Versão do sistema</h3><p>Ambiente, publicação e histórico de atualizações.</p></div></div>
         <div class="asc-card asc-release-card">${typeof releaseInformationHtml==='function'?releaseInformationHtml():'<div class="asc-empty">Informações de versão indisponíveis.</div>'}</div>
       </section>
-      ${settingsBack()}
     </div></div>`;
   }
   window.openSettingsCategory=function(key){
@@ -113,7 +130,7 @@
     const host=$('#ascManagerList');if(!host)return;
     try{
       const rows=await services().users.listManagers({force:true,includeInactive:true});
-      host.innerHTML=rows.length?rows.map(row=>`<article class="asc-card"><div class="asc-person"><span class="asc-avatar"><i class="fa-solid fa-user-shield"></i></span><div class="asc-person-copy"><strong>${esc(row.displayName||row.name||'Nome não informado')}</strong><small>${esc(row.email||'E-mail não informado')}</small></div><span class="asc-pill ${row.active===true?'active':'inactive'}">${row.active===true?'Ativo':'Inativo'}</span></div><div class="asc-meta"><span class="asc-pill">${esc(roleLabel(row.role))}</span>${row.id===state.currentSession?.uid?'<span class="asc-pill active">Você</span>':''}</div><div class="asc-row-actions"><button onclick="editAdminAccess('${esc(row.id)}')">Editar perfil</button><button onclick="sendAdminReset('${esc(row.id)}')">Reenviar acesso</button>${row.id!==state.currentSession?.uid?'<button class="danger" onclick="toggleAdminAccess(\''+esc(row.id)+'\','+(row.active===true?'false':'true')+')">'+(row.active===true?'Suspender':'Reativar')+'</button>':''}</div></article>`).join(''):'<div class="asc-empty">Nenhuma conta administrativa encontrada.</div>';
+      host.innerHTML=rows.length?rows.map(row=>`<article class="asc-card"><div class="asc-person"><span class="asc-avatar"><i class="fa-solid fa-user-shield"></i></span><div class="asc-person-copy"><strong>${esc(row.displayName||row.name||'Nome não informado')}</strong><small>${esc(row.email||'E-mail não informado')}</small></div><span class="asc-pill ${row.active===true?'active':'inactive'}">${row.active===true?'Ativo':'Inativo'}</span></div><div class="asc-row-actions"><button onclick="editAdminAccess('${esc(row.id)}')">Editar perfil</button><button onclick="sendAdminReset('${esc(row.id)}')">Reenviar acesso</button>${row.id!==state.currentSession?.uid?'<button class="danger" onclick="toggleAdminAccess(\''+esc(row.id)+'\','+(row.active===true?'false':'true')+')">'+(row.active===true?'Suspender':'Reativar')+'</button>':''}</div></article>`).join(''):'<div class="asc-empty">Nenhuma conta administrativa encontrada.</div>';
       window.__oleiroManagerRows=rows;
     }catch(error){console.error(error);host.innerHTML='<div class="asc-empty">Não foi possível consultar os acessos. Verifique sua conexão e suas permissões.</div>'}
   }
@@ -126,8 +143,7 @@
       <div id="ascUnitScope" class="field" hidden><label>Unidades autorizadas</label><div class="asc-unit-list">${unitOptions()}</div><small class="asc-help">O coordenador só poderá administrar registros vinculados às unidades selecionadas.</small></div>
       <div class="asc-danger-note">Será criada uma conta real no Firebase Authentication. O novo usuário receberá um e-mail para definir a própria senha. Não compartilhe senhas temporárias.</div>
       <div class="asc-admin-form-footer"><button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Criar administrador e enviar acesso</button></div>
-    </form></div>`);
-    openShell('Cadastrar administrador',modalRoot.querySelector('.modal-body').outerHTML,'',true);
+    </form></div>`,'',()=>window.openAdminAccessManagement());
     $('#ascCreateForm')?.addEventListener('submit',createAdminAccount);
   };
   async function createAdminAccount(event){
