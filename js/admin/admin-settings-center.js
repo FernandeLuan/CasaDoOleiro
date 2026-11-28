@@ -143,13 +143,14 @@
     openShell('Cadastrar administrador',`<div class="modal-body"><form id="ascCreateForm" class="asc-admin-form">
       <div class="field"><label for="ascName">Nome completo</label><input id="ascName" class="input" name="name" required maxlength="100" autocomplete="name" placeholder="Nome do administrador"></div>
       <div class="field"><label for="ascEmail">E-mail de acesso</label><input id="ascEmail" class="input" name="email" type="email" required maxlength="160" autocomplete="email" placeholder="nome@exemplo.com"></div>
-      <div class="field"><label for="ascRole">Nível de acesso</label><select id="ascRole" class="select" name="role"><option value="admin">Administrador — acesso completo</option><option value="coordinator">Coordenador — limitado às unidades selecionadas</option></select></div>
-      <div id="ascUnitScope" class="field"><label>Unidades autorizadas</label><div class="asc-unit-list">${unitOptions()}</div></div>
+      <div class="field"><label>Nível de acesso</label><div class="asc-role-switch"><button type="button" class="active" data-role="admin" onclick="setAdminRole(&#39;ascCreateForm&#39;,&#39;admin&#39;)">Geral</button><button type="button" data-role="coordinator" onclick="setAdminRole(&#39;ascCreateForm&#39;,&#39;coordinator&#39;)">Por unidade</button></div><select id="ascRole" class="select" name="role" hidden><option value="admin">Administrador</option><option value="coordinator">Coordenador</option></select></div>
+      <div id="ascUnitScope" class="field" hidden><label>Unidades autorizadas</label><div class="asc-unit-list">${unitOptions()}</div></div>
       
       <div class="asc-admin-form-footer"><button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Criar administrador e enviar acesso</button></div>
     </form></div>`,'',()=>window.openAdminAccessManagement());
     $('#ascCreateForm')?.addEventListener('submit',createAdminAccount);
   };
+  window.setAdminRole=function(formId,role){const form=document.getElementById(formId);if(!form)return;const select=form.querySelector("[name=role]")||form.querySelector("#ascEditRole");if(!select)return;select.value=role;form.querySelectorAll(".asc-role-switch button").forEach(button=>{const active=button.dataset.role===role;button.classList.toggle("active",active);button.setAttribute("aria-pressed",String(active))});const scope=form.querySelector("#ascUnitScope")||form.querySelector("#ascEditUnits");if(scope)scope.hidden=role!=="coordinator"};
   async function createAdminAccount(event){
     event.preventDefault();if(!isAdmin())return;
     const form=event.currentTarget,button=form.querySelector('[type="submit"]');button.disabled=true;button.textContent='Criando conta...';
