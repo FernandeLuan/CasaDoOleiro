@@ -123,7 +123,7 @@
     const portal=typeof infoAccordion==='function'?infoAccordion():'<div class="asc-empty">Informações do portal indisponíveis.</div>';
     openShell('Informações da Casa','<div class="modal-body"><div class="asc-wrap"><section class="asc-section"><h3>Portal do voluntário</h3>'+portal+'</section><section class="asc-section"><h3>Rotina da Casa</h3>'+routine+'</section></div></div>','',()=>window.openSettingsCategory('house'));
   };
-  window.openMyAccount=function(){openShell('Configurações',settingsHtml(),' ',()=>closeModal())};
+  window.openMyAccount=function(){openShell('Configurações',settingsHtml(),'',()=>closeModal())};
   window.setAdminTheme=function(target){window.setThemePreference?.(target);setTimeout(()=>window.openSettingsCategory('system'),0)};
   window.openAdminAccessManagement=async function(){
     if(!isAdmin()){showToast?.('Somente administradores podem gerenciar acessos.');return}
