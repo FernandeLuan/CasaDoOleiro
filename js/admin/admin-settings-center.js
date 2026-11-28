@@ -32,25 +32,88 @@
       .asc-unit-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.asc-unit-check{display:flex;gap:7px;align-items:center;padding:8px;border:1px solid var(--border);border-radius:9px;font-size:.56rem}
       .asc-footer{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}.asc-empty{border:1px dashed var(--border);border-radius:13px;padding:18px;text-align:center;color:var(--muted);font-size:.6rem}
       .asc-danger-note{padding:10px 12px;border-radius:10px;background:color-mix(in srgb,var(--warning,#d99a2b) 10%,var(--surface));font-size:.55rem;line-height:1.45;color:var(--text)}
+
+      .asc-category-grid{display:grid;grid-template-columns:1fr;gap:10px}
+      .asc-category-grid .asc-tile{min-height:76px;padding:16px;border-radius:16px}
+      .asc-category-grid .asc-tile strong{font-size:.72rem}
+      .asc-category-grid .asc-tile small{font-size:.58rem}
+      .asc-tile .asc-tile-chevron{margin-left:auto;width:auto;color:var(--muted);font-size:.72rem}
+      .asc-back{display:inline-flex;align-items:center;gap:8px;width:max-content;border:0;background:transparent;color:var(--primary);font:inherit;font-size:.62rem;font-weight:700;padding:8px 2px;cursor:pointer}
+      .asc-release-card .release-info{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px}
+      .asc-release-card .release-info p{margin:0!important;padding:10px 11px;border:1px solid var(--border);border-radius:11px;background:var(--surface-2);font-size:.58rem!important;line-height:1.4;color:var(--muted)}
+      .asc-release-card .release-info strong{color:var(--text)}
+      .asc-release-card .admin-release-details{grid-column:1/-1}
+      .asc-release-card .admin-release-version-whatsnew{grid-column:1/-1}
+      .admin-content-r62>.app-header .header-actions .icon-btn{width:44px;height:44px;border-radius:14px}
+      #navRoot .bottom-nav .nav-btn.nav-logout{color:var(--danger)!important}
+      #navRoot .bottom-nav .nav-btn.nav-logout i{color:var(--danger)!important}
+      #navRoot .bottom-nav .nav-btn.nav-logout span{color:var(--danger)!important}
+      @media(max-width:520px){.asc-release-card .release-info{grid-template-columns:1fr}}
+
       @media(max-width:520px){.admin-settings-center .modal-head{padding:16px 16px 12px!important}.admin-settings-center .modal-body{padding:14px 16px 18px!important}.asc-actions{grid-template-columns:1fr}.asc-unit-list{grid-template-columns:1fr}.asc-section-head{align-items:flex-start}}
     `;document.head.appendChild(s);
   }
   function unitOptions(selected=[]){return (state.units||[]).filter(u=>u.active!==false).map(u=>'<label class="asc-unit-check"><input type="checkbox" name="adminUnit" value="'+esc(u.id)+'" '+(selected.includes(String(u.id))?'checked':'')+'> '+esc(u.name||u.id)+'</label>').join('')||'<small class="asc-help">Nenhuma unidade ativa cadastrada.</small>'}
   function openShell(title,html,footer=''){openModal(title,'',html,footer);$('.modal')?.classList.add('admin-settings-center')}
+  function settingsTile(icon,title,description,action){
+    return `<button class="asc-tile" type="button" onclick="${action}"><i class="fa-solid ${icon}"></i><span><strong>${title}</strong><small>${description}</small></span><i class="fa-solid fa-chevron-right asc-tile-chevron"></i></button>`;
+  }
+  function settingsBack(){return '<button class="asc-back" type="button" onclick="openMyAccount()"><i class="fa-solid fa-arrow-left"></i> Todas as configurações</button>'}
+  function settingsIntro(title,description,icon='fa-gear'){
+    return `<div class="asc-intro"><span class="asc-intro-icon"><i class="fa-solid ${icon}"></i></span><div><h3>${title}</h3><p>${description}</p></div></div>`;
+  }
   function settingsHtml(){
-    const session=state.currentSession||{},user=session.user||{},pref=state.themePreference||'system';
+    const categories=[
+      ['fa-user','Minha conta','Dados e preferências pessoais','openSettingsCategory(\'account\')'],
+      ['fa-house','Casa do Oleiro','Informações, unidades e grupos','openSettingsCategory(\'house\')'],
+      ...(isAdmin()?[['fa-users-gear','Administração','Administradores e permissões de acesso','openSettingsCategory(\'admin\')']]:[]),
+      ['fa-sliders','Sistema','Aparência, versão e informações técnicas','openSettingsCategory(\'system\')']
+    ];
     return `<div class="modal-body"><div class="asc-wrap">
-      <section class="asc-intro"><span class="asc-intro-icon"><i class="fa-solid fa-gear"></i></span><div><h3>Configurações</h3><p>Preferências da sua conta, informações da Casa e controle dos acessos administrativos.</p></div></section>
-      <section class="asc-section"><div class="asc-section-head"><div><h3>Minha conta</h3><p>Identificação e preferências pessoais.</p></div></div><div class="asc-card"><div class="asc-person"><span class="asc-avatar"><i class="fa-solid fa-user"></i></span><div class="asc-person-copy"><strong>${esc(user.displayName||user.name||'Conta administrativa')}</strong><small>${esc(session.email||'—')}</small></div><span class="asc-pill active">${esc(roleLabel(user.role))}</span></div><div class="asc-field"><label for="ascTheme">Aparência do painel</label><select id="ascTheme" onchange="setAdminTheme(this.value)"><option value="system" ${pref==='system'?'selected':''}>Seguir o dispositivo</option><option value="light" ${pref==='light'?'selected':''}>Claro</option><option value="dark" ${pref==='dark'?'selected':''}>Escuro</option></select></div></div></section>
-      <section class="asc-section"><div class="asc-section-head"><div><h3>Casa do Oleiro</h3><p>Conteúdos e configurações operacionais.</p></div></div><div class="asc-actions"><button class="asc-tile" onclick="openHouseInfo()"><i class="fa-solid fa-house"></i><span><strong>Informações da Casa</strong><small>Rotina, orientações e unidades</small></span></button><button class="asc-tile" onclick="openUnits()"><i class="fa-solid fa-building"></i><span><strong>Unidades</strong><small>Gerenciar unidades cadastradas</small></span></button><button class="asc-tile" onclick="openAdminGroups()"><i class="fa-solid fa-people-group"></i><span><strong>Grupos</strong><small>Gerenciar grupos e integrantes por unidade</small></span><i class="fa-solid fa-chevron-right"></i></button></div></section>
-      ${isAdmin()?'<section class="asc-section"><div class="asc-section-head"><div><h3>Administração</h3><p>Gerencie quem pode acessar o painel e o que cada perfil pode fazer.</p></div></div><button class="asc-tile" onclick="openAdminAccessManagement()"><i class="fa-solid fa-users-gear"></i><span><strong>Administradores e acessos</strong><small>Consultar, cadastrar e ajustar permissões</small></span><i class="fa-solid fa-chevron-right"></i></button></section>':''}
-      <section class="asc-section"><div class="asc-section-head"><div><h3>Sistema</h3><p>Informações técnicas e versão.</p></div></div><div class="asc-card">${typeof releaseInformationHtml==='function'?releaseInformationHtml():'Informações de versão indisponíveis.'}</div></section>
-      <button class="btn btn-outline btn-block" style="width:100%;min-height:46px" onclick="confirmAdminLogout()"><i class="fa-solid fa-right-from-bracket"></i> Sair da conta</button>
+      ${settingsIntro('Central de configurações','Selecione uma área para acessar suas opções.')}
+      <div class="asc-category-grid">${categories.map(([icon,title,description,action])=>settingsTile(icon,title,description,action)).join('')}</div>
     </div></div>`;
   }
+  function settingsCategoryHtml(key){
+    const session=state.currentSession||{},user=session.user||{},pref=state.themePreference||'system';
+    if(key==='account')return `<div class="modal-body"><div class="asc-wrap">
+      ${settingsIntro('Minha conta','Informações da conta administrativa.','fa-user')}
+      <section class="asc-card"><div class="asc-person"><span class="asc-avatar"><i class="fa-solid fa-user"></i></span><div class="asc-person-copy"><strong>${esc(user.displayName||user.name||'Conta administrativa')}</strong><small>${esc(session.email||'—')}</small></div><span class="asc-pill active">${esc(roleLabel(user.role))}</span></div></section>
+      ${settingsBack()}
+    </div></div>`;
+    if(key==='house')return `<div class="modal-body"><div class="asc-wrap">
+      ${settingsIntro('Casa do Oleiro','Conteúdos e configurações operacionais.','fa-house')}
+      <div class="asc-actions">
+        ${settingsTile('fa-house','Informações da Casa','Rotina e orientações do portal',"openHouseInfo()")}
+        ${settingsTile('fa-building','Unidades','Gerenciar unidades cadastradas',"openUnits()")}
+        ${settingsTile('fa-people-group','Grupos','Gerenciar grupos e integrantes por unidade',"openAdminGroups()")}
+      </div>
+      ${settingsBack()}
+    </div></div>`;
+    if(key==='admin')return `<div class="modal-body"><div class="asc-wrap">
+      ${settingsIntro('Administração','Gerencie quem pode acessar o painel e o que cada perfil pode fazer.','fa-users-gear')}
+      <div class="asc-actions">${settingsTile('fa-users-gear','Administradores e acessos','Consultar, cadastrar e ajustar permissões',"openAdminAccessManagement()")}</div>
+      ${settingsBack()}
+    </div></div>`;
+    return `<div class="modal-body"><div class="asc-wrap">
+      ${settingsIntro('Sistema','Aparência do painel e informações da versão instalada.','fa-sliders')}
+      <section class="asc-section"><div class="asc-section-head"><div><h3>Aparência</h3><p>Escolha como o painel será exibido neste dispositivo.</p></div></div>
+        <div class="asc-card"><div class="asc-field"><label for="ascTheme">Tema do painel</label><select id="ascTheme" onchange="setAdminTheme(this.value)"><option value="system" ${pref==='system'?'selected':''}>Seguir o dispositivo</option><option value="light" ${pref==='light'?'selected':''}>Claro</option><option value="dark" ${pref==='dark'?'selected':''}>Escuro</option></select></div></div>
+      </section>
+      <section class="asc-section"><div class="asc-section-head"><div><h3>Versão do sistema</h3><p>Ambiente, publicação e histórico de atualizações.</p></div></div>
+        <div class="asc-card asc-release-card">${typeof releaseInformationHtml==='function'?releaseInformationHtml():'<div class="asc-empty">Informações de versão indisponíveis.</div>'}</div>
+      </section>
+      ${settingsBack()}
+    </div></div>`;
+  }
+  window.openSettingsCategory=function(key){
+    const labels={account:'Minha conta',house:'Casa do Oleiro',admin:'Administração',system:'Sistema'};
+    if(key==='admin'&&!isAdmin()){showToast?.('Somente administradores podem acessar esta área.');return}
+    openShell(labels[key]||'Configurações',settingsCategoryHtml(key));
+  };
   window.openAdminGroups=function(){if(typeof closeModal==='function')closeModal();if(typeof navigateManager==='function')navigateManager('groups')};
   window.openMyAccount=function(){openShell('Configurações',settingsHtml())};
-  window.setAdminTheme=function(target){window.setThemePreference?.(target);setTimeout(()=>window.openMyAccount(),0)};
+  window.setAdminTheme=function(target){window.setThemePreference?.(target);setTimeout(()=>window.openSettingsCategory('system'),0)};
   window.openAdminAccessManagement=async function(){
     if(!isAdmin()){showToast?.('Somente administradores podem gerenciar acessos.');return}
     openShell('Administradores e acessos','<div class="modal-body"><div class="asc-wrap"><div class="asc-intro"><span class="asc-intro-icon"><i class="fa-solid fa-shield-halved"></i></span><div><h3>Controle de acesso</h3><p>Contas administrativas vinculadas ao Firebase Authentication e ao cadastro de permissões.</p></div></div><div id="ascManagerList" class="asc-section"><div class="asc-empty"><i class="fa-solid fa-circle-notch fa-spin"></i> Carregando administradores...</div></div><div class="asc-footer"><button class="btn btn-outline" onclick="openMyAccount()">Voltar</button><button class="btn btn-primary" onclick="openAdminCreateForm()"><i class="fa-solid fa-user-plus"></i> Cadastrar administrador</button></div></div></div>');

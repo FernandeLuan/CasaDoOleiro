@@ -113,12 +113,12 @@
   function enhanceAdminHeader(){
     const actions=document.querySelector('.admin-content-r62>.app-header .header-actions');
     if(!actions)return;
-    actions.innerHTML='<button class="icon-btn" type="button" onclick="confirmAdminLogout()" aria-label="Sair da conta" title="Sair da conta"><i class="fa-solid fa-right-from-bracket"></i></button>';
+    actions.innerHTML='<button class="icon-btn" type="button" onclick="openMyAccount()" aria-label="Configurações" title="Configurações"><i class="fa-solid fa-gear"></i></button>';
   }
 
   function bottomNav(){
     const item=(icon,label,action,active)=>`<button class="nav-btn ${active?'active':''}" onclick="${action}"><i class="fa-solid ${icon}"></i><span>${label}</span></button>`;
-    return `<nav class="bottom-nav">${item('fa-house','Início',"navigateManager('home')",state.managerPage==='home')}${item('fa-users','Voluntariado',"navigateManager('volunteer')",state.managerPage==='volunteer')}${item('fa-calendar-check','Planejamento',"navigateManager('planning')",state.managerPage==='planning')}${item('fa-seedling','Projetos',"navigateManager('projects')",state.managerPage==='projects')}${item('fa-gear','Configurações',"openMyAccount()",false)}</nav>`;
+    return `<nav class="bottom-nav">${item('fa-house','Início',"navigateManager('home')",state.managerPage==='home')}${item('fa-users','Voluntariado',"navigateManager('volunteer')",state.managerPage==='volunteer')}${item('fa-calendar-check','Planejamento',"navigateManager('planning')",state.managerPage==='planning')}${item('fa-seedling','Projetos',"navigateManager('projects')",state.managerPage==='projects')}${item('fa-right-from-bracket','Sair',"confirmAdminLogout()",false).replace('class="nav-btn "','class="nav-btn nav-logout"')}</nav>`;
   }
 
   function pageTitle(eyebrow,title,description){

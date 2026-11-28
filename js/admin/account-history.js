@@ -256,9 +256,16 @@
   document.addEventListener('click',event=>{
     const button=event.target.closest?.('.planning-detail-page .planning-profile-tabs button');
     if(!button||String(button.textContent||'').trim().toLowerCase()!=='histórico'||button.dataset.r71DirectHandler==='1')return;
-    const id=String(document.querySelector('.planning-detail-page')?.dataset.personId||state.managerPlanningPersonId||'');
+    const detail=document.querySelector('.planning-detail-page');
+    let id=String(detail?.dataset.personId||state.managerPlanningPersonId||'');
+    if(!id){
+      const inline=String(button.getAttribute('onclick')||'');
+      const match=inline.match(/(?:openPerson|openPlanningHistoryR71)\s*\(\s*(?:decodeURIComponent\s*\()?['"]([^'"]+)['"]/);
+      if(match)try{id=decodeURIComponent(match[1])}catch{id=match[1]}
+    }
     const p=historyPersonById(id);if(!p)return;
-    event.preventDefault();event.stopImmediatePropagation();openHistory(p.id);
+    event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();
+    openHistory(p.id);
   },true);
 
   const baseRenderManager=typeof window.renderManager==='function'?window.renderManager:null;

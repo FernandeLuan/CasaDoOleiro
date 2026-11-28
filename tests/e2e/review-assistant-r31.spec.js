@@ -16,7 +16,10 @@ async function login(page,email,password,target){
 async function relogin(page,email,password,target){await page.evaluate(async()=>{await window.OleiroAuth?.signOut?.()});await login(page,email,password,target)}
 const navAction=(page,label)=>page.locator('.admin-sidebar-r62 button:visible').filter({hasText:label}).or(page.getByRole('navigation').getByRole('button',{name:new RegExp(label)})).first();
 async function openGroupsFromSettings(page){
-  await navAction(page,'Configurações').click();
+  const settingsButton=page.locator('.admin-sidebar-account-r62 button:visible, .admin-content-r62 .app-header .header-actions button[aria-label="Configurações"]:visible, button[aria-label="Configurações"]:visible').first();
+  await expect(settingsButton).toBeVisible({timeout:15_000});
+  await settingsButton.click();
+  await page.locator('.asc-category-grid .asc-tile').filter({hasText:'Casa do Oleiro'}).click();
   await page.locator('.asc-actions .asc-tile').filter({hasText:'Grupos'}).click();
   await expect(page.locator('.groups-page-grid')).toBeVisible({timeout:20_000});
 }
@@ -84,7 +87,7 @@ test('Approved volunteer can add a new activity and Admin gets blue scoped info 
 
 test('Rodeio activity assistant is unit-scoped and has no candidate lifecycle controls',async({page})=>{
   await login(page,'assistant@oleiro.test','Assistant123!','admin');
-  for(const label of ['Início','Voluntariado','Planejamento','Projetos','Configurações'])await expect(navAction(page,label)).toBeVisible();
+  for(const label of ['Início','Voluntariado','Planejamento','Projetos'])await expect(navAction(page,label)).toBeVisible();
   const homeOccupancy=page.locator('[data-home-occupancy]');await expect(homeOccupancy).toBeVisible({timeout:20_000});const homeUnits=homeOccupancy.locator('.home-occ-units button');await expect(homeUnits).toHaveCount(1);await expect(homeUnits).toHaveText('Rodeio');await expect(homeOccupancy.getByText('Indaial',{exact:true})).toHaveCount(0);
   await navAction(page,'Voluntariado').click();const list=page.locator('#candidateList');await expect(list).toContainText('Aprovado E2E',{timeout:20_000});await expect(list).not.toContainText('Indaial E2E');await expect(page.locator('.candidate-add-button')).toHaveCount(0);
   const denied=await page.evaluate(async()=>{try{await window.OleiroServices.applications.getById('e2e-indaial-application');return 'allowed'}catch(error){return String(error?.code||error?.message||'denied')}});expect(denied).not.toBe('allowed');
